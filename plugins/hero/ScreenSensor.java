@@ -71,7 +71,7 @@ public class ScreenSensor extends JPanel {
 		add(imageLabel, ratio > 2 ? BorderLayout.NORTH : BorderLayout.WEST);
 		add(dataLabel, BorderLayout.CENTER);
 
-		this.iTesseract = Hero.geTesseract();
+		this.iTesseract = Hero.getTesseract();
 		init();
 		update();
 	}

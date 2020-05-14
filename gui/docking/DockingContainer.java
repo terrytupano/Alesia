@@ -25,6 +25,7 @@ import com.alee.laf.button.*;
 import com.alee.laf.label.*;
 import com.alee.managers.style.*;
 import com.alee.utils.*;
+import com.jgoodies.common.base.*;
 
 import core.*;
 import gui.*;
@@ -47,13 +48,31 @@ public class DockingContainer extends JPanel {
 		for (Container cnt : cnts) {
 			if (cnt instanceof TUIListPanel)
 				((TUIListPanel) cnt).init();
-			
+
 			if (cnt instanceof PropertyChangeListener && cnt instanceof TUIListPanel) {
 				PropertyChangeListener pcl = (PropertyChangeListener) cnt;
 				addChangeListener(TUIListPanel.MODEL_SELECTED, pcl);
 			}
 		}
 		setVisible(true);
+	}
+
+	/**
+	 * Utility method to perform {@link UIListPanel#freshen()} in an active instance of the class pass as argument.
+	 * <p>
+	 * Use this class for example when an arbitrary action alter the internal content of another class and you want
+	 * those class uptade their internal content data .
+	 * 
+	 * @param clsn - active instance to refresh
+	 */
+	public void signalFreshgen(Class clazz) {
+		SwingUtilities.invokeLater(() -> {
+			Object cnt = SwingUtils.getFirst(contentPanel, clazz);
+			Preconditions.checkArgument(cnt instanceof TUIListPanel, "the Class $s must be instance of $s",
+					clazz.getName(), TUIListPanel.class.getName());
+			TUIListPanel tuilp = (TUIListPanel) cnt;
+			tuilp.freshen();
+		});
 	}
 
 	/**

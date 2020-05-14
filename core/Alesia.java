@@ -17,7 +17,6 @@ import java.awt.event.*;
 import java.io.*;
 import java.sql.*;
 import java.util.*;
-import java.util.List;
 import java.util.logging.*;
 
 import javax.swing.*;
@@ -49,12 +48,8 @@ import com.alee.managers.plugin.data.*;
 import com.alee.managers.settings.*;
 import com.alee.managers.style.*;
 import com.alee.skin.dark.*;
+import com.alee.utils.*;
 import com.alee.utils.CollectionUtils;
-import com.alee.utils.FileUtils;
-import com.sun.jna.*;
-import com.sun.jna.platform.*;
-import com.sun.jna.platform.win32.*;
-import com.sun.jna.platform.win32.WinDef.*;
 
 import core.tasks.*;
 import gui.*;
@@ -96,14 +91,14 @@ public class Alesia extends Application {
 		return getInstance().getContext().getResourceMap();
 	}
 
-//	public interface TUser32 extends Library {
-//		TUser32 INSTANCE = (TUser32) Native.loadLibrary("user32", TUser32.class);
-//		HWND FindWindow(String lpClassName, String lpWindowName);
-//		int GetWindowRect(HWND handle, int[] rect);
-//		boolean EnumWindows(WinUser.WNDENUMPROC lpEnumFunc, Pointer data);
-//		boolean GetWindowInfo(WinDef.HWND hWnd, WinUser.WINDOWINFO pwi);
-//		WinDef.HWND	GetActiveWindow();
-//	}
+	// public interface TUser32 extends Library {
+	// TUser32 INSTANCE = (TUser32) Native.loadLibrary("user32", TUser32.class);
+	// HWND FindWindow(String lpClassName, String lpWindowName);
+	// int GetWindowRect(HWND handle, int[] rect);
+	// boolean EnumWindows(WinUser.WNDENUMPROC lpEnumFunc, Pointer data);
+	// boolean GetWindowInfo(WinDef.HWND hWnd, WinUser.WINDOWINFO pwi);
+	// WinDef.HWND GetActiveWindow();
+	// }
 
 	/**
 	 * inicio de aplicacion
@@ -113,19 +108,18 @@ public class Alesia extends Application {
 	public static void main(String[] args) {
 		Locale.setDefault(Locale.US);
 
-// List<DesktopWindow> winds = WindowUtils.getAllWindows(true);
-//		WinDef.HWND hwnd = TUser32.INSTANCE.GetActiveWindow();
-//		WinUser.WINDOWINFO info = new WinUser.WINDOWINFO();
-//		TUser32.INSTANCE.GetWindowInfo(hwnd, info);
+		// List<DesktopWindow> winds = WindowUtils.getAllWindows(true);
+		// WinDef.HWND hwnd = TUser32.INSTANCE.GetActiveWindow();
+		// WinUser.WINDOWINFO info = new WinUser.WINDOWINFO();
+		// TUser32.INSTANCE.GetWindowInfo(hwnd, info);
 
-//		for (DesktopWindow win : winds) {
-//			System.out.println(win.getTitle());
-//		}
+		// for (DesktopWindow win : winds) {
+		// System.out.println(win.getTitle());
+		// }
 		// HWND hwnd = TUser32.INSTANCE.FindWindow("Eclipse", null);
 		// int[] rect = {0, 0, 0, 0};
 		// int result = TUser32.INSTANCE.GetWindowRect(hwnd, rect);
-//		System.out.println("Ok.");
-
+		// System.out.println("Ok.");
 
 		// Loggin configuration. this step is performed here for conbenence
 		// TODO: For slf4j: the bridge betwen slf4j is set using the slf4j-jdk14-1.7.25 jar lib
@@ -248,7 +242,7 @@ public class Alesia extends Application {
 	}
 	public static void showNotification(String mid, int lt, Object... dta) {
 		TError ae = new TError(mid, dta);
-		WebNotification npop = NotificationManager.showNotification(Alesia.mainFrame, ae.getMessage(),
+		WebInnerNotification npop = NotificationManager.showInnerNotification(Alesia.mainFrame, ae.getMessage(),
 				ae.getExceptionIcon());
 		// ae.getExceptionIcon(), NotificationOption.accept);
 		npop.setDisplayTime(lt);

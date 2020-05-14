@@ -49,9 +49,9 @@ public class TWebFrame extends WebFrame {
 		v.add(TResources.getIcon("appicon", 32).getImage());
 		setIconImages(v);
 
-//		TODO: comented due ps problems. fix
-//		setSize(new Dimension(800, 600));
-//		setLocationRelativeTo(null);
+		// TODO: comented due ps problems. fix
+		// setSize(new Dimension(800, 600));
+		// setLocationRelativeTo(null);
 
 		WindowAdapter ad = new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
@@ -64,7 +64,7 @@ public class TWebFrame extends WebFrame {
 		AnimatorBuilder.setDefaultTimingSource(ts);
 		frameAnimator = new AnimatorBuilder().setDuration(250, TimeUnit.MILLISECONDS).build();
 		// ts.init();
-		
+
 		registerSettings(new Configuration<WindowState>("TWebFrame"));
 
 	}
@@ -100,9 +100,16 @@ public class TWebFrame extends WebFrame {
 	 * @param r1 - base rectangle
 	 * @param r2 - rectangle to center
 	 */
-	private void center(Rectangle r1, Rectangle r2) {
+	public static void center(Rectangle r1, Rectangle r2) {
 		r2.x = (r1.width - r2.width) / 2;
 		r2.y = (r1.height - r2.height) / 2;
+	}
+
+	public static Point getCenter(Component c1, Component c2) {
+		Rectangle r1 = c1.getBounds();
+		Rectangle r2 = new Rectangle(c2.getBounds());
+		TWebFrame.center(r1, r2);
+		return new Point(r2.x - (r2.width / 2), r2.y - (r2.height / 2));
 	}
 
 	public void setContent(JComponent c) {

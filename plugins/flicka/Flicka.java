@@ -18,9 +18,11 @@ import javax.swing.Action;
 
 import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
+import org.jdesktop.application.Task.*;
 
 import com.alee.laf.panel.*;
 import com.alee.laf.splitpane.*;
+import com.alee.utils.*;
 
 import core.*;
 import core.datasource.model.*;
@@ -28,14 +30,14 @@ import gui.*;
 
 public class Flicka extends TPlugin {
 
-	protected static ActionMap actionMap; 
+	protected static ActionMap actionMap;
 
 	public Flicka() {
 		actionMap = Alesia.getInstance().getContext().getActionMap(this);
 		Alesia.openDB("flicka");
 		TActionsFactory.insertActions(actionMap);
 	}
-	
+
 	@Override
 	public ArrayList<javax.swing.Action> getUI(String type) {
 		ArrayList<Action> alist = new ArrayList<>();
@@ -43,30 +45,39 @@ public class Flicka extends TPlugin {
 		return alist;
 	}
 
+	@org.jdesktop.application.Action(block = BlockingScope.APPLICATION)
+	public Task<Void, Void> runMultiSimulation(ActionEvent event) {
+		AbstractButton src = (AbstractButton) event.getSource();
+		TUIListPanel tuilp = SwingUtils.getFirstParent(src, TUIListPanel.class);
+		Model models[] = tuilp.getModels();
+		// MultipleSimulationTask t = new MultipleSimulationTask(models);
+		// TTaskMonitor ttm = new TTaskMonitor(t);
+		DoNothingTask t = new DoNothingTask();
+		TTaskMonitor ttm = new TTaskMonitor(t, true);
+		t.setInputBlocker(ttm);
+		return t;
+	}
+
 	@org.jdesktop.application.Action
 	public void runSimulation(ActionEvent event) {
 		AbstractButton src = (AbstractButton) event.getSource();
-		ApplicationAction me = (ApplicationAction) src.getAction();
-		TUIListPanel tuilp = (TUIListPanel) me.getValue(TActionsFactory.TUILISTPANEL);
-		Model[] models = tuilp.getModels();
+		TUIListPanel tuilp = SwingUtils.getFirstParent(src, TUIListPanel.class);
+		Model model = tuilp.getModel();
+		String fieldPx = (tuilp instanceof DBExplorer) ? "re" : "st";
+		int race = model.getInteger(fieldPx + "race");
+		Date date = model.getDate(fieldPx + "date");
+		Selector.runSimulation(race, date);
+	}
 
-		parms = JOptionPane.showInputDialog(Alesia.mainFrame,
-				"Selected records: " + models.length + "\n\nEnter the uper value for horseSample, JockeySample", parms);
-		if (parms != null) {
-			try {
-				int horseSample = Integer.parseInt(parms.substring(0, 1));
-				int jockeySample = Integer.parseInt(parms.substring(1, 2));
-				Selector.runSimulation(models, horseSample);
-			} catch (NumberFormatException e) {
-				JOptionPane.showMessageDialog(Alesia.mainFrame, "Error in input parameters", "Error",
-						JOptionPane.ERROR_MESSAGE);
-			}
-		}
+	@org.jdesktop.application.Action
+	public void countEndPositions(ActionEvent event) {
+		DBExplorer instance = SwingUtils.getFirstParent((AbstractButton) event.getSource(), DBExplorer.class);
+		Selector.checkReend_posAndRecpsFields(instance.getModels());
 	}
 
 	@org.jdesktop.application.Action
 	public void flicka(ActionEvent event) {
-		DBExplorer dbe = new DBExplorer();		
+		DBExplorer dbe = new DBExplorer();
 		RaceList races = new RaceList();
 		PDistributionList pdistri = new PDistributionList();
 		WebSplitPane sp = new WebSplitPane(WebSplitPane.VERTICAL_SPLIT);
@@ -102,7 +113,7 @@ public class Flicka extends TPlugin {
 		TEntry[] te = new TEntry[reslrr.size()];
 		reslrr.copyInto(te);
 		return te;
-	}	
+	}
 
 	/**
 	 * return the reslr list filter by field parameter. e.g: if field = rehorse, the return list contain ony one element
@@ -110,21 +121,12 @@ public class Flicka extends TPlugin {
 	 * 
 	 * @param field - fiel to filter list
 	 * 
-	 * @return 
-	public static ServiceRequest getFilterServiceReques(String field) {
-		Vector<String> tmpList = new Vector<String>();
-		Vector<Record> reslr = ConnectionManager.getAccessTo("reslr").search(null, "redate DESC");
-		Vector<Record> reslrr = new Vector<Record>();
-		for (Record rcd : reslr) {
-			String ele = (String) rcd.getFieldValue(field);
-			if (!tmpList.contains(ele)) {
-				tmpList.add(ele);
-				reslrr.add(rcd);
-			}
-		}
-		ServiceRequest sr = new ServiceRequest(ServiceRequest.CLIENT_GENERATED_LIST, "reslr", reslrr);
-		sr.setParameter(ServiceResponse.RECORD_MODEL, ConnectionManager.getAccessTo("reslr").getModel());
-		return sr;
-	}
+	 * @return public static ServiceRequest getFilterServiceReques(String field) { Vector<String> tmpList = new
+	 *         Vector<String>(); Vector<Record> reslr = ConnectionManager.getAccessTo("reslr").search(null, "redate
+	 *         DESC"); Vector<Record> reslrr = new Vector<Record>(); for (Record rcd : reslr) { String ele = (String)
+	 *         rcd.getFieldValue(field); if (!tmpList.contains(ele)) { tmpList.add(ele); reslrr.add(rcd); } }
+	 *         ServiceRequest sr = new ServiceRequest(ServiceRequest.CLIENT_GENERATED_LIST, "reslr", reslrr);
+	 *         sr.setParameter(ServiceResponse.RECORD_MODEL, ConnectionManager.getAccessTo("reslr").getModel()); return
+	 *         sr; }
 	 */
 }

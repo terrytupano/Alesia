@@ -23,10 +23,8 @@ import javax.swing.Action;
 import org.jdesktop.application.*;
 
 import com.alee.laf.*;
-import com.alee.utils.*;
 
 import core.*;
-import gui.*;
 import gui.console.*;
 import net.sourceforge.tess4j.*;
 
@@ -50,7 +48,7 @@ public class Hero extends TPlugin {
 		consolePanel = new ConsolePanel(logger);
 	}
 
-	public static Tesseract geTesseract() {
+	public static Tesseract getTesseract() {
 		// TODO: no visible performance improve by setting every sensor with his own teseract instance
 		Tesseract iTesseract = new Tesseract(); // JNA Interface Mapping
 		iTesseract.setDatapath("plugins/hero/tessdata"); // path to tessdata directory

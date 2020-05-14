@@ -59,10 +59,10 @@ public class TProgressMonitor extends WebPopOver implements ActionListener {
 		progressBar.setMaximum(100);
 		progressBar.setIndeterminate(true);
 
-		this.cancel = new JButton("Cacelar");
+		this.cancel = new JButton("Cancel");
 		cancel.addActionListener(this);
 		cancel.setEnabled(future != null);
-		this.background = new JButton("Segundo plano");
+		this.background = new JButton("Background");
 		background.addActionListener(this);
 		background.setEnabled(allowBg);
 
@@ -78,14 +78,14 @@ public class TProgressMonitor extends WebPopOver implements ActionListener {
 		// title bar
 		WebLabel i = new WebLabel(TResources.getIcon(in, 16));
 		WebLabel t = new WebLabel(TStringUtils.getString(acc), JLabel.CENTER);
-		t.setDrawShade(true);
+//		t.setDrawShade(true);
 		GroupPanel gp = new GroupPanel(GroupingType.fillLast, 4, i, t);
-		WebPanel wp = gp.setMargin(0, 0, 10, 0);
+		gp.setMargin(0, 0, 10, 0);
 		// gp.setOpaque(true);
 		// Color wpc = gp.getBackground();
 		// gp.setBackground(new Color(wpc.getRed(), wpc.getGreen(), wpc.getBlue(), 200));
 		setLayout(new VerticalFlowLayout());
-		add(wp);
+		add(gp);
 		add(jp1);
 		add(new JLabel(" "));
 		add(new GroupPanel(GroupingType.fillFirst, true, new JLabel(), background, cancel));

@@ -15,29 +15,22 @@ import gui.docking.*;
 
 import java.beans.*;
 import java.util.*;
+import java.util.function.*;
 
 import javax.swing.*;
 
+import org.javalite.activejdbc.*;
+import org.jdesktop.application.*;
+
 import core.datasource.*;
+import core.datasource.model.*;
 import core.reporting.*;
 
-public class JockeyHistory extends UIListPanel implements DockingComponent {
-
-	ServiceRequest request;
+public class JockeyHistory extends TUIListPanel implements PropertyChangeListener {
 
 	public JockeyHistory() {
-		super(null);
-		this.request = new ServiceRequest(ServiceRequest.DB_QUERY, "reslr", null);
-		request.setParameter(ServiceRequest.ORDER_BY, "redate DESC");
-		setColumns("redate;rerace;redistance;restar_lane;rehorse;reend_pos;recps");
 		setToolBar(new ExportToFileAction(this, ""));
-	}
-
-	@Override
-	public UIComponentPanel getUIFor(AbstractAction aa) {
-		UIComponentPanel pane = null;
-
-		return pane;
+		setColumns("redate;rerace;redistance;restar_lane;rehorse;reend_pos;recps");
 	}
 
 	@Override
@@ -49,28 +42,35 @@ public class JockeyHistory extends UIListPanel implements DockingComponent {
 	public void propertyChange(PropertyChangeEvent evt) {
 		Object src = evt.getSource();
 		Object newv = evt.getNewValue();
-		Record rcd = (Record) newv;
+		Model rcd = (Model) newv;
 
-		String joceky = null;
+		String jockey = null;
 		Date date = null;
 		if (src instanceof RaceList) {
 			if (rcd != null) {
-				joceky = (String) rcd.getFieldValue("rejockey");
-				date = (Date) rcd.getFieldValue("redate");
+				jockey = rcd.getString("rejockey");
+				date = rcd.getDate("redate");
 			}
 		}
 		if (src instanceof PDistributionList) {
-			if (rcd != null && rcd.getFieldValue("pdfield").equals("rejockey")) {
-				joceky = (String) rcd.getFieldValue("pdvalue");
-				date = (Date) rcd.getFieldValue("pddate");
+			if (rcd != null && rcd.getString("pdfield").equals("rejockey")) {
+				jockey = rcd.getString("pdvalue");
+				date = rcd.getDate("pddate");
 			}
 		}
-		if (joceky != null) {
-			String wc = "rejockey = '" + joceky + "' AND redate < '" + date + "'";
-			request.setData(wc);
-			setServiceRequest(request);
+		if (jockey != null) {
+			final String jockeyf = jockey;
+			final Date datef = date;
+			Function<String, List<Model>> f = (par -> Race.find("rejockey = ? AND rerace = ?", jockeyf, datef)
+					.orderBy("redate DESC"));
+			setDBParameters(f, Race.getMetaModel().getColumnMetadata());
 		} else {
 			setMessage("flicka.msg02");
 		}
+	}
+
+	@Override
+	public TUIFormPanel getTUIFormPanel(ApplicationAction action) {
+		return null;
 	}
 }

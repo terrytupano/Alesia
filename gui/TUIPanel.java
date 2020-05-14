@@ -320,9 +320,9 @@ public class TUIPanel extends WebPanel {
 		String sco = aa.getResourceMap().getString(aa.getName() + ".Action.scope");
 
 		// auto add the property TActionsFactory.TUILISTPANEL
-		if (sco != null && (sco.equals("element") || sco.equals("list"))) {
-			aa.putValue(TActionsFactory.TUILISTPANEL, this);
-		}
+//		if (sco != null && (sco.equals("element") || sco.equals("list"))) {
+//			aa.putValue(TActionsFactory.TUILISTPANEL, this);
+//		}
 
 		// action for popup menu
 		if (sco != null && sco.equals("element")) {

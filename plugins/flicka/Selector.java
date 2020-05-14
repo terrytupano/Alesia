@@ -10,22 +10,19 @@
  ******************************************************************************/
 package plugins.flicka;
 
-import gui.docking.*;
-
-import java.sql.*;
 import java.text.*;
 import java.util.*;
-import java.util.Date;
 
 import javax.swing.*;
 
 import org.apache.commons.math3.geometry.euclidean.twod.*;
 import org.apache.commons.math3.stat.*;
 import org.apache.commons.math3.stat.descriptive.*;
+import org.javalite.activejdbc.*;
+import org.jdesktop.application.*;
 
 import core.*;
-import core.datasource.*;
-import core.tasks.*;
+import core.datasource.model.*;
 
 public class Selector {
 
@@ -35,17 +32,17 @@ public class Selector {
 	 * default tolerance for numerical calculation
 	 */
 	static final double TOLERANCE = 1.0e-4;
-	private int race;
-	private Date date;
-	private boolean writePdistribution;
+	public static String END_POSITION = "End position";
+	public static String DIFERENCE_FROM_FIRST = "Diference form first";
+	public static String PROYECTED_TIME = "Proyected time";
 
+	protected  int race;
+	protected Date date;
+	boolean writePdistribution;
 	private boolean writeStatistics;
 	int horseSample;
-
 	int jockeySample;
-
 	final int minSample = 2;
-
 	/**
 	 * number of elements to be selected.
 	 */
@@ -55,6 +52,12 @@ public class Selector {
 	private int[] oneToOneDistribution = new int[14];
 	private int[] exactaByElements = new int[14];
 	private int[] winnerByElements = new int[14];
+	private final double kelly_p = 0.30;
+	private final double kelly_bDiv = 3;
+	private String selectBy = END_POSITION;
+	private int arriveWindow = 4;
+	boolean countingHits = false;
+	private Hashtable<String, Frequency> distributions;
 
 	public Selector(int race, Date date) {
 		this.race = race;
@@ -74,165 +77,133 @@ public class Selector {
 
 	}
 
-	public static void checkEndPositionCPS(Record[] rcdList) {
-		DBAccess lrdba = ConnectionManager.getAccessTo("reslr");
-		boolean df = false;
-		for (Record rcd : rcdList) {
-			Date date = (Date) rcd.getFieldValue("redate");
-			int race = (Integer) rcd.getFieldValue("rerace");
-			Vector<Record> endlist = lrdba.search("recps > -1 AND redate = '" + date + "' AND rerace = " + race,
-					"reend_pos");
-			Vector<Record> cpslist = lrdba.search("recps > -1 AND redate = '" + date + "' AND rerace = " + race,
-					"recps, reend_pos");
+	/**
+	 * For a list of {@link Race} elements, this method check the fields <code>reend_pos</code> and <code>recps</code>
+	 * fields looking for discrepanci. this 2 field must be in the same order.
+	 * <p>
+	 * e.g: a horse that finisch 1 can.t habe a <code>recps</code> other than, a second place horse must be a
+	 * <code>recps</code> value less than the horse than finisht 3 and so on
+	 * 
+	 * @param rcdList
+	 */
+	public static void checkReend_posAndRecpsFields(Model[] rcdList) {
+		String df = "";
+		for (Model race : rcdList) {
+			Date redate = (Date) race.getDate("redate");
+			int rerace = race.getInteger("rerace");
+			Vector<Race> endlist = new Vector<>(
+					Race.find("recps > -1 AND redate = ? AND rerace = ?", redate, rerace).orderBy("reend_pos"));
+			Vector<Race> cpslist = new Vector<>(
+					Race.find("recps > -1 AND redate = ? AND rerace = ?", redate, rerace).orderBy("recps, reend_pos"));
 			for (int i = 0; i < endlist.size(); i++) {
-				String rehorse = (String) endlist.elementAt(i).getFieldValue("rehorse");
-				if (!rehorse.equals(cpslist.elementAt(i).getFieldValue("rehorse"))) {
-					df = true;
-					System.out.println("Discrepancy found in race " + date + " " + race + " on " + rehorse);
-					break;
-				}
+				String rehorse = endlist.elementAt(i).getString("rehorse");
+				if (!rehorse.equals(cpslist.elementAt(i).getString("rehorse")))
+					df += "<b>Race " + redate + " " + rerace + " on " + rehorse;
+
 			}
 		}
 		// TODO: check that recps=-1 must be the last element of the race (last end_pos)
-		if (!df) {
-			System.out.println("no discrepancy found");
+		if (df.equals(""))
+			Alesia.showNotification("flicka.msg04");
+		else
+			Alesia.showNotification("flicka.msg03", df);
+	}
+	/**
+	 * Return the positions of the sensor array placed in the racetrack starting at 0m (the star line). the last sensor
+	 * is the finish line.
+	 * 
+	 * @param dist - distance of the race
+	 * @return list of sensor positions (in meters)
+	 */
+	public static Vector<Integer> getSensors(int dist) {
+		int sensors = ((int) Math.ceil(dist / 400));
+		// only i have 4 partials
+		// sensors = (sensors > 4) ? 4 : sensors;
+		Vector<Integer> arr = new Vector<Integer>();
+		for (int i = 0; i < sensors; i++) {
+			arr.add((i + 1) * 400);
 		}
-	}
-
-	public static void runSimulation(int race, Date date) {
-		runSimulation(race, date, 4);
-	}
-
-	public static void runSimulation(int race, Date date, int hs) {
-		Selector sel = new Selector(race, date);
-		sel.horseSample = hs;
-		sel.writeStatistics = false;
-		sel.clearTables();
-		sel.select();
-		DockingContainer.signalFreshgen(PDistributionList.class.getName());
-	}
-
-	public static void runSimulation(Record[] rcdList, int hs) {
-		TTaskManager.executeTask(() -> {
-			Selector sel = new Selector(0, null);
-			// sel.horseSample = hs;
-				sel.writePdistribution = false;
-				sel.clearTables();
-				int max = rcdList.length;
-				ProgressMonitor pg = new ProgressMonitor(Alesia.mainFrame, "Running a Long Task", "", 0, max);
-				pg.setMillisToPopup(250);
-				int step = 0;
-				for (Record rcd : rcdList) {
-					sel.date = (Date) rcd.getFieldValue("redate");
-					sel.race = (Integer) rcd.getFieldValue("rerace");
-					pg.setProgress(++step);
-					pg.setNote(sel.date + " " + sel.race);
-					sel.select();
-				}
-				sel.printStats();
-				DockingContainer.signalFreshgen(Statistics.class.getName());
-				pg.close();
-			});
-	}
-
-	private void log(String msg) {
-		if (msg != null && !countingHits) {
-			System.out.println(msg);
+		if ((dist % 400) > 0) {
+			arr.add(dist);
 		}
+		// add star lane
+		arr.add(0, 0);
+		return arr;
 	}
 
 	/**
-	 * This method return a proyected time of the horse speed based on the know historical data.
+	 * Return a array of {@link Vector2D} that represent the calculated time at each sensor in the race track.
+	 * <p>
+	 * This method work based on the assumption that the final position of the horse is a reflection of its position at
+	 * every sensor. i.e.: if a horse finish last at 10.50 from the winner, this horse at first sensor were last but
+	 * within a fraction of the final difference. While the race evolves, this difference gets wider until reach the
+	 * final values.
 	 * 
-	 * <ol>
-	 * <li>for each element of the incoming sample, build a curve that represent the time at each race tack sensor. see
-	 * {@link Selector#getSpeedPoints(Record)}.
-	 * <li>If a rece don't reach the normalization distance, a line between 400m and this race distance is build for
-	 * proyection (naive extrapolation), else, such line is build using the last 2 know points (last sensor and final
-	 * distance)
-	 * <li>compute the intersctions point between the vertical line at a fixed distance and the line calc at previos
-	 * step
-	 * <li>use a desicion rule: "Discart the worst, select the second best" to compute the normalized time. if a element
-	 * has no enough historical data, -1 is returnded
-	 * 
-	 * @param reslst sample of the element to estimate
-	 * @return proyected time at normalized distance or -1 if not enough data was found.
+	 * @param rcd - record form reslr file
+	 * @param todist - distance to extrapolate
+	 * @return
 	 */
-	public Histogram getProyectedTime(Vector<Record> reslst, int dist) {
-		Vector<Line> linlst = new Vector();
-		for (Record rcd : reslst) {
-			Vector2D[] pts = Selector.getSpeedPoints(rcd);
-			int d = (Integer) rcd.getFieldValue("redistance");
-			Line lin = null;
-			// extrapolation line form 400m to last know point
-			if (d < dist) {
-				lin = new Line(pts[1], pts[pts.length - 1], TOLERANCE);
-			} else {
-				// line based on intersection interval
-				lin = new Line(pts[pts.length - 2], pts[pts.length - 1], TOLERANCE);
-			}
-			linlst.add(lin);
+	public static Vector2D[] getSpeedPoints(Race rcd) {
+		// 1seg = 5cps
+		double mycps = rcd.getDouble("recps") / 5;
+		int dist = rcd.getInteger("redistance");
+		Vector<Integer> sens = getSensors(dist);
+
+		// iterate until 5 sensor ( 4 of my database implementation + 1 of star line)
+		if (sens.size() > 6) {
+			final int dist1 = sens.elementAt(5);
+			sens.removeIf((d) -> d >= dist1);
+			sens.add(dist);
+			// Predicate<Integer> rem = (d) -> d > dist1;
 		}
+		Vector2D[] pts = new Vector2D[sens.size()];
+		// asumption: the horse reach 13.15m/s at 46m.
+		// xval[0] = 46;
+		// yval[0] = 13.1;
+		pts[0] = new Vector2D(0, 0);
 
-		// intersection point
-		Line verl = new Line(new Vector2D(dist, 0), new Vector2D(dist, 1000), TOLERANCE);
-		Histogram his = new Histogram();
-		linlst.stream().forEach(lin -> {
-			Vector2D pi = lin.intersection(verl);
-			his.increment(pi.getY());
-		});
-
-		/*
-		 * ArrayList<Double> tmp = new ArrayList(); for (Line lin : linlst) { Vector2D pi = lin.intersection(verl);
-		 * tmp.add(pi.getY()); }
-		 * 
-		 * // discart the worst, select the second best (the middle of three left) Collections.sort(tmp); return
-		 * tmp.size() > 2 ? tmp.get(1) : tmp.get(0);
-		 */
-		return his;
-	}
-	private void addJockeyWeight1(Vector<Record> horseSample, Vector<Record> raceList) {
-		for (int h = 0; h < horseSample.size(); h++) {
-			Record hr = horseSample.elementAt(h);
-			Record jr = raceList.elementAt(h);
-
-			// numbers of horse samples           
-			int hsa = (Integer) hr.getFieldValue("pdsamplesize");
-			String val = (String) jr.getFieldValue("rejockey");
-			int jsa = hsa * 5;
-			Vector<Record> samplst = getSample(jsa, "rejockey", val);
-			Histogram jlin = getFieldCount("reend_pos", samplst);
-
-			// pdend_position line
-			Histogram hlin = (Histogram) hr.getFieldValue("pdend_posline");
-			// Histogram jlin = (Histogram) jr.getFieldValue("pdend_posline");
-			Collection<Double> jkeys = jlin.keySet();
-			for (Double jk : jkeys) {
-				double hp = hlin.get(jk);
-				double jp = jlin.get(jk);
-				hp += jp * 0.10;
-				hlin.put(jk, hp);
-			}
+		for (int c = 1; c < sens.size(); c++) {
+			// position inside the cloud at sensor c+1
+			double dif = ((double) (c + 1)) / ((double) sens.size()) * mycps;
+			// partial or final time
+			double par = (sens.elementAt(c) != dist) ? rcd.getDouble("repartial" + c) : rcd.getDouble("reracetime");
+			// stimated time
+			double tim = par + dif;
+			pts[c] = new Vector2D((double) sens.elementAt(c), tim);
+			// par + dif = time. velocity = distance/time expressed in m/seg
+			// yval[c] = xval[c] / (par + dif);
 		}
+		return pts;
 	}
+
+	public static void runSimulation(int race, Date date) {
+		Selector sel = new Selector(race, date);
+		sel.writeStatistics = false;
+		sel.clearTables();
+		sel.select();
+		Alesia.getMainPanel().signalFreshgen(PDistributionList.class);
+	}
+
 	/**
 	 * add a fraction of the joceky performance to the horse performance. (from jockey histogram line to horse histogram
 	 * line). this method is based on asumption that the jockey infuence the outcome.
 	 * <p>
-	 * RESULT: selecting salmple size = 20: convergenci: 180 , Area1-2: 100, Lane 1: 55, per 2-1: 45 RESULT: selecting
-	 * salmple size = 10: convergenci: 175 , Area1-2: 103, Lane 1: 49, per 2-1: 54 about 2% increment (from 171 to 180)
+	 * EMPIRICAL RESULTS:
+	 * <li>selecting salmple size = 20: convergenci: 180 , Area1-2: 100, Lane 1: 55, per 2-1: 45
+	 * <li>selecting salmple size = 10: convergenci: 175 , Area1-2: 103, Lane 1: 49, per 2-1: 54 about 2% increment
+	 * (from 171 to 180)
 	 * 
 	 * @param horseSample - horse list
 	 * @param jockeySample
 	 */
-	private void addJockeyWeight(Vector<Record> horseSample, Vector<Record> jockeySample) {
+	private void addJockeyWeight(Vector<PDistribution> horseSample, Vector<PDistribution> jockeySample) {
 		for (int h = 0; h < horseSample.size(); h++) {
-			Record hr = horseSample.elementAt(h);
-			Record jr = jockeySample.elementAt(h);
+			PDistribution hr = horseSample.elementAt(h);
+			PDistribution jr = jockeySample.elementAt(h);
 
 			// pdend_position line
-			Histogram hlin = (Histogram) hr.getFieldValue("pdend_posline");
-			Histogram jlin = (Histogram) jr.getFieldValue("pdend_posline");
+			Histogram hlin = (Histogram) hr.get("pdend_posline");
+			Histogram jlin = (Histogram) jr.get("pdend_posline");
 			Collection<Double> jkeys = jlin.keySet();
 			for (Double jk : jkeys) {
 				double hp = hlin.get(jk);
@@ -242,8 +213,8 @@ public class Selector {
 			}
 
 			// cps line
-			hlin = (Histogram) hr.getFieldValue("pdcpsline");
-			jlin = (Histogram) jr.getFieldValue("pdcpsline");
+			hlin = (Histogram) hr.get("pdcpsline");
+			jlin = (Histogram) jr.get("pdcpsline");
 			jkeys = jlin.keySet();
 			for (Double jk : jkeys) {
 				double hp = hlin.get(jk);
@@ -281,110 +252,45 @@ public class Selector {
 		return mc;
 	}
 
-	private final double kelly_p = 0.30;
-	private final double kelly_bDiv = 3;
-
-	/**
-	 * apply kelly criterion to the incoming list based on previous parameter p and b divisor. this cirtirion has 2
-	 * uses:
-	 * <ol>
-	 * <li>to accept only races that historicaly has more win probability (races with 7 or more elemens)
-	 * <li>based on previous step, has the practical purporse for invest in billboards
-	 * </ol>
-	 */
-	private boolean isValidKelly(Vector<Record> pdList) {
-		boolean val = true;
-		double b = ((double) pdList.size()) / kelly_bDiv;
-		double kc = (kelly_p * b - (1 - kelly_p)) / b;
-		if (kc <= 0) {
-			log("Selection of elements rejected by kelly criterion: " + numberFormat.format(kc));
-			val = false;
-		}
-		return val;
-	}
-	/**
-	 * evaluate the incoming list searchin if the elements has enought statistical data. this method:
-	 * <ol>
-	 * <li>Count the pdsamplesize field forall record in the argument list. and element is cosider with enought data if
-	 * the sample size >= {@link #minSample} variable
-	 * <li>Based on the previous count, the list consider valid only if there are valid records > (list.size / 3). else
-	 * , the list is cleaned and a log msg is printed
-	 * 
-	 * @param pdList - list of pdistribution's record to evaluate
-	 */
-	private boolean isValidSample(Vector<Record> pdList) {
-		int valid = 0;
-		boolean val = true;
-		// int minvalid = pdList.size() * 2 / 3; // 2/3 test
-		// int minvalid = pdList.size() * 3 / 5; // 3/5 test
-
-		int minvalid = pdList.size() / 2; // 1/2 base for comparation
-
-		// count invalid samples
-		for (Record r : pdList) {
-			int ss = (Integer) r.getFieldValue("pdsamplesize");
-			valid = (ss >= minSample) ? valid + 1 : valid;
-		}
-
-		// enougth valid samples?
-		if (valid < minvalid) {
-			log("Selection of elements rejected by lack of historical data. The list contain only " + valid + "/"
-					+ pdList.size() + " valid samples.");
-			val = false;
-		}
-		return val;
-	}
-
 	/**
 	 * clear pdistribuion and/or statistics tables according to {@link #writePdistribution} and {@link #writeStatistics}
 	 * variables
 	 */
-	private void clearTables() {
-		try {
-			if (writePdistribution) {
-				Connection con = ConnectionManager.getConnection("pdistribution");
-				con.createStatement().execute("DELETE FROM pdistribution");
-			}
+	protected void clearTables() {
+		if (writePdistribution) {
+			PDistribution.deleteAll();
+		}
 
-			if (writeStatistics) {
-				Connection con = ConnectionManager.getConnection("statistics");
-				con.createStatement().execute("DELETE FROM statistics");
-			}
-
-		} catch (SQLException e) {
-			e.printStackTrace();
+		if (writeStatistics) {
+			// Connection con = ConnectionManager.getConnection("statistics");
+			// con.createStatement().execute("DELETE FROM statistics");
 		}
 	}
-
-	public static String END_POSITION = "End position";
-	public static String DIFERENCE_FROM_FIRST = "Diference form first";
-	public static String PROYECTED_TIME = "Proyected time";
-	private String selectBy = END_POSITION;
 
 	/**
 	 * set the prediction field based on the select algorithm.
 	 * 
 	 * @param pdList
 	 */
-	private void computePrediction(Vector<Record> pdList) {
-		for (Record pdRcd : pdList) {
+	private void computePrediction(Vector<PDistribution> pdList) {
+		for (PDistribution pdRcd : pdList) {
 			if (selectBy == END_POSITION) {
-				Histogram histo = (Histogram) pdRcd.getFieldValue("pdend_posline");
-				pdRcd.setFieldValue("pdprediction", centerOfMass(histo));
+				Histogram histo = (Histogram) pdRcd.get("pdend_posline");
+				pdRcd.setDouble("pdprediction", centerOfMass(histo));
 			}
 			if (selectBy == DIFERENCE_FROM_FIRST) {
-				Histogram histo = (Histogram) pdRcd.getFieldValue("pdcpsline");
-				pdRcd.setFieldValue("pdprediction", centerOfMass(histo));
+				Histogram histo = (Histogram) pdRcd.get("pdcpsline");
+				pdRcd.setDouble("pdprediction", centerOfMass(histo));
 			}
 			if (selectBy == PROYECTED_TIME) {
-				Histogram histo = (Histogram) pdRcd.getFieldValue("pdtimeline");
-				pdRcd.setFieldValue("pdprediction", centerOfMass(histo));
+				Histogram histo = (Histogram) pdRcd.get("pdtimeline");
+				pdRcd.setDouble("pdprediction", centerOfMass(histo));
 			}
 		}
 	}
 
 	/**
-	 * return a {@link Vector} of pdistribution table colecting all necesary data for prediction.
+	 * return a {@link Vector} of {@link PDistribution} table colecting all necesary data for prediction.
 	 * 
 	 * @param samSize - sample size
 	 * @param field - fielt to count
@@ -392,78 +298,53 @@ public class Selector {
 	 * 
 	 * @return list of counted elements
 	 */
-	private Vector<Record> countEndPosition(int samSize, String field, Vector<Record> raceList) {
+	private Vector<PDistribution> countEndPosition(int samSize, String field, Vector<Race> raceList) {
 		// DescriptiveStatistics stat = new DescriptiveStatistics();
 		// pdRcd.setFieldValue("pdstdev", stat.getStandardDeviation());
 		// pdRcd.setFieldValue("pdmean", stat.getMean());
-		Vector<Record> rlist = new Vector<Record>();
-		Record pdMod = ConnectionManager.getAccessTo("pdistribution").getModel();
-		pdMod.setFieldValue("pddate", date);
-		pdMod.setFieldValue("pdrace", race);
-		pdMod.setFieldValue("pdfield", field);
-		int dist = (Integer) raceList.elementAt(0).getFieldValue("redistance");
-		for (Record raceR : raceList) {
-			Record pdRcd = new Record(pdMod);
-			String val = (String) raceR.getFieldValue(field);
-			pdRcd.setFieldValue("pdvalue", val);
-			Vector<Record> samplst = getSample(samSize, field, val);
-			pdRcd.setFieldValue("pdend_posline", getFieldCount("reend_pos", samplst));
-			pdRcd.setFieldValue("pdcpsline", getFieldCount("recps", samplst));
-			pdRcd.setFieldValue("pdtimeline", getProyectedTime(samplst, dist));
-			pdRcd.setFieldValue("pdsamplesize", samplst.size());
-			pdRcd.setFieldValue("pdselrange", selRange);
-			pdRcd.setFieldValue("pdevent", raceR.getFieldValue("reend_pos"));
+		Vector<PDistribution> rlist = new Vector<>();
+		// int dist = (Integer) raceList.elementAt(0).getInteger("redistance");
+		for (Race raceR : raceList) {
+			PDistribution pdRcd = new PDistribution();
+			pdRcd.set("pddate", date, "pdrace", race, "pdfield", field);
+			String val = raceR.getString(field);
+			pdRcd.set("pdvalue", val);
+			Vector<Race> samplst = getSample(samSize, field, val);
+			pdRcd.set("pdend_posline", getFieldCount("reend_pos", samplst));
+			pdRcd.set("pdcpsline", getFieldCount("recps", samplst));
+			// pdRcd.setFieldValue("pdtimeline", getProyectedTime(samplst, dist));
+			pdRcd.set("pdsamplesize", samplst.size());
+			pdRcd.set("pdselrange", selRange);
+			pdRcd.set("pdevent", raceR.get("reend_pos"));
 			rlist.add(pdRcd);
 		}
 		return rlist;
-
 	}
-
-	private void setStatisticsFields(Record pdRcd) {
-		DescriptiveStatistics stat = new DescriptiveStatistics();
-		Histogram histo = null;
-		if (selectBy == END_POSITION) {
-			histo = (Histogram) pdRcd.getFieldValue("pdend_posline");
-		}
-		if (selectBy == DIFERENCE_FROM_FIRST) {
-			histo = (Histogram) pdRcd.getFieldValue("pdcpsline");
-		}
-		if (selectBy == PROYECTED_TIME) {
-			histo = (Histogram) pdRcd.getFieldValue("pdtimeline");
-		}
-		Set<Double> tmp = histo.keySet();
-		for (Double k : tmp) {
-			stat.addValue(k * (histo.get(k) + 1));
-		}
-		if (stat.getN() > 0) {
-			pdRcd.setFieldValue("pdstdev", stat.getStandardDeviation());
-			pdRcd.setFieldValue("pdmean", stat.getMean());
-		} else {
-			// if has no data, put 99
-			pdRcd.setFieldValue("pdmean", 99.0);
-		}
-	}
-
-	private int arriveWindow = 4;
-	boolean countingHits = false;
-	private double countHits(Record pdRcd) {
+	/**
+	 * TODO: this method aparently, count the number of element that are inside of the {@link #arriveWindow} global
+	 * variable and return the probabilit of {@link #select()} method !?!?!?!
+	 * 
+	 * @param pdRcd
+	 * @return
+	 */
+	private double countHits(PDistribution pdRcd) {
 		double hits = 0.0;
-		String hor = (String) pdRcd.getFieldValue("pdvalue");
-		Vector<Record> samplst = getSample(4, "rehorse", hor);
-		for (Record srcd : samplst) {
-			int ra = (Integer) srcd.getFieldValue("rerace");
-			Date da = (Date) srcd.getFieldValue("redate");
+		String hor = pdRcd.getString("pdvalue");
+		Vector<Race> samplst = getSample(4, "rehorse", hor);
+		for (Race srcd : samplst) {
+			int ra = srcd.getInteger("rerace");
+			Date da = srcd.getDate("redate");
 			Selector sel = new Selector(ra, da);
 			sel.writePdistribution = false;
 			sel.writeStatistics = false;
 			sel.countingHits = true;
-			Vector<Record> pdlst = sel.select();
-			for (Record pdrcd : pdlst) {
-				String pdhor = (String) pdrcd.getFieldValue("pdvalue");
-				int dec = (Integer) pdrcd.getFieldValue("pddecision");
+			Vector<PDistribution> pdlst = sel.select();
+			for (PDistribution pdrcd : pdlst) {
+				String pdhor = pdrcd.getString("pdvalue");
+				int dec = pdrcd.getInteger("pddecision");
 				if (pdhor.equals(hor) && dec > 0) {
 					// if a take a decicion and the asociated event is < frames
-					int evt = (Integer) pdrcd.getFieldValue("pdevent");
+					int evt = pdrcd.getInteger("pdevent");
 					// int res = dec > evt ? dec - evt : evt - dec;
 					if (evt <= arriveWindow) {
 						// if (res <= arriveWindow) {
@@ -478,7 +359,6 @@ public class Selector {
 		}
 		return hits;
 	}
-
 	/**
 	 * return {@link Histogram} where the x-coordenate represent the element value and y-coordente, the element's number
 	 * of occurrence
@@ -488,17 +368,27 @@ public class Selector {
 	 * 
 	 * @return array of Vector2D
 	 */
-	private Histogram getFieldCount(String ofField, Vector<Record> sample) {
+	private Histogram getFieldCount(String ofField, Vector<Race> sample) {
 		Histogram pts = new Histogram();
-		for (Record rcd : sample) {
-			double k = Double.valueOf(rcd.getFieldValue(ofField).toString());
+		for (Race rcd : sample) {
+			rcd.getDouble(ofField);
+			double k = rcd.getDouble(ofField);
 			pts.increment(k);
 		}
 		return pts;
 	}
 
+	private Frequency getFrequency(String name) {
+		Frequency f = distributions.get(name);
+		if (f == null) {
+			f = new Frequency();
+			distributions.put(name, new Frequency());
+		}
+		return f;
+	}
+
 	/**
-	 * Return a list for {@link Record} form reslr table acording to selected parameters
+	 * Return a list of {@link Race} acording to selected parameters
 	 * 
 	 * a sample returned by this method follow:
 	 * <ul>
@@ -513,15 +403,71 @@ public class Selector {
 	 * @param value - value of field
 	 * @return desired sample
 	 */
-	private Vector<Record> getSample(int size, String field, String value) {
-		DBAccess dba = ConnectionManager.getAccessTo("reslr");
-		String wc = "redate < '" + date + "' AND " + field + " = '" + value
-				// TODO: temporal 
-				+ "' AND rehorsegender != 'S' AND recps != -1 AND retrack = 'lr'";
-		return dba.search(wc, "redate DESC", size);
+	private Vector<Race> getSample(int size, String field, String value) {
+		Vector<Race> vec = new Vector<>(Race
+				.find("redate < ? AND " + field + " = ? AND rehorsegender != 'S' AND recps != -1 AND retrack = 'lr'",
+						date, value)
+				.orderBy("redate DESC"));
+		return vec;
 	}
 
-	private void printStats() {
+	/**
+	 * apply kelly criterion to the incoming list based on previous parameter p and b divisor. this cirtirion has 2
+	 * uses:
+	 * <ol>
+	 * <li>to accept only races that historicaly has more win probability (races with 7 or more elemens)
+	 * <li>based on previous step, has the practical purporse for invest in billboards
+	 * </ol>
+	 */
+	private boolean isValidKelly(Vector<PDistribution> pdList) {
+		boolean val = true;
+		double b = ((double) pdList.size()) / kelly_bDiv;
+		double kc = (kelly_p * b - (1 - kelly_p)) / b;
+		if (kc <= 0) {
+			Alesia.showNotification("flicka.msg06", numberFormat.format(kc));
+			val = false;
+		}
+		return val;
+	}
+
+	/**
+	 * evaluate the incoming list searchin if the elements has enought statistical data. this method:
+	 * <ol>
+	 * <li>Count the pdsamplesize field forall record in the argument list. and element is cosider with enought data if
+	 * the sample size >= {@link #minSample} variable
+	 * <li>Based on the previous count, the list consider valid only if there are valid records > (list.size / 3). else
+	 * , the list is cleaned and a log msg is printed
+	 * 
+	 * @param pdList - list of pdistribution's record to evaluate
+	 */
+	private boolean isValidSample(Vector<PDistribution> pdList) {
+		int valid = 0;
+		boolean val = true;
+		// int minvalid = pdList.size() * 2 / 3; // 2/3 test
+		// int minvalid = pdList.size() * 3 / 5; // 3/5 test
+
+		int minvalid = pdList.size() / 2; // 1/2 base for comparation
+
+		// count invalid samples
+		for (PDistribution r : pdList) {
+			int ss = r.getInteger("pdsamplesize");
+			valid = (ss >= minSample) ? valid + 1 : valid;
+		}
+
+		// enougth valid samples?
+		if (valid < minvalid) {
+			Alesia.showNotification("flicka.msg05", valid + "", pdList.size());
+			val = false;
+		}
+		return val;
+	}
+
+	private void log(String msg) {
+		if (msg != null && !countingHits) {
+			System.out.println(msg);
+		}
+	}
+	protected void printStats() {
 
 		System.out.println("Total\t\t" + total);
 		double totd = total;
@@ -544,7 +490,7 @@ public class Selector {
 		// to avoid div by cero. (if cero, does't matter because numerator is cero too)
 		sum = sum == 0 ? 1 : sum;
 		for (int i = 0; i < oneToOneDistribution.length; i++) {
-			// System.out.println((i + 1) + "  to " + (i + 1) + ": \t" + oneToOneDistribution[i] + "\t"
+			// System.out.println((i + 1) + " to " + (i + 1) + ": \t" + oneToOneDistribution[i] + "\t"
 			// + percentformat.format(oneToOneDistribution[i] / sum));
 		}
 		System.out.println("Exacta by numbers of race elements:");
@@ -570,7 +516,6 @@ public class Selector {
 					+ percentformat.format(winnerByElements[i] / sum));
 		}
 	}
-
 	/**
 	 * Predict the future outcome based on selected parameters. This method try to predict the outcome for the given
 	 * date/race parameters based on horseSample, jockeySample and cumulative probability (upBound). The data is
@@ -585,22 +530,18 @@ public class Selector {
 	 * <p>
 	 * 
 	 */
-	private Vector<Record> select() {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-		String ud = sdf.format(date);
+	protected Vector<PDistribution> select() {
 		log("Selecting elements for race " + race + " of date " + date);
 
 		// step 1
-		DBAccess dba = ConnectionManager.getAccessTo("reslr");
-		Vector<Record> rcds = dba.search("rerace = " + race + " AND redate = '" + ud + "'", "redate DESC");
+		Vector<Race> rcds = new Vector<>(Race.find("rerace = ? AND redate = ?", race, date).orderBy("redate DESC"));
 
 		// step 2
-		Vector<Record> pdlstH = countEndPosition(horseSample, "rehorse", rcds);
-		Vector<Record> pdlisJ = countEndPosition(jockeySample, "rejockey", rcds);
+		Vector<PDistribution> pdlstH = countEndPosition(horseSample, "rehorse", rcds);
+		Vector<PDistribution> pdlisJ = countEndPosition(jockeySample, "rejockey", rcds);
 
 		// step 3
 		addJockeyWeight(pdlstH, pdlisJ);
-//		addJockeyWeight1(pdlstH, rcds);
 
 		// step 4
 		computePrediction(pdlstH);
@@ -610,7 +551,30 @@ public class Selector {
 		writeTables(pdlstH);
 		return pdlstH;
 	}
-
+	private void setStatisticsFields(PDistribution pdRcd) {
+		DescriptiveStatistics stat = new DescriptiveStatistics();
+		Histogram histo = null;
+		if (selectBy == END_POSITION) {
+			histo = (Histogram) pdRcd.get("pdend_posline");
+		}
+		if (selectBy == DIFERENCE_FROM_FIRST) {
+			histo = (Histogram) pdRcd.get("pdcpsline");
+		}
+		if (selectBy == PROYECTED_TIME) {
+			histo = (Histogram) pdRcd.get("pdtimeline");
+		}
+		Set<Double> tmp = histo.keySet();
+		for (Double k : tmp) {
+			stat.addValue(k * (histo.get(k) + 1));
+		}
+		if (stat.getN() > 0) {
+			pdRcd.set("pdstdev", stat.getStandardDeviation());
+			pdRcd.set("pdmean", stat.getMean());
+		} else {
+			// if has no data, put 99
+			pdRcd.set("pdmean", 99.0);
+		}
+	}
 	/**
 	 * take a descision for the entire list. the descision is stored in <code>pddecision</code> field.
 	 * <ol>
@@ -621,7 +585,7 @@ public class Selector {
 	 * 
 	 * @param pdList list of record from pdistribution table
 	 */
-	private void takeDecision(Vector<Record> pdList) {
+	private void takeDecision(Vector<PDistribution> pdList) {
 
 		// step 1
 		if (!isValidSample(pdList) || !isValidKelly(pdList)) {
@@ -631,8 +595,8 @@ public class Selector {
 
 		// step 2
 		ArrayList<TEntry> vals = new ArrayList<TEntry>();
-		for (Record r : pdList) {
-			TEntry te = new TEntry(r, r.getFieldValue("pdprediction"));
+		for (PDistribution r : pdList) {
+			TEntry te = new TEntry(r, r.getDouble("pdprediction"));
 			vals.add(te);
 		}
 		Collections.sort(vals);
@@ -641,8 +605,8 @@ public class Selector {
 		for (int i = 0; i < sis; i++) {
 			// for (int i = 0; i < vals.size(); i++) {
 			TEntry te = (TEntry) vals.get(i);
-			Record r = (Record) te.getKey();
-			r.setFieldValue("pddecision", i + 1);
+			PDistribution r = (PDistribution) te.getKey();
+			r.setInteger("pddecision", i + 1);
 		}
 
 		/*
@@ -658,28 +622,27 @@ public class Selector {
 		 * log("Selection of elements rejected by no decision based on hits fields."); }
 		 */
 	}
-	private void writeTables(Vector<Record> col) {
+
+	private void writeTables(Vector<PDistribution> pdlist) {
 		// nothing to write
-		if (col.size() == 0) {
+		if (pdlist.size() == 0) {
 			return;
 		}
 
 		// pdistribution table
 		if (writePdistribution) {
-			DBAccess pddba = ConnectionManager.getAccessTo("pdistribution");
-			for (Record rcd : col) {
-				pddba.add(rcd);
+			for (PDistribution rcd : pdlist) {
+				rcd.save();
 			}
 
-			DBAccess dba = ConnectionManager.getAccessTo("reslr");
 			// temporal: print the selected elements to easy copy to phone
 			for (int i = 1; i <= selRange; i++) {
-				for (Record rcd : col) {
-					if (((Integer) rcd.getFieldValue("pddecision")) == i) {
-						String ho = (String) rcd.getFieldValue("pdvalue");
-						int ra = (Integer) rcd.getFieldValue("pdrace");
-						Record r = dba.exist("rerace = " + ra + " AND rehorse = '" + ho + "'");
-						log(r.getFieldValue("restar_lane") + " \t" + ho);
+				for (PDistribution rcd : pdlist) {
+					if (rcd.getInteger("pddecision") == i) {
+						String ho = rcd.getString("pdvalue");
+						int ra = rcd.getInteger("pdrace");
+						Race r = Race.findFirst("rerace = ? AND rehorse = ?", ra, ho);
+						log(r.get("restar_lane") + " \t" + ho);
 					}
 				}
 			}
@@ -690,41 +653,38 @@ public class Selector {
 			return;
 		}
 		// look for missing data
-		DBAccess reslrdba = ConnectionManager.getAccessTo("reslr");
-		Vector tmp = reslrdba.search("redate = '" + date + "' AND rerace = " + race, null);
 		// take first. (any of them have the missing data)
-		Record tr = (Record) tmp.elementAt(0);
+		Race tr = Race.findFirst("redate = ? AND rerace = ?", date, race);
 
-		DBAccess statdba = ConnectionManager.getAccessTo("statistics");
-		Record stsmod = statdba.getModel();
+		FlickaStat stsmod = new FlickaStat();
 
 		total++;
 		int exaccnt = 0, tricnt = 0, triCcnt = 0;
 		boolean winb = false, placeb = false, third = false;
-		for (Record rcd : col) {
-			int dec = (Integer) rcd.getFieldValue("pddecision");
-			int evt = (Integer) rcd.getFieldValue("pdevent");
+		for (PDistribution rcd : pdlist) {
+			int dec = rcd.getInteger("pddecision");
+			int evt = rcd.getInteger("pdevent");
 			if (dec > 0) {
-				stsmod.setFieldValue("stfield", rcd.getFieldValue("pdfield"));
-				stsmod.setFieldValue("stdate", date);
-				stsmod.setFieldValue("strace", race);
-				stsmod.setFieldValue("stsignature", selRange);
-				stsmod.setFieldValue("stprediction", rcd.getFieldValue("pdprediction"));
-				stsmod.setFieldValue("stdecision", rcd.getFieldValue("pddecision"));
-				stsmod.setFieldValue("stevent", evt);
-				stsmod.setFieldValue("stdistance", tr.getFieldValue("redistance"));
-				stsmod.setFieldValue("sthorsegender", tr.getFieldValue("rehorsegender"));
-				stsmod.setFieldValue("stelements", tmp.size());
-				stsmod.setFieldValue("stserie", tr.getFieldValue("reserie"));
-				stsmod.setFieldValue("stmean", rcd.getFieldValue("pdmean"));
-				stsmod.setFieldValue("ststdev", rcd.getFieldValue("pdstdev"));
-				statdba.add(stsmod);
+				stsmod.set("stfield", rcd.get("pdfield"));
+				stsmod.set("stdate", date);
+				stsmod.set("strace", race);
+				stsmod.set("stsignature", selRange);
+				stsmod.set("stprediction", rcd.get("pdprediction"));
+				stsmod.set("stdecision", rcd.get("pddecision"));
+				stsmod.set("stevent", evt);
+				stsmod.set("stdistance", tr.get("redistance"));
+				stsmod.set("sthorsegender", tr.get("rehorsegender"));
+				// stsmod.set("stelements", tmp.size());
+				stsmod.set("stserie", tr.get("reserie"));
+				stsmod.set("stmean", rcd.get("pdmean"));
+				stsmod.set("ststdev", rcd.get("pdstdev"));
+				stsmod.insert();
 
 				// winner
 				winb = (dec == evt && dec == 1);
 				winner = winb ? winner + 1 : winner;
 				if (winb) {
-					winnerByElements[col.size() - 1]++;
+					winnerByElements[pdlist.size() - 1]++;
 				}
 				// place
 				placeb = (dec == evt && dec == 2);
@@ -735,7 +695,7 @@ public class Selector {
 				if (winb || placeb) {
 					exaccnt++;
 					if (exaccnt == 2) {
-						exactaByElements[col.size() - 1]++;
+						exactaByElements[pdlist.size() - 1]++;
 						exacta++;
 					}
 				}
@@ -767,82 +727,5 @@ public class Selector {
 				}
 			}
 		}
-	}
-	private Hashtable<String, Frequency> distributions;
-	private Frequency getFrequency(String name) {
-		Frequency f = distributions.get(name);
-		if (f == null) {
-			f = new Frequency();
-			distributions.put(name, new Frequency());
-		}
-		return f;
-	}
-	/**
-	 * Return a array of {@link Vector2D} that represent the calculated time at each sensor in the race track.
-	 * <p>
-	 * This method work based on the assumption that the final position of the horse is a reflection of its position at
-	 * every sensor. i.e.: if a horse finish last at 10.50 from the winner, this horse at first sensor were last but
-	 * within a fraction of the final difference. While the race evolves, this difference gets wider until reach the
-	 * final values.
-	 * 
-	 * @param rcd - record form reslr file
-	 * @param todist - distance to extrapolate
-	 * @return
-	 */
-	public static Vector2D[] getSpeedPoints(Record rcd) {
-		// 1seg = 5cps
-		double mycps = (Double) rcd.getFieldValue("recps") / 5;
-		int dist = (Integer) rcd.getFieldValue("redistance");
-		Vector<Integer> sens = getSensors(dist);
-
-		// iterate until 5 sensor ( 4 of my database implementation + 1 of star line)
-		if (sens.size() > 6) {
-			final int dist1 = sens.elementAt(5);
-			sens.removeIf((d) -> d >= dist1);
-			sens.add(dist);
-			// Predicate<Integer> rem = (d) -> d > dist1;
-		}
-		Vector2D[] pts = new Vector2D[sens.size()];
-		// asumption: the horse reach 13.15m/s at 46m.
-		// xval[0] = 46;
-		// yval[0] = 13.1;
-		pts[0] = new Vector2D(0, 0);
-
-		for (int c = 1; c < sens.size(); c++) {
-			// position inside the cloud at sensor c+1
-			double dif = ((double) (c + 1)) / ((double) sens.size()) * mycps;
-			// partial or final time
-			double par = (sens.elementAt(c) != dist) ? (Double) rcd.getFieldValue("repartial" + c) : (Double) rcd
-					.getFieldValue("reracetime");
-			// stimated time
-			double tim = par + dif;
-			pts[c] = new Vector2D((double) sens.elementAt(c), tim);
-			// par + dif = time. velocity = distance/time expressed in m/seg
-			// yval[c] = xval[c] / (par + dif);
-		}
-		return pts;
-	}
-
-	/**
-	 * Return the positions of the sensor array placed in the racetrack starting at 0m (the star line). the last sensor
-	 * is the finish line.
-	 * 
-	 * @param dist - distance of the race
-	 * @return list of sensor positions (in meters)
-	 */
-	public static Vector<Integer> getSensors(int dist) {
-		int sensors = ((int) Math.ceil(dist / 400));
-		// only i have 4 partials
-		// sensors = (sensors > 4) ? 4 : sensors;
-		Vector<Integer> arr = new Vector<Integer>();
-		for (int i = 0; i < sensors; i++) {
-			arr.add((i + 1) * 400);
-		}
-		if ((dist % 400) > 0) {
-			arr.add(dist);
-		}
-		// add star lane
-		arr.add(0, 0);
-		return arr;
 	}
 }

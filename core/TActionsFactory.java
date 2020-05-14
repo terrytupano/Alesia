@@ -177,7 +177,7 @@ public class TActionsFactory {
 		}
 	}
 
-	public static String TUILISTPANEL = "TUIListPanel";
+//	public static String TUILISTPANEL = "TUIListPanel";
 
 	/**
 	 * generic constant to store information about grouping or group
@@ -255,14 +255,13 @@ public class TActionsFactory {
 	@Action
 	public void deleteModel(ActionEvent event) {
 		AbstractButton src = (AbstractButton) event.getSource();
-		ApplicationAction me = (ApplicationAction) src.getAction();
 		Object[] options = {TStringUtils.getString("deleteModel.Action.confirm"),
 				TStringUtils.getString("deleteModel.Action.cancel")};
 		int o = JOptionPane.showOptionDialog(Alesia.mainFrame, TStringUtils.getString("deleteModel.Action.message"),
 				TStringUtils.getString("deleteModel.Action.title"), JOptionPane.DEFAULT_OPTION,
 				JOptionPane.WARNING_MESSAGE, null, options, options[1]);
 		if (o == JOptionPane.YES_OPTION) {
-			TUIListPanel listp = (TUIListPanel) me.getValue(TUILISTPANEL);
+			TUIListPanel listp = SwingUtils.getFirstParent(src,  TUIListPanel.class);
 			listp.getModel().delete();
 			listp.freshen();
 		}

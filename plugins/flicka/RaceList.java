@@ -19,8 +19,6 @@ import javax.swing.*;
 import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 
-import com.alee.laf.text.*;
-
 import action.*;
 import core.*;
 import core.datasource.model.*;

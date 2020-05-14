@@ -15,29 +15,22 @@ import gui.docking.*;
 
 import java.beans.*;
 import java.util.*;
+import java.util.function.*;
 
 import javax.swing.*;
 
+import org.javalite.activejdbc.*;
+import org.jdesktop.application.*;
+
 import core.datasource.*;
+import core.datasource.model.*;
 import core.reporting.*;
 
-public class HorseHistory extends UIListPanel implements DockingComponent {
-
-	ServiceRequest request;
+public class HorseHistory extends TUIListPanel implements PropertyChangeListener {
 
 	public HorseHistory() {
-		super(null);
-		this.request = new ServiceRequest(ServiceRequest.DB_QUERY, "reslr", null);
-		request.setParameter(ServiceRequest.ORDER_BY, "redate DESC");
 		setToolBar(new ExportToFileAction(this, ""));
 		setColumns("redate;rerace;redistance;restar_lane;rejockey;reend_pos;recps");
-	}
-
-	@Override
-	public UIComponentPanel getUIFor(AbstractAction aa) {
-		UIComponentPanel pane = null;
-
-		return pane;
 	}
 
 	@Override
@@ -49,28 +42,35 @@ public class HorseHistory extends UIListPanel implements DockingComponent {
 	public void propertyChange(PropertyChangeEvent evt) {
 		Object src = evt.getSource();
 		Object newv = evt.getNewValue();
-		Record rcd = (Record) newv;
+		Model rcd = (Model) newv;
 
 		String horse = null;
 		Date date = null;
 		if (src instanceof RaceList) {
 			if (rcd != null) {
-				horse = (String) rcd.getFieldValue("rehorse");
-				date = (Date) rcd.getFieldValue("redate");
+				horse = rcd.getString("rehorse");
+				date = rcd.getDate("redate");
 			}
 		}
 		if (src instanceof PDistributionList) {
-			if (rcd != null && rcd.getFieldValue("pdfield").equals("rehorse")) {
-				horse = (String) rcd.getFieldValue("pdvalue");
-				date = (Date) rcd.getFieldValue("pddate");
+			if (rcd != null && rcd.getString("pdfield").equals("rehorse")) {
+				horse = rcd.getString("pdvalue");
+				date = rcd.getDate("pddate");
 			}
 		}
 		if (horse != null) {
-			String wc = "rehorse = '" + horse + "' AND redate < '" + date + "'";
-			request.setData(wc);
-			setServiceRequest(request);
+			final String horsef = horse;
+			final Date datef = date;
+			Function<String, List<Model>> f = (par -> Race.find("rehorse = ? AND rerace = ?", horsef, datef)
+					.orderBy("redate DESC"));
+			setDBParameters(f, Race.getMetaModel().getColumnMetadata());
 		} else {
 			setMessage("flicka.msg02");
 		}
+	}
+
+	@Override
+	public TUIFormPanel getTUIFormPanel(ApplicationAction action) {
+		return null;
 	}
 }
