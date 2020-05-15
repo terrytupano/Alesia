@@ -23,8 +23,6 @@ import org.javalite.activejdbc.*;
 
 import com.alee.utils.*;
 
-import core.datasource.*;
-
 /**
  * Utils class for String and {@link TEntry} Manipulations
  * 
@@ -289,7 +287,7 @@ public class TStringUtils {
 	 */
 	private static PasscodeGenerator getPasscodeGenerator(String uid) {
 		try {
-			int to = SystemVariables.getintVar("OTPTimeout");
+			int to = Integer.parseInt(System.getProperty("Alesia.OTPTimeout"));
 			Mac mac = Mac.getInstance("HMACSHA1");
 			mac.init(new SecretKeySpec(uid.toLowerCase().getBytes(), ""));
 			PasscodeGenerator pcg = new PasscodeGenerator(mac, 6, to * 60);

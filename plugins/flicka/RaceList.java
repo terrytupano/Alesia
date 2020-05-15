@@ -19,14 +19,12 @@ import javax.swing.*;
 import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 
-import action.*;
 import core.*;
 import core.datasource.model.*;
 import gui.*;
 
 public class RaceList extends TUIListPanel implements PropertyChangeListener {
 
-	private TAbstractAction newFromTable, baseNewRecord, baseEditRecord;
 	private RaceRecordFromTable recordFromTable;
 	private TAbstractTableModel tableModel;
 	private Race sourceModel;
@@ -55,8 +53,7 @@ public class RaceList extends TUIListPanel implements PropertyChangeListener {
 		return tuifp;
 	}
 
-	public UIComponentPanel getUIFor(AbstractAction aa) {
-		UIComponentPanel pane = null;
+	public void getUIFor(AbstractAction aa) {
 		// if (aa == baseNewRecord) {
 		// Record rcd = getRecordModel();
 		// RaceRecord.copyFields(sourceRcd, rcd, RaceRecord.EVENT);
@@ -72,12 +69,11 @@ public class RaceList extends TUIListPanel implements PropertyChangeListener {
 		// recordFromTable = new RaceRecordFromTable(rcd, true);
 		// pane = recordFromTable;
 		// }
-		return pane;
 	}
 
 	@Override
 	public void init() {
-		 setMessage("flicka.msg01");
+		setMessage("flicka.msg01");
 	}
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {

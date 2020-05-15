@@ -348,10 +348,10 @@ public class TUIUtils {
 		return jcb;
 	}
 
-	public static WebCheckBox getWebCheckBox(String field) {
-		WebCheckBox jcb = new WebCheckBox();
-		jcb.setName(field);
-		Alesia.getResourceMap().injectComponent(jcb);
+	public static WebCheckBox getWebCheckBox(String name) {
+		WebCheckBox jcb = new WebCheckBox(TStringUtils.getString(name));
+		jcb.setName(name);
+		jcb.putClientProperty("settingsProcessor", new Configuration<ButtonState>(name));
 		return jcb;
 	}
 

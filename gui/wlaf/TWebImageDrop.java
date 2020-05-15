@@ -4,12 +4,9 @@ import java.awt.event.*;
 import java.awt.image.*;
 import java.io.*;
 import java.util.*;
-import java.util.logging.*;
 
 import javax.imageio.*;
 import javax.swing.*;
-
-
 
 import com.alee.extended.image.*;
 import com.alee.utils.*;

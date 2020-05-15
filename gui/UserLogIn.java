@@ -11,11 +11,12 @@
 package gui;
 
 import java.awt.*;
-import java.awt.event.*;
+import java.util.*;
 
 import javax.swing.*;
 
 import com.alee.laf.checkbox.*;
+import com.alee.laf.label.*;
 import com.alee.laf.text.*;
 import com.alee.managers.settings.*;
 import com.jgoodies.forms.builder.*;
@@ -24,12 +25,7 @@ import com.jgoodies.forms.layout.*;
 
 import core.*;
 
-public class UserLogIn extends TUIFormPanel implements ActionListener {
-
-	private WebCheckBox remindUser;
-	private JTextField jtf_user_id;
-//	private Record usrmod;
-	private int t_usmax_attemps;
+public class UserLogIn extends TUIFormPanel {
 
 	/**
 	 * nueva instancia
@@ -38,21 +34,23 @@ public class UserLogIn extends TUIFormPanel implements ActionListener {
 	 * 
 	 */
 	public UserLogIn() {
-		this.t_usmax_attemps = -1;
+		showAditionalInformation(true);
 		setTitle("UserLogIn.title");
 		setDescription("UserLogIn.description");
-		WebTextField usertf = TUIUtils.getWebTextField("UserLogIn.user", "", 20);
-		WebPasswordField passf = TUIUtils.getWebPasswordField("UserLogIn.password", "", 20);
-		passf.setText("");
+		WebTextField usertf = TUIUtils.getWebTextField("UserLogIn.user", "", 30);
+		WebPasswordField passf = TUIUtils.getWebPasswordField("UserLogIn.password", "", 30);
+		WebCheckBox jcb = TUIUtils.getWebCheckBox("UserLogIn.rememberUser");
+		// passf.setText("");
 		addInputComponent(usertf, true, true);
 		addInputComponent(passf, true, true);
+		addInputComponent(jcb);
 
+		registreSettings("UserLogIn.rememberUser");
 		// recordar usuario
-		WebCheckBox jcb = TUIUtils.getWebCheckBox("UserLogIn.rememberPassword");
 		if (jcb.isSelected()) {
-			usertf.setText(SettingsManager.get("RemindUser", ""));
+			usertf.setText(SettingsManager.get("rememberUser", ""));
 		}
-		FormLayout layout = new FormLayout("right:max(40dlu;pref), 3dlu, 80dlu", // 1st major colum
+		FormLayout layout = new FormLayout("left:max(40dlu;pref), 3dlu, 90dlu", // 1st major colum
 				""); // add rows dynamically
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG);
 
@@ -61,58 +59,24 @@ public class UserLogIn extends TUIFormPanel implements ActionListener {
 		builder.append(TStringUtils.getString("UserLogIn.password"), getInputComponent("UserLogIn.password"));
 		builder.nextLine();
 		builder.append(jcb, 3);
-		
+
 		JPanel jp = new JPanel(new BorderLayout());
-		jp.add(new JLabel(TResources.getIcon("keys", 48)), BorderLayout.WEST);
+		jp.setBackground(Color.white);
+		WebLabel wl = new WebLabel(TResources.getIcon("user_sponge_bob", 48));
+		wl.setVerticalAlignment(JLabel.TOP);
+		wl.setBorder(Borders.DIALOG);
+		jp.add(wl, BorderLayout.WEST);
 		jp.add(builder.getPanel(), BorderLayout.CENTER);
 		setBodyComponent(jp);
 		setFooterActions("acept", "cancel");
 		preValidate();
 	}
 
-	// public void propertyChange(PropertyChangeEvent evt) {
-	// if (evt.getNewValue() instanceof AceptAction) {
-	// Record r1 = getRecord();
-	// Record r2 = ConnectionManager.getAccessTo("t_users").exist(
-	// "t_ususer_id = '" + r1.getFieldValue("t_ususer_id") + "'");
-	// if (r2 != null) {
-	// // check num_logins
-	// if (t_usmax_attemps < 0) {
-	// t_usmax_attemps = (Integer) r2.getFieldValue("t_usmax_attemps");
-	// }
-	// // check user inactive date
-	// long curd = System.currentTimeMillis();
-	// long usrd = ((Date) r2.getFieldValue("t_usexpiry_period")).getTime();
-	// if (usrd > 0 && (curd > usrd)) {
-	// showAplicationExceptionMsg("security.msg08");
-	// return;
-	// }
-	// // verifica contraceña. si se alcanza numero maximo de intentos, se desabilita el usuario
-	// if (!r2.getFieldValue("t_uspassword").equals(r1.getFieldValue("t_uspassword"))) {
-	// showAplicationExceptionMsg("security.msg10");
-	//
-	// t_usmax_attemps--;
-	// if (t_usmax_attemps == 0) {
-	// r2.setFieldValue("t_usstatus", "disa");
-	// ConnectionManager.getAccessTo("t_users").update(r2);
-	// showAplicationExceptionMsg("security.msg11");
-	// return;
-	// }
-	// return;
-	// }
-	// Session.setUser(r2);
-	// } else {
-	// showAplicationExceptionMsg("security.msg09");
-	// return;
-	// }
-	// }
-	// if (evt.getNewValue() instanceof CancelAction) {
-	// Exit.shutdown();
-	// }
-	// }
-
 	@Override
-	public void actionPerformed(ActionEvent e) {
-		System.out.println("UserLogIn.actionPerformed()");
+	public Hashtable<String, Object> getValues() {
+		Hashtable<String, Object> ht = super.getValues();
+		if (ht.get("UserLogIn.rememberUser").equals(Boolean.TRUE))
+			SettingsManager.set("rememberUser", ht.get("UserLogIn.user"));
+		return ht;
 	}
 }

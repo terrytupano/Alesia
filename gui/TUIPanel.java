@@ -20,6 +20,7 @@ import com.alee.laf.panel.*;
 import com.alee.laf.window.*;
 import com.alee.managers.style.*;
 import com.jgoodies.common.base.*;
+import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.*;
 
 import core.*;
@@ -296,7 +297,9 @@ public class TUIPanel extends WebPanel {
 			remove(footerJComponent);
 		}
 		this.footerJComponent = footer;
-		add(footer, BorderLayout.SOUTH);
+//		add decoration
+		footerJComponent.setBorder(Borders.DIALOG);
+		add(footerJComponent, BorderLayout.SOUTH);
 	}
 
 	public void setTitle(String txtId) {

@@ -45,7 +45,6 @@ public class Browser extends JPanel implements Navigator, ActionListener, Hyperl
 		try {
 			JFrame jf = new JFrame();
 			TPreferences.init();
-			TStringUtils.init();
 			jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			jf.setBounds(20,20,300,600);
 			jf.setContentPane(new Browser());

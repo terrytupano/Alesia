@@ -89,3 +89,7 @@
 /TWindowUtils$X11WindowUtils$3.class
 /TWindowUtils$X11WindowUtils$4.class
 /TWindowUtils$X11WindowUtils$5.class
+/CheckInactivity.class
+/RequestMaximized.class
+/SignalTaskListener.class
+/TTaskManager.class

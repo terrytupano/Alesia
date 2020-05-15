@@ -8,17 +8,10 @@
  * Contributors:
  *     terry - initial API and implementation
  ******************************************************************************/
-/*			
- * Copyright (c) QQ - All right reserved
-
- */
 package gui;
 
 import javax.swing.*;
 import javax.swing.text.*;
-
-
-
 
 /** clase que verifica la longitud de los datos entrantes
  * 

@@ -11,7 +11,6 @@ import javax.swing.*;
 import org.jdesktop.core.animation.timing.*;
 import org.jdesktop.swing.animation.timing.sources.*;
 
-import com.alee.api.jdk.*;
 import com.alee.extended.transition.*;
 import com.alee.extended.transition.effects.fade.*;
 import com.alee.laf.rootpane.*;
@@ -20,7 +19,6 @@ import com.alee.managers.settings.*;
 import com.jgoodies.forms.builder.*;
 import com.jgoodies.forms.layout.*;
 
-import action.*;
 import core.*;
 
 public class TWebFrame extends WebFrame {
@@ -109,7 +107,7 @@ public class TWebFrame extends WebFrame {
 		Rectangle r1 = c1.getBounds();
 		Rectangle r2 = new Rectangle(c2.getBounds());
 		TWebFrame.center(r1, r2);
-		return new Point(r2.x - (r2.width / 2), r2.y - (r2.height / 2));
+		return new Point(r2.x - (r2.width), r2.y - (r2.height / 2));
 	}
 
 	public void setContent(JComponent c) {

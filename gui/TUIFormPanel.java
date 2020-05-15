@@ -500,10 +500,10 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 			return val;
 		}
 		// Conjuntos de elementos seleccionados del ListRecordSelector
-		if (jcmp instanceof RecordSelectorList) {
-			val = ((RecordSelectorList) jcmp).getSelectedElement();
-			return val;
-		}
+		// if (jcmp instanceof RecordSelectorList) {
+		// val = ((RecordSelectorList) jcmp).getSelectedElement();
+		// return val;
+		// }
 
 		// nothig found
 		throw new NullPointerException("No value fount for field " + field);
@@ -531,6 +531,24 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 			}
 		}
 	}
+
+	/**
+	 * Registers the given list of input component for settings auto-save.
+	 * 
+	 * @param names - list of components
+	 * @see SettingsMethods#registerSettings(Configuration)
+	 * @see #registreSettings()
+	 */
+	public void registreSettings(String... names) {
+		for (String name : names) {
+			JComponent cmp = fields.get(name);
+			if (cmp instanceof SettingsMethods) {
+				Configuration cnf = (Configuration) cmp.getClientProperty("settingsProcessor");
+				((SettingsMethods) cmp).registerSettings(cnf);
+			}
+		}
+	}
+
 	protected void addInputComponent(JComponent cmp, boolean required, boolean enable) {
 		String name = cmp.getName();
 		Preconditions.checkNotNull(name, "the component name can't be null");

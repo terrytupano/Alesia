@@ -8,13 +8,12 @@
  * Contributors:
  *     terry - initial API and implementation
  ******************************************************************************/
-package core.tasks;
+package core;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
 import java.util.List;
-import java.util.concurrent.*;
 
 import javax.swing.*;
 
@@ -23,9 +22,6 @@ import org.jdesktop.application.*;
 import com.alee.laf.progressbar.*;
 import com.alee.managers.settings.*;
 import com.alee.utils.swing.*;
-
-import core.*;
-import core.datasource.*;
 
 public class TTaskManager implements PropertyChangeListener {
 
@@ -75,48 +71,12 @@ public class TTaskManager implements PropertyChangeListener {
 
 		}
 		if ("message".equals(propertyName)) {
-//			String text = (String) (evt.getNewValue());
+			// String text = (String) (evt.getNewValue());
 
 		}
 		if ("progress".equals(propertyName)) {
-//			int value = (Integer) (evt.getNewValue());
+			// int value = (Integer) (evt.getNewValue());
 		}
-	}
-}
-
-/**
- * Class that notify a {@link TaskListener} when {@link Future} asocitated task finish its work. when
- * {@link Future#isDone()} = <code>true</code>, {@link TaskListener#taskDone(Future)} is called and this runnable ends.
- * 
- * @author terry
- * 
- */
-class SignalTaskListener implements Runnable {
-
-	private TaskListener listener;
-	private Future future;
-	private Future myFuture;
-
-	public SignalTaskListener(TaskListener tl, Future f) {
-		this.listener = tl;
-		this.future = f;
-	}
-
-	@Override
-	public void run() {
-		if (future.isDone()) {
-			listener.taskDone(future);
-			myFuture.cancel(false);
-		}
-	}
-
-	/**
-	 * set the future (of this runnable instance). this object is used to cancel this runnable instance
-	 * 
-	 * @param myf - future
-	 */
-	public void setMyFuture(Future myf) {
-		this.myFuture = myf;
 	}
 }
 
@@ -149,9 +109,9 @@ class CheckInactivity implements Runnable, MouseMotionListener {
 	private static int signOut;
 
 	CheckInactivity() {
-		signOut = SystemVariables.getintVar("signout") * 60 * 1000;
-		lastMouseMove = System.currentTimeMillis();
-		Alesia.mainFrame.addMouseMotionListener(this);
+		// signOut = SystemVariables.getintVar("signout") * 60 * 1000;
+		// lastMouseMove = System.currentTimeMillis();
+		// Alesia.mainFrame.addMouseMotionListener(this);
 
 	}
 	@Override

@@ -221,7 +221,7 @@ public class HTMLEditor extends JPanel implements ActionListener {
 				try {
 					editorKit.insertHTML(document, editor.getCaretPosition(), "<hr>", 0, 0, HTML.Tag.HR);
 				} catch (Exception ex) {
-					SystemLog.logException(ex);
+					ex.printStackTrace();
 				}
 			}
 		};
@@ -488,7 +488,7 @@ public class HTMLEditor extends JPanel implements ActionListener {
 			if (editor.getCaretPosition() == document.getLength())
 				editor.setCaretPosition(editor.getCaretPosition() - 1);
 		} catch (Exception ex) {
-			SystemLog.logException(ex);
+			ex.printStackTrace();
 		}
 	}
 
@@ -526,7 +526,7 @@ public class HTMLEditor extends JPanel implements ActionListener {
 			css.loadRules(new InputStreamReader(fis), null);
 			ek.setStyleSheet(css);
 		} catch (Exception ex) {
-			SystemLog.logException(ex);
+			ex.printStackTrace();
 		}
 	}
 

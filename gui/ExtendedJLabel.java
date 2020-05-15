@@ -16,8 +16,6 @@ import java.util.*;
 
 import javax.swing.*;
 
-import core.*;
-
 /**
  * este componente extiende las funciones de <code>JLabel</code> para presentar el valor de distintos objetos dando
  * formato segun su clase. Ademas:

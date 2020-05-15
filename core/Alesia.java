@@ -27,6 +27,7 @@ import org.apache.shiro.*;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.config.*;
 import org.apache.shiro.mgt.*;
+import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.*;
 import org.apache.shiro.session.mgt.*;
 import org.apache.shiro.subject.*;
@@ -51,7 +52,6 @@ import com.alee.skin.dark.*;
 import com.alee.utils.*;
 import com.alee.utils.CollectionUtils;
 
-import core.tasks.*;
 import gui.*;
 import gui.docking.*;
 import gui.wlaf.*;
@@ -107,6 +107,8 @@ public class Alesia extends Application {
 	 */
 	public static void main(String[] args) {
 		Locale.setDefault(Locale.US);
+
+		getActiveWindows("*eclipse*");
 
 		// List<DesktopWindow> winds = WindowUtils.getAllWindows(true);
 		// WinDef.HWND hwnd = TUser32.INSTANCE.GetActiveWindow();
@@ -380,6 +382,33 @@ public class Alesia extends Application {
 	}
 
 	/**
+	 * Consult the <code>cmdow.exe</code> program and look for the active windows who match the pattern parameter
+	 * 
+	 * @param pattern - wildcard patter matcher 
+	 * 
+	 * @return list of string lines where the patter match.
+	 */
+	public static ArrayList<String> getActiveWindows(String pattern) {
+		ArrayList<String> resutl = new ArrayList<>();
+		try {
+			Runtime runtime = Runtime.getRuntime();
+			Process process = runtime.exec("cmdow.exe /t");
+			InputStream is = process.getInputStream();
+			Scanner sc = new Scanner(is);
+			while (sc.hasNext()) {
+				String line = sc.nextLine();
+				if (TStringUtils.wildCardMacher(line, pattern))
+					System.out.println(line);
+			}
+			is.close();
+			sc.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return resutl;
+	}
+
+	/**
 	 * retrive global identificator from <code>wmic</code>
 	 * 
 	 * @param gid - gobal id
@@ -402,6 +431,8 @@ public class Alesia extends Application {
 				}
 			}
 			is.close();
+			sc.close();
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -418,7 +449,6 @@ public class Alesia extends Application {
 	 */
 	private static void requestAutentication() {
 		Alesia.mainFrame.setSplashIncrementText("Request autentication");
-
 		Factory<org.apache.shiro.mgt.SecurityManager> factory = new IniSecurityManagerFactory("classpath:shiro.ini");
 		DefaultSecurityManager securityManager = (DefaultSecurityManager) factory.getInstance();
 		DefaultSessionManager sessionManager = (DefaultSessionManager) securityManager.getSessionManager();
@@ -442,8 +472,8 @@ public class Alesia extends Application {
 			if (vals == null) {
 				getInstance().exit();
 			}
-			UsernamePasswordToken token = new UsernamePasswordToken((String) vals.get("user"),
-					(String) vals.get("password"));
+			UsernamePasswordToken token = new UsernamePasswordToken((String) vals.get("UserLogIn.user"),
+					(String) vals.get("UserLogIn.password"));
 			token.setRememberMe(true);
 			try {
 				currentUser.login(token);
@@ -488,9 +518,7 @@ public class Alesia extends Application {
 		}
 
 		// all done - log out!
-		currentUser.logout();
-
-		System.exit(0);
+//		currentUser.logout();
 	}
 
 	public void restarApplication() {
@@ -507,10 +535,8 @@ public class Alesia extends Application {
 	@Override
 	protected void initialize(String[] args) {
 
-		// System.out.println(getWmicValue("bios", "SerialNumber"));
-		// System.out.println(getWmicValue("cpu", "SystemName"));
-
-		// Properties prp = System.getProperties();
+		System.out.println(getWmicValue("bios", "SerialNumber"));
+		System.out.println(getWmicValue("cpu", "SystemName"));
 
 		TResources.init();
 		TStringUtils.addProperties(TResources.USER_DIR + "/core/resources/");
@@ -562,11 +588,7 @@ public class Alesia extends Application {
 
 		Alesia.mainFrame.setSplashIncrementText("Starting task manager ...");
 		Alesia.manager = new TTaskManager();
-		// requestAutentication();
-
-		// UserLogIn logIn = new UserLogIn();
-		// TTilePanel tilePanel = new TTilePanel();
-		// ChangePassword changePassword = new ChangePassword(null);
+		 requestAutentication();
 
 		// load left panel actions
 		mainPanel = new DockingContainer();
