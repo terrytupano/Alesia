@@ -464,6 +464,14 @@ public class Alesia extends Application {
 		};
 		sessionManager.setSessionListeners(Arrays.asList(slit));
 
+		/**
+		 * to present local user information 
+		 * net user administrator
+		 * 
+		 * command line for check password against local user
+		 * net use \\localhost /user:username password
+		 * terry porfin12
+		 */
 		if (!currentUser.isAuthenticated()) {
 			UserLogIn li = new UserLogIn();
 			WebDialog dlg = li.createDialog(true);
@@ -474,7 +482,7 @@ public class Alesia extends Application {
 			}
 			UsernamePasswordToken token = new UsernamePasswordToken((String) vals.get("UserLogIn.user"),
 					(String) vals.get("UserLogIn.password"));
-			token.setRememberMe(true);
+//			token.setRememberMe(true);
 			try {
 				currentUser.login(token);
 			} catch (UnknownAccountException uae) {
@@ -588,7 +596,7 @@ public class Alesia extends Application {
 
 		Alesia.mainFrame.setSplashIncrementText("Starting task manager ...");
 		Alesia.manager = new TTaskManager();
-		 requestAutentication();
+//		 requestAutentication();
 
 		// load left panel actions
 		mainPanel = new DockingContainer();

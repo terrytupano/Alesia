@@ -280,7 +280,7 @@ public abstract class TUIListPanel extends TUIPanel implements ListSelectionList
 
 			setView(view);
 			setEnableActions("scope", "element", false);
-			// setMessage(null);
+			setMessage(null);
 			// TTaskManager.getListUpdater().add(this);
 		} else {
 			// TTaskManager.getListUpdater().remove(this);

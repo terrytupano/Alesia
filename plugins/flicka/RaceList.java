@@ -44,11 +44,10 @@ public class RaceList extends TUIListPanel implements PropertyChangeListener {
 	public TUIFormPanel getTUIFormPanel(ApplicationAction action) {
 		TUIFormPanel tuifp = null;
 		if (action.getName().equals("newModel")) {
-			Race r = new Race();
-			tuifp = new RaceRecord(this, r, true, RaceRecord.BASIC);
+			tuifp = new RaceRecord(this, new Race(), true, RaceRecord.BASIC);
 		}
 		if (action.getName().equals("editModel")) {
-			tuifp = new RaceRecord(this, getModel(), true, RaceRecord.BASIC);
+			tuifp = new RaceRecord(this, getModel(), false, RaceRecord.BASIC);
 		}
 		return tuifp;
 	}
@@ -87,7 +86,6 @@ public class RaceList extends TUIListPanel implements PropertyChangeListener {
 				Function<String, List<Model>> f = (par -> Race.find("redate = ? AND rerace = ?", d, r)
 						.orderBy("redate DESC"));
 				setDBParameters(f, Race.getMetaModel().getColumnMetadata());
-				setMessage(null);
 			} else {
 				setMessage("flicka.msg01");
 			}

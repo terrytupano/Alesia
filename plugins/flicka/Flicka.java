@@ -20,8 +20,10 @@ import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 import org.jdesktop.application.Task.*;
 
-import com.alee.laf.panel.*;
-import com.alee.laf.splitpane.*;
+import com.alee.api.data.*;
+import com.alee.extended.dock.*;
+import com.alee.extended.tab.*;
+import com.alee.laf.window.*;
 import com.alee.utils.*;
 
 import core.*;
@@ -59,6 +61,18 @@ public class Flicka extends TPlugin {
 	}
 
 	@org.jdesktop.application.Action
+	public void raceFromTable(ActionEvent event) {
+		TUIListPanel tuilp = SwingUtils.getFirstParent((JComponent) event.getSource(), TUIListPanel.class);
+		RaceRecordFromTable rmft = new RaceRecordFromTable((Race) tuilp.getModel());
+		WebDialog dlg = rmft.createDialog(false);
+		dlg.setVisible(true);
+		ApplicationAction aa = (ApplicationAction) rmft.getClientProperty("actionPerformed");
+		if (aa != null && aa.getName().equals("acept")) {
+			rmft.updateRecords();
+		}
+	}
+
+	@org.jdesktop.application.Action
 	public void runSimulation(ActionEvent event) {
 		AbstractButton src = (AbstractButton) event.getSource();
 		TUIListPanel tuilp = SwingUtils.getFirstParent(src, TUIListPanel.class);
@@ -75,18 +89,44 @@ public class Flicka extends TPlugin {
 		Selector.checkReend_posAndRecpsFields(instance.getModels());
 	}
 
+	private WebDockableFrame getWebDockableFrame(JComponent cmp, String title, String iconName) {
+		WebDockableFrame frame = new WebDockableFrame(cmp.getClass().getName(), title);
+		frame.setIcon(TResources.getSmallIcon(iconName));
+		frame.setClosable(false);
+		frame.setMaximizable(false);
+		frame.setFloatable(false);
+		frame.add(cmp);
+		return frame;
+	}
 	@org.jdesktop.application.Action
 	public void flicka(ActionEvent event) {
-		DBExplorer dbe = new DBExplorer();
-		RaceList races = new RaceList();
-		PDistributionList pdistri = new PDistributionList();
-		WebSplitPane sp = new WebSplitPane(WebSplitPane.VERTICAL_SPLIT);
-		sp.add(dbe);
-		sp.add(pdistri);
-		WebSplitPane sp1 = new WebSplitPane(WebSplitPane.HORIZONTAL_SPLIT);
-		sp1.add(sp);
-		sp1.add(races);
-		Alesia.getMainPanel().setContentPanel(new WebPanel(sp1));
+		WebDockablePane dockablePane = new WebDockablePane();
+		dockablePane.setSidebarVisibility(SidebarVisibility.never);
+
+		WebDockableFrame DBE = getWebDockableFrame(new DBExplorer(), "Flicka RESLR explorer", "DBExplorer");
+		DBE.setPosition(CompassDirection.west);
+
+		WebDockableFrame races = getWebDockableFrame(new RaceList(), "Selected races", "trojan_horse");
+		races.setPosition(CompassDirection.east);
+
+		WebDockableFrame pdistri = getWebDockableFrame(new PDistributionList(), "Probability distribution", "barchart");
+		races.setPosition(CompassDirection.south);
+
+		WebDocumentPane<DocumentData> tabs = new WebDocumentPane<>();
+		tabs.openDocument(new DocumentData<JComponent>(HorseHistory.class.getName(), TResources.getSmallIcon("donut"),
+				"Horse history", new HorseHistory()));
+		tabs.openDocument(new DocumentData<JComponent>(JockeyHistory.class.getName(),
+				TResources.getSmallIcon("user_racer"), "Jockey history", new JockeyHistory()));
+
+		dockablePane.addFrame(DBE);
+		dockablePane.addFrame(races);
+		dockablePane.addFrame(pdistri);
+		dockablePane.setContent(tabs);
+
+		dockablePane.registerSettings(
+				new com.alee.managers.settings.Configuration<DockablePaneState>("FlickaDockablePane"));
+
+		Alesia.getMainPanel().setContentPanel(dockablePane);
 	}
 
 	/**

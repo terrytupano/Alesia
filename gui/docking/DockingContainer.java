@@ -33,10 +33,10 @@ import gui.*;
 public class DockingContainer extends JPanel {
 
 	private ComponentTransition transitionPanel;
-	private JPanel contentPanel;
+	private JComponent contentPanel;
 	private TLeftPanel leftPanel;
 
-	public void setContentPanel(JPanel cpanel) {
+	public void setContentPanel(JComponent cpanel) {
 		setVisible(false);
 		remove(contentPanel);
 		contentPanel = null;

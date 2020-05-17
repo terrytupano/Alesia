@@ -1,37 +1,32 @@
 package plugins.flicka;
 
-import gui.*;
-import gui.table.*;
-
 import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.*;
 import javax.swing.table.*;
 
-import core.datasource.*;
+import core.datasource.model.*;
+import gui.*;
+import gui.table.*;
 
-public class RaceRecordFromTable extends AbstractRecordDataInput {
+public class RaceRecordFromTable extends TUIFormPanel implements ActionListener {
 
-	boolean newr;
 	private JTable jTable;
-	private Record rModel;
+	private Race rModel;
 	private String[] columns;
 
-	public RaceRecordFromTable(Record rcd, boolean newr) {
-		super(null, rcd);
-		this.newr = newr;
+	public RaceRecordFromTable(Race rcd) {
 		this.rModel = rcd;
 		// table columns
-		columns = new String[]{"restar_lane", "rehorse", "rejockey", "rejockey_weight", "reend_pos", "recps",
-				"reobs", "retrainer"};
+		columns = new String[]{"restar_lane", "rehorse", "rejockey", "rejockey_weight", "reend_pos", "recps", "reobs",
+				"retrainer"};
 
 		// table data
 		Object[][] data = new Object[14][columns.length];
 		for (int r = 0; r < 14; r++) {
-			Record trcd = new Record(rcd);
 			for (int c = 0; c < columns.length; c++) {
-				data[r][c] = trcd.getFieldValue(columns[c]);
+				data[r][c] = rModel.get(columns[c]);
 			}
 		}
 
@@ -42,9 +37,9 @@ public class RaceRecordFromTable extends AbstractRecordDataInput {
 		// jTable.getModel().addTableModelListener(this);
 		jTable.setCellSelectionEnabled(true);
 		// jTable.setColumnSelectionAllowed(true);
-		setDefaultActionBar();
-		add(new JScrollPane(jTable));
-		preValidate(null);
+		setBodyComponent(new JScrollPane(jTable));
+		setFooterActions("acept", "cancel");
+		preValidate();
 	}
 
 	public void updateRecords() {
@@ -53,24 +48,23 @@ public class RaceRecordFromTable extends AbstractRecordDataInput {
 			if (model.getValueAt(r, 1).toString().length() == 0) {
 				continue;
 			}
-			Record rcd = new Record(rModel);
-			rcd.setFieldValue("restar_lane", new Integer(model.getValueAt(r, 0).toString()));
-			rcd.setFieldValue("rehorse", model.getValueAt(r, 1).toString());
-			rcd.setFieldValue("rejockey", model.getValueAt(r, 2).toString());
-			rcd.setFieldValue("rejockey_weight", new Integer(model.getValueAt(r, 3).toString()));
-			rcd.setFieldValue("reend_pos", new Integer(model.getValueAt(r, 4).toString()));
-			rcd.setFieldValue("recps", new Double(model.getValueAt(r, 5).toString()));
-			rcd.setFieldValue("reobs", model.getValueAt(r, 6).toString());
-			rcd.setFieldValue("retrainer", model.getValueAt(r, 7).toString());
-
-			ConnectionManager.getAccessTo("reslr").write(rcd);
+			Race rcd = new Race();
+			rcd.copyFrom(rModel);
+			rcd.set("restar_lane", new Integer(model.getValueAt(r, 0).toString()));
+			rcd.set("rehorse", model.getValueAt(r, 1).toString());
+			rcd.set("rejockey", model.getValueAt(r, 2).toString());
+			rcd.set("rejockey_weight", new Integer(model.getValueAt(r, 3).toString()));
+			rcd.set("reend_pos", new Integer(model.getValueAt(r, 4).toString()));
+			rcd.set("recps", new Double(model.getValueAt(r, 5).toString()));
+			rcd.set("reobs", model.getValueAt(r, 6).toString());
+			rcd.set("retrainer", model.getValueAt(r, 7).toString());
+			rcd.save();
 		}
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent ae) {
-		super.actionPerformed(ae);
-		DBAccess reslr = ConnectionManager.getAccessTo("reslr");
+		// super.actionPerformed(ae);
 
 		TableModel model = jTable.getModel();
 		for (int r = 0; r < model.getRowCount(); r++) {
@@ -80,20 +74,21 @@ public class RaceRecordFromTable extends AbstractRecordDataInput {
 
 			// uppercase for horse names
 			String ho = model.getValueAt(r, 1).toString().toUpperCase();
+
 			// check if horse exist. if not, mark
-			if (reslr.exist("rehorse = '" + ho + "'") == null) {
+			if (Race.findFirst("rehorse = ?", ho) == null) {
 				ho = ">>" + ho;
 			}
 			model.setValueAt(ho, r, 1);
 
 			// Check and format jockey
 			String[] jos = model.getValueAt(r, 2).toString().split("[ ]");
-			String jo = jos[0]+ " ";
+			String jo = jos[0] + " ";
 			for (int c = 1; c < jos.length; c++) {
 				String j = jos[c];
-				jo += (j.length() > 2) ? j+" " : "";
+				jo += (j.length() > 2) ? j + " " : "";
 			}
-			if (reslr.exist("rejockey = '" + jo + "'") == null) {
+			if (Race.findFirst("rejockey = ?", jo) == null) {
 				jo = ">>" + jo;
 			}
 			model.setValueAt(jo, r, 2);

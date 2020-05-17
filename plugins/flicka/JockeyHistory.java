@@ -10,26 +10,20 @@
  ******************************************************************************/
 package plugins.flicka;
 
-import gui.*;
-import gui.docking.*;
-
 import java.beans.*;
 import java.util.*;
 import java.util.function.*;
 
-import javax.swing.*;
-
 import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 
-import core.datasource.*;
 import core.datasource.model.*;
-import core.reporting.*;
+import gui.*;
 
 public class JockeyHistory extends TUIListPanel implements PropertyChangeListener {
 
 	public JockeyHistory() {
-		setToolBar(new ExportToFileAction(this, ""));
+//		setToolBar(new ExportToFileAction(this, ""));
 		setColumns("redate;rerace;redistance;restar_lane;rehorse;reend_pos;recps");
 	}
 
@@ -61,7 +55,7 @@ public class JockeyHistory extends TUIListPanel implements PropertyChangeListene
 		if (jockey != null) {
 			final String jockeyf = jockey;
 			final Date datef = date;
-			Function<String, List<Model>> f = (par -> Race.find("rejockey = ? AND rerace = ?", jockeyf, datef)
+			Function<String, List<Model>> f = (par -> Race.find("rejockey = ? AND rerace < ?", jockeyf, datef)
 					.orderBy("redate DESC"));
 			setDBParameters(f, Race.getMetaModel().getColumnMetadata());
 		} else {

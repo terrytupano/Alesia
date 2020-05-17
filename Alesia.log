@@ -5,8 +5,5 @@ INFO: checkpointClose end
 INFO: Loading plugins ...
 INFO: Loggin level set to INFO
 INFO: Starting task manager ...
-INFO: Request autentication
-INFO: User [admin] logged in successfully.
-INFO: Hello, mere mortal.
-INFO: You may use a lightsaber ring.  Use it wisely.
-INFO: You are permitted to 'drive' the winnebago with license plate (id) 'eagle5'.  Here are the keys - have fun!
+INFO: Preapering to leave the application ...
+INFO: Bye !!!

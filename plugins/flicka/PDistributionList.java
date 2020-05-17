@@ -20,7 +20,6 @@ import javax.swing.*;
 import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 
-import core.*;
 import core.datasource.model.*;
 import gui.*;
 
@@ -29,7 +28,7 @@ public class PDistributionList extends TUIListPanel implements PropertyChangeLis
 	public PDistributionList() {
 		showAditionalInformation(false);
 //		this toolbar hat new ExportToFileAction(this, "") warum???
-		setToolBar(TActionsFactory.getActions("deleteModel"));
+//		setToolBar(TActionsFactory.getActions("deleteModel"));
 		setColumns("pdrace;pdvalue;pdhits;pdmasscenter;pdprediction;pddecision;pdevent");
 		getWebTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 	}
