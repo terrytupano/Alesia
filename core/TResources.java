@@ -21,9 +21,6 @@ import java.util.zip.*;
 
 import javax.swing.*;
 
-import org.jdesktop.application.*;
-import org.omg.CORBA.portable.*;
-
 import com.jgoodies.common.base.*;
 
 public class TResources {
@@ -44,6 +41,48 @@ public class TResources {
 		if (!td.exists()) {
 			td.mkdir();
 		}
+	}
+
+	public static void performCMDOWCommand(String winId, String cmdowParm) {
+		try {
+			Runtime runtime = Runtime.getRuntime();
+			runtime.exec("cmdow.exe " + winId + " " + cmdowParm);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Consult the <code>cmdow.exe</code> program and look for the active windows who match the pattern parameter. The
+	 * result is stored in a {@link List} of {@link TEntry} where the key is the window identificator and the value is
+	 * the window title bar.
+	 * 
+	 * @param pattern - wildcard patter matcher
+	 * 
+	 * @return list of {@link TEntry} with the id and title bar text .
+	 */
+	public static ArrayList<TEntry<String, String>> getActiveWindows(String pattern) {
+		ArrayList<TEntry<String, String>> resutl = new ArrayList<>();
+		try {
+			Runtime runtime = Runtime.getRuntime();
+			Process process = runtime.exec("cmdow.exe /t /b /f");
+			InputStream is = process.getInputStream();
+			Scanner sc = new Scanner(is);
+			while (sc.hasNext()) {
+				String line = sc.nextLine();
+				if (TStringUtils.wildCardMacher(line, pattern)) {
+					String[] fields = line.split("\\s");
+					String titt = "";
+					for (int t = 8; t < fields.length; t++)
+						titt = (fields[t].trim().equals("")) ? titt : titt + " " + fields[t].trim();
+					resutl.add(new TEntry<>(fields[0].trim(), titt));
+				}
+			}
+			is.close();
+			sc.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}		return resutl;
 	}
 
 	/**
@@ -75,42 +114,6 @@ public class TResources {
 		File td = new File(TEMP_PATH + ldn + "_" + Long.toHexString(System.currentTimeMillis()));
 		td.mkdir();
 		return td;
-	}
-
-	/**
-	 * crea y retorna un archivo .zip con el arrego de archivos pasados como argumento.
-	 * 
-	 * @param fls - archivo a empaquetar
-	 * @return archivo empaquetado
-	 */
-	public static File createZipFile(File[] fls) {
-		File jarf = null;
-		try {
-			boolean atleastone = false;
-			jarf = File.createTempFile("tmp", ".zip");
-			FileOutputStream fos = new FileOutputStream(jarf);
-			JarOutputStream jos = new JarOutputStream(fos);
-			for (File f : fls) {
-				if (f.exists() && f.isFile()) {
-					BufferedInputStream bis = new BufferedInputStream(new FileInputStream(f));
-					jos.putNextEntry(new ZipEntry(f.getName()));
-					byte[] b = new byte[(int) f.length()];
-					for (int x = 0; x < b.length; x++) {
-						b[x] = (byte) bis.read();
-					}
-					jos.write(b);
-					atleastone = true;
-					bis.close();
-				}
-			}
-			if (atleastone) {
-				jos.close();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			e.printStackTrace();
-		}
-		return jarf;
 	}
 
 	/**

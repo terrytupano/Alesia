@@ -570,7 +570,7 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 		cmp.putClientProperty("myLabel", jl);
 		cmp.putClientProperty("isRequired", required);
 		setEnable(field, enable);
-		setInputVerifier(field, new TInputVerifier(required));
+//		setInputVerifier(field, new TInputVerifier(required));
 		if (cmp instanceof TWebFileChooserField) {
 			TWebFileChooserField fc = (TWebFileChooserField) cmp;
 			fc.addSelectedFilesListener(this);

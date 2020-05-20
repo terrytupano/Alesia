@@ -46,7 +46,7 @@ public class TTile extends JPanel  {
 			e1.printStackTrace();
 		}
 		if (uipanel instanceof UIListPanel) {
-			((UIListPanel) uipanel).init();
+			((UIListPanel) uipanel).clearEnviorement();
 		}
 		add(button, "Button");
 		buildInputComponent();

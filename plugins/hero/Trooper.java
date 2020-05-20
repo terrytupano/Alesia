@@ -49,15 +49,12 @@ public class Trooper extends Task {
 
 	public static String EXPLANATION = "trooper.Explanation";
 	public static String STATUS = "trooper.Status";
-	private static String ODDS_EV = "Expected value odds";
-	private static String ODDS_MREV = "Minimun regret odds";
 	private PokerSimulator pokerSimulator;
 	private RobotActuator robotActuator;
 	private SensorsArray sensorsArray;
 	private boolean isTestMode;
 	private Vector<TEntry<String, Double>> availableActions;
 	private int countdown = 5;
-	private File file;
 	private long time1;
 	private DescriptiveStatistics outGameStats;
 	private boolean paused = false;
@@ -107,7 +104,6 @@ public class Trooper extends Task {
 	public void init(File file) {
 		ShapeAreas sDisp = new ShapeAreas(file);
 		sDisp.read();
-		this.file = file;
 		this.availableActions.clear();
 		sensorsArray.createSensorsArray(sDisp);
 		robotActuator.setEnviorement(sDisp);
@@ -133,7 +129,7 @@ public class Trooper extends Task {
 	 * 
 	 */
 	private void clearEnviorement() {
-		sensorsArray.init();
+		sensorsArray.clearEnviorement();
 		rekonAmunition = 0;
 		maxRekonAmmo = -1;
 		oportinity = false;
@@ -187,7 +183,7 @@ public class Trooper extends Task {
 		// FLOP AND FUTHER
 		if (pokerSimulator.getCurrentRound() > PokerSimulator.HOLE_CARDS_DEALT) {
 			double number = getAmmunitions();
-			setOddActions(ODDS_MREV, "from ammunition value", number);
+			setOddActions(number);
 		}
 
 		// if the list of available actions are empty, i habe no option but fold/check
@@ -226,18 +222,12 @@ public class Trooper extends Task {
 		double buyIn = pokerSimulator.getBuyIn();
 		double pot = pokerSimulator.getPotValue();
 
-		// upper bound:
-		// when the pot is extremly hight, hero tend to fall in boby trap go to ruin. to avoid this, when the pot_only
-		// surpase the empirical constant (buyIn*factor), i take pot_streng. this value ....
-		// double pot_streng = pot_only * handStreng;
+		// empirical base
 		double base = pokerSimulator.getBigBlind() * 6;
-		// double pot = pot_only > base ? pot_streng : pot_only;
-		// String potSrc = pot_only == pot ? "Pot" : "HandStreng";
 
-		// the sorurce of invest can arrive from 2 sources: hero.s chips or buy in. This allog Hero to continue playin
-		// smootly when he is in bad shape. (bbe rich or die try)
+		// the source of invest can arrive from 2 sources: hero.s chips or buy in.: When hero is poor, play safe. when
+		// is richt, play whit more room to invest
 		double invest = Math.min(chips, buyIn);
-		String isrc = chips == buyIn ? "buyIn" : "Chips";
 
 		double number = base + (pot * handStreng) + (invest * potential);
 
@@ -338,12 +328,10 @@ public class Trooper extends Task {
 	}
 
 	/**
-	 * Compute the actions available according to {@link #getOdds(int, String)} evaluations. The resulting computation
-	 * will be reflected in a list of actions with his expected values.
-	 * <p>
-	 * this method also remove negative ev if there exist positive ev. this is because most of the times, there are more
-	 * negative EV than positives ones, if i translate the function to the positive cuadrant to allow posible agressive
-	 * actions violate the main purporse of this implementation. so, until now, i just remove them.
+	 * thie method build a list of all actions available for the troper to perform. this mean, all action at first are
+	 * consider alls posible. After the list ist build, this list is procesed acording to the selected method. those
+	 * method will analize all entryes and select the actions acordinly. the result is stored in the gobal valiabel
+	 * {@link #availableActions}
 	 * 
 	 * 
 	 * TODO: maybe implement some kind of threshold to alow 1 more action (bluff)
@@ -353,7 +341,7 @@ public class Trooper extends Task {
 	 * @param sourceName - the name of the source
 	 * @param sourceValue - the value
 	 */
-	private void setOddActions(String computationType, String sourceName, double sourceValue) {
+	private void setOddActions(double sourceValue) {
 		availableActions.clear();
 		// no calculation for 0 value
 		if (sourceValue == 0) {
@@ -389,8 +377,6 @@ public class Trooper extends Task {
 				// round value to look natural (dont write 12345. write 12340 or 12350)
 				if (isInt)
 					tickVal = ((int) (tickVal / 10)) * 10;
-				// else
-				// tickVal = ((int) (tickVal * 100)) / 100.0;
 
 				String txt = isInt ? "" + (int) tickVal : twoDigitFormat.format(tickVal);
 				availableActions
@@ -423,10 +409,12 @@ public class Trooper extends Task {
 			Hero.logger.info(txt);
 			return;
 		}
-		if (computationType == ODDS_EV) {
+		String computationType = pokerSimulator.getOddCalculation();
+		if ("ODDS_EV".equals(computationType)) {
 			calculateOdds(sourceValue, availableActions);
 			availableActions.sort(Collections.reverseOrder());
-		} else {
+		}
+		if ("ODDS_MREV".equals(computationType)) {
 			calculateRegretMinOdds(sourceValue, availableActions);
 		}
 		// test: based on the current handStreng value, allow more o les options. this avoid the troper a wide range of
@@ -449,7 +437,7 @@ public class Trooper extends Task {
 		String val = availableActions.stream().map(te -> te.getKey() + "=" + fourDigitFormat.format(te.getValue()))
 				.collect(Collectors.joining(", "));
 		val = val.trim().isEmpty() ? "No positive EV" : val;
-		Hero.logger.info(computationType + " for " + sourceName + " " + val);
+		Hero.logger.info(computationType + val);
 	}
 	/**
 	 * Set the action based on the starting hand distribution. If the starting hand is inside on the predefined hands

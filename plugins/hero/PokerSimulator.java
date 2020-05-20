@@ -81,11 +81,13 @@ public class PokerSimulator {
 	private double buyIn;
 	private double smallBlind;
 	private double bigBlind;
-	private int minRankForOportunity;
+	private int minHandPotential;
 	private ActionsBarChart actionsBarChart;
 	private long lastStepMillis;
 	private double bestProbability;
 	private UoAHand uoAHand;
+
+	private String oddCalculation;
 
 	public PokerSimulator() {
 		this.cardsBuffer = new Hashtable<String, String>();
@@ -128,22 +130,52 @@ public class PokerSimulator {
 		upperProbability.put(PokerSimulator.TURN_CARD_DEALT, 0.8);
 		upperProbability.put(PokerSimulator.RIVER_CARD_DEALT, 0.9);
 
-		init();
-	}
-
-	/**
-	 * Return the strin representation of the parameters of the table
-	 * 
-	 * @return table parms
-	 */
-	public String getTableParameters() {
-		return getBuyIn() + "," + getBigBlind() + "," + getSmallBlind();
+		clearEnviorement();
 	}
 	public void cleanReport() {
 		variableList.keySet().forEach(key -> variableList.put(key, ""));
 		variableList.put(STATUS, STATUS_OK);
 		actionsBarChart.setDataSet(null);
 		updateReport();
+	}
+
+	/**
+	 * clear the simulation eviorement. Use this metod to clear al component in case of error or start/stop event
+	 * 
+	 */
+	public void clearEnviorement() {
+		this.currentRound = NO_CARDS_DEALT;
+		this.numSimPlayers = -1;
+		holeCards = null;
+		communityCards = null;
+		// variableList.clear();
+		// 190831: ya el sistema se esta moviendo. por lo menos hace fold !!!! :D estoy en el salon de clases del campo
+		// de refujiados en dresden !!!! ya van 2 meses
+		cardsBuffer.clear();
+		potValue = -1;
+		tablePosition = -1;
+		callValue = -1;
+		raiseValue = -1;
+		heroChips = -1;
+		// parameters from the panel
+		Hashtable<String, Object> vals = Hero.heroPanel.getTrooperPanel().getValues();
+		this.minHandPotential = Integer.parseInt(vals.get("minHandPotential").toString());
+		this.oddCalculation = vals.get("oddCalculation").toString();
+
+		// the table parameters component are webtextfield
+		try {
+			String val = (String) vals.get("table.buyIn");
+			this.buyIn = val != null ? Double.parseDouble(val) : -1;
+			val = (String) vals.get("table.smallBlid");
+			this.smallBlind = val != null ? Double.parseDouble(val) : -1;
+			val = (String) vals.get("table.bigBlid");
+			this.bigBlind = val != null ? Double.parseDouble(val) : -1;
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(Alesia.mainFrame, "Error en table parameteres", "Error",
+					JOptionPane.ERROR_MESSAGE); // TODO: handle exception
+		}
+
+		System.out.println("PokerSimulator.clearEnviorement()" + getTableParameters());
 	}
 
 	/**
@@ -179,36 +211,8 @@ public class PokerSimulator {
 	public Hashtable<String, String> getCardsBuffer() {
 		return cardsBuffer;
 	}
-
 	public CommunityCards getCommunityCards() {
 		return communityCards;
-	}
-	public int getCurrentRound() {
-		return currentRound;
-	}
-
-	/**
-	 * This methos return the propability of my hand will become a better hand in termns of probabilities. The parameter
-	 * {@link #minRankForOportunity} control the minimun rank to take into acount.
-	 * <p>
-	 * e.g: if {@link #minRankForOportunity} = <code>STRAIGHT</code> this method will retorun the potential of the
-	 * current hand of become better than <code>STRAIGHT</code>
-	 * 
-	 * @return the probabilities of become a better hand
-	 */
-	public double getHandPotential() {
-		double hp = 0.0;
-		if (myHandStatsHelper != null) {
-			// TODO: test: use the minRankForOportunity parameter to compute the hand potential. this allowme to invest
-			// ammunitions en really oportunities
-			// int toh = Hand.STRAIGHT_FLUSH - myHandHelper.getHandRank();
-			int toh = Hand.STRAIGHT_FLUSH - minRankForOportunity;
-			float[] list = myHandStatsHelper.getAllProbs();
-			for (int i = 0; i < toh; i++) {
-				hp += list[i];
-			}
-		}
-		return hp;
 	}
 
 	/**
@@ -219,17 +223,32 @@ public class PokerSimulator {
 	 */
 	public double getCurrentHandStreng() {
 		double rank = UoAHandEvaluator.rankHand(uoAHand);
-		// lest than minimun, or none of hole card participate in the hand
-		// if (rank < minHandRank || !myHandHelper.isHoleCardHand())
-		// return 0.0;
 		return rank / topHandRank;
 	}
 
-	public double getPreFlopHandStreng() {
-		double rank = UoAHandEvaluator.rankHand(uoAHand);
-		// if is already a poket pair, assig 1
-		rank = myHandHelper.isPocketPair() ? 1.0 : rank / topHoleRank;
-		return rank;
+	public int getCurrentRound() {
+		return currentRound;
+	}
+
+	/**
+	 * This methos return the propability of my hand will become a better hand in termns of probabilities. The parameter
+	 * {@link #minHandPotential} control the minimun rank to take into acount.
+	 * <p>
+	 * e.g: if {@link #minHandPotential} = <code>STRAIGHT</code> this method will retorun the potential of the current
+	 * hand of become better than <code>STRAIGHT</code>
+	 * 
+	 * @return the probabilities of become a better hand
+	 */
+	public double getHandPotential() {
+		double hp = 0.0;
+		if (myHandStatsHelper != null) {
+			int toh = Hand.STRAIGHT_FLUSH - minHandPotential;
+			float[] list = myHandStatsHelper.getAllProbs();
+			for (int i = 0; i < toh; i++) {
+				hp += list[i];
+			}
+		}
+		return hp;
 	}
 	public double getHeroChips() {
 		return heroChips;
@@ -254,14 +273,23 @@ public class PokerSimulator {
 		return numSimPlayers;
 	}
 
+	public String getOddCalculation() {
+		return this.oddCalculation;
+	}
+
 	public double getPotValue() {
 		return potValue;
 	}
 
+	public double getPreFlopHandStreng() {
+		double rank = UoAHandEvaluator.rankHand(uoAHand);
+		// if is already a poket pair, assig 1
+		rank = myHandHelper.isPocketPair() ? 1.0 : rank / topHoleRank;
+		return rank;
+	}
 	public double getRaiseValue() {
 		return raiseValue;
 	}
-
 	/**
 	 * Return the information component whit all values computesd form simulations and game status
 	 * 
@@ -270,9 +298,19 @@ public class PokerSimulator {
 	public TUIPanel getReportPanel() {
 		return reportPanel;
 	}
+
 	public double getSmallBlind() {
 		return smallBlind;
 	}
+	/**
+	 * Return the strin representation of the parameters of the table
+	 * 
+	 * @return table parms
+	 */
+	public String getTableParameters() {
+		return getBuyIn() + "," + getBigBlind() + "," + getSmallBlind();
+	}
+
 	public int getTablePosition() {
 		return tablePosition;
 	}
@@ -280,26 +318,7 @@ public class PokerSimulator {
 	public TreeMap<String, Object> getVariables() {
 		return variableList;
 	}
-	/**
-	 * Init the simulation eviorement. Use this metod to clear al component in case of error or start/stop event
-	 * 
-	 */
-	public void init() {
-		this.currentRound = NO_CARDS_DEALT;
-		this.numSimPlayers = -1;
-		holeCards = null;
-		communityCards = null;
-		// variableList.clear();
-		// 190831: ya el sistema se esta moviendo. por lo menos hace fold !!!! :D estoy en el salon de clases del campo
-		// de refujiados en dresden !!!! ya van 2 meses
-		cardsBuffer.clear();
-		potValue = -1;
-		tablePosition = -1;
-		callValue = -1;
-		raiseValue = -1;
-		heroChips = -1;
-		setParameter();;
-	}
+
 	public String isdraw() {
 		String drw = null;
 		drw = myHandHelper.isFlushDraw() ? "Flush draw" : drw;
@@ -307,7 +326,6 @@ public class PokerSimulator {
 		drw = myHandHelper.isStraightFlushDraw() ? "Straight Flush draw" : drw;
 		return drw;
 	}
-
 	/**
 	 * check whether is an oportunity. An oportunity is present when all the following contitions are set
 	 * <li>The current game street is {@link #FLOP_CARDS_DEALT} or {@link #TURN_CARD_DEALT}
@@ -321,13 +339,13 @@ public class PokerSimulator {
 	public String isOportunity() {
 		String txt = null;
 		// fail safe. an oportunity must be more than a pair
-		if (minRankForOportunity < Hand.TWO_PAIRS) {
+		if (minHandPotential < Hand.TWO_PAIRS) {
 			Hero.logger.warning("minimun hand rank for an oportunity must be > Hand.PAIR. Method ignored.");
 			return null;
 		}
 		// table parameters contitions
 		// test: parameter value + 1
-		if (myHandHelper.getHandRank() >= (minRankForOportunity + 1)
+		if (myHandHelper.getHandRank() >= (minHandPotential + 1)
 				&& (currentRound == FLOP_CARDS_DEALT || currentRound == TURN_CARD_DEALT)) {
 			String sts = getSignificantCards();
 			String nh = UoAHandEvaluator.nameHand(uoAHand);
@@ -337,7 +355,6 @@ public class PokerSimulator {
 		txt = currentRound > HOLE_CARDS_DEALT && getMyHandHelper().isTheNuts() ? "is the nuts" : txt;
 		return txt;
 	}
-
 	/**
 	 * perform the PokerProphesier simulation. Call this method when all the cards on the table has been setted using
 	 * {@link #addCard(String, String)} this method will create the {@link HoleCards} and the {@link CommunityCards} (if
@@ -398,10 +415,12 @@ public class PokerSimulator {
 		actionsBarChart.setDataSet(actions);
 		updateReport();
 	}
+
 	public void setActionsData(Vector<TEntry<String, Double>> actions) {
 		actionsBarChart.setDataSet(actions);
 		updateReport();
 	}
+
 	public void setCallValue(double callValue) {
 		this.callValue = callValue;
 	}
@@ -409,7 +428,6 @@ public class PokerSimulator {
 	public void setHeroChips(double heroChips) {
 		this.heroChips = heroChips;
 	}
-
 	public void setNunOfPlayers(int p) {
 		this.numSimPlayers = p;
 	}
@@ -420,24 +438,9 @@ public class PokerSimulator {
 	public void setRaiseValue(double raiseValue) {
 		this.raiseValue = raiseValue;
 	}
-
-	/**
-	 * Read the fields values from {@link TrooperPanel} and colect the necesery values
-	 * 
-	 */
-	public void setParameter() {
-		if (Hero.heroPanel != null) {
-			Hashtable<String, Object> vals = Hero.heroPanel.getTrooperPanel().getValues();
-			this.buyIn = (Double) vals.get("table.buyIn");
-			this.smallBlind = (Double) vals.get("table.smallBlid");
-			this.bigBlind = (Double) vals.get("table.bigBlid");
-			this.minRankForOportunity = Integer.parseInt(vals.get("minForOportunity").toString());
-		}
-	}
 	public void setTablePosition(int tp) {
 		this.tablePosition = tp;
 	}
-
 	public void setVariable(String key, Object value) {
 		// format double values
 		Object value1 = value;
@@ -547,6 +550,7 @@ public class PokerSimulator {
 
 		return car;
 	}
+
 	/**
 	 * create the comunity cards. This method also set the currnet round of the game based on length of the
 	 * <code>cards</code> parameter.
@@ -593,10 +597,10 @@ public class PokerSimulator {
 		holeCards = new HoleCards(ca1, ca2);
 		currentRound = HOLE_CARDS_DEALT;
 	}
-
 	private String getFormateTable(String helperString) {
 		return getFormateTable(helperString, s -> true);
 	}
+
 	/**
 	 * return a HTML table based on the <code>helperString</code> argument. the <code>only</code> paratemeter indicate a
 	 * filter of elemenst. If any line form helperstring argument star with a word form this list, the line is include
@@ -619,7 +623,6 @@ public class PokerSimulator {
 		}
 		return "<table>" + res + "</table>";
 	}
-
 	/**
 	 * return a string representing the card in the troopers hand that participe in the hand Example:
 	 * <li>hero: 2s Ah, comunity: 2s 4h 4c this method return only 2s
@@ -655,6 +658,7 @@ public class PokerSimulator {
 		variableList.put("simulator.Table values", txt);
 		variableList.put("simulator.Simulator values", "Round " + getCurrentRound() + " Players " + getNumSimPlayers());
 
+		Hero.logger.info("Table parameters: " + getTableParameters());
 		Hero.logger.info("Table values: " + variableList.get("simulator.Table values"));
 		Hero.logger.info("Troper probability: " + variableList.get("simulator.Troper probability"));
 		Hero.logger.info("Trooper Current hand: " + variableList.get("simulator.Trooper Current hand"));

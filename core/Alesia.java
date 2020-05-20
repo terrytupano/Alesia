@@ -27,7 +27,6 @@ import org.apache.shiro.*;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.config.*;
 import org.apache.shiro.mgt.*;
-import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.*;
 import org.apache.shiro.session.mgt.*;
 import org.apache.shiro.subject.*;
@@ -76,8 +75,10 @@ public class Alesia extends Application {
 	public static final String IS_RUNNING = "Running";
 	public static final String REQUEST_MAXIMIZE = "RequestMaximize";
 
-	private TPluginManager pluginManager;
 	private static DockingContainer mainPanel;
+	private static DB alesiaDB;
+
+	private TPluginManager pluginManager;
 
 	public static ActionMap getActionMap() {
 		return getInstance().getContext().getActionMap();
@@ -91,15 +92,6 @@ public class Alesia extends Application {
 		return getInstance().getContext().getResourceMap();
 	}
 
-	// public interface TUser32 extends Library {
-	// TUser32 INSTANCE = (TUser32) Native.loadLibrary("user32", TUser32.class);
-	// HWND FindWindow(String lpClassName, String lpWindowName);
-	// int GetWindowRect(HWND handle, int[] rect);
-	// boolean EnumWindows(WinUser.WNDENUMPROC lpEnumFunc, Pointer data);
-	// boolean GetWindowInfo(WinDef.HWND hWnd, WinUser.WINDOWINFO pwi);
-	// WinDef.HWND GetActiveWindow();
-	// }
-
 	/**
 	 * inicio de aplicacion
 	 * 
@@ -107,21 +99,6 @@ public class Alesia extends Application {
 	 */
 	public static void main(String[] args) {
 		Locale.setDefault(Locale.US);
-
-		getActiveWindows("*eclipse*");
-
-		// List<DesktopWindow> winds = WindowUtils.getAllWindows(true);
-		// WinDef.HWND hwnd = TUser32.INSTANCE.GetActiveWindow();
-		// WinUser.WINDOWINFO info = new WinUser.WINDOWINFO();
-		// TUser32.INSTANCE.GetWindowInfo(hwnd, info);
-
-		// for (DesktopWindow win : winds) {
-		// System.out.println(win.getTitle());
-		// }
-		// HWND hwnd = TUser32.INSTANCE.FindWindow("Eclipse", null);
-		// int[] rect = {0, 0, 0, 0};
-		// int result = TUser32.INSTANCE.GetWindowRect(hwnd, rect);
-		// System.out.println("Ok.");
 
 		// Loggin configuration. this step is performed here for conbenence
 		// TODO: For slf4j: the bridge betwen slf4j is set using the slf4j-jdk14-1.7.25 jar lib
@@ -157,6 +134,23 @@ public class Alesia extends Application {
 	}
 
 	/**
+	 * Convenient method to open the alesia local database connection using the system enviorement variables. call this
+	 * method to create or open a new database connection and attach these to {@link Thread} that invoke this method.
+	 * <p>
+	 * this method is intentet for javaLite imeplementation. this method relly in the javaLite internal storage that
+	 * determine if the connection name is aready opened. if is opened, just attach to the invoker thread
+	 */
+	public static void openDB() {
+		if (alesiaDB == null)
+			alesiaDB = new DB("AlesiaDatabase");
+		// alesiaDB = openDB("activejdbc");
+		ConnectionJdbcSpec spec = new ConnectionJdbcSpec(System.getProperty("activejdbc.driver"),
+				System.getProperty("activejdbc.url"), System.getProperty("activejdbc.username"),
+				System.getProperty("activejdbc.password"));
+		alesiaDB.open(spec);
+
+	}
+	/**
 	 * Open and return an instacen of {@link DB} for the given prefix. The connection parameters must be in the
 	 * database.properties file or similar.
 	 * 
@@ -189,23 +183,6 @@ public class Alesia extends Application {
 			e.printStackTrace();
 		}
 		return db;
-	}
-
-	/**
-	 * Convenient method to open the alesia local database connection using the system enviorement variables. call this
-	 * method to create or open a new database connection and attach these to {@link Thread} that invoke this method.
-	 * <p>
-	 * this method is intentet for javaLite imeplementation. this method relly in the javaLite internal storage that
-	 * determine if the connection name is aready opened. if is opened, just attach to the invoker thread
-	 */
-	public static void openDB() {
-		if (alesiaDB == null)
-			alesiaDB = new DB("AlesiaDatabase");
-		// alesiaDB = openDB("activejdbc");
-		ConnectionJdbcSpec spec = new ConnectionJdbcSpec(System.getProperty("activejdbc.driver"),
-				System.getProperty("activejdbc.url"), System.getProperty("activejdbc.username"),
-				System.getProperty("activejdbc.password"));
-		alesiaDB.open(spec);
 	}
 	public static Hashtable<String, Object> showDialog(TUIFormPanel content, double withFactor, double heightFactor) {
 
@@ -242,6 +219,7 @@ public class Alesia extends Application {
 
 		return content.getValues();
 	}
+
 	public static void showNotification(String mid, int lt, Object... dta) {
 		TError ae = new TError(mid, dta);
 		WebInnerNotification npop = NotificationManager.showInnerNotification(Alesia.mainFrame, ae.getMessage(),
@@ -255,7 +233,6 @@ public class Alesia extends Application {
 			newMsg.play();
 		}
 	}
-
 	/**
 	 * show notification that does't disapear ultil user click on it
 	 * 
@@ -265,6 +242,7 @@ public class Alesia extends Application {
 	public static void showNotification(String mid, Object... dta) {
 		showNotification(mid, 0, dta);
 	}
+
 	/**
 	 * show notification that disapear according to {@link AplicationException} limited time
 	 * 
@@ -275,61 +253,6 @@ public class Alesia extends Application {
 		showNotification(mid, new TError(mid).getMiliSeconds(), dta);
 	}
 
-	/**
-	 * this method is only for reference of the old school clases.
-	 */
-	private static void configureWorkMenuBar() {
-
-		// JMenu menu = new JMenu(TStringUtils.getBundleString("about.app.name"));
-
-		// MenuActionFactory maf = null;
-		// maf = new MenuActionFactory(SystemVars.class);
-		// menu.add(maf);
-		// maf = new MenuActionFactory(TConnectionDialog.class);
-		// maf.setDimension(MenuActionFactory.PACK_DIMMENTION);
-		// menu.add(maf);
-		// maf = new MenuActionFactory(TDriverDialog.class);
-		// maf.setDimension(MenuActionFactory.PACK_DIMMENTION);
-		// menu.add(maf);
-		// menu.add(new LoadView());
-		// menu.add(new SaveView());
-		// menu.add(new UpdateManifestView());
-		// menuBar.add(menu);
-
-		// menu.add(new JSeparator(JSeparator.HORIZONTAL));
-		// menu.add(new DockingAction(Wellcome.class));
-		// menu.add(new DockingAction(HelpBrowser.class));
-		// menu.add(new UpdateManifestView());
-		// MenuActionFactory maf = new MenuActionFactory(AuditLog.class);
-
-		// 171201 1.24: Mierdaaa ya es diciembre y yo pelandooooooooo otro añooo !?!?! user options moved to
-		// plancselector
-
-		// 191031 7:16: Mierdaaaa ya an pasado 2 anos y continuo pelandooooo otro aöo mas !!!!! JAJAJAJAJAJA Ahora
-		// pelando pero en alemania :D
-		//
-		// menu.add(new ChangePasswordAction());
-		// menu.add(new SignOut());
-		// menu.add(new JSeparator(JSeparator.HORIZONTAL));
-		// menu.add(new Exit());
-		// final PathSelector pcs = new PathSelector();
-	}
-
-	/**
-	 * Look in the Alesia.properties file, look for the property "Alesia.database.file.name" and load an return the list
-	 * of all prperties found in that file. This file contain all data base connection information.
-	 * 
-	 * @return all properties found in the database properties files
-	 */
-	private static Properties getDBProperties() throws Exception {
-		// active jdbc propertie files pointed form main alesia property file
-		Properties activeprp = new Properties();
-		// TODO: convert to urls to allow more access support ???
-		File fp = new File(System.getProperty("Alesia.database.file.name"));
-		activeprp.load(new FileInputStream(fp));
-		return activeprp;
-	}
-	private static DB alesiaDB;
 	/**
 	 * try to connect to local database. this method determine if an instance of this app is already running. in this
 	 * case, send {@link TPreferences#REQUEST_MAXIMIZE} message throwout internal comunication file (_.properties file)
@@ -380,32 +303,19 @@ public class Alesia extends Application {
 			System.exit(-1);
 		}
 	}
-
 	/**
-	 * Consult the <code>cmdow.exe</code> program and look for the active windows who match the pattern parameter
+	 * Look in the Alesia.properties file, look for the property "Alesia.database.file.name" and load an return the list
+	 * of all prperties found in that file. This file contain all data base connection information.
 	 * 
-	 * @param pattern - wildcard patter matcher 
-	 * 
-	 * @return list of string lines where the patter match.
+	 * @return all properties found in the database properties files
 	 */
-	public static ArrayList<String> getActiveWindows(String pattern) {
-		ArrayList<String> resutl = new ArrayList<>();
-		try {
-			Runtime runtime = Runtime.getRuntime();
-			Process process = runtime.exec("cmdow.exe /t");
-			InputStream is = process.getInputStream();
-			Scanner sc = new Scanner(is);
-			while (sc.hasNext()) {
-				String line = sc.nextLine();
-				if (TStringUtils.wildCardMacher(line, pattern))
-					System.out.println(line);
-			}
-			is.close();
-			sc.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return resutl;
+	private static Properties getDBProperties() throws Exception {
+		// active jdbc propertie files pointed form main alesia property file
+		Properties activeprp = new Properties();
+		// TODO: convert to urls to allow more access support ???
+		File fp = new File(System.getProperty("Alesia.database.file.name"));
+		activeprp.load(new FileInputStream(fp));
+		return activeprp;
 	}
 
 	/**
@@ -465,12 +375,9 @@ public class Alesia extends Application {
 		sessionManager.setSessionListeners(Arrays.asList(slit));
 
 		/**
-		 * to present local user information 
-		 * net user administrator
+		 * to present local user information net user administrator
 		 * 
-		 * command line for check password against local user
-		 * net use \\localhost /user:username password
-		 * terry porfin12
+		 * command line for check password against local user net use \\localhost /user:username password terry porfin12
 		 */
 		if (!currentUser.isAuthenticated()) {
 			UserLogIn li = new UserLogIn();
@@ -482,7 +389,7 @@ public class Alesia extends Application {
 			}
 			UsernamePasswordToken token = new UsernamePasswordToken((String) vals.get("UserLogIn.user"),
 					(String) vals.get("UserLogIn.password"));
-//			token.setRememberMe(true);
+			// token.setRememberMe(true);
 			try {
 				currentUser.login(token);
 			} catch (UnknownAccountException uae) {
@@ -526,7 +433,7 @@ public class Alesia extends Application {
 		}
 
 		// all done - log out!
-//		currentUser.logout();
+		// currentUser.logout();
 	}
 
 	public void restarApplication() {
@@ -596,7 +503,7 @@ public class Alesia extends Application {
 
 		Alesia.mainFrame.setSplashIncrementText("Starting task manager ...");
 		Alesia.manager = new TTaskManager();
-//		 requestAutentication();
+		// requestAutentication();
 
 		// load left panel actions
 		mainPanel = new DockingContainer();

@@ -239,9 +239,9 @@ private ArrayList<DescriptiveStatistics> statistics;
 	/**
 	 * initialize this sensor array. clearing all sensor and all variables
 	 */
-	public void init() {
+	public void clearEnviorement() {
 		screenSensors.values().forEach((ss) -> ss.init());
-		pokerSimulator.init();
+		pokerSimulator.clearEnviorement();
 	}
 
 	/**
@@ -509,7 +509,7 @@ private ArrayList<DescriptiveStatistics> statistics;
 			screenSensors.put(ss.getName(), ss);
 		}
 		setStandByBorder();
-		pokerSimulator.init();
+		pokerSimulator.clearEnviorement();
 		gameRecorder = new GameRecorder(getVillans());
 	}
 }

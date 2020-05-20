@@ -361,6 +361,14 @@ public class TUIUtils {
 		return jcbox;
 	}
 
+	/**
+	 * Return a {@link TWebComboBox} with the standar configuration parameters
+	 * 
+	 * @param name - name of the compoment
+	 * @param listId - prefix of the list elements stored in the app or plugins {@link ResourceBundle}
+	 * 
+	 * @return {@link TWebComboBox}
+	 */
 	public static TWebComboBox getTWebComboBox(String name, String listId) {
 		TEntry[] entries = TStringUtils.getTEntryGroup(listId);
 		return getTWebComboBox(name, entries, null);
@@ -379,6 +387,9 @@ public class TUIUtils {
 		twcb.setSelectedIndex(row);
 		twcb.setName(name);
 		twcb.putClientProperty("settingsProcessor", new Configuration<ComboBoxState>(name));
+		String tt = TStringUtils.getString(name + ".tt");
+		if (tt != null)
+			twcb.setToolTip(tt);
 		return twcb;
 	}
 
@@ -475,7 +486,7 @@ public class TUIUtils {
 			jftf.setHorizontalAlignment(JTextField.RIGHT);
 		}
 		setDimensionForTextComponent(jftf, cw);
-		setToolTip(name, jftf);
+//		setToolTip(name, jftf);
 		// 180614: implement focus listener
 		FocusAdapter fa = new FocusAdapter() {
 			@Override
@@ -616,27 +627,16 @@ public class TUIUtils {
 		return jsp;
 	}
 
-	/**
-	 * <code>JTextField</code> con formato estandar para registros
-	 * 
-	 * @param rcd - datos
-	 * @param fld - nombre de la columna
-	 * @return JTextField
-	 */
-	public static JTextField getJTextField(Model model, ColumnMetadata column) {
-		String fn = column.getColumnName();
-		int len = column.getColumnSize();
-		String val = model.getString(fn);
-		JTextField jtf = getJTextField("tt" + fn, val, len);
-		jtf.setName(fn);
-		return jtf;
-	}
-
 	public static WebTextField getWebTextField(String name, String val, int cw) {
 		WebTextField textField = new WebTextField(cw);
 		textField.setDocument(new TPlainDocument(val, cw));
 		textField.setText(val);
 		textField.setName(name);
+		textField.putClientProperty("settingsProcessor", new Configuration<TextComponentState>(name));
+		String tt = TStringUtils.getString(name + ".tt");
+		if (tt != null)
+			textField.setToolTip(tt);
+
 		return textField;
 	}
 	/**

@@ -117,10 +117,19 @@ public class Hero extends TPlugin {
 		ab.setSelected(pause);
 		t.pause(pause);
 	}
-	
+
 	@org.jdesktop.application.Action
 	public Task runTrooper(ActionEvent event) {
 		startDate = new Date();
+		// retrive info from the porker window to resize
+		ArrayList<TEntry<String, String>> winds = TResources.getActiveWindows("*terry1013*");
+		// TODO: temporal: set manualy the correct win pos and size
+		if (winds.isEmpty()) {
+			JOptionPane.showMessageDialog(Alesia.mainFrame, "No active window found", "Error",
+					JOptionPane.ERROR_MESSAGE);
+			return null;
+		}
+		TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 840 600 /mov 532 41");
 		return start(false);
 	}
 
@@ -158,7 +167,7 @@ public class Hero extends TPlugin {
 				}
 			}
 		};
-		t.getPokerSimulator().setParameter();
+//		t.getPokerSimulator().setParameter();
 		t.addPropertyChangeListener(tl);
 		t.setTestMode(isTest);
 		actionMap.get("testTrooper").setEnabled(false);
