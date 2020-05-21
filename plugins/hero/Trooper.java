@@ -1,6 +1,5 @@
 package plugins.hero;
 
-import java.io.*;
 import java.text.*;
 import java.util.*;
 import java.util.stream.*;
@@ -50,8 +49,8 @@ public class Trooper extends Task {
 	public static String EXPLANATION = "trooper.Explanation";
 	public static String STATUS = "trooper.Status";
 	private PokerSimulator pokerSimulator;
-	private RobotActuator robotActuator;
 	private SensorsArray sensorsArray;
+	private RobotActuator robotActuator;
 	private boolean isTestMode;
 	private Vector<TEntry<String, Double>> availableActions;
 	private int countdown = 5;
@@ -74,13 +73,14 @@ public class Trooper extends Task {
 	public Trooper() {
 		super(Alesia.getInstance());
 		this.robotActuator = new RobotActuator();
-		availableActions = new Vector<>();
+		this.availableActions = new Vector<>();
+		this.sensorsArray = Hero.sensorsArray;
 		this.outGameStats = new DescriptiveStatistics(10);
-		this.sensorsArray = new SensorsArray();
 		this.pokerSimulator = sensorsArray.getPokerSimulator();
 		instance = this;
 		this.preflopHands = TStringUtils.getStrings("preflop.card");
 	}
+	
 	public static Trooper getInstance() {
 		return instance;
 	}
@@ -90,25 +90,6 @@ public class Trooper extends Task {
 		super.cancel(interrupt);
 	}
 
-	public PokerSimulator getPokerSimulator() {
-		return pokerSimulator;
-	}
-
-	public SensorsArray getSensorsArray() {
-		return sensorsArray;
-	}
-	/**
-	 * set the enviorement. this method create a new enviorement discarting all previous created objects
-	 * 
-	 */
-	public void init(File file) {
-		ShapeAreas sDisp = new ShapeAreas(file);
-		sDisp.read();
-		this.availableActions.clear();
-		sensorsArray.createSensorsArray(sDisp);
-		robotActuator.setEnviorement(sDisp);
-		Hero.heroPanel.setArray(sensorsArray);
-	}
 	public boolean isPaused() {
 		return paused;
 	}

@@ -31,7 +31,7 @@ public class RaceRecord extends TUIFormPanel {
 					true, true);
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("reracetime")),
 					true, true);
-			addInputComponent(TUIUtils.getJTextField(model, listPanel.getColumnMetadata().get("reserie")), true, true);
+			addInputComponent(TUIUtils.getWebTextField(model, listPanel.getColumnMetadata().get("reserie")), true, true);
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("repartial1")),
 					true, true);
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("repartial2")),
@@ -40,7 +40,7 @@ public class RaceRecord extends TUIFormPanel {
 					false, true);
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("repartial4")),
 					false, true);
-			addInputComponent(TUIUtils.getJTextField(model, listPanel.getColumnMetadata().get("rehorsegender")), true,
+			addInputComponent(TUIUtils.getWebTextField(model, listPanel.getColumnMetadata().get("rehorsegender")), true,
 					true);
 		}
 
@@ -61,12 +61,12 @@ public class RaceRecord extends TUIFormPanel {
 					true);
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("rerating")),
 					false, true);
-			addInputComponent(TUIUtils.getJTextField(model, listPanel.getColumnMetadata().get("reobs")), false, true);
+			addInputComponent(TUIUtils.getWebTextField(model, listPanel.getColumnMetadata().get("reobs")), false, true);
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("recps")), false,
 					true);
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("redividend")),
 					false, false);
-			addInputComponent(TUIUtils.getJTextField(model, listPanel.getColumnMetadata().get("retrainer")), false,
+			addInputComponent(TUIUtils.getWebTextField(model, listPanel.getColumnMetadata().get("retrainer")), false,
 					true);
 		}
 

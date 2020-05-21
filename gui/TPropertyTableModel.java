@@ -100,7 +100,7 @@ public class TPropertyTableModel extends AbstractTableModel {
 		if (properties != null) {
 			switch (columnIndex) {
 				case 1 :
-					t.setKey((aValue != null) ? aValue.toString() : new String());
+//					t.setKey((aValue != null) ? aValue.toString() : new String());
 					fireTableCellUpdated(rowIndex, columnIndex);
 					break;
 				case 2 :

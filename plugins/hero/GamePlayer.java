@@ -24,6 +24,7 @@ public class GamePlayer {
 	private String name;
 	private String oldName = "";
 	private DescriptiveStatistics bettingPattern;
+	private DescriptiveStatistics previousBettingPattern;
 	private SensorsArray array;
 	private int playerId;
 	private String prefix;
@@ -34,8 +35,9 @@ public class GamePlayer {
 		this.prefix = "villan" + playerId;
 		this.name = prefix;
 		this.prevValue = -1;
-		this.array = Trooper.getInstance().getSensorsArray();
-		initStatistics();
+		this.array = Hero.sensorsArray;
+		this.bettingPattern = new DescriptiveStatistics(100);
+		this.previousBettingPattern = new DescriptiveStatistics(100);
 	}
 
 	public int getId() {
@@ -44,17 +46,20 @@ public class GamePlayer {
 	public String getName() {
 		return name;
 	}
-	private void initStatistics() {
-		this.bettingPattern = new DescriptiveStatistics(100);
+	public String getPreviousStats() {
+		return getMean(previousBettingPattern) + " (" + previousBettingPattern.getN() + ")";
+
 	}
+
+	public String getStats() {
+		return getMean() + " (" + bettingPattern.getN() + ")";
+	}
+
 	/**
-	 * signal by {@link GameRecorder} when is time to update the information about this player. This method will updata
-	 * all the available information retrived from {@link PokerSimulator}
-	 * <p>
-	 * When this method detect a know villan, it will try to retrive pass information about him form the data base.
-	 * propabilistic information about this villan could be retribed afeter that
+	 * Read the sensor form the {@link SensorsArray} asociated whit this recorder
+	 * 
 	 */
-	public void update() {
+	public void readSensors() {
 		// record only if the player is active
 		if (!array.isActive(playerId))
 			return;
@@ -95,51 +100,36 @@ public class GamePlayer {
 		name = name == null ? prefix : name;
 		if (!(name.equals(prefix) || name.equals(oldName))) {
 			oldName = name;
-			GamesHistory gh = GamesHistory.findFirst("NAME = ?", name);
-			if (gh == null) {
-				initStatistics();
-			} else {
-				bettingPattern = (DescriptiveStatistics) TPreferences
+			Game gh = Game.findFirst("NAME = ? AND TABLEPARAMS = ? ORDER BY TIME DESC", name,
+					array.getPokerSimulator().getTableParameters());
+			if (gh != null) {
+				previousBettingPattern = (DescriptiveStatistics) TResources
 						.getObjectFromByteArray(gh.getBytes("BEATTIN_PATTERN"));
 			}
 		}
 
-		// store the curren street. starting hans can be calculated just retrivin the values > 0;
-		// startingHands.addValue(array.getPokerSimulator().getCurrentRound());
-		// startingHands.addValue(round);
 		// negative for betting, positive for winnigs (don.t record 0 value because affect statistical values)
 		if (chips - prevValue != 0)
 			bettingPattern.addValue(chips - prevValue);
 		prevValue = chips;
 	}
 
-	public double getMean() {
-		double mean = bettingPattern.getMean();
-		mean = ((int) (mean * 100)) / 100.0;
-		return mean;
-	}
-	public long getN() {
-		return bettingPattern.getN();
-	}
-
-	public double getVariance() {
-		double var = bettingPattern.getStandardDeviation();
-		var = ((int) (var * 100)) / 100.0;
-		return var;
-	}
-
-	@Override
-	public String toString() {
-		return getMean() + " (" + getN() + ")";
-	}
-
 	public void updateDB() {
 		if (!name.equals(prefix)) {
-			GamesHistory gh = GamesHistory.findOrInit("time", Hero.startDate, "tableparams",
-					array.getPokerSimulator().getTableParameters(), "name", name);
-			gh.set("ASSESMENT", toString());
-			gh.set("BEATTIN_PATTERN", TPreferences.getByteArrayFromObject(bettingPattern));
+			Game gh = Game.findOrInit("TIME", Hero.startDate, "tableparams", array.getPokerSimulator().getTableParameters(), "name", name);
+			gh.set("ASSESMENT", getStats());
+			gh.set("BEATTIN_PATTERN", TResources.getByteArrayFromObject(bettingPattern));
 			gh.save();
 		}
+	}
+
+	public double getMean() {
+		return getMean(bettingPattern);
+	}
+
+	private double getMean(DescriptiveStatistics stats) {
+		double mean = stats.getMean();
+		mean = ((int) (mean * 100)) / 100.0;
+		return mean;
 	}
 }

@@ -47,13 +47,19 @@ public class TActionsFactory {
 		instance = this;
 	}
 
+	/**
+	 * Insert the given {@link ActionMap} to the main application {@link ActionMap}. this allow use this class to find
+	 * aditional actions inserted during plugin initializacion.
+	 * 
+	 * @param actionMap - tha map to append 
+	 */
 	public static void insertActions(ActionMap actionMap) {
 		Object[] keys = actionMap.allKeys();
 		for (Object key : keys) {
 			instance.actionMap.put(key, actionMap.get(key));
 		}
 	}
-	
+
 	public static javax.swing.Action getAction(String key) {
 		return instance.actionMap.get(key);
 	}
@@ -177,7 +183,7 @@ public class TActionsFactory {
 		}
 	}
 
-//	public static String TUILISTPANEL = "TUIListPanel";
+	// public static String TUILISTPANEL = "TUIListPanel";
 
 	/**
 	 * generic constant to store information about grouping or group
@@ -219,7 +225,7 @@ public class TActionsFactory {
 
 			// find the variable
 			lsel = LocalProperty.findById(sel.getKey());
-			Object obj = TPreferences.getObjectFromByteArray(lsel.getBytes("value"));
+			Object obj = TResources.getObjectFromByteArray(lsel.getBytes("value"));
 			me.putValue(DATA_LOADED, obj);
 		}
 	}
@@ -228,7 +234,7 @@ public class TActionsFactory {
 	public void newModel(ActionEvent event) {
 		AbstractButton src = (AbstractButton) event.getSource();
 		ApplicationAction me = (ApplicationAction) src.getAction();
-		TUIListPanel  tuilp = SwingUtils.getFirstParent((JComponent) event.getSource(), TUIListPanel.class);
+		TUIListPanel tuilp = SwingUtils.getFirstParent((JComponent) event.getSource(), TUIListPanel.class);
 		TUIFormPanel tuifp = tuilp.getTUIFormPanel(me);
 		WebDialog dlg = tuifp.createDialog(false);
 		dlg.setVisible(true);
@@ -242,7 +248,7 @@ public class TActionsFactory {
 	public void editModel(ActionEvent event) {
 		AbstractButton src = (AbstractButton) event.getSource();
 		ApplicationAction me = (ApplicationAction) src.getAction();
-		TUIListPanel  tuilp = SwingUtils.getFirstParent((JComponent) event.getSource(), TUIListPanel.class);
+		TUIListPanel tuilp = SwingUtils.getFirstParent((JComponent) event.getSource(), TUIListPanel.class);
 		TUIFormPanel tuifp = tuilp.getTUIFormPanel(me);
 		WebDialog dlg = tuifp.createDialog(false);
 		dlg.setVisible(true);
@@ -261,7 +267,7 @@ public class TActionsFactory {
 				TStringUtils.getString("deleteModel.Action.title"), JOptionPane.DEFAULT_OPTION,
 				JOptionPane.WARNING_MESSAGE, null, options, options[1]);
 		if (o == JOptionPane.YES_OPTION) {
-			TUIListPanel listp = SwingUtils.getFirstParent(src,  TUIListPanel.class);
+			TUIListPanel listp = SwingUtils.getFirstParent(src, TUIListPanel.class);
 			listp.getModel().delete();
 			listp.freshen();
 		}

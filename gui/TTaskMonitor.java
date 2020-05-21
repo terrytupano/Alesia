@@ -12,7 +12,6 @@ package gui;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.*;
 import java.beans.*;
 import java.util.concurrent.*;
 
@@ -26,7 +25,6 @@ import com.alee.extended.layout.*;
 import com.alee.extended.panel.*;
 import com.alee.extended.window.*;
 import com.alee.laf.label.*;
-import com.alee.utils.*;
 
 import core.*;
 import gui.wlaf.*;

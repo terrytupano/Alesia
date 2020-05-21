@@ -71,16 +71,14 @@ public abstract class TUIListPanel extends TUIPanel implements ListSelectionList
 	private JScrollPane js_pane;
 	private TAbstractTableModel tableModel;
 	private WebTable webTable;
-	private TAbstractListModel listModel;
 	private WebList tJlist;
-	private String specialFieldID;
 	private boolean cellEditable;
 	private Hashtable<String, Hashtable> referenceColumns;
 	private String iconParameters;
 	private String tableColumns;
 	private Map<String, ColumnMetadata> columnMetadata;
 
-	private Function<String, LazyList> function;
+	//	private Function<String, LazyList> function;
 	private Map<String, ColumnMetadata> columns;
 
 	/**
@@ -135,9 +133,6 @@ public abstract class TUIListPanel extends TUIPanel implements ListSelectionList
 
 	public void freshen() {
 		tableModel.freshen();
-		listModel.freshen();
-		listModel = new TAbstractListModel(tableModel);
-		tJlist.setModel(listModel);
 		// 171231: if no element to display, disable actions
 		if (tableModel.getRowCount() == 0) {
 			setEnableActions("scope", "element", false);
@@ -243,14 +238,10 @@ public abstract class TUIListPanel extends TUIPanel implements ListSelectionList
 
 	public void setColumns(String cols) {
 		this.tableColumns = cols;
-		// temp
-		TDefaultListCellRenderer tdlcr = (TDefaultListCellRenderer) tJlist.getCellRenderer();
-		tdlcr.setColumns(cols);
 	}
 
 	public void setDBParameters(Function<String, List<Model>> function, Map<String, ColumnMetadata> columns) {
 		if (function != null || columns != null) {
-			this.specialFieldID = (String) getClientProperty(TConstants.SPECIAL_COLUMN);
 			this.columns = columns;
 			setColumnMetadata(columns);
 			// table model
@@ -269,13 +260,6 @@ public abstract class TUIListPanel extends TUIPanel implements ListSelectionList
 				// for (String fn : cls) {
 				// webTable.setDefaultEditor(mod.getFieldValue(fn).getClass(), ttce);
 				// }
-			}
-
-			// list model
-			this.listModel = new TAbstractListModel(tableModel);
-			tJlist.setModel(listModel);
-			if (tableModel.getRowCount() > 0) {
-				// tJlist.setPrototypeCellValue(tableModel.getRecordAt(0));
 			}
 
 			setView(view);
@@ -303,9 +287,6 @@ public abstract class TUIListPanel extends TUIPanel implements ListSelectionList
 		webTable.setDefaultRenderer(Long.class, tdcr);
 	}
 
-	public void setF(Function<String, LazyList> function) {
-		this.function = function;
-	}
 	/**
 	 * Indica los parametros necesarios para presentar el icono que adorna la celda. los parametros descritos en forma
 	 * parm;parm;...
@@ -328,15 +309,12 @@ public abstract class TUIListPanel extends TUIPanel implements ListSelectionList
 	 */
 	public void setIconParameters(String ip) {
 		TDefaultTableCellRenderer tdcr = (TDefaultTableCellRenderer) webTable.getDefaultRenderer(String.class);
-		TDefaultListCellRenderer tdlcr = (TDefaultListCellRenderer) tJlist.getCellRenderer();
 		if (ip != null) {
 			String[] col_ico_val = ip.split(";");
 			String vc = (col_ico_val.length > 2) ? col_ico_val[2] : null;
 			tdcr.setIconParameters(Integer.parseInt(col_ico_val[0]), col_ico_val[1], vc);
-			tdlcr.setIconParameters(col_ico_val[1], vc);
 		} else {
 			tdcr.setIconParameters(0, "document", null);
-			tdlcr.setIconParameters("document", null);
 		}
 	}
 
@@ -416,8 +394,6 @@ public abstract class TUIListPanel extends TUIPanel implements ListSelectionList
 		// cellrenderer
 		TDefaultTableCellRenderer tdcr = new TDefaultTableCellRenderer();
 		setDefaultRenderer(tdcr);
-		TDefaultListCellRenderer tdlcr = new TDefaultListCellRenderer();
-		tJlist.setCellRenderer(tdlcr);
 
 		setIconParameters(null);
 	}

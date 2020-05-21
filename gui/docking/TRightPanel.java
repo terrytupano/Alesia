@@ -8,7 +8,6 @@ import javax.swing.*;
 
 import com.alee.extended.layout.*;
 import com.alee.laf.button.*;
-import com.alee.laf.label.*;
 import com.alee.laf.panel.*;
 import com.alee.managers.style.*;
 import com.jgoodies.forms.builder.*;
@@ -16,8 +15,6 @@ import com.jgoodies.forms.layout.*;
 import com.jgoodies.forms.layout.FormLayout;
 
 import core.*;
-import gui.*;
-import gui.jgoodies.*;
 
 public class TRightPanel extends WebPanel implements FocusListener {
 

@@ -13,13 +13,10 @@ package plugins.flicka;
 import java.text.*;
 import java.util.*;
 
-import javax.swing.*;
-
 import org.apache.commons.math3.geometry.euclidean.twod.*;
 import org.apache.commons.math3.stat.*;
 import org.apache.commons.math3.stat.descriptive.*;
 import org.javalite.activejdbc.*;
-import org.jdesktop.application.*;
 
 import core.*;
 import core.datasource.model.*;

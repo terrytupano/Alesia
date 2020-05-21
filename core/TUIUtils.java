@@ -123,6 +123,23 @@ public class TUIUtils {
 		jl.setFont((req ? f.deriveFont(Font.BOLD) : f.deriveFont(Font.PLAIN)));
 	}
 
+	public static JComponent getBackgroundPanel() {
+		WebImage wi = new WebImage(TResources.getIcon("text")) {
+			protected void paintComponent(Graphics g) {
+				Graphics2D g2d = (Graphics2D) g;
+				g2d.setPaint(new LinearGradientPaint(0, 0, 0, getHeight(), new float[]{0f, 0.4f, 0.6f, 1f},
+						new Color[]{Color.gray, Color.WHITE, Color.WHITE, Color.gray}));
+				g2d.fill(g2d.getClip() != null ? g2d.getClip() : getVisibleRect());
+
+				super.paintComponent(g);
+			}
+		};
+		wi.setDisplayType(DisplayType.preferred);
+		wi.setHorizontalAlignment(SwingConstants.CENTER);
+		wi.setVerticalAlignment(SwingConstants.CENTER);
+		return wi;
+	}
+
 	/**
 	 * retorna un <code>Box</code> con formato preestablecido para los componentes que se encuentran en la parte
 	 * inferior de las ventanas de dialogo.
@@ -142,19 +159,25 @@ public class TUIUtils {
 		return b1;
 	}
 
+	public static GroupPanel getButtonGroup() {
+		GroupPanel bg = new GroupPanel();
+		CompoundBorder cb = new CompoundBorder(new EmptyBorder(2, 2, 2, 2), bg.getBorder());
+		bg.setBorder(cb);
+		return bg;
+	}
+
 	/**
-	 * crea y retorna una instancia de <code>JComboBox</code> diseñada presentar una paleta de colores DESENTEEEEEEEEEEE
-	 * POR FAVOOOOOOORRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+	 * return a {@link CheckComboBox} with predefined parameters
 	 * 
+	 * @param ct - constants group
+	 * @param rcd - Record
+	 * @param fld - field name of store parameters
 	 * 
-	 * @param tid - id para tooltip
-	 * @param col - color en formato <code>Integer.decode(Sttring)</code> (0xHexDigits 0XHexDigits #HexDigits)
-	 * 
-	 * @return selector de color
+	 * @return {@link CheckComboBox}
 	 */
-	public static JComboBox getColorJComboBox(String tid, Color col) {
-		ColorComboBox jcbox = new ColorComboBox(col);
-		setToolTip(tid, jcbox);
+	public static CheckComboBox getCheckComboBox(String ct, Model model, String fld) {
+		TEntry[] val = TStringUtils.getTEntryGroup(ct);
+		CheckComboBox jcbox = getCheckComboBox("tt" + fld, val, model.getString(fld));
 		return jcbox;
 	}
 
@@ -174,17 +197,18 @@ public class TUIUtils {
 	}
 
 	/**
-	 * return a {@link CheckComboBox} with predefined parameters
+	 * crea y retorna una instancia de <code>JComboBox</code> diseñada presentar una paleta de colores DESENTEEEEEEEEEEE
+	 * POR FAVOOOOOOORRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
 	 * 
-	 * @param ct - constants group
-	 * @param rcd - Record
-	 * @param fld - field name of store parameters
 	 * 
-	 * @return {@link CheckComboBox}
+	 * @param tid - id para tooltip
+	 * @param col - color en formato <code>Integer.decode(Sttring)</code> (0xHexDigits 0XHexDigits #HexDigits)
+	 * 
+	 * @return selector de color
 	 */
-	public static CheckComboBox getCheckComboBox(String ct, Model model, String fld) {
-		TEntry[] val = TStringUtils.getTEntryGroup(ct);
-		CheckComboBox jcbox = getCheckComboBox("tt" + fld, val, model.getString(fld));
+	public static JComboBox getColorJComboBox(String tid, Color col) {
+		ColorComboBox jcbox = new ColorComboBox(col);
+		setToolTip(tid, jcbox);
 		return jcbox;
 	}
 
@@ -348,11 +372,296 @@ public class TUIUtils {
 		return jcb;
 	}
 
-	public static WebCheckBox getWebCheckBox(String name) {
-		WebCheckBox jcb = new WebCheckBox(TStringUtils.getString(name));
-		jcb.setName(name);
-		jcb.putClientProperty("settingsProcessor", new Configuration<ButtonState>(name));
-		return jcb;
+	/**
+	 * crea y retorna una instancia de <code>JEditorPane</code> con configuracion estandar para presentacion de texto en
+	 * formato HTML
+	 * 
+	 * @param txt - texto a presentar en el componente
+	 * 
+	 * @return instancia de <code>JEditorPane</code>
+	 */
+	public static JEditorPane getJEditorPane(String txt) {
+		JEditorPane jep = new JEditorPane();
+		jep.setEditable(false);
+		StyleSheet shee = new StyleSheet();
+		try {
+			shee.loadRules(new FileReader(TResources.getFile("HtmlEditor.css")), null);
+		} catch (Exception e) {
+
+		}
+		HTMLEditorKit kit = new HTMLEditorKit();
+		kit.setStyleSheet(shee);
+		jep.setEditorKit(kit);
+		jep.setText(txt);
+		return jep;
+	}
+
+	/**
+	 * construye y retorna una instancia de JLabel con los atributos establecidos segun los argumentos de entrada.
+	 * 
+	 * @param field - id de resource bundle
+	 * @param req - true si el campo es de entrada obligatoria.
+	 * @param ena - abilitado o no.
+	 * @return instancia con atributos
+	 */
+	public static JLabel getJLabel(String field, boolean req, boolean ena) {
+		JLabel jl = new JLabel(TStringUtils.getString(field));
+		jl.setName(field);
+		formatJLabel(jl, req, ena);
+		return jl;
+	}
+
+	/**
+	 * <code>Jt_uspasswordField</code> con formato estandar
+	 * 
+	 * @param rcd - datos
+	 * @param fld - nombre del campo
+	 * @return JTextField
+	 */
+	public static JPasswordField getJPasswordField(Model model, String fld) {
+		int len = model.getMetaModel().getColumnMetadata().get(fld).getColumnSize();
+		String val = model.getString(fld);
+		JPasswordField jpf = getJPasswordField("tt" + fld, val, len);
+		// jpf.setName(fld);
+		return jpf;
+	}
+
+	/**
+	 * <code>Jt_uspasswordField</code> con formato estandar
+	 * 
+	 * @param ttn - id de tooltip
+	 * @param val - valor para el componente
+	 * @param cw - longitud del componente medido en caracteres
+	 * @return <code>Jt_uspasswordField</code> con formato estandar
+	 */
+	public static JPasswordField getJPasswordField(String ttn, String val, int cw) {
+		JPasswordField jpf = new JPasswordField(cw);
+		jpf.setDocument(new TPlainDocument(val, cw));
+		jpf.setText(val);
+		// jtf.setColumns(rcd.getFieldLength(fld));
+		setDimensionForTextComponent(jpf, cw);
+		setToolTip(ttn, jpf);
+		return jpf;
+	}
+
+	/**
+	 * retorna un <code>JRadioButton</code> con valores standar
+	 * 
+	 * @param ti - id de tooltip
+	 * @param idt - identificador en resourcebundle para el texto
+	 * @param sel - estado: seleccionado o no
+	 * @return JRadioButton
+	 */
+	public static JRadioButton getJRadioButton(String ti, String idt, boolean sel) {
+		JRadioButton jrb = new JRadioButton(TStringUtils.getString(idt), sel);
+		setToolTip(ti, jrb);
+		return jrb;
+	}
+
+	/**
+	 * JtextArea estadar para datos de registros
+	 * 
+	 * @param r - registro
+	 * @param f - nombre de la columna
+	 * @return JScrollPane
+	 */
+	public static JScrollPane getJTextArea(Model model, String field) {
+		int len = model.getMetaModel().getColumnMetadata().get(field).getColumnSize();
+		String val = model.getString(field);
+		JScrollPane jsp = getJTextArea("tt" + field, val, len, 2);
+		// jsp.setName(f);
+		return jsp;
+	}
+	/**
+	 * JtextArea estadar para datos de registros
+	 * 
+	 * @param r - registro
+	 * @param f - nombre de la columna
+	 * @param lin - Nro de lineas deseadas para el componente
+	 * @return JScrollPane
+	 */
+	public static JScrollPane getJTextArea(Model model, String field, int lin) {
+		int len = model.getMetaModel().getColumnMetadata().get(field).getColumnSize();
+		String val = model.getString(field);
+		JScrollPane jsp = getJTextArea("tt" + field, val, len, lin);
+		// jsp.setName(f);
+		return jsp;
+	}
+
+	/**
+	 * retorna <code>JTextArea</code> con formato estandar
+	 * 
+	 * @param tt - id para tooltips
+	 * @param val - Texto inicial para el componente
+	 * @param col - columnas. las columnas seran dividias entre el Nro de lineas
+	 * @param lin - Lineas. Nro de lines que se desean para el componentes
+	 * @return JScrollPane
+	 */
+	public static JScrollPane getJTextArea(String tt, String val, int col, int lin) {
+		int cl = (col / lin);
+		JTextArea jta = new JTextArea(val, lin, cl);
+		jta.setDocument(new TPlainDocument(val, col));
+		jta.setLineWrap(true);
+		setToolTip(tt, jta);
+		setDimensionForTextComponent(jta, cl);
+		JScrollPane jsp = new JScrollPane(jta, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
+				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		return jsp;
+	}
+
+	/**
+	 * <code>JTextField</code> con formato estandar
+	 * 
+	 * @param ttn - id de tooltip
+	 * @param val - valor para el componente
+	 * @param cw - longitud del componente medido en caracteres
+	 * @return <code>JTextField</code> scon formato estandar
+	 */
+	public static JTextField getJTextField(String ttn, String val, int cw) {
+		JTextField jtf = new JTextField(cw);
+		jtf.setDocument(new TPlainDocument(val, cw));
+		jtf.setText(val);
+		// jtf.setColumns(rcd.getFieldLength(fld));
+		setDimensionForTextComponent(jtf, cw);
+		setToolTip(ttn, jtf);
+		return jtf;
+	}
+
+	/**
+	 * barra de herramientas con formatos estandar
+	 * 
+	 * @return jtoolbar
+	 * 
+	 * @see {@link UIComponentPanel} for future toolbar implementation
+	 */
+	public static WebToolBar getJToolBar() {
+		WebToolBar toolBar = new WebToolBar();
+		// toolBar.setToolbarStyle(ToolbarStyle.attached);
+		toolBar.setFloatable(false);
+		toolBar.setRollover(true);
+		return toolBar;
+
+	}
+	/**
+	 * return the ImageIcon <code>src</code> with a mark which is a scaled instance of the icon file name
+	 * <code>mfn</code> draw over the source image.
+	 * 
+	 * @param src - original imagen
+	 * @param mfn - icon file name used as mark
+	 * @param h - Horizontal position of the mark. any of {@link SwingConstants#LEFT} or {@link SwingConstants#RIGHT}
+	 * @param h - Vertical position of the mark. any of {@link SwingConstants#TOP} or {@link SwingConstants#BOTTOM}
+	 * @return the image icon with the mark
+	 */
+	public static ImageIcon getMarkIcon(ImageIcon src, String mfn, int h, int v) {
+		int size = src.getIconHeight();
+		BufferedImage bi = ImageUtils.createCompatibleImage(size, size, Transparency.TRANSLUCENT);
+		Graphics2D g2d = bi.createGraphics();
+		g2d.drawImage(src.getImage(), 0, 0, null);
+		ImageIcon ii = TResources.getIcon(mfn, (int) (size * .6));
+		// draw position
+		int hpos = h == SwingConstants.LEFT ? 0 : size - ii.getIconWidth();
+		int vpos = v == SwingConstants.TOP ? 0 : size - ii.getIconHeight();
+		g2d.drawImage(ii.getImage(), hpos, vpos, null);
+		return new ImageIcon(bi);
+	}
+
+	/**
+	 * create and return an ImageIcon that is result of drawing background icon <code>bi</code> of request size
+	 * <code>size</code> and and merging with the fornt icon <code>fi</code> with 0.6 of size
+	 * 
+	 * @param bi - background icon (big)
+	 * @param fi - foreground Icon (small)
+	 * @param size - return image size
+	 * 
+	 * @return merged icon
+	 */
+	public static ImageIcon getMergedIcon(String bi, String fi, int size) {
+		// TODO: draw an oval before small icon to create contrast between images
+		ImageIcon ii2 = TResources.getIcon(bi, size);
+		ImageIcon ii = TResources.getIcon(fi, (int) (size * 0.6));
+		return ImageUtils.mergeIcons(ii2, ii);
+	}
+	/**
+	 * crea y retorna un componente informativo con formato estandar
+	 * 
+	 * @param rbid - id de resourceBundle
+	 * @param inf - componente que contendra la informacion
+	 * @return - Box
+	 */
+	public static JPanel getStandarInfoComponent(String rbid, Component inf) {
+		JLabel jl = new JLabel(TStringUtils.getString(rbid) + ":");
+		float inc = 2;
+		Font fo = jl.getFont();
+		fo = fo.deriveFont(fo.getSize() + inc);
+		fo = fo.deriveFont(Font.BOLD);
+		jl.setFont(fo);
+
+		fo = inf.getFont();
+		fo = fo.deriveFont(fo.getSize() + inc);
+		inf.setFont(fo);
+
+		JPanel ic = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		ic.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+		ic.add(jl);
+		ic.add(Box.createHorizontalStrut(4));
+		ic.add(inf);
+		return ic;
+	}
+
+	public static int getStringPixelHeight(String str, Font font) {
+		FontMetrics metrics = new FontMetrics(font) {
+		};
+		Rectangle2D bounds = metrics.getStringBounds(str, null);
+		return (int) bounds.getHeight();
+	}
+
+	/**
+	 * crea y retorna un separador horizontal con un texto colocado hacia la izquierda
+	 * 
+	 * 20161123.04:25 NAAAA GUEBONAAA DE VIEJOOOOO !!! ESTE METODO DEBE TENER +10 AÑOS !!!! FUE DE LOS PRIMEROS PARA
+	 * CLIO
+	 * 
+	 * @param idl - id para texto
+	 * @return componente
+	 */
+	public static JComponent getTitledSeparator(String idl) {
+		Box tb1 = Box.createVerticalBox();
+		tb1.add(Box.createVerticalGlue());
+		tb1.add(new JSeparator());
+		Box tb = Box.createHorizontalBox();
+		JLabel jl = new JLabel(TStringUtils.getString(idl));
+		jl.setFont(jl.getFont().deriveFont(Font.BOLD));
+		tb.add(jl);
+		tb.add(Box.createHorizontalStrut(H_GAP));
+		tb.add(tb1);
+		return tb;
+	}
+
+	/**
+	 * return a {@link JScrollPane} with a {@link TPropertyJTable} inside
+	 * 
+	 * @param rcd - record to obtain properties
+	 * @param fld - field name
+	 * @return Component
+	 * 
+	 */
+	public static JScrollPane getTPropertyJTable(Model model, String fld) {
+		return getTPropertyJTable("tt" + fld, model.getString(fld).toString());
+	}
+
+	/**
+	 * return a {@link JScrollPane} with a {@link TPropertyJTable} inside
+	 * 
+	 * @param tid - tooltip id
+	 * @param prpl - propertis string in standar format
+	 * @return Component 170911: MALDITO MABURRO con sus cadenas de mierdaaaa
+	 */
+	public static JScrollPane getTPropertyJTable(String tid, String prpl) {
+		TPropertyJTable tpjt = new TPropertyJTable(prpl);
+		setToolTip(tid, tpjt);
+		JScrollPane js = new JScrollPane(tpjt);
+		js.getViewport().setBackground(Color.WHITE);
+		return js;
 	}
 
 	public static TWebComboBox getTWebComboBox(String name, Model model, String listId) {
@@ -360,7 +669,6 @@ public class TUIUtils {
 		TWebComboBox jcbox = getTWebComboBox(name, entries, model.get(name));
 		return jcbox;
 	}
-
 	/**
 	 * Return a {@link TWebComboBox} with the standar configuration parameters
 	 * 
@@ -394,31 +702,60 @@ public class TUIUtils {
 	}
 
 	/**
-	 * crea y retorna una instancia de <code>JEditorPane</code> con configuracion estandar para presentacion de texto en
-	 * formato HTML
+	 * create and return and {@link WebButton} with all settings stablisehd for toolbar
 	 * 
-	 * @param txt - texto a presentar en el componente
-	 * 
-	 * @return instancia de <code>JEditorPane</code>
+	 * @param taa - action to set in the button
+	 * @return button ready to set as toolbar button
+	 * @since 2.3
 	 */
-	public static JEditorPane getJEditorPane(String txt) {
-		JEditorPane jep = new JEditorPane();
-		jep.setEditable(false);
-		StyleSheet shee = new StyleSheet();
-		try {
-			shee.loadRules(new FileReader(TResources.getFile("HtmlEditor.css")), null);
-		} catch (Exception e) {
+	public static WebButton getWebButtonForToolBar(Action action) {
+		overRideIcons(16, null, action);
+		WebButton jb = new WebButton(action);
+		jb.setRequestFocusEnabled(false);
 
-		}
-		HTMLEditorKit kit = new HTMLEditorKit();
-		kit.setStyleSheet(shee);
-		jep.setEditorKit(kit);
-		jep.setText(txt);
-		return jep;
+		// TooltipManager.setTooltip(jb, (String) taa.getValue(TAbstractAction.SHORT_DESCRIPTION), TooltipWay.down);
+		// jb.setDrawFocus(false);
+		// jb.setShadeWidth(0);
+		jb.setText(null);
+		jb.setPreferredWidth(46);
+		return jb;
 	}
 
-	public static TWebFileChooserField getWebFileChooserField(Model model, String fn) {
-		return getWebFileChooserField("tt" + fn, model.getString(fn));
+	public static WebCheckBox getWebCheckBox(String name) {
+		WebCheckBox jcb = new WebCheckBox(TStringUtils.getString(name));
+		jcb.setName(name);
+		jcb.putClientProperty("settingsProcessor", new Configuration<ButtonState>(name));
+		return jcb;
+	}
+
+	/**
+	 * create and return {@link WebDateField} according to parameters
+	 * 
+	 * @param rcd - Record to obtain data
+	 * @param fn - record field name
+	 * @return {@link WebDateField}
+	 * 
+	 */
+	public static WebDateField getWebDateField(Model model, ColumnMetadata column) {
+		String name = column.getColumnName();
+		WebDateField wdf = getWebDateField("tt" + name, model.getDate(name));
+		wdf.setName(name);
+		return wdf;
+	}
+
+	/**
+	 * create and return {@link WebDateField} according to parameters. the date format is dd/MM/yyy
+	 * 
+	 * @param tt - id for tooltips
+	 * @param val - date
+	 * @return {@link WebDateField}
+	 */
+	public static WebDateField getWebDateField(String tt, Date val) {
+		WebDateField wdf = val == null ? new WebDateField() : new WebDateField(val);
+		wdf.setDateFormat(new SimpleDateFormat("dd/MM/yyy"));
+		setDimensionForTextComponent(wdf, 10);
+		setToolTip(tt, wdf);
+		return wdf;
 	}
 
 	public static TWebFileChooserField getWebDirectoryChooserField(Model model, String fn) {
@@ -443,6 +780,10 @@ public class TUIUtils {
 		return fcf;
 	}
 
+	public static TWebFileChooserField getWebFileChooserField(Model model, String fn) {
+		return getWebFileChooserField("tt" + fn, model.getString(fn));
+	}
+
 	public static TWebFileChooserField getWebFileChooserField(String ttn, String file) {
 		TWebFileChooserField wfcf = new TWebFileChooserField(file);
 		wfcf.setPreferredWidth(200);
@@ -452,6 +793,50 @@ public class TUIUtils {
 		setToolTip(ttn, wfcf);
 		return wfcf;
 	}
+
+	/**
+	 * return a {@link WebTextField} with a trailing cancel button. The cancel button reroute the action performed to
+	 * set a empty text on text component and notify the actionlister.
+	 * 
+	 * @param alist - action listener. listerner to notify when a change on the text component ocurr.
+	 * 
+	 * @return text field for search or filter
+	 */
+	public static WebTextField getWebFindField(final ActionListener alist) {
+		final WebTextField findf = new WebTextField(20);
+		// WebButton cancelbt = WebButton.createIconWebButton(TResourceUtils.getIcon("cancelAction", 14), 0);
+		WebButton cancelbt = new WebButton(TResources.getIcon("cancelAction", 14));
+		cancelbt.setName("Cancel");
+		cancelbt.setFocusable(false);
+		// cancelbt.setShadeWidth(0);
+		// cancelbt.setMoveIconOnPress(false);
+		// cancelbt.setRolloverDecoratedOnly(true);
+		cancelbt.setCursor(Cursor.getDefaultCursor());
+
+		findf.setMargin(0, 0, 0, 0);
+		findf.setTrailingComponent(cancelbt);
+		// findf.setRound(WebDateFieldStyle.round);
+		// findf.setShadeWidth(WebDateFieldStyle.shadeWidth);
+
+		// 180403: old find button replaced by cancel button
+
+		// button change source to WebTextField for simplicity
+		cancelbt.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				findf.setText("");
+				alist.actionPerformed(new ActionEvent(findf, ActionEvent.ACTION_PERFORMED, ""));
+			}
+		});
+
+		findf.addActionListener(alist);
+		setDimensionForTextComponent(findf, 20);
+		setToolTip("ttsearch.textfield", findf);
+		setToolTip("ttsearch.button", cancelbt);
+
+		return findf;
+	}
+
 	/**
 	 * retorna <code>JFormattedTextField</code> estandar. NOTA: recomendado solo para numeros y fechas.
 	 * 
@@ -506,35 +891,6 @@ public class TUIUtils {
 		return jftf;
 	}
 
-	/**
-	 * construye y retorna una instancia de JLabel con los atributos establecidos segun los argumentos de entrada.
-	 * 
-	 * @param field - id de resource bundle
-	 * @param req - true si el campo es de entrada obligatoria.
-	 * @param ena - abilitado o no.
-	 * @return instancia con atributos
-	 */
-	public static JLabel getJLabel(String field, boolean req, boolean ena) {
-		JLabel jl = new JLabel(TStringUtils.getString(field));
-		jl.setName(field);
-		formatJLabel(jl, req, ena);
-		return jl;
-	}
-	/**
-	 * <code>Jt_uspasswordField</code> con formato estandar
-	 * 
-	 * @param rcd - datos
-	 * @param fld - nombre del campo
-	 * @return JTextField
-	 */
-	public static JPasswordField getJPasswordField(Model model, String fld) {
-		int len = model.getMetaModel().getColumnMetadata().get(fld).getColumnSize();
-		String val = model.getString(fld);
-		JPasswordField jpf = getJPasswordField("tt" + fld, val, len);
-		// jpf.setName(fld);
-		return jpf;
-	}
-
 	public static WebPasswordField getWebPasswordField(String field, String val, int cw) {
 		WebPasswordField wpf = new WebPasswordField(cw);
 		wpf.setDocument(new TPlainDocument(val, cw));
@@ -543,93 +899,19 @@ public class TUIUtils {
 		wpf.setName(field);
 		return wpf;
 	}
-	/**
-	 * <code>Jt_uspasswordField</code> con formato estandar
-	 * 
-	 * @param ttn - id de tooltip
-	 * @param val - valor para el componente
-	 * @param cw - longitud del componente medido en caracteres
-	 * @return <code>Jt_uspasswordField</code> con formato estandar
-	 */
-	public static JPasswordField getJPasswordField(String ttn, String val, int cw) {
-		JPasswordField jpf = new JPasswordField(cw);
-		jpf.setDocument(new TPlainDocument(val, cw));
-		jpf.setText(val);
-		// jtf.setColumns(rcd.getFieldLength(fld));
-		setDimensionForTextComponent(jpf, cw);
-		setToolTip(ttn, jpf);
-		return jpf;
+
+	public static WebTextField getWebTextField(Model model, ColumnMetadata column) {
+	int len = column.getColumnSize();
+	String fn = column.getColumnName();
+//	model.get(fn).toString() allow any field class
+	String val = model.get(fn).toString();
+	WebTextField jftf = getWebTextField(fn, val, len);
+	return jftf;
 	}
 
-	/**
-	 * retorna un <code>JRadioButton</code> con valores standar
-	 * 
-	 * @param ti - id de tooltip
-	 * @param idt - identificador en resourcebundle para el texto
-	 * @param sel - estado: seleccionado o no
-	 * @return JRadioButton
-	 */
-	public static JRadioButton getJRadioButton(String ti, String idt, boolean sel) {
-		JRadioButton jrb = new JRadioButton(TStringUtils.getString(idt), sel);
-		setToolTip(ti, jrb);
-		return jrb;
-	}
-
-	/**
-	 * JtextArea estadar para datos de registros
-	 * 
-	 * @param r - registro
-	 * @param f - nombre de la columna
-	 * @return JScrollPane
-	 */
-	public static JScrollPane getJTextArea(Model model, String field) {
-		int len = model.getMetaModel().getColumnMetadata().get(field).getColumnSize();
-		String val = model.getString(field);
-		JScrollPane jsp = getJTextArea("tt" + field, val, len, 2);
-		// jsp.setName(f);
-		return jsp;
-	}
-
-	/**
-	 * JtextArea estadar para datos de registros
-	 * 
-	 * @param r - registro
-	 * @param f - nombre de la columna
-	 * @param lin - Nro de lineas deseadas para el componente
-	 * @return JScrollPane
-	 */
-	public static JScrollPane getJTextArea(Model model, String field, int lin) {
-		int len = model.getMetaModel().getColumnMetadata().get(field).getColumnSize();
-		String val = model.getString(field);
-		JScrollPane jsp = getJTextArea("tt" + field, val, len, lin);
-		// jsp.setName(f);
-		return jsp;
-	}
-
-	/**
-	 * retorna <code>JTextArea</code> con formato estandar
-	 * 
-	 * @param tt - id para tooltips
-	 * @param val - Texto inicial para el componente
-	 * @param col - columnas. las columnas seran dividias entre el Nro de lineas
-	 * @param lin - Lineas. Nro de lines que se desean para el componentes
-	 * @return JScrollPane
-	 */
-	public static JScrollPane getJTextArea(String tt, String val, int col, int lin) {
-		int cl = (col / lin);
-		JTextArea jta = new JTextArea(val, lin, cl);
-		jta.setDocument(new TPlainDocument(val, col));
-		jta.setLineWrap(true);
-		setToolTip(tt, jta);
-		setDimensionForTextComponent(jta, cl);
-		JScrollPane jsp = new JScrollPane(jta, JScrollPane.VERTICAL_SCROLLBAR_NEVER,
-				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		return jsp;
-	}
-
-	public static WebTextField getWebTextField(String name, String val, int cw) {
-		WebTextField textField = new WebTextField(cw);
-		textField.setDocument(new TPlainDocument(val, cw));
+	public static WebTextField getWebTextField(String name, String val, int colums) {
+		WebTextField textField = new WebTextField(colums);
+		textField.setDocument(new TPlainDocument(val, colums));
 		textField.setText(val);
 		textField.setName(name);
 		textField.putClientProperty("settingsProcessor", new Configuration<TextComponentState>(name));
@@ -639,227 +921,23 @@ public class TUIUtils {
 
 		return textField;
 	}
-	/**
-	 * <code>JTextField</code> con formato estandar
-	 * 
-	 * @param ttn - id de tooltip
-	 * @param val - valor para el componente
-	 * @param cw - longitud del componente medido en caracteres
-	 * @return <code>JTextField</code> scon formato estandar
-	 */
-	public static JTextField getJTextField(String ttn, String val, int cw) {
-		JTextField jtf = new JTextField(cw);
-		jtf.setDocument(new TPlainDocument(val, cw));
-		jtf.setText(val);
-		// jtf.setColumns(rcd.getFieldLength(fld));
-		setDimensionForTextComponent(jtf, cw);
-		setToolTip(ttn, jtf);
-		return jtf;
-	}
 
 	/**
-	 * barra de herramientas con formatos estandar
+	 * create and return and {@link WebToggleButton} with all settings stablisehd for toolbar
 	 * 
-	 * @return jtoolbar
-	 * 
-	 * @see {@link UIComponentPanel} for future toolbar implementation
+	 * @param action - action to set in the button
+	 * @return button ready to set as toolbar button
+	 * @since 2.3
 	 */
-	public static WebToolBar getJToolBar() {
-		WebToolBar toolBar = new WebToolBar();
-		// toolBar.setToolbarStyle(ToolbarStyle.attached);
-		toolBar.setFloatable(false);
-		toolBar.setRollover(true);
-		return toolBar;
-
-	}
-
-	/**
-	 * return the ImageIcon <code>src</code> with a mark which is a scaled instance of the icon file name
-	 * <code>mfn</code> draw over the source image.
-	 * 
-	 * @param src - original imagen
-	 * @param mfn - icon file name used as mark
-	 * @param h - Horizontal position of the mark. any of {@link SwingConstants#LEFT} or {@link SwingConstants#RIGHT}
-	 * @param h - Vertical position of the mark. any of {@link SwingConstants#TOP} or {@link SwingConstants#BOTTOM}
-	 * @return the image icon with the mark
-	 */
-	public static ImageIcon getMarkIcon(ImageIcon src, String mfn, int h, int v) {
-		int size = src.getIconHeight();
-		BufferedImage bi = ImageUtils.createCompatibleImage(size, size, Transparency.TRANSLUCENT);
-		Graphics2D g2d = bi.createGraphics();
-		g2d.drawImage(src.getImage(), 0, 0, null);
-		ImageIcon ii = TResources.getIcon(mfn, (int) (size * .6));
-		// draw position
-		int hpos = h == SwingConstants.LEFT ? 0 : size - ii.getIconWidth();
-		int vpos = v == SwingConstants.TOP ? 0 : size - ii.getIconHeight();
-		g2d.drawImage(ii.getImage(), hpos, vpos, null);
-		return new ImageIcon(bi);
-	}
-
-	/**
-	 * create and return an ImageIcon that is result of drawing background icon <code>bi</code> of request size
-	 * <code>size</code> and and merging with the fornt icon <code>fi</code> with 0.6 of size
-	 * 
-	 * @param bi - background icon (big)
-	 * @param fi - foreground Icon (small)
-	 * @param size - return image size
-	 * 
-	 * @return merged icon
-	 */
-	public static ImageIcon getMergedIcon(String bi, String fi, int size) {
-		// TODO: draw an oval before small icon to create contrast between images
-		ImageIcon ii2 = TResources.getIcon(bi, size);
-		ImageIcon ii = TResources.getIcon(fi, (int) (size * 0.6));
-		return ImageUtils.mergeIcons(ii2, ii);
-	}
-
-	/**
-	 * crea y retorna un componente informativo con formato estandar
-	 * 
-	 * @param rbid - id de resourceBundle
-	 * @param inf - componente que contendra la informacion
-	 * @return - Box
-	 */
-	public static JPanel getStandarInfoComponent(String rbid, Component inf) {
-		JLabel jl = new JLabel(TStringUtils.getString(rbid) + ":");
-		float inc = 2;
-		Font fo = jl.getFont();
-		fo = fo.deriveFont(fo.getSize() + inc);
-		fo = fo.deriveFont(Font.BOLD);
-		jl.setFont(fo);
-
-		fo = inf.getFont();
-		fo = fo.deriveFont(fo.getSize() + inc);
-		inf.setFont(fo);
-
-		JPanel ic = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-		ic.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
-		ic.add(jl);
-		ic.add(Box.createHorizontalStrut(4));
-		ic.add(inf);
-		return ic;
-	}
-
-	/**
-	 * crea y retorna un separador horizontal con un texto colocado hacia la izquierda
-	 * 
-	 * 20161123.04:25 NAAAA GUEBONAAA DE VIEJOOOOO !!! ESTE METODO DEBE TENER +10 AÑOS !!!! FUE DE LOS PRIMEROS PARA
-	 * CLIO
-	 * 
-	 * @param idl - id para texto
-	 * @return componente
-	 */
-	public static JComponent getTitledSeparator(String idl) {
-		Box tb1 = Box.createVerticalBox();
-		tb1.add(Box.createVerticalGlue());
-		tb1.add(new JSeparator());
-		Box tb = Box.createHorizontalBox();
-		JLabel jl = new JLabel(TStringUtils.getString(idl));
-		jl.setFont(jl.getFont().deriveFont(Font.BOLD));
-		tb.add(jl);
-		tb.add(Box.createHorizontalStrut(H_GAP));
-		tb.add(tb1);
-		return tb;
-	}
-
-	/**
-	 * return a {@link JScrollPane} with a {@link TPropertyJTable} inside
-	 * 
-	 * @param rcd - record to obtain properties
-	 * @param fld - field name
-	 * @return Component
-	 * 
-	 */
-	public static JScrollPane getTPropertyJTable(Model model, String fld) {
-		return getTPropertyJTable("tt" + fld, model.getString(fld).toString());
-	}
-
-	/**
-	 * return a {@link JScrollPane} with a {@link TPropertyJTable} inside
-	 * 
-	 * @param tid - tooltip id
-	 * @param prpl - propertis string in standar format
-	 * @return Component 170911: MALDITO MABURRO con sus cadenas de mierdaaaa
-	 */
-	public static JScrollPane getTPropertyJTable(String tid, String prpl) {
-		TPropertyJTable tpjt = new TPropertyJTable(prpl);
-		setToolTip(tid, tpjt);
-		JScrollPane js = new JScrollPane(tpjt);
-		js.getViewport().setBackground(Color.WHITE);
-		return js;
-	}
-
-	/**
-	 * create and return {@link WebDateField} according to parameters
-	 * 
-	 * @param rcd - Record to obtain data
-	 * @param fn - record field name
-	 * @return {@link WebDateField}
-	 * 
-	 */
-	public static WebDateField getWebDateField(Model model, ColumnMetadata column) {
-		String name = column.getColumnName();
-		WebDateField wdf = getWebDateField("tt" + name, model.getDate(name));
-		wdf.setName(name);
-		return wdf;
-	}
-
-	/**
-	 * create and return {@link WebDateField} according to parameters. the date format is dd/MM/yyy
-	 * 
-	 * @param tt - id for tooltips
-	 * @param val - date
-	 * @return {@link WebDateField}
-	 */
-	public static WebDateField getWebDateField(String tt, Date val) {
-		WebDateField wdf = val == null ? new WebDateField() : new WebDateField(val);
-		wdf.setDateFormat(new SimpleDateFormat("dd/MM/yyy"));
-		setDimensionForTextComponent(wdf, 10);
-		setToolTip(tt, wdf);
-		return wdf;
-	}
-
-	/**
-	 * return a {@link WebTextField} with a trailing cancel button. The cancel button reroute the action performed to
-	 * set a empty text on text component and notify the actionlister.
-	 * 
-	 * @param alist - action listener. listerner to notify when a change on the text component ocurr.
-	 * 
-	 * @return text field for search or filter
-	 */
-	public static WebTextField getWebFindField(final ActionListener alist) {
-		final WebTextField findf = new WebTextField(20);
-		// WebButton cancelbt = WebButton.createIconWebButton(TResourceUtils.getIcon("cancelAction", 14), 0);
-		WebButton cancelbt = new WebButton(TResources.getIcon("cancelAction", 14));
-		cancelbt.setName("Cancel");
-		cancelbt.setFocusable(false);
-		// cancelbt.setShadeWidth(0);
-		// cancelbt.setMoveIconOnPress(false);
-		// cancelbt.setRolloverDecoratedOnly(true);
-		cancelbt.setCursor(Cursor.getDefaultCursor());
-
-		findf.setMargin(0, 0, 0, 0);
-		findf.setTrailingComponent(cancelbt);
-		// findf.setRound(WebDateFieldStyle.round);
-		// findf.setShadeWidth(WebDateFieldStyle.shadeWidth);
-
-		// 180403: old find button replaced by cancel button
-
-		// button change source to WebTextField for simplicity
-		cancelbt.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				findf.setText("");
-				alist.actionPerformed(new ActionEvent(findf, ActionEvent.ACTION_PERFORMED, ""));
-			}
-		});
-
-		findf.addActionListener(alist);
-		setDimensionForTextComponent(findf, 20);
-		setToolTip("ttsearch.textfield", findf);
-		setToolTip("ttsearch.button", cancelbt);
-
-		return findf;
+	public static WebToggleButton getWebToggleButton(Action action) {
+		overRideIcons(16, null, action);
+		WebToggleButton jb = new WebToggleButton(StyleId.togglebutton, action);
+		// test: for toglebuttons, perform action performed over the action
+		// jb.addItemListener(
+		// evt -> ((AbstractButton) evt.getSource()).getAction().actionPerformed(new ActionEvent(jb, -1, "")));
+		jb.setText(null);
+		jb.setPreferredWidth(46);
+		return jb;
 	}
 
 	/**
@@ -872,6 +950,33 @@ public class TUIUtils {
 		jp.setOpaque(true);
 		Color bg = jp.getBackground();
 		jp.setBackground(brighter(bg));
+	}
+
+	/**
+	 * Utility method for override icons propertis setted in the {@link ApplicationAction} by bsf framework. This method
+	 * <ul>
+	 * <li>take the icon from the {@link Action#SMALL_ICON} and create an scaled instance using the size parameter.
+	 * <li>repaint the icon to the target color toColor argument
+	 * </ul>
+	 * 
+	 * @param size - new icon siye
+	 * @param toColor - new icon color
+	 * @param actions - list of actions to override
+	 * 
+	 * @since 2.3
+	 */
+	public static void overRideIcons(int size, Color toColor, Action... actions) {
+		for (Action action : actions) {
+			ImageIcon ii = (ImageIcon) action.getValue(Action.SMALL_ICON);
+			// maybe the action has no icon
+			if (ii != null) {
+				if (toColor != null) {
+					ii = TColorUtils.changeColor(ii, toColor);
+				}
+				Image i = ii.getImage().getScaledInstance(size, size, Image.SCALE_SMOOTH);
+				action.putValue(Action.LARGE_ICON_KEY, new ImageIcon(i));
+			}
+		}
 	}
 
 	/**
@@ -985,107 +1090,11 @@ public class TUIUtils {
 		return b;
 	}
 
-	public static JComponent getBackgroundPanel() {
-		WebImage wi = new WebImage(TResources.getIcon("text")) {
-			protected void paintComponent(Graphics g) {
-				Graphics2D g2d = (Graphics2D) g;
-				g2d.setPaint(new LinearGradientPaint(0, 0, 0, getHeight(), new float[]{0f, 0.4f, 0.6f, 1f},
-						new Color[]{Color.gray, Color.WHITE, Color.WHITE, Color.gray}));
-				g2d.fill(g2d.getClip() != null ? g2d.getClip() : getVisibleRect());
-
-				super.paintComponent(g);
-			}
-		};
-		wi.setDisplayType(DisplayType.preferred);
-		wi.setHorizontalAlignment(SwingConstants.CENTER);
-		wi.setVerticalAlignment(SwingConstants.CENTER);
-		return wi;
-	}
-
-	public static GroupPanel getButtonGroup() {
-		GroupPanel bg = new GroupPanel();
-		CompoundBorder cb = new CompoundBorder(new EmptyBorder(2, 2, 2, 2), bg.getBorder());
-		bg.setBorder(cb);
-		return bg;
-	}
-
-	/**
-	 * create and return and {@link WebButton} with all settings stablisehd for toolbar
-	 * 
-	 * @param taa - action to set in the button
-	 * @return button ready to set as toolbar button
-	 * @since 2.3
-	 */
-	public static WebButton getWebButtonForToolBar(Action action) {
-		overRideIcons(16, null, action);
-		WebButton jb = new WebButton(action);
-		jb.setRequestFocusEnabled(false);
-
-		// TooltipManager.setTooltip(jb, (String) taa.getValue(TAbstractAction.SHORT_DESCRIPTION), TooltipWay.down);
-		// jb.setDrawFocus(false);
-		// jb.setShadeWidth(0);
-		jb.setText(null);
-		jb.setPreferredWidth(46);
-		return jb;
-	}
-
-	/**
-	 * create and return and {@link WebToggleButton} with all settings stablisehd for toolbar
-	 * 
-	 * @param action - action to set in the button
-	 * @return button ready to set as toolbar button
-	 * @since 2.3
-	 */
-	public static WebToggleButton getWebToggleButton(Action action) {
-		overRideIcons(16, null, action);
-		WebToggleButton jb = new WebToggleButton(StyleId.togglebutton, action);
-		// test: for toglebuttons, perform action performed over the action
-		// jb.addItemListener(
-		// evt -> ((AbstractButton) evt.getSource()).getAction().actionPerformed(new ActionEvent(jb, -1, "")));
-		jb.setText(null);
-		jb.setPreferredWidth(46);
-		return jb;
-	}
-
 	static int getStringPixelWidth(String str, Font font) {
 		FontMetrics metrics = new FontMetrics(font) {
 		};
 		Rectangle2D bounds = metrics.getStringBounds(str, null);
 		return (int) bounds.getWidth();
-	}
-
-	public static int getStringPixelHeight(String str, Font font) {
-		FontMetrics metrics = new FontMetrics(font) {
-		};
-		Rectangle2D bounds = metrics.getStringBounds(str, null);
-		return (int) bounds.getHeight();
-	}
-
-	/**
-	 * Utility method for override icons propertis setted in the {@link ApplicationAction} by bsf framework. This method
-	 * <ul>
-	 * <li>take the icon from the {@link Action#SMALL_ICON} and create an scaled instance using the size parameter.
-	 * <li>repaint the icon to the target color toColor argument
-	 * </ul>
-	 * 
-	 * @param size - new icon siye
-	 * @param toColor - new icon color
-	 * @param actions - list of actions to override
-	 * 
-	 * @since 2.3
-	 */
-	public static void overRideIcons(int size, Color toColor, Action... actions) {
-		for (Action action : actions) {
-			ImageIcon ii = (ImageIcon) action.getValue(Action.SMALL_ICON);
-			// maybe the action has no icon
-			if (ii != null) {
-				if (toColor != null) {
-					ii = TColorUtils.changeColor(ii, toColor);
-				}
-				Image i = ii.getImage().getScaledInstance(size, size, Image.SCALE_SMOOTH);
-				action.putValue(Action.LARGE_ICON_KEY, new ImageIcon(i));
-			}
-		}
 	}
 
 }

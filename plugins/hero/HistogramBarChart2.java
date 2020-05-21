@@ -1,14 +1,11 @@
 package plugins.hero;
 import java.awt.*;
 import java.util.*;
-import java.util.List;
 
 import org.jfree.chart.*;
 import org.jfree.chart.plot.*;
 import org.jfree.chart.renderer.xy.*;
 import org.jfree.data.statistics.*;
-
-import core.*;
 
 public class HistogramBarChart2 {
 

@@ -174,8 +174,6 @@ public class PokerSimulator {
 			JOptionPane.showMessageDialog(Alesia.mainFrame, "Error en table parameteres", "Error",
 					JOptionPane.ERROR_MESSAGE); // TODO: handle exception
 		}
-
-		System.out.println("PokerSimulator.clearEnviorement()" + getTableParameters());
 	}
 
 	/**

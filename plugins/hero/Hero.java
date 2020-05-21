@@ -35,7 +35,10 @@ public class Hero extends TPlugin {
 	protected static ConsolePanel consolePanel;
 	protected static HeroPanel heroPanel;
 	protected static Logger logger;
-
+	protected static File tableFile;
+	protected static SensorsArray sensorsArray;
+	protected static ShapeAreas shapeAreas;
+	protected static Hashtable<String, Object> trooperParameters;
 	/**
 	 * update every time the action {@link #runTrooper(ActionEvent)} is performed
 	 */
@@ -46,6 +49,7 @@ public class Hero extends TPlugin {
 		actionMap = Alesia.getInstance().getContext().getActionMap(this);
 		logger = Logger.getLogger("Hero");
 		consolePanel = new ConsolePanel(logger);
+		TActionsFactory.insertActions(actionMap);
 	}
 
 	public static Tesseract getTesseract() {
@@ -66,7 +70,7 @@ public class Hero extends TPlugin {
 		Action load = TActionsFactory.getAction("fileChooserOpen");
 		load.addPropertyChangeListener(evt -> {
 			if (evt.getPropertyName().equals(TActionsFactory.DATA_LOADED)) {
-				Trooper.getInstance().init((File) load.getValue(TActionsFactory.DATA_LOADED));
+				tableFile = (File) load.getValue(TActionsFactory.DATA_LOADED);
 			}
 		});
 		return load;
@@ -99,13 +103,11 @@ public class Hero extends TPlugin {
 	public void heroPanel(ActionEvent event) {
 		heroPanel = new HeroPanel();
 		Alesia.getMainPanel().setContentPanel(heroPanel);
-
 		// temp: change the main frame using this coordenates: 0,40 547,735
+		// temporal: must be loaded from troperPanel
+		tableFile = new File("plugins/hero/resources/ps-main table.ppt");
+		initGlovalVars();
 		Alesia.mainFrame.setBounds(0, 40, 547, 735);
-
-		// temporal
-		Trooper t = new Trooper();
-		t.init(new File("plugins/hero/resources/ps-main table.ppt"));
 	}
 
 	@org.jdesktop.application.Action
@@ -120,7 +122,6 @@ public class Hero extends TPlugin {
 
 	@org.jdesktop.application.Action
 	public Task runTrooper(ActionEvent event) {
-		startDate = new Date();
 		// retrive info from the porker window to resize
 		ArrayList<TEntry<String, String>> winds = TResources.getActiveWindows("*terry1013*");
 		// TODO: temporal: set manualy the correct win pos and size
@@ -143,12 +144,12 @@ public class Hero extends TPlugin {
 
 	@org.jdesktop.application.Action
 	public void takeActionSample(ActionEvent event) {
-		Trooper.getInstance().getSensorsArray().takeActionSample();
+		sensorsArray.takeActionSample();
 	}
 
 	@org.jdesktop.application.Action
 	public void takeCardSample(ActionEvent event) {
-		Trooper.getInstance().getSensorsArray().takeCardSample();
+		sensorsArray.takeCardSample();
 	}
 
 	@org.jdesktop.application.Action
@@ -156,10 +157,19 @@ public class Hero extends TPlugin {
 		return start(true);
 	}
 
+	private static void initGlovalVars() {
+		startDate = new Date();
+		shapeAreas = new ShapeAreas(Hero.tableFile);
+		shapeAreas.read();
+		sensorsArray = new SensorsArray();
+		sensorsArray.setShapeAreas(shapeAreas);
+		heroPanel.updateGlovalParameters();
+	}
+
 	private Task start(boolean isTest) {
 		WebLookAndFeel.setForceSingleEventsThread(false);
+		initGlovalVars();
 		Trooper t = new Trooper();
-		t.init(new File("plugins/hero/resources/ps-main table.ppt"));
 		PropertyChangeListener tl = new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (Trooper.PROP_DONE.equals(evt.getPropertyName())) {
@@ -167,7 +177,7 @@ public class Hero extends TPlugin {
 				}
 			}
 		};
-//		t.getPokerSimulator().setParameter();
+		// t.getPokerSimulator().setParameter();
 		t.addPropertyChangeListener(tl);
 		t.setTestMode(isTest);
 		actionMap.get("testTrooper").setEnabled(false);

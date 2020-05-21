@@ -24,8 +24,6 @@ public class RobotActuator {
 	private int mouseDelay = 200;
 	private int keyStrokeDelay = 20;
 
-	private ShapeAreas sensorDisposition;
-
 	public RobotActuator() {
 		this.robot = Hero.getNewRobot();
 		robot.setAutoDelay(40);
@@ -51,7 +49,7 @@ public class RobotActuator {
 			String action = temp[0];
 			String actValue = temp.length > 1 ? temp[1] : "";
 
-			Shape fig = sensorDisposition.getShapes().get(action);
+			Shape fig = Hero.shapeAreas.getShapes().get(action);
 			if (fig == null) {
 				Hero.logger.severe("RobotActuator: Action " + action + " not found.");
 				continue;
@@ -85,9 +83,6 @@ public class RobotActuator {
 				continue;
 			}
 		}
-	}
-	public void setEnviorement(ShapeAreas sDisp) {
-		this.sensorDisposition = sDisp;
 	}
 
 	/**

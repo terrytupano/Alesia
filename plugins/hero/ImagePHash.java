@@ -3,10 +3,6 @@ package plugins.hero;
 import java.awt.*;
 import java.awt.color.*;
 import java.awt.image.*;
-import java.io.*;
-import java.util.*;
-
-import javax.imageio.*;
 /*
  * pHash-like image hash.
  * Author: Elliot Shepherd (elliot@jarofworms.com

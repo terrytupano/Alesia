@@ -242,7 +242,8 @@ public class TUIPanel extends WebPanel {
 			// blkinfoLabel.setVerticalTextPosition(JLabel.TOP);
 
 			toolBarPanel.setVisible(visibleTB);
-			remove(bodyJComponent);
+			if (bodyJComponent != null)
+				remove(bodyJComponent);
 			add(bodyMessageJComponent, BorderLayout.CENTER);
 		}
 		repaint();
@@ -297,7 +298,7 @@ public class TUIPanel extends WebPanel {
 			remove(footerJComponent);
 		}
 		this.footerJComponent = footer;
-//		add decoration
+		// add decoration
 		footerJComponent.setBorder(Borders.DIALOG);
 		add(footerJComponent, BorderLayout.SOUTH);
 	}
@@ -312,6 +313,10 @@ public class TUIPanel extends WebPanel {
 		this.titlePanel.setVisible(aFlag);
 	}
 
+	public void setToolBar(String... actions) {
+		setToolBar(TActionsFactory.getActions(actions));
+	}
+
 	public void setToolBar(Action... actions) {
 		setToolBar(Arrays.asList(actions));
 	}
@@ -323,9 +328,9 @@ public class TUIPanel extends WebPanel {
 		String sco = aa.getResourceMap().getString(aa.getName() + ".Action.scope");
 
 		// auto add the property TActionsFactory.TUILISTPANEL
-//		if (sco != null && (sco.equals("element") || sco.equals("list"))) {
-//			aa.putValue(TActionsFactory.TUILISTPANEL, this);
-//		}
+		// if (sco != null && (sco.equals("element") || sco.equals("list"))) {
+		// aa.putValue(TActionsFactory.TUILISTPANEL, this);
+		// }
 
 		// action for popup menu
 		if (sco != null && sco.equals("element")) {

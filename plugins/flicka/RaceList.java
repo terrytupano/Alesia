@@ -25,8 +25,6 @@ import gui.*;
 
 public class RaceList extends TUIListPanel implements PropertyChangeListener {
 
-	private RaceRecordFromTable recordFromTable;
-	private TAbstractTableModel tableModel;
 	private Race sourceModel;
 
 	public RaceList() {

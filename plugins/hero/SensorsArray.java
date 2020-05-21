@@ -16,7 +16,6 @@ import org.apache.commons.math3.stat.descriptive.*;
 import com.jgoodies.common.base.*;
 
 import core.datasource.model.*;
-import plugins.flicka.*;
 
 /**
  * This class control the array of sensor inside of the screen. This class is responsable for reading all the sensor
@@ -64,19 +63,10 @@ public class SensorsArray {
 	private ShapeAreas screenAreas;
 	DescriptiveStatistics tesseractTime = new DescriptiveStatistics(10);
 	DescriptiveStatistics imageDiffereceTime = new DescriptiveStatistics(10);
-private ArrayList<DescriptiveStatistics> statistics;
+	private ArrayList<DescriptiveStatistics> statistics;
 	private GameRecorder gameRecorder;
-
-	/**
-	 * Return a list of all actions areas
-	 * 
-	 * @see SensorsPanel
-	 * @return list of actions public Vector<ScreenSensor> getActionAreas() { Vector<ScreenSensor> vec = new Vector<>();
-	 *         for (ScreenSensor sensor : screenSensors.values()) { if (sensor.isActionArea()) { vec.add(sensor); } }
-	 *         return vec; }
-	 */
-
 	private int villansBeacon = 0;
+	DescriptiveStatistics pots = new DescriptiveStatistics(30);
 
 	public SensorsArray() {
 		this.pokerSimulator = new PokerSimulator();
@@ -86,13 +76,20 @@ private ArrayList<DescriptiveStatistics> statistics;
 		this.standByBorder = new LineBorder(new JPanel().getBackground(), 2);
 		this.screenSensors = new TreeMap<>();
 		this.statistics = new ArrayList<>();
-//		TODO: temp solution
+		// TODO: temp solution
 		statistics.add(new DescriptiveStatistics());
 		statistics.add(new DescriptiveStatistics());
 		statistics.add(new DescriptiveStatistics());
 		statistics.add(new DescriptiveStatistics());
 		statistics.add(new DescriptiveStatistics());
 		statistics.add(new DescriptiveStatistics());
+	}
+	/**
+	 * initialize this sensor array. clearing all sensor and all variables
+	 */
+	public void clearEnviorement() {
+		screenSensors.values().forEach((ss) -> ss.init());
+		pokerSimulator.clearEnviorement();
 	}
 
 	/**
@@ -111,6 +108,7 @@ private ArrayList<DescriptiveStatistics> statistics;
 			Hero.logger.severe("Fail to detect active seats");
 		return av;
 	}
+
 	/**
 	 * Return the number of current active villans.
 	 * 
@@ -165,7 +163,6 @@ private ArrayList<DescriptiveStatistics> statistics;
 		}
 		return bp;
 	}
-
 	public PokerSimulator getPokerSimulator() {
 		return pokerSimulator;
 	}
@@ -201,6 +198,7 @@ private ArrayList<DescriptiveStatistics> statistics;
 	public ShapeAreas getSensorDisposition() {
 		return screenAreas;
 	}
+
 	/**
 	 * retriva a list of sensor.s names acording to the <code>subString</code> argument.
 	 * <p>
@@ -237,14 +235,6 @@ private ArrayList<DescriptiveStatistics> statistics;
 	}
 
 	/**
-	 * initialize this sensor array. clearing all sensor and all variables
-	 */
-	public void clearEnviorement() {
-		screenSensors.values().forEach((ss) -> ss.init());
-		pokerSimulator.clearEnviorement();
-	}
-
-	/**
 	 * return <code>true</code> if the player identifyed as id argument is active (hero or villan). A PLAYER IS ACTIVE
 	 * IF HE HAS CARDS IN THIS HANDS. if a player fold his card. this method will not count that player. from this
 	 * method point of view. the player is in tha game, but in this particular moment are not active.
@@ -258,7 +248,6 @@ private ArrayList<DescriptiveStatistics> statistics;
 		ScreenSensor vc2 = getSensor(prefix + ".card2");
 		return vc1.isEnabled() && vc2.isEnabled();
 	}
-
 	/**
 	 * return <code>true</code> if the villanId seat is active. A seat is active if there are a villan sittion on it.
 	 * this method check the villan name sensor and the villan chip sensor. if both are active, the seat is active.
@@ -280,6 +269,7 @@ private ArrayList<DescriptiveStatistics> statistics;
 		ScreenSensor vchip = getSensor("villan" + villanId + ".chips");
 		return vchip.isEnabled();
 	}
+
 	/**
 	 * Shortcut to get the enable/disable status from a sensor
 	 * 
@@ -312,7 +302,6 @@ private ArrayList<DescriptiveStatistics> statistics;
 		long t2 = System.currentTimeMillis() - t1;
 		pokerSimulator.setVariable("sensorArray.Look table time", sslist.size() + " sensors " + t2);
 	}
-
 	/**
 	 * Perform read operation on the {@link ScreenSensor} acoording to the type of the sensor. The type can be any of
 	 * TYPE_ global constatn passed as argument. This method perform the OCR operation on the selected areas and update
@@ -375,6 +364,7 @@ private ArrayList<DescriptiveStatistics> statistics;
 		pokerSimulator.setVariable("sensorArray.Performance", "Tesseract " + ((int) tesseractTime.getMean())
 				+ " ImageDiference " + ((int) imageDiffereceTime.getMean()));
 	}
+
 	/**
 	 * read one unit of information. This method is intented to retrive information from the enviorement in small amount
 	 * to avoid exces of time comsumption.
@@ -382,76 +372,28 @@ private ArrayList<DescriptiveStatistics> statistics;
 	 */
 	public void readPlayerStat() {
 		// gamers information
-		gameRecorder.getGamePlayer(villansBeacon).update();
+		gameRecorder.getGamePlayer(villansBeacon).readSensors();
 		villansBeacon++;
 		if (villansBeacon > getVillans()) {
 			villansBeacon = 0;
 			gameRecorder.updateDB();
-			ArrayList<String> means = gameRecorder.getAssesment();
 			StringBuffer sb = new StringBuffer();
-			means.forEach(st -> sb.append(st + " "));
-			pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 2));
+			gameRecorder.getPlayers().forEach(
+					gp -> sb.append(gp.getName() + " " + gp.getStats() + " prev " + gp.getPreviousStats() + "<br>"));
+			pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
 		}
 
 		// envioerement information
-		Statistic s = Statistic.findOrInit("time", Hero.startDate, "tableparams", pokerSimulator.getTableParameters(),
+		Statistic s = Statistic.findOrCreateIt("tableparams", pokerSimulator.getTableParameters(),
 				"STREET", pokerSimulator.getCurrentRound(), "name", "potValue");
 		DescriptiveStatistics sts = statistics.get(pokerSimulator.getCurrentRound());
 		sts.addValue(pokerSimulator.getPotValue());
-		s.set("VALUE", sts.getMean());
+		s.set("time", Hero.startDate);
+		s.set("mean", sts.getMean());
+		s.set("min", sts.getMin());
+		s.set("max", sts.getMax());
 		s.save();
 	}
-
-	DescriptiveStatistics pots = new DescriptiveStatistics(30);
-	/**
-	 * Utility method to take the image of the villans?.name areas for some and store in the
-	 * {@link GameRecorder#IMAGE_ACTIONS}. This method is invoked during configuration step to retribe samples of the
-	 * designated areas that contain image information for determinate the action performed by the villans during the
-	 * gameplay
-	 */
-	public void takeActionSample() {
-		try {
-			for (String sn : screenSensors.keySet()) {
-				// TODO temporal for TH. the action area is the same as the name area
-				if (sn.contains(".name")) {
-					ScreenSensor ss = screenSensors.get(sn);
-					ss.capture(false);
-					BufferedImage bi = ss.getImage(ScreenSensor.CAPTURED);
-					String ext = "png";
-					File f = new File("TODO:" + "sample_" + System.currentTimeMillis() + "." + ext);
-					f.createNewFile();
-					ImageIO.write(bi, ext, f);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	/**
-	 * Utility method to take the image of all card areas and store in the {@link ScreenSensor#CARDS} directory. Used
-	 * for retrive the images of the cards in configuration step to used for detect the card rack during the gameplay
-	 */
-	public void takeCardSample() {
-		try {
-			String ext = "png";
-			for (String sn : screenSensors.keySet()) {
-				ScreenSensor ss = screenSensors.get(sn);
-				if (ss.isComunityCard() || ss.isHoleCard()) {
-					// if (ss.getName().equals("hero.card2")) {
-					ss.capture(false);
-					BufferedImage image = ss.getImage(ScreenSensor.CAPTURED);
-					// image = TColorUtils.getImageDataRegion(image);
-					File f = new File(ScreenSensor.CARDS + "sample_" + System.currentTimeMillis() + "." + ext);
-					f.createNewFile();
-					ImageIO.write(image, ext, f);
-				}
-				// }
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 	/**
 	 * Perform the read operation for all {@link ScreenSensor} passed int the list argument.
 	 * 
@@ -477,6 +419,55 @@ private ArrayList<DescriptiveStatistics> statistics;
 		}
 		setStandByBorder();
 	}
+	/**
+	 * Utility method to take the image of the villans?.name areas for some and store in the
+	 * {@link GameRecorder#IMAGE_ACTIONS}. This method is invoked during configuration step to retribe samples of the
+	 * designated areas that contain image information for determinate the action performed by the villans during the
+	 * gameplay
+	 */
+	public void takeActionSample() {
+		try {
+			for (String sn : screenSensors.keySet()) {
+				// TODO temporal for TH. the action area is the same as the name area
+				if (sn.contains(".name")) {
+					ScreenSensor ss = screenSensors.get(sn);
+					ss.capture(false);
+					BufferedImage bi = ss.getImage(ScreenSensor.CAPTURED);
+					String ext = "png";
+					File f = new File("TODO:" + "sample_" + System.currentTimeMillis() + "." + ext);
+					f.createNewFile();
+					ImageIO.write(bi, ext, f);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Utility method to take the image of all card areas and store in the {@link ScreenSensor#CARDS} directory. Used
+	 * for retrive the images of the cards in configuration step to used for detect the card rack during the gameplay
+	 */
+	public void takeCardSample() {
+		try {
+			String ext = "png";
+			for (String sn : screenSensors.keySet()) {
+				ScreenSensor ss = screenSensors.get(sn);
+				if (ss.isComunityCard() || ss.isHoleCard()) {
+					// if (ss.getName().equals("hero.card2")) {
+					ss.capture(false);
+					BufferedImage image = ss.getImage(ScreenSensor.CAPTURED);
+					// image = TColorUtils.getImageDataRegion(image);
+					File f = new File(ScreenSensor.CARDS + "sample_" + System.currentTimeMillis() + "." + ext);
+					f.createNewFile();
+					ImageIO.write(image, ext, f);
+				}
+				// }
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	private void setStandByBorder() {
 		screenSensors.values().stream().forEach(ss -> ss.setBorder(standByBorder));
@@ -501,7 +492,7 @@ private ArrayList<DescriptiveStatistics> statistics;
 	 * 
 	 * @param areas - the enviorement
 	 */
-	protected void createSensorsArray(ShapeAreas areas) {
+	protected void setShapeAreas(ShapeAreas areas) {
 		this.screenAreas = areas;
 		this.screenSensors.clear();
 		for (Shape shape : screenAreas.getShapes().values()) {

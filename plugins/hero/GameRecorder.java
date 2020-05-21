@@ -28,12 +28,15 @@ public class GameRecorder {
 			players.add(new GamePlayer(i));
 		}
 	}
-
+	public Vector<GamePlayer> getPlayers() {
+		return players;
+	}
 	public ArrayList<String> getAssesment() {
 		ArrayList<String> means = new ArrayList<>(players.size());
 		players.forEach(gp -> means.add(gp.toString()));
 		return means;
 	}
+
 	public String getAssest(int playerId) {
 		return players.elementAt(playerId).toString();
 	}
@@ -48,7 +51,7 @@ public class GameRecorder {
 	}
 
 	private ArrayList<TEntry<String, Double>> tempList = new ArrayList<>();
-	
+
 	/**
 	 * Return the Boss. The boss of the villans is the villan with the hihest mean
 	 * 
@@ -64,7 +67,7 @@ public class GameRecorder {
 		String boss = tempList.size() > 0 ? tempList.get(tempList.size() - 1).getKey() : "No boss detected.";
 		return boss;
 	}
-	
+
 	public GamePlayer getGamePlayer(int index) {
 		return players.elementAt(index);
 	}
@@ -74,6 +77,6 @@ public class GameRecorder {
 	 * 
 	 */
 	public void takeSnapShot() {
-		players.stream().forEach(v -> v.update());
+		players.stream().forEach(v -> v.readSensors());
 	}
 }

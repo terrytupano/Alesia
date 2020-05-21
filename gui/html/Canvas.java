@@ -22,12 +22,8 @@ import javax.swing.*;
 import javax.swing.text.*;
 import javax.swing.text.html.*;
 
-import core.*;
-
-
-
 class Canvas extends JPanel {
-	
+
 	protected JEditorPane editorPane;
 	private JScrollPane scrollPane;
 	private HTMLEditorKit editorKit;
@@ -42,11 +38,10 @@ class Canvas extends JPanel {
 			editorPane.setEditorKit(editorKit);
 			editorPane.setPage(url);
 			/*
-			document = (HTMLDocument) editorKit.createDefaultDocument();
-//			editorPane.setDocument(document);
-//			editorKit = (HTMLEditorKit) editorPane.getEditorKit();
-			editorPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
-			*/
+			 * document = (HTMLDocument) editorKit.createDefaultDocument(); // editorPane.setDocument(document); //
+			 * editorKit = (HTMLEditorKit) editorPane.getEditorKit();
+			 * editorPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+			 */
 			scrollPane = new JScrollPane(editorPane);
 			add(scrollPane, BorderLayout.CENTER);
 		} catch (Exception e) {
@@ -55,14 +50,10 @@ class Canvas extends JPanel {
 	}
 
 	/**
-	 * Follows the reference in an
-	 * link.  The given url is the requested reference.
-	 * By default this calls <a href="#setPage">setPage</a>,
-	 * and if an exception is thrown the original previous
-	 * document is restored and a beep sounded.  If an 
-	 * attempt was made to follow a link, but it represented
-	 * a malformed url, this method will be called with a
-	 * null argument.
+	 * Follows the reference in an link. The given url is the requested reference. By default this calls
+	 * <a href="#setPage">setPage</a>, and if an exception is thrown the original previous document is restored and a
+	 * beep sounded. If an attempt was made to follow a link, but it represented a malformed url, this method will be
+	 * called with a null argument.
 	 *
 	 * @param u the URL to follow
 	 */
@@ -74,9 +65,7 @@ class Canvas extends JPanel {
 	}
 
 	/**
-	 * temporary class that loads synchronously (although
-	 * later than the request so that a cursor change
-	 * can be done).
+	 * temporary class that loads synchronously (although later than the request so that a cursor change can be done).
 	 */
 	class PageLoader implements Runnable {
 
@@ -90,7 +79,7 @@ class Canvas extends JPanel {
 				// restore the original cursor
 				editorPane.setCursor(cursor);
 
-				// PENDING(prinz) remove this hack when 
+				// PENDING(prinz) remove this hack when
 				// automatic validation is activated.
 				Container parent = editorPane.getParent();
 				parent.repaint();
