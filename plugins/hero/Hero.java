@@ -113,11 +113,13 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public void pauseTrooper(ActionEvent event) {
 		Trooper t = Trooper.getInstance();
-		boolean pause = !t.isPaused();
-		AbstractButton ab = (AbstractButton) event.getSource();
-		ab.setSelectedIcon(TResources.getSmallIcon("plugins/hero/resources/ResumeTrooper"));
-		ab.setSelected(pause);
-		t.pause(pause);
+		if (t != null) {
+			boolean pause = !t.isPaused();
+			AbstractButton ab = (AbstractButton) event.getSource();
+			ab.setSelectedIcon(TResources.getSmallIcon("plugins/hero/resources/ResumeTrooper"));
+			ab.setSelected(pause);
+			t.pause(pause);
+		}
 	}
 
 	@org.jdesktop.application.Action
@@ -139,7 +141,8 @@ public class Hero extends TPlugin {
 		actionMap.get("testTrooper").setEnabled(true);
 		actionMap.get("runTrooper").setEnabled(true);
 		actionMap.get("pauseTrooper").setEnabled(true);
-		Trooper.getInstance().cancelTrooper(true);
+		if (Trooper.getInstance() != null)
+			Trooper.getInstance().cancelTrooper(true);
 	}
 
 	@org.jdesktop.application.Action

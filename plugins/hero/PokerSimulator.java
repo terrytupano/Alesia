@@ -130,7 +130,7 @@ public class PokerSimulator {
 		upperProbability.put(PokerSimulator.TURN_CARD_DEALT, 0.8);
 		upperProbability.put(PokerSimulator.RIVER_CARD_DEALT, 0.9);
 
-		clearEnviorement();
+//		clearEnviorement();
 	}
 	public void cleanReport() {
 		variableList.keySet().forEach(key -> variableList.put(key, ""));
@@ -161,21 +161,20 @@ public class PokerSimulator {
 		Hashtable<String, Object> vals = Hero.heroPanel.getTrooperPanel().getValues();
 		this.minHandPotential = Integer.parseInt(vals.get("minHandPotential").toString());
 		this.oddCalculation = vals.get("oddCalculation").toString();
-
-		// the table parameters component are webtextfield
-		try {
-			String val = (String) vals.get("table.buyIn");
-			this.buyIn = val != null ? Double.parseDouble(val) : -1;
-			val = (String) vals.get("table.smallBlid");
-			this.smallBlind = val != null ? Double.parseDouble(val) : -1;
-			val = (String) vals.get("table.bigBlid");
-			this.bigBlind = val != null ? Double.parseDouble(val) : -1;
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(Alesia.mainFrame, "Error en table parameteres", "Error",
-					JOptionPane.ERROR_MESSAGE); // TODO: handle exception
-		}
+		this.buyIn = ((Number) vals.get("table.buyIn")).doubleValue();
+		this.smallBlind = ((Number) vals.get("table.smallBlid")).doubleValue();
+		this.bigBlind = ((Number) vals.get("table.bigBlid")).doubleValue();
+		this.preflopBase = ((Number) vals.get("preflopRekonAmmo.base")).doubleValue();
+		this.handStrengBase = ((Number) vals.get("preflopRekonAmmo.hand")).doubleValue();
 	}
-
+	private double preflopBase;
+	private double handStrengBase;
+	public double getPreflopBase() {
+		return preflopBase;
+	}
+	public double getHandStrengBase() {
+		return handStrengBase;
+	}
 	/**
 	 * this mathod act like a buffer betwen {@link SensorsArray} and this class to set the cards based on the name/value
 	 * of the {@link ScreenSensor} component while the cards arrive at the game table. For example durin a reading

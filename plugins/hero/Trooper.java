@@ -59,14 +59,10 @@ public class Trooper extends Task {
 	private boolean paused = false;
 	private Hashtable<String, Object> parameters;
 	private Hashtable<String, String> preflopHands;
-
 	long stepMillis;
-
 	// This variable is ONLY used and cleaned by ensuregametable method
 	private String lastHoleCards = "";
-
 	private double rekonAmunition;
-
 	private double maxRekonAmmo;
 	boolean oportinity = false;
 
@@ -148,10 +144,8 @@ public class Trooper extends Task {
 		// start the preflop with hight amounts and after the preflop raise all in to steal the pot. the constant 5% of
 		// the chip, leave hero vulnerable to those buffons and the chips start to dropping out whiout control.
 		if (pokerSimulator.getCurrentRound() == PokerSimulator.HOLE_CARDS_DEALT && maxRekonAmmo == -1) {
-			double base = pokerSimulator.getBigBlind() * 3;
-			// TEST: allwais buy in
-			double ammo = pokerSimulator.getBuyIn() * 0.07;
-			// double ammo = Math.max(pokerSimulator.getBuyIn() * f, pokerSimulator.getHeroChips() * f);
+			double base = pokerSimulator.getBigBlind() * pokerSimulator.getPreflopBase();
+			double ammo = pokerSimulator.getBigBlind() * pokerSimulator.getHandStrengBase();
 			maxRekonAmmo = base + ammo * pokerSimulator.getPreFlopHandStreng();
 		}
 

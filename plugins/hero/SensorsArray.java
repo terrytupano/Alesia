@@ -379,13 +379,13 @@ public class SensorsArray {
 			gameRecorder.updateDB();
 			StringBuffer sb = new StringBuffer();
 			gameRecorder.getPlayers().forEach(
-					gp -> sb.append(gp.getName() + " " + gp.getStats() + " prev " + gp.getPreviousStats() + "<br>"));
+					gp -> sb.append(gp.getName() + " --- " + gp.getStats() + " --- " + gp.getPreviousStats() + "<br>"));
 			pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
 		}
 
 		// envioerement information
-		Statistic s = Statistic.findOrCreateIt("tableparams", pokerSimulator.getTableParameters(),
-				"STREET", pokerSimulator.getCurrentRound(), "name", "potValue");
+		Statistic s = Statistic.findOrCreateIt("tableparams", pokerSimulator.getTableParameters(), "STREET",
+				pokerSimulator.getCurrentRound(), "name", "potValue");
 		DescriptiveStatistics sts = statistics.get(pokerSimulator.getCurrentRound());
 		sts.addValue(pokerSimulator.getPotValue());
 		s.set("time", Hero.startDate);
@@ -500,7 +500,7 @@ public class SensorsArray {
 			screenSensors.put(ss.getName(), ss);
 		}
 		setStandByBorder();
-		pokerSimulator.clearEnviorement();
+		// pokerSimulator.clearEnviorement();
 		gameRecorder = new GameRecorder(getVillans());
 	}
 }

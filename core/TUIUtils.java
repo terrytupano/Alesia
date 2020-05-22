@@ -23,6 +23,7 @@ import javax.swing.Action;
 import javax.swing.border.*;
 import javax.swing.table.*;
 import javax.swing.table.TableColumn;
+import javax.swing.text.*;
 import javax.swing.text.html.*;
 
 import org.javalite.activejdbc.*;
@@ -42,6 +43,7 @@ import com.alee.managers.style.*;
 import com.alee.utils.*;
 import com.alee.utils.swing.*;
 
+import dev.utils.*;
 import gui.*;
 import gui.wlaf.*;
 import javafx.scene.control.*;
@@ -853,25 +855,48 @@ public class TUIUtils {
 		return jftf;
 	}
 
-	public static WebFormattedTextField getWebFormattedTextField(String name, Object val, int cw) {
-		return getWebFormattedTextField(name, val, cw, null);
+	public static NumericTextField getNumericTextField(String name, String text, int cols, String mask) {
+		NumericTextField ntf = new NumericTextField(text, cols);
+		if (mask != null) {
+			DecimalFormat fmt = new DecimalFormat(mask);
+			fmt.setGroupingUsed(true);
+			fmt.setGroupingSize(3);
+			fmt.setParseIntegerOnly(false);
+			ntf = new NumericTextField(text, cols, fmt);
+		}
+
+		ntf.setName(name);
+		ntf.putClientProperty("settingsProcessor", new Configuration<TextComponentState>(name));
+		String tt = TStringUtils.getString(name + ".tt");
+		// if (tt != null)
+		// ntf.setToolTip(tt);
+		return ntf;
 	}
 
-	public static WebFormattedTextField getWebFormattedTextField(String name, Object val, int cw, Format fmt) {
-		WebFormattedTextField jftf;
-		if (fmt != null) {
-			jftf = new WebFormattedTextField(fmt);
-			jftf.setValue(val);
-		} else {
-			jftf = new WebFormattedTextField(val);
+	public static WebFormattedTextField getWebFormattedTextField(String name, Object val, int cols) {
+		return getWebFormattedTextField(name, val, cols, null);
+	}
+
+	public static WebFormattedTextField getWebFormattedTextField(String name, Object val, int cols, String mask) {
+		WebFormattedTextField jftf = new WebFormattedTextField();
+		if (mask != null) {
+			try {
+				MaskFormatter fmt = new MaskFormatter(mask);
+				fmt.setAllowsInvalid(false);
+				jftf = new WebFormattedTextField(fmt);
+				jftf.setInputPrompt(mask);
+			} catch (ParseException e1) {
+				e1.printStackTrace();
+			}
 		}
-		jftf.setColumns(cw);
+		jftf.setValue(val);
+		jftf.setColumns(cols);
 		jftf.setName(name);
-		if (val instanceof java.lang.Number) {
-			jftf.setHorizontalAlignment(JTextField.RIGHT);
-		}
-		setDimensionForTextComponent(jftf, cw);
-//		setToolTip(name, jftf);
+		// if (val instanceof java.lang.Number) {
+		// jftf.setHorizontalAlignment(JTextField.RIGHT);
+		// }
+		setDimensionForTextComponent(jftf, cols);
+		// setToolTip(name, jftf);
 		// 180614: implement focus listener
 		FocusAdapter fa = new FocusAdapter() {
 			@Override
@@ -887,6 +912,7 @@ public class TUIUtils {
 			}
 		};
 		jftf.addFocusListener(fa);
+
 		jftf.putClientProperty("settingsProcessor", new Configuration<TextComponentState>(name));
 		return jftf;
 	}
@@ -901,12 +927,12 @@ public class TUIUtils {
 	}
 
 	public static WebTextField getWebTextField(Model model, ColumnMetadata column) {
-	int len = column.getColumnSize();
-	String fn = column.getColumnName();
-//	model.get(fn).toString() allow any field class
-	String val = model.get(fn).toString();
-	WebTextField jftf = getWebTextField(fn, val, len);
-	return jftf;
+		int len = column.getColumnSize();
+		String fn = column.getColumnName();
+		// model.get(fn).toString() allow any field class
+		String val = model.get(fn).toString();
+		WebTextField jftf = getWebTextField(fn, val, len);
+		return jftf;
 	}
 
 	public static WebTextField getWebTextField(String name, String val, int colums) {

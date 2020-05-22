@@ -2,6 +2,7 @@ package gui;
 
 import java.awt.*;
 import java.io.*;
+import java.text.*;
 import java.util.*;
 import java.util.List;
 
@@ -21,6 +22,7 @@ import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.*;
 
 import core.*;
+import dev.utils.*;
 import gui.html.*;
 import gui.wlaf.*;
 
@@ -432,9 +434,27 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 			return wdf.getDate();
 		}
 
+//		test: fast replace for jformatetextfield
+		if (jcmp instanceof NumericTextField) {
+			try {
+				val = ((NumericTextField) jcmp).getNumberValue();
+				return val;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+
 		// numeros
 		if (jcmp instanceof JFormattedTextField) {
-			val = ((JFormattedTextField) jcmp).getValue();
+			JFormattedTextField jftf = ((JFormattedTextField) jcmp);
+			try {
+				jftf.commitEdit();
+				val = jftf.getValue();
+			} catch (ParseException e) {
+				// TEST: print statck trace
+				e.printStackTrace();
+			}
 			return val;
 		}
 		// texto
@@ -570,7 +590,7 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 		cmp.putClientProperty("myLabel", jl);
 		cmp.putClientProperty("isRequired", required);
 		setEnable(field, enable);
-//		setInputVerifier(field, new TInputVerifier(required));
+		setInputVerifier(field, new TInputVerifier(required));
 		if (cmp instanceof TWebFileChooserField) {
 			TWebFileChooserField fc = (TWebFileChooserField) cmp;
 			fc.addSelectedFilesListener(this);
