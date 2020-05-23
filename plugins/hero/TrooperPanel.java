@@ -2,11 +2,9 @@ package plugins.hero;
 
 import java.util.*;
 
-import com.alee.laf.text.*;
 import com.jgoodies.forms.builder.*;
 import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.*;
-import com.kitfox.svg.*;
 
 import core.*;
 import gui.*;
@@ -55,11 +53,5 @@ public class TrooperPanel extends TUIFormPanel {
 		setBodyComponent(builder.getPanel());
 		registreSettings();
 		
-	}
-	@Override
-	public Hashtable<String, Object> getValues() {
-		Hashtable<String, Object> ht = super.getValues();
-		System.out.println("TrooperPanel.getValues()"+ht.get("test"));
-		return ht;
 	}
 }

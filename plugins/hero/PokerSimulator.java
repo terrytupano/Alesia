@@ -43,7 +43,7 @@ public class PokerSimulator {
 	public static int BIG_BLIND = 2;
 	public static int MIDLE = 3;
 	public static int DEALER = 10;
-	public static String STATUS = "Simulator Status";
+	public static String STATUS = "aa.Simulator Status";
 	public static String STATUS_OK = "Ok";
 	public static String STATUS_ERROR = "Error";
 	private static DecimalFormat fourDigitFormat = new DecimalFormat("#0.0000");
@@ -130,7 +130,7 @@ public class PokerSimulator {
 		upperProbability.put(PokerSimulator.TURN_CARD_DEALT, 0.8);
 		upperProbability.put(PokerSimulator.RIVER_CARD_DEALT, 0.9);
 
-//		clearEnviorement();
+		// clearEnviorement();
 	}
 	public void cleanReport() {
 		variableList.keySet().forEach(key -> variableList.put(key, ""));
@@ -413,11 +413,6 @@ public class PokerSimulator {
 		updateReport();
 	}
 
-	public void setActionsData(Vector<TEntry<String, Double>> actions) {
-		actionsBarChart.setDataSet(actions);
-		updateReport();
-	}
-
 	public void setCallValue(double callValue) {
 		this.callValue = callValue;
 	}
@@ -491,6 +486,7 @@ public class PokerSimulator {
 			tmp = tmp.replace("simulator.ammount.", "");
 			tmp = tmp.replace("simulator.", "");
 			tmp = tmp.replace("trooper.", "");
+			tmp = tmp.replace("aa.", "");
 			text += getFormateTable(tmp);
 		}
 
@@ -646,9 +642,8 @@ public class PokerSimulator {
 
 		variableList.put("simulator.Troper probability", fourDigitFormat.format(bestProbability));
 		variableList.put("simulator.Trooper Current hand", getMyHandHelper().getHand().toString());
-		variableList.put("simulator.Trooper Hole hand",
-				getMyHoleCards().getFirstCard() + ", " + getMyHoleCards().getSecondCard());
-		variableList.put("simulator.Troper Comunity cards", getCommunityCards().toString());
+		variableList.put("simulator.Table cards", getMyHoleCards().getFirstCard() + ", "
+				+ getMyHoleCards().getSecondCard() + ", " + getCommunityCards().toString());
 		// variableList.put("Table Position", getTablePosition());
 		String txt = "Amunitions " + getHeroChips() + " Pot " + getPotValue() + " Call " + getCallValue() + " Raise "
 				+ getRaiseValue();

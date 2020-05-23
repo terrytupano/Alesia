@@ -54,14 +54,15 @@ public class SensorArrayPanel extends TUIPanel {
 	}
 
 	public void updateArray() {
-		setVisible(false);
+//		sensorsPanel.setVisible(false);
 		this.sensorsArray = Hero.sensorsArray;
 		sensorsPanel.removeAll();
 		List<ScreenSensor> ssl = sensorsArray.getSensors(null);
 		for (ScreenSensor ss : ssl) {
 			sensorsPanel.add(ss);
 		}
-		setVisible(true);
+//		sensorsPanel.setVisible(true);
+		sensorsPanel.repaint();
 	}
 
 	private void filterSensors() {

@@ -36,7 +36,7 @@ public class HeroPanel extends WebPanel {
 		wtp.add(Hero.consolePanel, "Log console");
 		wtp.add(TCVUtils.createImagesPanel(ScreenSensor.cardsTable), "Cards");
 
-		wtp.registerSettings(new Configuration<TabbedPaneState>("SensorsPanel.tabbedPanel"));
+		wtp.registerSettings(new Configuration<TabbedPaneState>("HeroPanel.tabbedPanel"));
 
 		add(wtp, BorderLayout.CENTER);
 	}

@@ -384,7 +384,7 @@ public class SensorsArray {
 		}
 
 		// envioerement information
-		Statistic s = Statistic.findOrCreateIt("tableparams", pokerSimulator.getTableParameters(), "STREET",
+		Statistic s = Statistic.findOrInit("tableparams", pokerSimulator.getTableParameters(), "STREET",
 				pokerSimulator.getCurrentRound(), "name", "potValue");
 		DescriptiveStatistics sts = statistics.get(pokerSimulator.getCurrentRound());
 		sts.addValue(pokerSimulator.getPotValue());
