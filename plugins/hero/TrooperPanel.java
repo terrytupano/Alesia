@@ -20,6 +20,8 @@ public class TrooperPanel extends TUIFormPanel {
 		addInputComponent(TUIUtils.getTWebComboBox("oddCalculation", "oddMethod"));
 		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.base", null, 5, null), true, true);
 		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.hand", null, 5, null), true, true);
+		addInputComponent(TUIUtils.getWebCheckBox("takeOportunity"));
+		addInputComponent(TUIUtils.getWebTextField("availableActions", null, 50));
 
 		addInputComponent(TUIUtils.getWebFormattedTextField("test", null, 20, "##+##*preflop"), true, true);
 
@@ -39,6 +41,8 @@ public class TrooperPanel extends TUIFormPanel {
 		builder.append(TStringUtils.getString("preflopStrategy"), getInputComponent("preflopStrategy"), 5);
 		builder.append(TStringUtils.getString("minHandPotential"), getInputComponent("minHandPotential"), 5);
 		builder.append(TStringUtils.getString("oddCalculation"), getInputComponent("oddCalculation"), 5);
+		builder.append(TStringUtils.getString("availableActions"), getInputComponent("availableActions"), 5);
+		builder.append(getInputComponent("takeOportunity"));
 		builder.nextLine();
 
 		builder.appendSeparator("pre flop rekon parameteres");

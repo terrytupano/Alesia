@@ -38,7 +38,6 @@ public class PokerSimulator {
 	public static final int FLOP_CARDS_DEALT = 2;
 	public static final int TURN_CARD_DEALT = 3;
 	public static final int RIVER_CARD_DEALT = 4;
-
 	public static int SMALL_BLIND = 1;
 	public static int BIG_BLIND = 2;
 	public static int MIDLE = 3;
@@ -47,8 +46,7 @@ public class PokerSimulator {
 	public static String STATUS_OK = "Ok";
 	public static String STATUS_ERROR = "Error";
 	private static DecimalFormat fourDigitFormat = new DecimalFormat("#0.0000");
-
-	public static double probabilityThreshold = 0.50;
+	private static DecimalFormat twoDigitFormat = new DecimalFormat("#.00");
 	// royal flush
 	private static int topHandRank = 2970356;
 	// pair of 22
@@ -72,24 +70,38 @@ public class PokerSimulator {
 	private int tablePosition;
 	private WebComboBox helperFilterComboBox;
 	private MyHandHelper myHandHelper;
-
 	private MyHandStatsHelper myHandStatsHelper;
 	private MyGameStatsHelper myGameStatsHelper;
 	private Hashtable<Integer, Double> upperProbability;
 	private double heroChips;
-
 	private double buyIn;
 	private double smallBlind;
 	private double bigBlind;
 	private int minHandPotential;
 	private ActionsBarChart actionsBarChart;
-	private long lastStepMillis;
+	// private long lastStepMillis;
 	private double bestProbability;
 	private UoAHand uoAHand;
-
 	private String oddCalculation;
+	private double preflopBase;
+	private double handStrengBase;
+	private Hashtable<Integer, String> tmplist = new Hashtable<>();
+	private boolean takeOportunity = false;
+	private ArrayList<String> availableActions;
 
 	public PokerSimulator() {
+		
+		tmplist.put(0, "straight_flush");
+		tmplist.put(1, "four_of_a_kind");
+		tmplist.put(2, "full_house");
+		tmplist.put(3, "flush");
+		tmplist.put(4, "straight");
+		tmplist.put(5, "three_of_a_kind");
+		tmplist.put(6, "two_pairs");
+		tmplist.put(7, "pair");
+		tmplist.put(8, "high_card");
+
+		this.availableActions = new ArrayList<>();
 		this.cardsBuffer = new Hashtable<String, String>();
 		this.uoAHand = new UoAHand();
 		// Create an adapter to communicate with the simulator
@@ -138,7 +150,6 @@ public class PokerSimulator {
 		actionsBarChart.setDataSet(null);
 		updateReport();
 	}
-
 	/**
 	 * clear the simulation eviorement. Use this metod to clear al component in case of error or start/stop event
 	 * 
@@ -166,15 +177,13 @@ public class PokerSimulator {
 		this.bigBlind = ((Number) vals.get("table.bigBlid")).doubleValue();
 		this.preflopBase = ((Number) vals.get("preflopRekonAmmo.base")).doubleValue();
 		this.handStrengBase = ((Number) vals.get("preflopRekonAmmo.hand")).doubleValue();
+		this.takeOportunity = ((Boolean) vals.get("takeOportunity"));
+		String actions[] = vals.get("availableActions").toString().split("[|]");
+		availableActions.clear();
+		for (String string : actions)
+			availableActions.add(string);
 	}
-	private double preflopBase;
-	private double handStrengBase;
-	public double getPreflopBase() {
-		return preflopBase;
-	}
-	public double getHandStrengBase() {
-		return handStrengBase;
-	}
+
 	/**
 	 * this mathod act like a buffer betwen {@link SensorsArray} and this class to set the cards based on the name/value
 	 * of the {@link ScreenSensor} component while the cards arrive at the game table. For example durin a reading
@@ -188,11 +197,12 @@ public class PokerSimulator {
 	public PokerProphesierAdapter getAdapter() {
 		return adapter;
 	}
-
+	public ArrayList<String> getAvailableActions() {
+		return availableActions;
+	}
 	public double getBestProbability() {
 		return bestProbability;
 	}
-
 	public double getBigBlind() {
 		return bigBlind;
 	}
@@ -208,6 +218,7 @@ public class PokerSimulator {
 	public Hashtable<String, String> getCardsBuffer() {
 		return cardsBuffer;
 	}
+
 	public CommunityCards getCommunityCards() {
 		return communityCards;
 	}
@@ -220,9 +231,10 @@ public class PokerSimulator {
 	 */
 	public double getCurrentHandStreng() {
 		double rank = UoAHandEvaluator.rankHand(uoAHand);
+//		TEST: the minimun is a pair of 22
+//		rank = Math.max(0, rank - minHandRank);
 		return rank / topHandRank;
 	}
-
 	public int getCurrentRound() {
 		return currentRound;
 	}
@@ -238,23 +250,31 @@ public class PokerSimulator {
 	 */
 	public double getHandPotential() {
 		double hp = 0.0;
+		String hs = "";
 		if (myHandStatsHelper != null) {
 			int toh = Hand.STRAIGHT_FLUSH - minHandPotential;
 			float[] list = myHandStatsHelper.getAllProbs();
 			for (int i = 0; i < toh; i++) {
 				hp += list[i];
+				if (list[i] > 0)
+					hs += tmplist.get(i) + " " + twoDigitFormat.format(list[i]) + " ";
 			}
 		}
+		hs += "= " + twoDigitFormat.format(hp);
+		setVariable("simulator.hand streng", hs);
 		return hp;
 	}
+
+	public double getHandStrengBase() {
+		return handStrengBase;
+	}
+
 	public double getHeroChips() {
 		return heroChips;
 	}
-
 	public MyGameStatsHelper getMyGameStatsHelper() {
 		return myGameStatsHelper;
 	}
-
 	public MyHandHelper getMyHandHelper() {
 		return myHandHelper;
 	}
@@ -262,10 +282,10 @@ public class PokerSimulator {
 	public MyHandStatsHelper getMyHandStatsHelper() {
 		return myHandStatsHelper;
 	}
+
 	public HoleCards getMyHoleCards() {
 		return holeCards;
 	}
-
 	public int getNumSimPlayers() {
 		return numSimPlayers;
 	}
@@ -276,6 +296,10 @@ public class PokerSimulator {
 
 	public double getPotValue() {
 		return potValue;
+	}
+
+	public double getPreflopBase() {
+		return preflopBase;
 	}
 
 	public double getPreFlopHandStreng() {
@@ -335,13 +359,15 @@ public class PokerSimulator {
 	 */
 	public String isOportunity() {
 		String txt = null;
+		// check if hero must check for oportunity
+		if (!takeOportunity)
+			return txt;
 		// fail safe. an oportunity must be more than a pair
 		if (minHandPotential < Hand.TWO_PAIRS) {
 			Hero.logger.warning("minimun hand rank for an oportunity must be > Hand.PAIR. Method ignored.");
 			return null;
 		}
 		// table parameters contitions
-		// test: parameter value + 1
 		if (myHandHelper.getHandRank() >= (minHandPotential + 1)
 				&& (currentRound == FLOP_CARDS_DEALT || currentRound == TURN_CARD_DEALT)) {
 			String sts = getSignificantCards();
@@ -441,7 +467,7 @@ public class PokerSimulator {
 		variableList.put(key, value1);
 		if (Trooper.STATUS.equals(key)) {
 			// variableList.put("trooper.Performance Step time", (System.currentTimeMillis() - lastStepMillis));
-			lastStepMillis = System.currentTimeMillis();
+			// lastStepMillis = System.currentTimeMillis();
 		}
 		// mandatori. i nedd to see what is happening
 		updateReport();

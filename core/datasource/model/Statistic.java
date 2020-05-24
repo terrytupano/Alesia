@@ -5,7 +5,7 @@ import org.javalite.activejdbc.annotations.*;
 
 @DbName("AlesiaDatabase")
 @Table("STATISTIC")
-@CompositePK({"TABLEPARAMS", "STREET", "NAME"})
+@CompositePK({"TIME", "TABLEPARAMS", "STREET", "NAME"})
 public class Statistic extends Model {
 
 }

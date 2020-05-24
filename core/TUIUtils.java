@@ -32,7 +32,9 @@ import org.jdesktop.application.*;
 import com.alee.extended.date.*;
 import com.alee.extended.filechooser.*;
 import com.alee.extended.image.*;
+import com.alee.extended.list.*;
 import com.alee.extended.panel.*;
+import com.alee.laf.*;
 import com.alee.laf.button.*;
 import com.alee.laf.checkbox.*;
 import com.alee.laf.combobox.*;
@@ -40,6 +42,7 @@ import com.alee.laf.text.*;
 import com.alee.laf.toolbar.*;
 import com.alee.managers.settings.Configuration;
 import com.alee.managers.style.*;
+import com.alee.managers.tooltip.*;
 import com.alee.utils.*;
 import com.alee.utils.swing.*;
 
@@ -697,9 +700,7 @@ public class TUIUtils {
 		twcb.setSelectedIndex(row);
 		twcb.setName(name);
 		twcb.putClientProperty("settingsProcessor", new Configuration<ComboBoxState>(name));
-		String tt = TStringUtils.getString(name + ".tt");
-		if (tt != null)
-			twcb.setToolTip(tt);
+		setToolTip(name, twcb);
 		return twcb;
 	}
 
@@ -723,9 +724,24 @@ public class TUIUtils {
 		return jb;
 	}
 
+	public static WebCheckBoxList<TEntry> getWebCheckBox(String name, String group) {
+		TEntry[] entries = TStringUtils.getTEntryGroup(group);
+		CheckBoxListModel<TEntry> model = new CheckBoxListModel<>();
+		for (TEntry tEntry : entries) {
+			model.add(new CheckBoxCellData<TEntry>(tEntry));
+		}
+		WebCheckBoxList<TEntry> boxList = new WebCheckBoxList<>(model);
+		boxList.setName(name);
+//		TODO: i must write the procesor !!!O.o no tnk, not today
+//		boxList.putClientProperty("settingsProcessor", new Configuration<list>(name));
+		return boxList;
+		
+	}
+
 	public static WebCheckBox getWebCheckBox(String name) {
 		WebCheckBox jcb = new WebCheckBox(TStringUtils.getString(name));
 		jcb.setName(name);
+		setToolTip(name, jcb);
 		jcb.putClientProperty("settingsProcessor", new Configuration<ButtonState>(name));
 		return jcb;
 	}
@@ -941,10 +957,7 @@ public class TUIUtils {
 		textField.setText(val);
 		textField.setName(name);
 		textField.putClientProperty("settingsProcessor", new Configuration<TextComponentState>(name));
-		String tt = TStringUtils.getString(name + ".tt");
-		if (tt != null)
-			textField.setToolTip(tt);
-
+		setToolTip(name, textField);
 		return textField;
 	}
 
@@ -1061,30 +1074,21 @@ public class TUIUtils {
 	}
 
 	/**
-	 * Localiza el texto, da formato y asigna el tooltip para el componente pasado como argumento. El texto descriptivo
-	 * de la ayuda es fraccionada cada tanto para evitar que el componente sea demasiado largo. este metodo acepta los
-	 * dos tipos de tooltip. el sencillo y el de forma titulo;texto
+	 * set the tooltip for the component. If the component is a instance of {@link ToolTipMethods}, the tooltip will be
+	 * a {@link WebLookAndFeel} tooltip, else the tooltip will be a standar swing tooltip
 	 * 
-	 * @param tid - identificador de tooltip.
-	 * @param cmp - componente
+	 * @param name - the name for the resorurce bundle. this method will be append <code>.tt</code> to this name to look
+	 *        for the tooltip
+	 * @param cmp - the component
 	 */
-	public static void setToolTip(String tid, JComponent cmp) {
-		if (tid != null) {
-			String tt = null;
-			try {
-				tt = TStringUtils.getString(tid);
-			} catch (Exception e) {
-				// nada
-			}
-			if (tt != null) {
-				String fstt = TStringUtils.getInsertedBR(tt, 80);
-				if (tt.indexOf(";") != -1) {
-					String[] stt = tt.split(";");
-					String sbr = TStringUtils.getInsertedBR(stt[1], 100);
-					fstt = "<html><b>" + stt[0] + "</b><p>" + sbr + "</p></html>";
-				}
-				cmp.setToolTipText(fstt);
-			}
+	public static void setToolTip(String name, JComponent cmp) {
+		if (name != null) {
+			String tooltip = TStringUtils.getString(name + ".tt");
+			// tooltip = tooltip.length() > 80 ? WordUtils.wrap(tooltip, 80) : tooltip;
+			if (cmp instanceof ToolTipMethods)
+				((ToolTipMethods) cmp).setToolTip(tooltip);
+			else
+				cmp.setToolTipText(tooltip);
 		}
 	}
 

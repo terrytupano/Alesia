@@ -62,58 +62,15 @@ public class TStringUtils {
 		return rs;
 	}
 	/**
-	 * remueve de la cadena de caracateres pasada como argumento todas los tag html
+	 * return a {@link Hashtable} of string with all properties from all .properties files registres in Alesia) that
+	 * begginen with the geven argument. the key for the returned list will be the property and the value, the property
+	 * value
 	 * 
-	 * @param sht - String con tag html
-	 * @return String sin tags
+	 * @param group - prefix of the property to look.
+	 * 
+	 * @return list for property values
 	 */
-	public static String removeHTMLtags(String sht) {
-		sht = sht.replaceAll("</*\\w*>", "");
-		sht = sht.replaceAll("&lt", "<");
-		sht = sht.replaceAll("&gt", ">");
-		return sht;
-	}
-
-	/**
-	 * inserta el atributo<br>
-	 * dentro de una secuencia de caracteres cada vez que se consiga un espacio en blanco despues de una longitud
-	 * determinada Ej.: getInsertedBR("Arnaldo Fuentes", 3) retornara "Arnaldo<br>
-	 * Fuentes"
-	 * 
-	 * NOTA: este metodo adiciona <html></html> si estas no se encuentran al inicio/final de la cadena original
-	 * 
-	 * @param str - secuancia
-	 * @param len - longitud
-	 * @return secoencia con atributo insertado
-	 */
-	public static String getInsertedBR(String str, int len) {
-		StringBuffer stt1 = new StringBuffer(str);
-		int c = 0;
-		boolean f = false;
-		for (int x = 0; x < stt1.length(); x++) {
-			f = (c > len && stt1.charAt(x) == ' ');
-			if (f) {
-				stt1.insert(x, "<br>");
-				c = 0;
-			} else {
-				c++;
-			}
-		}
-		String bris = stt1.toString();
-		bris = bris.startsWith("<html>") ? bris : "<html>" + bris;
-		bris = bris.endsWith("</html>") ? bris : bris + "</html>";
-		return bris;
-	}
-
-	/**
-	 * return a {@link Hashtable} of string whit all element inside of {@link Alesia#getResourceMap()} that start whit
-	 * the give group constant
-	 * 
-	 * @param group - prefix of the property to look
-	 * 
-	 * @return
-	 */
-	public static Hashtable<String, String> getStrings(String group) {
+	public static Hashtable<String, String> getProperties(String group) {
 		ArrayList<String> keys = new ArrayList(allProperties.keySet());
 		Hashtable<String, String> list = new Hashtable<>();
 		for (String key : keys) {
@@ -123,13 +80,35 @@ public class TStringUtils {
 		}
 		return list;
 	}
+
 	/**
-	 * busca y retorna el grupo de constantes que comienzen con el parametro <code>ty</code>. este metodo intenta
-	 * primero localizar la lista de constantes en los archivos <code>.properties</code> cargados durante la
-	 * inicializacion. si no se encuentran alli, intenta en el archive de referencias en la base de datos principal
+	 * same as {@link #getTEntryGroup(String)} but in {@link Hashtable} format
 	 * 
-	 * @param group - tipo de constantes
-	 * @return arreglo de constantes
+	 * @param group - prefix for a valid tentry group
+	 * 
+	 * @return list of elements
+	 */
+	public static Hashtable<String, String> getHashtableGroup(String group) {
+		TEntry[] telist = getTEntryGroup(group);
+		Hashtable<String, String> hashtable = new Hashtable<>();
+		for (TEntry tEntry : telist) {
+			hashtable.put(tEntry.getKey().toString(), tEntry.getValue().toString());
+		}
+		return hashtable;
+	}
+
+	/**
+	 * look for the constants from all .properties files load in the system and retunr a array of {@link TEntry}. the
+	 * <code>group</code> argument must point to a valid standar key;value porperty. for examples <br>
+	 * <code>
+	 * <br>prefix01 = key1;value1
+	 * <br>prefix02 = key2;value2
+	 * <br>...
+	 * <br>prefix99 = key99;value99
+	 * </code>
+	 * 
+	 * @param group - prefix for the group of constant.
+	 * @return array of entries
 	 */
 	public static TEntry[] getTEntryGroup(String group) {
 		ArrayList<String> keys = new ArrayList(allProperties.keySet());
@@ -357,41 +336,6 @@ public class TStringUtils {
 		} catch (InterruptedException e) {
 		}
 		return Long.toHexString(mill);
-	}
-
-	/**
-	 * este metodo verifica que el texto txt este escrito segun el patron pasado como argumento
-	 * 
-	 * @param patt - plantilla que indentifica el formato en que el texto debe estar descrito
-	 * @param txt - valor a compara contra la plantiall
-	 * 
-	 * @return id de mensaje si el valor txt no esta escrito segun el patron
-	 */
-	public static TError validatePatt(String patt, String txt) {
-		if (txt.length() > 0) {
-			TError ape = new TError("ui.msg21");
-			ape.setMessage(MessageFormat.format(ape.getMessage(), patt));
-
-			// datos > que patron
-			if (txt.length() > patt.length()) {
-				return ape;
-			}
-			// verifica patron: mientras el texto escrito este correcto, no muestra mensaje
-			for (int i = 0; i < txt.length(); i++) {
-				if (patt.charAt(i) == '.' && !(txt.charAt(i) == '.')) {
-					return ape;
-				}
-				if (patt.charAt(i) == '#' && !(Character.isDigit(txt.charAt(i)))) {
-					return ape;
-				}
-			}
-			// verifica longitud solo cuando el patron esta correcto
-			if (txt.length() == patt.length()) {
-				// showMessage("ui.msg21");
-				// return;
-			}
-		}
-		return null;
 	}
 
 	/**

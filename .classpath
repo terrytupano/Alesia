@@ -6,6 +6,7 @@
 			<accessrule kind="accessible" pattern="javafx/**"/>
 		</accessrules>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/commons-text-1.8.jar" sourcepath="C:/Users/terry/Documents/java/Apache/commons-text-1.8/commons-text-1.8-sources.jar"/>
 	<classpathentry kind="lib" path="lib/weblaf/hamcrest-core-1.3.jar"/>
 	<classpathentry kind="lib" path="lib/weblaf/java-image-scaling-0.8.6.jar"/>
 	<classpathentry kind="lib" path="lib/weblaf/jericho-html-3.3.jar"/>

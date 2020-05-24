@@ -384,11 +384,10 @@ public class SensorsArray {
 		}
 
 		// envioerement information
-		Statistic s = Statistic.findOrInit("tableparams", pokerSimulator.getTableParameters(), "STREET",
-				pokerSimulator.getCurrentRound(), "name", "potValue");
+		Statistic s = Statistic.findOrInit("time", Hero.startDate, "tableparams", pokerSimulator.getTableParameters(),
+				"STREET", pokerSimulator.getCurrentRound(), "name", "potValue");
 		DescriptiveStatistics sts = statistics.get(pokerSimulator.getCurrentRound());
 		sts.addValue(pokerSimulator.getPotValue());
-		s.set("time", Hero.startDate);
 		s.set("mean", sts.getMean());
 		s.set("min", sts.getMin());
 		s.set("max", sts.getMax());
