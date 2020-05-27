@@ -51,7 +51,6 @@ public class Trooper extends Task {
 	private PokerSimulator pokerSimulator;
 	private SensorsArray sensorsArray;
 	private RobotActuator robotActuator;
-	private boolean isTestMode;
 	private Hashtable<String, Double> availableActions;
 	private Hashtable<String, Double> asociatedCost;
 	private int countdown = 5;
@@ -92,17 +91,11 @@ public class Trooper extends Task {
 		return paused;
 	}
 
-	public boolean isTestMode() {
-		return isTestMode;
-	}
 	public void pause(boolean pause) {
 		this.paused = pause;
 		setVariableAndLog(STATUS, paused ? "Trooper paused" : "Trooper resumed");
 	}
 
-	public void setTestMode(boolean isTestMode) {
-		this.isTestMode = isTestMode;
-	}
 	/**
 	 * clear the enviorement for a new round.
 	 * 
@@ -199,16 +192,16 @@ public class Trooper extends Task {
 
 		double myPot = (pot * handStreng);
 		invest = pot - myPot;
-		
-//		double number = base + myPot + (invest * potential);
+
+		// double number = base + myPot + (invest * potential);
 		double number = base + myPot + (invest * potential);
 
 		String txt1 = twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(pot) + " * "
 				+ twoDigitFormat.format(handStreng) + ") + (" + twoDigitFormat.format(invest) + " * "
 				+ twoDigitFormat.format(potential) + ") = " + twoDigitFormat.format(number);
-//		String txt1 = twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(pot) + " * "
-//				+ twoDigitFormat.format(handStreng) + ") + (" + twoDigitFormat.format(invest) + " * "
-//				+ twoDigitFormat.format(potential) + ") = " + twoDigitFormat.format(number);
+		// String txt1 = twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(pot) + " * "
+		// + twoDigitFormat.format(handStreng) + ") + (" + twoDigitFormat.format(invest) + " * "
+		// + twoDigitFormat.format(potential) + ") = " + twoDigitFormat.format(number);
 
 		setVariableAndLog(EXPLANATION, txt1);
 		return number;

@@ -90,7 +90,7 @@ public class RobotActuator {
 	 * signal only. the property "show location of pointer when press control key" must be set on in mouse properties
 	 */
 	public void doClick() {
-		if (Trooper.getInstance().isTestMode()) {
+		if (Hero.isTestMode) {
 			type(KeyEvent.VK_CONTROL);
 			return;
 		}
@@ -104,7 +104,7 @@ public class RobotActuator {
 	 * signal only. the property "show location of pointer when press control key" must be set on in mouse properties
 	 */
 	public void doubleClick() {
-		if (Trooper.getInstance().isTestMode()) {
+		if (Hero.isTestMode) {
 			type(KeyEvent.VK_CONTROL);
 			return;
 		}
@@ -154,7 +154,7 @@ public class RobotActuator {
 			if ((code > 96 && code < 123)) {
 				code = code - 32;
 			}
-			if (Trooper.getInstance().isTestMode())
+			if (Hero.isTestMode)
 				type(KeyEvent.VK_CONTROL);
 			else
 				type(code);

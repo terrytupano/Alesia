@@ -1,13 +1,10 @@
 package plugins.hero;
 
 import java.awt.*;
-import java.awt.image.*;
-import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.stream.*;
 
-import javax.imageio.*;
 import javax.swing.*;
 import javax.swing.border.*;
 
@@ -49,7 +46,6 @@ public class SensorsArray {
 	/**
 	 * Read/see only cards areas. this type is only for hero cards and comunity cards
 	 * 
-	 * @see #TYPE_VILLANS_CARDS
 	 */
 	public final static String TYPE_CARDS = "Cards";
 	/**
@@ -418,54 +414,21 @@ public class SensorsArray {
 		}
 		setStandByBorder();
 	}
-	/**
-	 * Utility method to take the image of the villans?.name areas for some and store in the
-	 * {@link GameRecorder#IMAGE_ACTIONS}. This method is invoked during configuration step to retribe samples of the
-	 * designated areas that contain image information for determinate the action performed by the villans during the
-	 * gameplay
-	 */
-	public void takeActionSample() {
-		try {
-			for (String sn : screenSensors.keySet()) {
-				// TODO temporal for TH. the action area is the same as the name area
-				if (sn.contains(".name")) {
-					ScreenSensor ss = screenSensors.get(sn);
-					ss.capture(false);
-					BufferedImage bi = ss.getImage(ScreenSensor.CAPTURED);
-					String ext = "png";
-					File f = new File("TODO:" + "sample_" + System.currentTimeMillis() + "." + ext);
-					f.createNewFile();
-					ImageIO.write(bi, ext, f);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
 	/**
-	 * Utility method to take the image of all card areas and store in the {@link ScreenSensor#CARDS} directory. Used
-	 * for retrive the images of the cards in configuration step to used for detect the card rack during the gameplay
+	 * this method read all {@link #TYPE_CARDS} areas from the .ppt file and perform the standar ocr operation. fur test
+	 * purporse
 	 */
-	public void takeCardSample() {
-		try {
-			String ext = "png";
-			for (String sn : screenSensors.keySet()) {
-				ScreenSensor ss = screenSensors.get(sn);
-				if (ss.isComunityCard() || ss.isHoleCard()) {
-					// if (ss.getName().equals("hero.card2")) {
-					ss.capture(false);
-					BufferedImage image = ss.getImage(ScreenSensor.CAPTURED);
-					// image = TColorUtils.getImageDataRegion(image);
-					File f = new File(ScreenSensor.CARDS + "sample_" + System.currentTimeMillis() + "." + ext);
-					f.createNewFile();
-					ImageIO.write(image, ext, f);
-				}
-				// }
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public void testCards() {
+		// if the trooper is active, do nothig (oüviously)
+		Trooper t = Trooper.getInstance();
+		if (t != null && t.isStarted())
+			return;
+
+		Hero.isTestMode = true;
+		List<ScreenSensor> slist = screenSensors.values().stream().filter(ss -> ss.isCardArea())
+				.collect(Collectors.toList());
+		readSensors(true, slist);
 	}
 
 	private void setStandByBorder() {

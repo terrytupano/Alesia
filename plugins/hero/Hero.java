@@ -12,6 +12,7 @@ package plugins.hero;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.*;
 import java.beans.*;
 import java.io.*;
 import java.util.*;
@@ -36,9 +37,13 @@ public class Hero extends TPlugin {
 	protected static HeroPanel heroPanel;
 	protected static Logger logger;
 	protected static File tableFile;
+	protected static boolean isTestMode;
 	protected static SensorsArray sensorsArray;
 	protected static ShapeAreas shapeAreas;
 	protected static Hashtable<String, Object> trooperParameters;
+	protected static String CARDS_FOLDER = "plugins/hero/cards/";
+	protected static TreeMap<String, BufferedImage> preparedCards;
+
 	/**
 	 * update every time the action {@link #runTrooper(ActionEvent)} is performed
 	 */
@@ -49,6 +54,7 @@ public class Hero extends TPlugin {
 		actionMap = Alesia.getInstance().getContext().getActionMap(this);
 		logger = Logger.getLogger("Hero");
 		consolePanel = new ConsolePanel(logger);
+		preparedCards = TCVUtils.loadCards(CARDS_FOLDER);
 		TActionsFactory.insertActions(actionMap);
 	}
 
@@ -133,7 +139,9 @@ public class Hero extends TPlugin {
 			return null;
 		}
 		TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 840 600 /mov 532 41");
-		return start(false);
+
+		isTestMode = false;
+		return start();
 	}
 
 	@org.jdesktop.application.Action
@@ -146,21 +154,18 @@ public class Hero extends TPlugin {
 	}
 
 	@org.jdesktop.application.Action
-	public void takeActionSample(ActionEvent event) {
-		sensorsArray.takeActionSample();
-	}
-
-	@org.jdesktop.application.Action
-	public void takeCardSample(ActionEvent event) {
-		sensorsArray.takeCardSample();
+	public void testCards(ActionEvent event) {
+		sensorsArray.testCards();
 	}
 
 	@org.jdesktop.application.Action
 	public Task testTrooper(ActionEvent event) {
-		return start(true);
+		isTestMode = true;
+		return start();
 	}
 
 	private static void initGlovalVars() {
+		isTestMode = false;
 		startDate = new Date();
 		shapeAreas = new ShapeAreas(Hero.tableFile);
 		shapeAreas.read();
@@ -169,7 +174,7 @@ public class Hero extends TPlugin {
 		heroPanel.updateGlovalParameters();
 	}
 
-	private Task start(boolean isTest) {
+	private Task start() {
 		WebLookAndFeel.setForceSingleEventsThread(false);
 		initGlovalVars();
 		Trooper t = new Trooper();
@@ -182,7 +187,6 @@ public class Hero extends TPlugin {
 		};
 		// t.getPokerSimulator().setParameter();
 		t.addPropertyChangeListener(tl);
-		t.setTestMode(isTest);
 		actionMap.get("testTrooper").setEnabled(false);
 		actionMap.get("runTrooper").setEnabled(false);
 		actionMap.get("pauseTrooper").setEnabled(true);

@@ -35,8 +35,6 @@ public class ScreenSensor extends JPanel {
 	private Hashtable<String, BufferedImage> images;
 	private String showImage;
 
-	public static String CARDS = "plugins/hero/cards/";
-	public static TreeMap<String, BufferedImage> cardsTable = TCVUtils.loadCards(CARDS);
 	private Shape shape;
 	private SensorsArray sensorsArray;
 	private int scaledWidth, scaledHeight;
@@ -94,31 +92,6 @@ public class ScreenSensor extends JPanel {
 		Hero.logger.finer("getOCRFromImage for sensor" + sName + ": image " + ocr + " found. Distance: " + dist);
 		return ocr == null || dist > minDist ? null : ocr;
 	}
-
-	// public static double getImageDiferences(List<MarvinSegment> segments, BufferedImage imagea, BufferedImage imageb)
-	// {
-	// double dif = 0.0;
-	//
-	// // at this point i.m asumming that segments are retrived in the same way for all images. so, similar images
-	// // haben the same segment order inside the list and ovious the same number of segments
-	//
-	// // segments from imageb
-	// MarvinImage miB = new MarvinImage(imageb);
-	// List<MarvinSegment> segmentsB = TCVUtils.getImageSegments(miB, false, null);
-	//
-	// // nto the same numbers of segments, bust be diferent images
-	// if (segments.size() != segmentsB.size())
-	// return 100.0;
-	//
-	// for (int i = 0; i < segments.size(); i++) {
-	// MarvinSegment segA = segments.get(i);
-	// MarvinSegment segB = segmentsB.get(i);
-	// BufferedImage subA = imagea.getSubimage(segA.x1, segA.y1, segA.width, segA.height);
-	// BufferedImage subB = imageb.getSubimage(segB.x1, segB.y1, segB.width, segB.height);
-	// dif += TCVUtils.getImageDiferences(subA, subB);
-	// }
-	// return dif;
-	// }
 
 	private String getOCRFromImage(BufferedImage imagea, TreeMap<String, BufferedImage> images) {
 		String ocr = null;
@@ -197,7 +170,7 @@ public class ScreenSensor extends JPanel {
 		long t1 = System.currentTimeMillis();
 
 		// capture the image
-		if (Trooper.getInstance().isTestMode()) {
+		if (Hero.isTestMode) {
 			// from the ppt file background
 			ImageIcon ii = sensorsArray.getSensorDisposition().getBackgroundImage();
 			BufferedImage bgimage = ImageUtils.getBufferedImage(ii);
@@ -381,7 +354,7 @@ public class ScreenSensor extends JPanel {
 
 	/**
 	 * return the String representation of the card area by comparing the {@link ScreenSensor#getCapturedImage()} image
-	 * against the list of card loaded in {@link #cardsTable} static variable. The most probable image file name is
+	 * against the list of card loaded in {@link #preparedCards} static variable. The most probable image file name is
 	 * return.
 	 * <p>
 	 * This method is intendet for card areas. a card area is practicaly equals if the diference is < 3%. This method
@@ -390,22 +363,15 @@ public class ScreenSensor extends JPanel {
 	 * @return the ocr retrived from the original file name or <code>null</code>
 	 */
 	private String getImageOCR() throws Exception {
-		String ocr = getOCRFromImage(preparedImage, cardsTable);
+		String ocr = getOCRFromImage(preparedImage, Hero.preparedCards);
 
 		// only for visual purpose. the regions of interest was already used
 		if (showImage.equals(PREPARED)) {
-			Properties parms = new Properties();
-			parms.put("rgbToBinaryThreshold", "200");
-			parms.put("removeSegmentsWindowSize", "0");
+			TCVUtils.parameteres.put("rgbToBinaryThreshold", "220");
+			TCVUtils.parameteres.put("removeSegmentsWindowSize", "9");
 			MarvinImage mi = new MarvinImage(preparedImage);
-			TCVUtils.getImageSegments(mi, true, parms);
+			TCVUtils.getImageSegments(mi, true);
 		}
-		//
-		// // if the card is the file name is card_facedown, set null for ocr
-		// if (ocr != null && ocr.equals("xx")) {
-		// ocr = null;
-		// Hero.logger.finer(getName() + ": card is face down.");
-		// }
 		return ocr;
 	}
 	/**
@@ -479,6 +445,8 @@ public class ScreenSensor extends JPanel {
 		images.put(CAPTURED, capturedImage);
 
 		if (isCardArea()) {
+			TCVUtils.parameteres.put("rgbToBinaryThreshold", "200");
+			TCVUtils.parameteres.put("removeSegmentsWindowSize", "1");
 			bufimg = TCVUtils.prepareCard(capturedImage, false);
 		}
 

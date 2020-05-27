@@ -3,7 +3,7 @@ package core.datasource.model;
 import org.javalite.activejdbc.*;
 import org.javalite.activejdbc.annotations.*;
 
-@DbName("AlesiaDatabase")
+@DbName("hero")
 @Table("GAMES")
 @CompositePK({"TIME", "TABLEPARAMS", "NAME" })
 public class Game extends Model {

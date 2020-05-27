@@ -16,6 +16,8 @@ import javax.swing.event.*;
 
 import org.jfree.chart.*;
 
+import com.alee.utils.*;
+
 import core.*;
 import marvin.color.*;
 import marvin.image.*;
@@ -27,14 +29,18 @@ public class TCVUtils {
 
 	private static Hashtable<String, JLabel> labels;
 	private JFrame frame;
-	private String prpfile = "plugins/hero/marvinproperties.properties";
-	/**
-	 * store the parameter for the methos inside this class. if this properti
-	 */
-	private Properties parameteres;
+	static public Properties parameteres;
 	private TreeMap<String, BufferedImage> images;
-
 	private Hashtable<String, String> images2;
+	private static String parametersFile = "plugins/hero/marvinproperties.properties";
+	static {
+		parameteres = new Properties();
+		try {
+			parameteres.load(new FileInputStream(parametersFile));
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+	}
 
 	public TCVUtils() {
 		this.frame = new JFrame();
@@ -42,7 +48,7 @@ public class TCVUtils {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				try {
-					parameteres.store(new FileOutputStream(prpfile), "");
+					parameteres.store(new FileOutputStream(parametersFile), "");
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
@@ -50,12 +56,6 @@ public class TCVUtils {
 		};
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.addWindowListener(wl);
-		parameteres = new Properties();
-		try {
-			parameteres.load(new FileInputStream(prpfile));
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
 	}
 
 	public static MarvinImage autoCrop(List<MarvinSegment> segments, MarvinImage image) {
@@ -227,14 +227,9 @@ public class TCVUtils {
 		return percent;
 	}
 
-	public static List<MarvinSegment> getImageSegments(MarvinImage mImage, boolean drawSegments, Properties parms) {
-		if (parms == null) {
-			parms = new Properties();
-			parms.put("rgbToBinaryThreshold", "200");
-			parms.put("removeSegmentsWindowSize", "1");
-		}
-		int rgbToBinaryThreshold = Integer.parseInt(parms.getProperty("rgbToBinaryThreshold"));
-		int removeSegmentsWindowSize = Integer.parseInt(parms.getProperty("removeSegmentsWindowSize"));
+	public static List<MarvinSegment> getImageSegments(MarvinImage mImage, boolean drawSegments) {
+		int rgbToBinaryThreshold = Integer.parseInt(parameteres.getProperty("rgbToBinaryThreshold", "200"));
+		int removeSegmentsWindowSize = Integer.parseInt(parameteres.getProperty("removeSegmentsWindowSize", "1"));
 		// MarvinImage mImage = new MarvinImage(image);
 		List<MarvinSegment> segments = segment(mImage, rgbToBinaryThreshold);
 		removeSegments(segments, mImage, removeSegmentsWindowSize);
@@ -385,7 +380,6 @@ public class TCVUtils {
 
 	public static void main(String[] args) {
 		TCVUtils demo = new TCVUtils();
-		demo.parameteres.put("imagesDir", "plugins/hero/image_cards/");
 		demo.showFrame();
 	}
 	public static BufferedImage MoravecCorners(BufferedImage image, boolean drawCorners, Properties parms) {
@@ -418,16 +412,12 @@ public class TCVUtils {
 		return mImage.getBufferedImage();
 	}
 
-	public static BufferedImage paintBorder(BufferedImage image, Properties parms) {
-		if (parms == null) {
-			parms = new Properties();
-			parms.put("size", "8");
-			parms.put("color", "FFFFFF");
-		}
-		int size = Integer.parseInt(parms.getProperty("size"));
-		Color color = TColorUtils.getRGBColor(parms.getProperty("color"));
+	public static BufferedImage paintBorder(BufferedImage image) {
+		int size = Integer.parseInt(parameteres.getProperty("size", "8"));
+		Color color = TColorUtils.getRGBColor(parameteres.getProperty("color", "FFFFFF"));
 
-		BufferedImage newimagea = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
+		BufferedImage newimagea = ImageUtils.copy(image);
+//		BufferedImage newimagea = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
 		Graphics2D g2d = newimagea.createGraphics();
 		g2d.drawImage(image, 0, 0, null);
 		BasicStroke bs = new BasicStroke(size);
@@ -450,15 +440,14 @@ public class TCVUtils {
 		Hashtable<String, Integer> histo = TColorUtils.getHistogram(bufimg);
 		Color backgroundColor = TColorUtils.getBackgroundColor(histo);
 
-		Properties parms = new Properties();
-		parms.setProperty("color", TColorUtils.getRGBColor(backgroundColor));
-		parms.setProperty("size", "8");
-		bufimg = TCVUtils.paintBorder(bufimg, parms);
+		parameteres.setProperty("color", TColorUtils.getRGBColor(backgroundColor));
+		parameteres.setProperty("size", "8");
+		bufimg = TCVUtils.paintBorder(bufimg);
 		// source from folder or captured ?
 		if (src)
 			bufimg = bufimg.getSubimage(0, 0, 28, 35);
-		MarvinImage mi = new MarvinImage(bufimg);
-		List<MarvinSegment> segments = TCVUtils.getImageSegments(mi, false, null);
+		 MarvinImage mi = new MarvinImage(bufimg);
+		 List<MarvinSegment> segments = TCVUtils.getImageSegments(mi, false);
 		mi = TCVUtils.autoCrop(segments, mi);
 		bufimg = mi.getBufferedImage();
 		return bufimg;
@@ -584,7 +573,7 @@ public class TCVUtils {
 
 	private void processImages() {
 		// start from the source
-		images = loadImages(ScreenSensor.CARDS);
+		images = loadImages(Hero.CARDS_FOLDER);
 
 		Set<String> keys = images.keySet();
 		for (String key : keys) {
@@ -609,7 +598,7 @@ public class TCVUtils {
 			Set<String> keys = images.keySet();
 			for (String key : keys) {
 				BufferedImage image = images.get(key);
-				File f = new File(ScreenSensor.CARDS + key + "." + ext);
+				File f = new File(Hero.CARDS_FOLDER + key + "." + ext);
 				f.delete();
 				f.createNewFile();
 				ImageIO.write(image, ext, f);
@@ -621,13 +610,13 @@ public class TCVUtils {
 
 	private void saveSegments() {
 		try {
-			images = loadImages(ScreenSensor.CARDS);
+			images = loadImages(Hero.CARDS_FOLDER);
 			String ext = "png";
 			Set<String> keys = images.keySet();
 			for (String key : keys) {
 				BufferedImage image = images.get(key);
 				MarvinImage miB = new MarvinImage(image);
-				List<MarvinSegment> segments = TCVUtils.getImageSegments(miB, true, null);
+				List<MarvinSegment> segments = TCVUtils.getImageSegments(miB, true);
 
 				for (int i = 0; i < segments.size(); i++) {
 					MarvinSegment segA = segments.get(i);
@@ -646,7 +635,7 @@ public class TCVUtils {
 
 	private void showFrame() {
 		// image panel
-		images = loadImages(ScreenSensor.CARDS);
+		images = loadImages(Hero.CARDS_FOLDER);
 		JPanel imagesPanel = createImagesPanel(images);
 
 		// controls
@@ -677,7 +666,7 @@ public class TCVUtils {
 	}
 
 	private void testImagePhash() {
-		images = loadImages(ScreenSensor.CARDS);
+		images = loadImages(Hero.CARDS_FOLDER);
 		images2 = new Hashtable<>();
 
 		Set<String> keys = images.keySet();

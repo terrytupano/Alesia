@@ -45,28 +45,28 @@ public class SensorArrayPanel extends TUIPanel {
 		imageTypeComboBox.registerSettings(new Configuration<ComboBoxState>("SensorPanel.imageType"));
 		sensorTypeComboBox.registerSettings(new Configuration<ComboBoxState>("SensorPanel.filter"));
 
+		setToolBar("testCards");
 		getToolBarPanel().add(sensorTypeComboBox, imageTypeComboBox);
-		
+
 		this.sensorsPanel = new WebPanel(new GridLayout(0, 2));
 		JScrollPane ajsp = new JScrollPane(sensorsPanel);
-		
+
 		setBodyComponent(ajsp);
 	}
 
 	public void updateArray() {
-//		sensorsPanel.setVisible(false);
 		this.sensorsArray = Hero.sensorsArray;
 		sensorsPanel.removeAll();
 		List<ScreenSensor> ssl = sensorsArray.getSensors(null);
 		for (ScreenSensor ss : ssl) {
 			sensorsPanel.add(ss);
 		}
-//		sensorsPanel.setVisible(true);
+		filterSensors();
 		sensorsPanel.repaint();
 	}
 
 	private void filterSensors() {
-		// temporal?? on init the sensorarray is null
+		// on the component registerSettings(), the sensorarray is null
 		if (sensorsArray == null)
 			return;
 		sensorsPanel.setVisible(false);
