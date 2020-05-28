@@ -10,7 +10,6 @@ import javax.swing.*;
 import com.alee.utils.*;
 
 import core.*;
-import marvin.image.*;
 import net.sourceforge.tess4j.*;
 import net.sourceforge.tess4j.util.*;
 
@@ -363,16 +362,26 @@ public class ScreenSensor extends JPanel {
 	 * @return the ocr retrived from the original file name or <code>null</code>
 	 */
 	private String getImageOCR() throws Exception {
-		String ocr = getOCRFromImage(preparedImage, Hero.preparedCards);
-
-		// only for visual purpose. the regions of interest was already used
-		if (showImage.equals(PREPARED)) {
-			TCVUtils.parameteres.put("rgbToBinaryThreshold", "220");
-			TCVUtils.parameteres.put("removeSegmentsWindowSize", "9");
-			MarvinImage mi = new MarvinImage(preparedImage);
-			TCVUtils.getImageSegments(mi, true);
+		// String ocr = getOCRFromImage(preparedImage, Hero.preparedCards);
+		String rank = iTesseract.doOCR(preparedImage).trim().toUpperCase();
+		String suit = "";
+		// TODO: temp ?? if tesseract can detect the rank, return a empty string !?!?!?!?!
+		if ("".equals(rank)) {
+			String cn = TColorUtils.colorNames.get(backgroundColor);
+			// suit como from the baground color
+			suit = "red".equals(cn) ? "h" : suit;
+			suit = "lime".equals(cn) ? "c" : suit;
+			suit = "cyan".equals(cn) ? "d" : suit;
+			suit = "black".equals(cn) ? "s" : suit;
+			// // only for visual purpose. the regions of interest was already used
+			// if (showImage.equals(PREPARED)) {
+			// TCVUtils.parameteres.put("rgbToBinaryThreshold", "220");
+			// TCVUtils.parameteres.put("removeSegmentsWindowSize", "9");
+			// MarvinImage mi = new MarvinImage(preparedImage);
+			// TCVUtils.getImageSegments(mi, true);
+			// }
 		}
-		return ocr;
+		return rank + suit;
 	}
 	/**
 	 * Perform tesseract ocr operation for generic areas.
@@ -445,16 +454,15 @@ public class ScreenSensor extends JPanel {
 		images.put(CAPTURED, capturedImage);
 
 		if (isCardArea()) {
-			TCVUtils.parameteres.put("rgbToBinaryThreshold", "200");
-			TCVUtils.parameteres.put("removeSegmentsWindowSize", "1");
-			bufimg = TCVUtils.prepareCard(capturedImage, false);
+			TCVUtils.parameteres.setProperty("borderColor", TColorUtils.getRGBColor(backgroundColor));
+			bufimg = TCVUtils.paintBorder(capturedImage);
+			bufimg = ImageHelper.convertImageToGrayscale(bufimg);
 		}
 
 		// all ocr areas need scaled instance
 		if (isTextArea() || isNumericArea()) {
 			bufimg = ImageHelper.getScaledInstance(capturedImage, scaledWidth, scaledHeight);
 			bufimg = ImageHelper.convertImageToGrayscale(bufimg);
-
 		}
 		images.put(PREPARED, bufimg);
 		this.preparedImage = bufimg;

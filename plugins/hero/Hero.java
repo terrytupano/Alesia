@@ -54,7 +54,7 @@ public class Hero extends TPlugin {
 		actionMap = Alesia.getInstance().getContext().getActionMap(this);
 		logger = Logger.getLogger("Hero");
 		consolePanel = new ConsolePanel(logger);
-		preparedCards = TCVUtils.loadCards(CARDS_FOLDER);
+//		preparedCards = TCVUtils.loadCards(CARDS_FOLDER);
 		TActionsFactory.insertActions(actionMap);
 	}
 

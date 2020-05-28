@@ -413,11 +413,9 @@ public class TCVUtils {
 	}
 
 	public static BufferedImage paintBorder(BufferedImage image) {
-		int size = Integer.parseInt(parameteres.getProperty("size", "8"));
-		Color color = TColorUtils.getRGBColor(parameteres.getProperty("color", "FFFFFF"));
-
+		int size = Integer.parseInt(parameteres.getProperty("borderSize", "8"));
+		Color color = TColorUtils.getRGBColor(parameteres.getProperty("borderColor", "FFFFFF"));
 		BufferedImage newimagea = ImageUtils.copy(image);
-//		BufferedImage newimagea = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
 		Graphics2D g2d = newimagea.createGraphics();
 		g2d.drawImage(image, 0, 0, null);
 		BasicStroke bs = new BasicStroke(size);
@@ -436,6 +434,18 @@ public class TCVUtils {
 	 * @return prepared image
 	 */
 	public static BufferedImage prepareCard(BufferedImage image, boolean src) {
+		BufferedImage bufimg = TCVUtils.paintBorder(image);
+		// source from folder or captured ?
+		if (src)
+			bufimg = bufimg.getSubimage(0, 0, 28, 35);
+		MarvinImage mi = new MarvinImage(bufimg);
+		List<MarvinSegment> segments = TCVUtils.getImageSegments(mi, false);
+		mi = TCVUtils.autoCrop(segments, mi);
+		bufimg = mi.getBufferedImage();
+		return bufimg;
+	}
+
+	public static BufferedImage prepareCardOriginal(BufferedImage image, boolean src) {
 		BufferedImage bufimg = TColorUtils.convert8(image);
 		Hashtable<String, Integer> histo = TColorUtils.getHistogram(bufimg);
 		Color backgroundColor = TColorUtils.getBackgroundColor(histo);
@@ -446,8 +456,8 @@ public class TCVUtils {
 		// source from folder or captured ?
 		if (src)
 			bufimg = bufimg.getSubimage(0, 0, 28, 35);
-		 MarvinImage mi = new MarvinImage(bufimg);
-		 List<MarvinSegment> segments = TCVUtils.getImageSegments(mi, false);
+		MarvinImage mi = new MarvinImage(bufimg);
+		List<MarvinSegment> segments = TCVUtils.getImageSegments(mi, false);
 		mi = TCVUtils.autoCrop(segments, mi);
 		bufimg = mi.getBufferedImage();
 		return bufimg;

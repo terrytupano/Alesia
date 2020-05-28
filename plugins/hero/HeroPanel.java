@@ -34,7 +34,7 @@ public class HeroPanel extends WebPanel {
 		wtp.add(sensorArrayPanel, "Sensor Array");
 		wtp.add(pockerSimulatorPanel, "Pocker Simulator");
 		wtp.add(Hero.consolePanel, "Log console");
-		wtp.add(TCVUtils.createImagesPanel(Hero.preparedCards), "Cards");
+//		wtp.add(TCVUtils.createImagesPanel(Hero.preparedCards), "Cards");
 
 		wtp.registerSettings(new Configuration<TabbedPaneState>("HeroPanel.tabbedPanel"));
 

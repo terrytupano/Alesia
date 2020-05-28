@@ -17,7 +17,7 @@
   <test type="TextComponentState" text="02+01 preflop" caretPosition="13"/>
   <PokerSimulator.HelperFilter type="ComboBoxState" selectedIndex="5"/>
   <oddCalculation type="ComboBoxState" selectedIndex="1"/>
-  <SensorPanel.filter type="ComboBoxState" selectedIndex="9"/>
+  <SensorPanel.filter type="ComboBoxState" selectedIndex="1"/>
   <FlickaDockablePane type="DockablePaneState">
     <root class="DockableList" id="EL-EpOpr-I8QK0-8FIyF-i9P6o-ID" size="479,664" orientation="vertical">
       <DockableList id="EL-sJamJ-UrxRl-1UQ5v-EBIfK-ID" size="1037,530" orientation="horizontal">
