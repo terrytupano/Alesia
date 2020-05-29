@@ -206,10 +206,11 @@ public class TColorUtils {
 	 * @return a copy of the source image with a 4-bit colour depth, with the default colour pallette
 	 */
 	public static BufferedImage convert4(BufferedImage src) {
-//		int[] cmap = new int[]{0x000000, 0x800000, 0x008000, 0x808000, 0x000080, 0x800080, 0x008080, 0x808080, 0xC0C0C0,
-//				0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF};
-		int[] cmap = new int[]{0x121A0C, 0x699B48, 0xFEFEFE, 0x476B32, 0x21383C, 0x4F8797, 0xFEFEFE, 0x417180, 0x763535,
-				0x6DA6A6, 0x984645, 0xF8F5F5, 0x2F2F2F, 0xA0A0A0, 0xF4F4F4, 0x606060};
+		int[] cmap = new int[]{0x000000, 0x800000, 0x008000, 0x808000, 0x000080, 0x800080, 0x008080, 0x808080, 0xC0C0C0,
+				0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xFFFFFF};
+		// int[] cmap = new int[]{0x121A0C, 0x699B48, 0xFEFEFE, 0x476B32, 0x21383C, 0x4F8797, 0xFEFEFE, 0x417180,
+		// 0x763535,
+		// 0x6DA6A6, 0x984645, 0xF8F5F5, 0x2F2F2F, 0xA0A0A0, 0xF4F4F4, 0x606060};
 		return convert4(src, cmap);
 	}
 
@@ -230,9 +231,9 @@ public class TColorUtils {
 	 * @param src the source image to convert
 	 * @return a copy of the source image with a 4-bit colour depth, with the default colour pallette
 	 */
-	public static BufferedImage convert3(BufferedImage src) {			    
-		int[] cmap = new int[]{0x000000, 0x0000FF, 0x00FF00, 0x00FFFF, 0xFF0000, 0xFF00FF,0xFFFF00,0xFFFFFF};
-		
+	public static BufferedImage convert3(BufferedImage src) {
+		int[] cmap = new int[]{0x000000, 0x0000FF, 0x00FF00, 0x00FFFF, 0xFF0000, 0xFF00FF, 0xFFFF00, 0xFFFFFF};
+
 		IndexColorModel icm = new IndexColorModel(3, cmap.length, cmap, 0, false, Transparency.OPAQUE,
 				DataBuffer.TYPE_BYTE);
 		BufferedImage dest = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_BYTE_BINARY, icm);
@@ -259,8 +260,6 @@ public class TColorUtils {
 		cco.filter(src, dest);
 		return dest;
 	}
-	
-	
 
 	public static BufferedImage convert4to32(BufferedImage src) {
 		BufferedImage bi = convert4(src);
@@ -345,6 +344,22 @@ public class TColorUtils {
 	}
 
 	/**
+	 * Return <code>true</code> if the histogram contain the color value color
+	 * 
+	 * @param histogram - histo
+	 * @param color - color to find
+	 * @return <code>true</code> if the color exist in the histo
+	 */
+	// public static boolean hasColor(Hashtable<String, Integer> histogram, Color color) {
+	// Color.decode(getRGBColor(color));
+	// if (histogram.size() == 0)
+	// return false;
+	// int rgb = color.getRGB();
+	// Vector<Integer> colors = new Vector<>(histogram.values());
+	// return colors.contains(rgb);
+	// }
+
+	/**
 	 * Count the values inside the histogram argument an return the {@link Color} that is more present. if the histogram
 	 * is empty return <code>null</code>
 	 * 
@@ -353,19 +368,32 @@ public class TColorUtils {
 	 * @return color who is more present
 	 */
 	public static Color getBackgroundColor(Hashtable<String, Integer> histogram) {
+		return getBackgroundColor(histogram, null);
+	}
+
+	public static Color getBackgroundColor(Hashtable<String, Integer> histogram, Color ignore) {
 		if (histogram.size() == 0)
 			return null;
-		Vector<String> ks = new Vector<>(histogram.keySet());
+
+		// create temporal histo
+		Hashtable<String, Integer> temp = new Hashtable<>();
+		histogram.forEach((key, value) -> temp.put(key, value));
+
+		// remove ignore colors
+		if (ignore != null)
+			temp.remove(getOpaqueRGBColor(ignore));
+
+		Vector<String> ks = new Vector<>(temp.keySet());
 		int max = -1;
 		String scol = null;
 		for (String col : ks) {
-			int cnt = histogram.get(col);
+			int cnt = temp.get(col);
 			if (max < cnt) {
 				max = cnt;
 				scol = col;
 			}
 		}
-		return getRGBColor(scol);
+		return getOpaqueRGBColor(scol);
 	}
 
 	/**
@@ -423,9 +451,9 @@ public class TColorUtils {
 	 * @return % of white color present in the image
 	 */
 	public static double getColorPercent(Hashtable<String, Integer> histogram, Color color, int area) {
-		Integer hcol = histogram.get(getRGBColor(color));
+		Integer hcol = histogram.get(getOpaqueRGBColor(color));
 		double colCnt = hcol == null ? 0 : hcol;
-		double d = (colCnt / area)*100; // percentaje
+		double d = (colCnt / area) * 100; // percentaje
 		int t = (int) (d * 100); // decimal reduction
 		return t / 100d;
 	}
@@ -445,9 +473,9 @@ public class TColorUtils {
 		for (int x = 0; x < image.getWidth(); x++) {
 			for (int y = 0; y < image.getHeight(); y++) {
 				Color col = new Color(image.getRGB(x, y));
-				Integer icnt = histo.get(getRGBColor(col));
+				Integer icnt = histo.get(getOpaqueRGBColor(col));
 				int cnt = icnt == null ? 1 : icnt.intValue() + 1;
-				histo.put(getRGBColor(col), cnt);
+				histo.put(getOpaqueRGBColor(col), cnt);
 			}
 		}
 		return histo;
@@ -519,15 +547,22 @@ public class TColorUtils {
 	 * 
 	 * @return color representation in format RRGGBB (opaque color)
 	 */
-	public static String getRGBColor(Color col) {
+	public static String getOpaqueRGBColor(Color col) {
 		int c = col.getRGB();
 		String mc = Integer.toHexString(c).substring(2);
 		return mc;
 	}
 
-	public static Color getRGBColor(String col) {
-		String ncol = col.length() == 8 ? col.substring(2) : col;
-		return Color.decode("0x"+ncol);
+	/**
+	 * Returnt the color represente in the string argument. thi method remove the alpha section interpreting the color
+	 * as a opaque color
+	 * 
+	 * @param color - the color to decode
+	 * @return a opaque color
+	 */
+	public static Color getOpaqueRGBColor(String color) {
+		String ncol = color.length() == 8 ? color.substring(2) : color;
+		return Color.decode("0x" + ncol);
 	}
 
 	/**

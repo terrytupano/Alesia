@@ -30,7 +30,7 @@ public class ActionsBarChart {
 		Set<Integer> keys = histogram.keySet();
 		for (Integer key : keys) {
 			Color col = new Color(key);
-			String colval = TColorUtils.getRGBColor(col);
+			String colval = TColorUtils.getOpaqueRGBColor(col);
 			dataset.addValue(histogram.get(key), name, colval);
 		}
 		// change the color of the bars

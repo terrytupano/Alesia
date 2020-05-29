@@ -341,14 +341,19 @@ public class SensorsArray {
 		// cards areas sensor will perform a simulation
 		if (TYPE_CARDS.equals(type)) {
 			pokerSimulator.getCardsBuffer().clear();
+
+			// 1 step update enable/disable area
 			slist = allSensors.stream().filter(ss -> ss.isCardArea()).collect(Collectors.toList());
+			readSensors(false, slist);
+
+			// second step, read Ocr
+			slist = allSensors.stream().filter(ss -> ss.isHoleCard() || ss.isComunityCard())
+					.collect(Collectors.toList());
 			readSensors(true, slist);
 			for (ScreenSensor ss : slist) {
-				if ((ss.isHoleCard() || ss.isComunityCard())) {
-					String ocr = ss.getOCR();
-					if (ocr != null)
-						pokerSimulator.getCardsBuffer().put(ss.getName(), ocr);
-				}
+				String ocr = ss.getOCR();
+				if (ocr != null)
+					pokerSimulator.getCardsBuffer().put(ss.getName(), ocr);
 			}
 
 			pokerSimulator.setNunOfPlayers(getActiveVillans() + 1);
@@ -387,7 +392,7 @@ public class SensorsArray {
 		s.set("mean", sts.getMean());
 		s.set("min", sts.getMin());
 		s.set("max", sts.getMax());
-		s.save();
+		// s.save();
 	}
 	/**
 	 * Perform the read operation for all {@link ScreenSensor} passed int the list argument.

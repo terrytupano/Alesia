@@ -413,8 +413,8 @@ public class TCVUtils {
 	}
 
 	public static BufferedImage paintBorder(BufferedImage image) {
-		int size = Integer.parseInt(parameteres.getProperty("borderSize", "8"));
-		Color color = TColorUtils.getRGBColor(parameteres.getProperty("borderColor", "FFFFFF"));
+		int size = Integer.parseInt(parameteres.getProperty("borderSize", "6"));
+		Color color = TColorUtils.getOpaqueRGBColor(parameteres.getProperty("borderColor", "000000"));
 		BufferedImage newimagea = ImageUtils.copy(image);
 		Graphics2D g2d = newimagea.createGraphics();
 		g2d.drawImage(image, 0, 0, null);
@@ -450,7 +450,7 @@ public class TCVUtils {
 		Hashtable<String, Integer> histo = TColorUtils.getHistogram(bufimg);
 		Color backgroundColor = TColorUtils.getBackgroundColor(histo);
 
-		parameteres.setProperty("color", TColorUtils.getRGBColor(backgroundColor));
+		parameteres.setProperty("color", TColorUtils.getOpaqueRGBColor(backgroundColor));
 		parameteres.setProperty("size", "8");
 		bufimg = TCVUtils.paintBorder(bufimg);
 		// source from folder or captured ?

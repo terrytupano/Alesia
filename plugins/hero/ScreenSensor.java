@@ -244,7 +244,7 @@ public class ScreenSensor extends JPanel {
 	 * @return
 	 */
 	public String getMaxColor() {
-		return TColorUtils.getRGBColor(backgroundColor);
+		return TColorUtils.getOpaqueRGBColor(backgroundColor);
 	}
 	/**
 	 * Retrun the optical caracter recognition extracted from the asociated area
@@ -364,9 +364,14 @@ public class ScreenSensor extends JPanel {
 	private String getImageOCR() throws Exception {
 		// String ocr = getOCRFromImage(preparedImage, Hero.preparedCards);
 		String rank = iTesseract.doOCR(preparedImage).trim().toUpperCase();
+		
+//		rank correction (know errors)
+		rank = "G".equals(rank) ? "Q" : rank;
+		rank = "ID".equals(rank) ? "T" : rank;
+		
 		String suit = "";
 		// TODO: temp ?? if tesseract can detect the rank, return a empty string !?!?!?!?!
-		if ("".equals(rank)) {
+		if (!"".equals(rank)) {
 			String cn = TColorUtils.colorNames.get(backgroundColor);
 			// suit como from the baground color
 			suit = "red".equals(cn) ? "h" : suit;
@@ -447,14 +452,21 @@ public class ScreenSensor extends JPanel {
 		// flow of the entire class
 		BufferedImage bufimg = TColorUtils.convert3(capturedImage);
 		Hashtable<String, Integer> histo = TColorUtils.getHistogram(bufimg);
-		this.backgroundColor = TColorUtils.getBackgroundColor(histo);
+		this.backgroundColor = TColorUtils.getBackgroundColor(histo, Color.white);
+
+		// test: for card areas, if the card is active and contain the cian color (diamond) set the background color as
+		// cyan
+		if (isCardArea())
+			if (histo.containsKey(TColorUtils.getOpaqueRGBColor(Color.cyan)))
+				this.backgroundColor = Color.cyan;
+
 		this.colorPercent = TColorUtils.getColorPercent(histo, shape.enableColor,
 				bufimg.getWidth() * bufimg.getHeight());
 		images.put(COLORED, bufimg);
 		images.put(CAPTURED, capturedImage);
 
 		if (isCardArea()) {
-			TCVUtils.parameteres.setProperty("borderColor", TColorUtils.getRGBColor(backgroundColor));
+			TCVUtils.parameteres.setProperty("borderColor", "808080");
 			bufimg = TCVUtils.paintBorder(capturedImage);
 			bufimg = ImageHelper.convertImageToGrayscale(bufimg);
 		}

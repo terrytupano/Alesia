@@ -119,7 +119,7 @@ public class GamePlayer {
 			Game gh = Game.findOrInit("TIME", Hero.startDate, "tableparams", array.getPokerSimulator().getTableParameters(), "name", name);
 			gh.set("ASSESMENT", getStats());
 			gh.set("BEATTIN_PATTERN", TResources.getByteArrayFromObject(bettingPattern));
-			gh.save();
+//			gh.save();
 		}
 	}
 
