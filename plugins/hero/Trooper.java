@@ -163,6 +163,30 @@ public class Trooper extends Task {
 		}
 	}
 
+	private double getAmmunitions2() {
+		double HS = pokerSimulator.getCurrentHandStreng();
+		double pHS = pokerSimulator.getHandPotential();
+		double pot = pokerSimulator.getPotValue();
+		int villans = sensorsArray.getActiveVillans();
+
+		double EHS = HS + (1 - HS) * pHS;
+		// empirical base
+		double base = pokerSimulator.getBigBlind() * villans;
+
+		// double number = base + myPot + (invest * potential);
+		double number = base + pot * EHS;
+
+		String txt1 = twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(pot) + " * "
+				+ twoDigitFormat.format(HS) + ") + (1 - " + twoDigitFormat.format(HS) + ") * "
+				+ twoDigitFormat.format(pHS) + " = " + twoDigitFormat.format(number);
+		setVariableAndLog(EXPLANATION, txt1);
+
+		// temporal for record stats in sensorarray
+		pokerSimulator.setVariable("EHSValue", number);
+
+		return number;
+	}
+
 	/**
 	 * compute and return the amount of chips available for actions. The number of amount are directe related to the
 	 * currnet hand rank. More the rank, more chips to invest. This allow the troper invest ammunitons acording to a
@@ -357,12 +381,13 @@ public class Trooper extends Task {
 		if (txt != null) {
 			// at this point pot action must be enabled because the tropper has very hight probabilities. enway check
 			// just in case
-			if (availableActions.contains("raise.pot;raise"))
+			if (availableActions.containsKey("raise.pot;raise"))
 				availableActions.keySet().removeIf(key -> !key.equals("raise.pot;raise"));
 			else
 				availableActions.keySet().removeIf(key -> !key.equals("raise"));
 			Hero.logger.info("Oportunity detected ----------");
 			Hero.logger.info(txt);
+			return;
 		}
 
 		// action filter *all spetial value allow all action to be consider
@@ -378,7 +403,6 @@ public class Trooper extends Task {
 			Collections.sort(tmp, Collections.reverseOrder());
 			availableActions.clear();
 			tmp.forEach(te -> availableActions.put(te.getKey(), te.getValue()));
-			// availableActions.sort(Collections.reverseOrder());
 		}
 		if ("ODDS_MREV".equals(computationType)) {
 			calculateRegretMinOdds(ammunitions);
@@ -532,14 +556,14 @@ public class Trooper extends Task {
 	protected void act() {
 		setVariableAndLog(STATUS, "Acting ...");
 		String ha = getSubOptimalAction();
-		currentHandCost += asociatedCost.get(ha);
-		// gameRecorder.takeSnapShot();
+		// normaly the cost is know. but sometimes(like in oportunities) not
+		Double cost = asociatedCost.get(ha);
+		if (cost != null)
+			currentHandCost += cost;
 		String key = "trooper.Action performed";
 		pokerSimulator.setVariable(key, ha + " current cost " + twoDigitFormat.format(currentHandCost));
 		// robot actuator perform the log
 		robotActuator.perform(ha);
-		// gameRecorder.updateDB();
-		// setVariableAndLog("trooper.Assesment ", gameRecorder.getAssest(0));
 	}
 	/**
 	 * Compute the EV for all actions inside of the <code>list</code> parameter. after this method, the list contain

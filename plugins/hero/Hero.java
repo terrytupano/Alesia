@@ -15,6 +15,7 @@ import java.awt.event.*;
 import java.awt.image.*;
 import java.beans.*;
 import java.io.*;
+import java.text.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -43,18 +44,22 @@ public class Hero extends TPlugin {
 	protected static Hashtable<String, Object> trooperParameters;
 	protected static String CARDS_FOLDER = "plugins/hero/cards/";
 	protected static TreeMap<String, BufferedImage> preparedCards;
-
+	private static DateFormat dateFormat;
 	/**
 	 * update every time the action {@link #runTrooper(ActionEvent)} is performed
 	 */
-	protected static Date startDate = null;
+	private static Date startDate = null;
 
+	protected static String getSesionID() {
+		return dateFormat.format(startDate);
+	}
 	public Hero() {
 		// iTesseract.setLanguage("pok");
+		dateFormat = DateFormat.getDateTimeInstance();
 		actionMap = Alesia.getInstance().getContext().getActionMap(this);
 		logger = Logger.getLogger("Hero");
 		consolePanel = new ConsolePanel(logger);
-//		preparedCards = TCVUtils.loadCards(CARDS_FOLDER);
+		// preparedCards = TCVUtils.loadCards(CARDS_FOLDER);
 		TActionsFactory.insertActions(actionMap);
 	}
 
@@ -165,7 +170,7 @@ public class Hero extends TPlugin {
 	}
 
 	private static void initGlovalVars() {
-		isTestMode = false;
+		// dont put isTestMode = false; HERE !!!!!!!!!!!!!!!!!
 		startDate = new Date();
 		shapeAreas = new ShapeAreas(Hero.tableFile);
 		shapeAreas.read();

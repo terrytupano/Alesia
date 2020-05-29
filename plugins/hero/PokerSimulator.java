@@ -90,7 +90,7 @@ public class PokerSimulator {
 	private ArrayList<String> availableActions;
 
 	public PokerSimulator() {
-		
+
 		tmplist.put(0, "straight_flush");
 		tmplist.put(1, "four_of_a_kind");
 		tmplist.put(2, "full_house");
@@ -231,8 +231,8 @@ public class PokerSimulator {
 	 */
 	public double getCurrentHandStreng() {
 		double rank = UoAHandEvaluator.rankHand(uoAHand);
-//		TEST: the minimun is a pair of 22
-//		rank = Math.max(0, rank - minHandRank);
+		// TEST: the minimun is a pair of 22
+		// rank = Math.max(0, rank - minHandRank);
 		return rank / topHandRank;
 	}
 	public int getCurrentRound() {
@@ -252,6 +252,8 @@ public class PokerSimulator {
 		double hp = 0.0;
 		String hs = "";
 		if (myHandStatsHelper != null) {
+			// TODO: check the simulator values. i think the probabilities in this list contains olny hand better than
+			// my currend hand
 			int toh = Hand.STRAIGHT_FLUSH - minHandPotential;
 			float[] list = myHandStatsHelper.getAllProbs();
 			for (int i = 0; i < toh; i++) {
@@ -363,7 +365,7 @@ public class PokerSimulator {
 		if (!takeOportunity)
 			return txt;
 		// fail safe. an oportunity must be more than a pair
-		if (minHandPotential < Hand.TWO_PAIRS) {
+		if (minHandPotential < Hand.PAIR) {
 			Hero.logger.warning("minimun hand rank for an oportunity must be > Hand.PAIR. Method ignored.");
 			return null;
 		}

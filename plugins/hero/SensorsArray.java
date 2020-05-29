@@ -59,10 +59,10 @@ public class SensorsArray {
 	private ShapeAreas screenAreas;
 	DescriptiveStatistics tesseractTime = new DescriptiveStatistics(10);
 	DescriptiveStatistics imageDiffereceTime = new DescriptiveStatistics(10);
-	private ArrayList<DescriptiveStatistics> statistics;
+	private ArrayList<DescriptiveStatistics> potValStats;
+	private ArrayList<DescriptiveStatistics> EHSStats;
 	private GameRecorder gameRecorder;
 	private int villansBeacon = 0;
-	DescriptiveStatistics pots = new DescriptiveStatistics(30);
 
 	public SensorsArray() {
 		this.pokerSimulator = new PokerSimulator();
@@ -71,14 +71,19 @@ public class SensorsArray {
 		this.lookingBorder = new LineBorder(Color.GREEN, 2);
 		this.standByBorder = new LineBorder(new JPanel().getBackground(), 2);
 		this.screenSensors = new TreeMap<>();
-		this.statistics = new ArrayList<>();
+		this.potValStats = new ArrayList<>();
 		// TODO: temp solution
-		statistics.add(new DescriptiveStatistics());
-		statistics.add(new DescriptiveStatistics());
-		statistics.add(new DescriptiveStatistics());
-		statistics.add(new DescriptiveStatistics());
-		statistics.add(new DescriptiveStatistics());
-		statistics.add(new DescriptiveStatistics());
+		potValStats.add(new DescriptiveStatistics());
+		potValStats.add(new DescriptiveStatistics());
+		potValStats.add(new DescriptiveStatistics());
+		potValStats.add(new DescriptiveStatistics());
+		potValStats.add(new DescriptiveStatistics());
+		this.EHSStats = new ArrayList<>();
+		EHSStats.add(new DescriptiveStatistics());
+		EHSStats.add(new DescriptiveStatistics());
+		EHSStats.add(new DescriptiveStatistics());
+		EHSStats.add(new DescriptiveStatistics());
+		EHSStats.add(new DescriptiveStatistics());
 	}
 	/**
 	 * initialize this sensor array. clearing all sensor and all variables
@@ -384,15 +389,29 @@ public class SensorsArray {
 			pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
 		}
 
-		// envioerement information
-		Statistic s = Statistic.findOrInit("time", Hero.startDate, "tableparams", pokerSimulator.getTableParameters(),
-				"STREET", pokerSimulator.getCurrentRound(), "name", "potValue");
-		DescriptiveStatistics sts = statistics.get(pokerSimulator.getCurrentRound());
+		// pot value information
+		Statistic s = Statistic.findOrInit("session", Hero.getSesionID(), "tableparams",
+				pokerSimulator.getTableParameters(), "STREET", pokerSimulator.getCurrentRound(), "name", "pot");
+		DescriptiveStatistics sts = potValStats.get(pokerSimulator.getCurrentRound());
 		sts.addValue(pokerSimulator.getPotValue());
 		s.set("mean", sts.getMean());
 		s.set("min", sts.getMin());
 		s.set("max", sts.getMax());
-		// s.save();
+		s.save();
+
+		// EHS value information
+		String ehs = (String) pokerSimulator.getVariables().get("EHSValue");
+		if (ehs != null) {
+			s = Statistic.findOrInit("session", Hero.getSesionID(), "tableparams", pokerSimulator.getTableParameters(),
+					"STREET", pokerSimulator.getCurrentRound(), "name", "EHS");
+			sts = EHSStats.get(pokerSimulator.getCurrentRound());
+			// data for getAmmunition2
+			sts.addValue(Double.parseDouble(ehs));
+			s.set("mean", sts.getMean());
+			s.set("min", sts.getMin());
+			s.set("max", sts.getMax());
+			s.save();
+		}
 	}
 	/**
 	 * Perform the read operation for all {@link ScreenSensor} passed int the list argument.

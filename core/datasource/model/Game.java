@@ -5,7 +5,7 @@ import org.javalite.activejdbc.annotations.*;
 
 @DbName("hero")
 @Table("GAMES")
-@CompositePK({"TIME", "TABLEPARAMS", "NAME" })
+@CompositePK({"SESSION", "TABLEPARAMS", "NAME" })
 public class Game extends Model {
 
 }

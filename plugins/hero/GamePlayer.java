@@ -100,7 +100,7 @@ public class GamePlayer {
 		name = name == null ? prefix : name;
 		if (!(name.equals(prefix) || name.equals(oldName))) {
 			oldName = name;
-			Game gh = Game.findFirst("NAME = ? AND TABLEPARAMS = ? ORDER BY TIME DESC", name,
+			Game gh = Game.findFirst("NAME = ? AND TABLEPARAMS = ? ORDER BY SESSION DESC", name,
 					array.getPokerSimulator().getTableParameters());
 			if (gh != null) {
 				previousBettingPattern = (DescriptiveStatistics) TResources
@@ -116,10 +116,11 @@ public class GamePlayer {
 
 	public void updateDB() {
 		if (!name.equals(prefix)) {
-			Game gh = Game.findOrInit("TIME", Hero.startDate, "tableparams", array.getPokerSimulator().getTableParameters(), "name", name);
+			Game gh = Game.findOrInit("SESSION", Hero.getSesionID(), "tableparams",
+					array.getPokerSimulator().getTableParameters(), "name", name);
 			gh.set("ASSESMENT", getStats());
 			gh.set("BEATTIN_PATTERN", TResources.getByteArrayFromObject(bettingPattern));
-//			gh.save();
+			gh.save();
 		}
 	}
 
