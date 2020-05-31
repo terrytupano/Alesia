@@ -60,7 +60,7 @@ public class SensorsArray {
 	DescriptiveStatistics tesseractTime = new DescriptiveStatistics(10);
 	DescriptiveStatistics imageDiffereceTime = new DescriptiveStatistics(10);
 	private ArrayList<DescriptiveStatistics> potValStats;
-	private ArrayList<DescriptiveStatistics> EHSStats;
+	private ArrayList<DescriptiveStatistics> ammoControlStats;
 	private GameRecorder gameRecorder;
 	private int villansBeacon = 0;
 
@@ -78,18 +78,18 @@ public class SensorsArray {
 		potValStats.add(new DescriptiveStatistics());
 		potValStats.add(new DescriptiveStatistics());
 		potValStats.add(new DescriptiveStatistics());
-		this.EHSStats = new ArrayList<>();
-		EHSStats.add(new DescriptiveStatistics());
-		EHSStats.add(new DescriptiveStatistics());
-		EHSStats.add(new DescriptiveStatistics());
-		EHSStats.add(new DescriptiveStatistics());
-		EHSStats.add(new DescriptiveStatistics());
+		this.ammoControlStats = new ArrayList<>();
+		ammoControlStats.add(new DescriptiveStatistics());
+		ammoControlStats.add(new DescriptiveStatistics());
+		ammoControlStats.add(new DescriptiveStatistics());
+		ammoControlStats.add(new DescriptiveStatistics());
+		ammoControlStats.add(new DescriptiveStatistics());
 	}
 	/**
 	 * initialize this sensor array. clearing all sensor and all variables
 	 */
 	public void clearEnviorement() {
-		screenSensors.values().forEach((ss) -> ss.init());
+		screenSensors.values().forEach((ss) -> ss.clearEnviorement());
 		pokerSimulator.clearEnviorement();
 	}
 
@@ -399,14 +399,14 @@ public class SensorsArray {
 		s.set("max", sts.getMax());
 		s.save();
 
-		// EHS value information
-		String ehs = (String) pokerSimulator.getVariables().get("EHSValue");
-		if (ehs != null) {
+		// ammoControl value information
+		String ammoControl = (String) pokerSimulator.getVariables().get("Trooper.ammoControl");
+		if (ammoControl != null) {
 			s = Statistic.findOrInit("session", Hero.getSesionID(), "tableparams", pokerSimulator.getTableParameters(),
-					"STREET", pokerSimulator.getCurrentRound(), "name", "EHS");
-			sts = EHSStats.get(pokerSimulator.getCurrentRound());
-			// data for getAmmunition2
-			sts.addValue(Double.parseDouble(ehs));
+					"STREET", pokerSimulator.getCurrentRound(), "name", "ammoControl");
+			sts = ammoControlStats.get(pokerSimulator.getCurrentRound());
+			// data for getAmmunition
+			sts.addValue(Double.parseDouble(ammoControl));
 			s.set("mean", sts.getMean());
 			s.set("min", sts.getMin());
 			s.set("max", sts.getMax());
@@ -482,7 +482,7 @@ public class SensorsArray {
 		this.screenAreas = areas;
 		this.screenSensors.clear();
 		for (Shape shape : screenAreas.getShapes().values()) {
-			ScreenSensor ss = new ScreenSensor(this, shape);
+			ScreenSensor ss = new ScreenSensor(shape);
 			screenSensors.put(ss.getName(), ss);
 		}
 		setStandByBorder();

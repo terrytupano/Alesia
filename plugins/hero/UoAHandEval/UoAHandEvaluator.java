@@ -25,11 +25,11 @@ public class UoAHandEvaluator {
        System.out.println(handEval.getBest5CardHand(hand1));
        System.out.println(handEval.getBest5CardHand(hand2));
 
-       System.out.println(handEval.rankHand(hand1));
-       System.out.println(handEval.rankHand(hand2));
+       System.out.println(UoAHandEvaluator.rankHand(hand1));
+       System.out.println(UoAHandEvaluator.rankHand(hand2));
 
-       System.out.println(handEval.nameHand(hand1));
-       System.out.println(handEval.nameHand(hand2));
+       System.out.println(UoAHandEvaluator.nameHand(hand1));
+       System.out.println(UoAHandEvaluator.nameHand(hand2));
 System.err.println(System.currentTimeMillis()-l1);
    }
    

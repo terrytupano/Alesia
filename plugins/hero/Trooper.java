@@ -203,32 +203,34 @@ public class Trooper extends Task {
 	private double getAmmunitions() {
 		double handStreng = pokerSimulator.getCurrentHandStreng();
 		double potential = pokerSimulator.getHandPotential();
-		double chips = pokerSimulator.getHeroChips();
-		double buyIn = pokerSimulator.getBuyIn();
+//		double chips = pokerSimulator.getHeroChips();
+//		double buyIn = pokerSimulator.getBuyIn();
 		double pot = pokerSimulator.getPotValue();
 
-		// empirical base
-		double base = pokerSimulator.getBigBlind() * 5;
+		// the source of invest can arrive from 2 sources: hero.s chips or buy in.: When hero is poor, fight safe. when
+		// is richt, fight with the max ammount of space.
+		// TODO: previous version show than hero is praticaly unbeateble allowhim play not with buyIn value, but allwais
+		// with pot. teest again this posivility
+		// double invest = Math.min(chips, buyIn);
 
-		// the source of invest can arrive from 2 sources: hero.s chips or buy in.: When hero is poor, play safe. when
-		// is richt, play whit more room to invest
-		double invest = Math.min(chips, buyIn);
-
+		// repercution: the action that i will do with my ammunitions, will affect the pot 
+		double repercution = pokerSimulator.getBigBlind() * sensorsArray.getActiveVillans();
+		// the current fraction of the pot ammount that until now, is really mine
 		double myPot = (pot * handStreng);
-		invest = pot - myPot;
+		// the invest resources
+		double invest = pot - myPot;
+		double ammunitions = repercution + myPot + (invest * potential);
 
-		// double number = base + myPot + (invest * potential);
-		double number = base + myPot + (invest * potential);
-
-		String txt1 = twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(pot) + " * "
-				+ twoDigitFormat.format(handStreng) + ") + (" + twoDigitFormat.format(invest) + " * "
-				+ twoDigitFormat.format(potential) + ") = " + twoDigitFormat.format(number);
-		// String txt1 = twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(pot) + " * "
-		// + twoDigitFormat.format(handStreng) + ") + (" + twoDigitFormat.format(invest) + " * "
-		// + twoDigitFormat.format(potential) + ") = " + twoDigitFormat.format(number);
+		String txt1 = twoDigitFormat.format(repercution) + " + " + twoDigitFormat.format(myPot) + " + ("
+				+ twoDigitFormat.format(invest) + " * " + twoDigitFormat.format(potential) + ") = "
+				+ twoDigitFormat.format(ammunitions);
 
 		setVariableAndLog(EXPLANATION, txt1);
-		return number;
+		
+		// temporal for record stats in sensorarray
+		pokerSimulator.setVariable("Trooper.ammoControl", ammunitions);
+
+		return ammunitions;
 	}
 
 	/**
@@ -532,18 +534,19 @@ public class Trooper extends Task {
 				return true;
 			}
 
+			// the i.m back button is active (at this point, the enviorement must only being showing the i.m back
+			// button)
+			if (sensorsArray.isSensorEnabled("imBack")) {
+				robotActuator.perform("imBack");
+				continue;
+			}
+
 			// if any of this are active, do nothig. raise.text in this case, is wachit a chackbok for check
 			if (sensorsArray.isSensorEnabled("raise.text") || sensorsArray.isSensorEnabled("sensor1")
 					|| sensorsArray.isSensorEnabled("sensor2")) {
 				continue;
 			}
 
-			// the i.m back button is active (at this point, the enviorement must only being showing the i.m back
-			// button)
-			if (sensorsArray.isSensorEnabled("imBack")) {
-				// robotActuator.perform("imBack");
-				continue;
-			}
 		}
 		setVariableAndLog(EXPLANATION, "Can.t reach the main gametable. Trooper return.");
 		return false;

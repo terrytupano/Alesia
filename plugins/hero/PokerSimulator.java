@@ -240,11 +240,13 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * This methos return the propability of my hand will become a better hand in termns of probabilities. The parameter
-	 * {@link #minHandPotential} control the minimun rank to take into acount.
+	 * This methos return the propability of my hand will become a better hand. The poker adapter is cofigured for take
+	 * into account only the probabilites of inprove my hand (the probabilities of get a hand better that i currently
+	 * have). To allow more presicion, The parameter {@link #minHandPotential} control the minimun rank to take into
+	 * acount.
 	 * <p>
-	 * e.g: if {@link #minHandPotential} = <code>STRAIGHT</code> this method will retorun the potential of the current
-	 * hand of become better than <code>STRAIGHT</code>
+	 * e.g: if {@link #minHandPotential} = {@link Hand#TWO_PAIRS} this method will return the potential of the current
+	 * hand of become better than {@link Hand#TWO_PAIRS}
 	 * 
 	 * @return the probabilities of become a better hand
 	 */
@@ -252,8 +254,6 @@ public class PokerSimulator {
 		double hp = 0.0;
 		String hs = "";
 		if (myHandStatsHelper != null) {
-			// TODO: check the simulator values. i think the probabilities in this list contains olny hand better than
-			// my currend hand
 			int toh = Hand.STRAIGHT_FLUSH - minHandPotential;
 			float[] list = myHandStatsHelper.getAllProbs();
 			for (int i = 0; i < toh; i++) {
@@ -350,11 +350,10 @@ public class PokerSimulator {
 		return drw;
 	}
 	/**
-	 * check whether is an oportunity. An oportunity is present when all the following contitions are set
-	 * <li>The current game street is {@link #FLOP_CARDS_DEALT} or {@link #TURN_CARD_DEALT}
-	 * <li>The current hand rank is equal o greater to the value selected in the table parameters
-	 * <li>The hand is a set. <br>
-	 * Or
+	 * check whether is an oportunity. An oportunity is present when the current street is {@link #FLOP_CARDS_DEALT} or
+	 * {@link #TURN_CARD_DEALT} and one of the following conditions is found:
+	 * <li>The current hand rank is >= ({@link #minHandPotential} + 1) <b>AND</b> The hand is a set (both card in
+	 * heros.s hands participate in the action)
 	 * <li>the hand is the nut
 	 * 
 	 * @return a text explain what oportunity is detected or <code>null</code> if no oportunity are present
@@ -369,15 +368,17 @@ public class PokerSimulator {
 			Hero.logger.warning("minimun hand rank for an oportunity must be > Hand.PAIR. Method ignored.");
 			return null;
 		}
-		// table parameters contitions
-		if (myHandHelper.getHandRank() >= (minHandPotential + 1)
-				&& (currentRound == FLOP_CARDS_DEALT || currentRound == TURN_CARD_DEALT)) {
-			String sts = getSignificantCards();
-			String nh = UoAHandEvaluator.nameHand(uoAHand);
-			txt = sts.length() == 5 ? "Troper has " + nh + " (set)" : txt;
+		// the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
+		if (currentRound == FLOP_CARDS_DEALT || currentRound == TURN_CARD_DEALT) {
+			// table parameters conditions
+			if (myHandHelper.getHandRank() >= (minHandPotential + 1)) {
+				String sts = getSignificantCards();
+				String nh = UoAHandEvaluator.nameHand(uoAHand);
+				txt = sts.length() == 5 ? "Troper has " + nh + " (set)" : txt;
+			}
+			// is the nut
+			txt = currentRound > HOLE_CARDS_DEALT && getMyHandHelper().isTheNuts() ? "is the nuts" : txt;
 		}
-		// is the nut
-		txt = currentRound > HOLE_CARDS_DEALT && getMyHandHelper().isTheNuts() ? "is the nuts" : txt;
 		return txt;
 	}
 	/**

@@ -10,6 +10,7 @@ import javax.swing.*;
 
 import org.apache.commons.math3.stat.descriptive.*;
 import org.apache.poi.hslf.usermodel.*;
+import org.apache.poi.hssf.record.crypto.*;
 
 import core.*;
 
@@ -46,6 +47,7 @@ public class ShapeAreas {
 		try {
 
 			FileInputStream fis = new FileInputStream(file);
+			Biff8EncryptionKey.setCurrentUserPassword("11043023");
 			HSLFSlideShow ppt = new HSLFSlideShow(new HSLFSlideShowImpl(fis));
 
 			// background. paste the image from clipboard genera an PNG image

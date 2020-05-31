@@ -15,6 +15,7 @@ public class TrooperPanel extends TUIFormPanel {
 		addInputComponent(TUIUtils.getNumericTextField("table.buyIn", null, 5, "#.00"), true, true);
 		addInputComponent(TUIUtils.getNumericTextField("table.bigBlid", null, 5, "#.00"), true, true);
 		addInputComponent(TUIUtils.getNumericTextField("table.smallBlid", null, 5, "#.00"), true, true);
+		addInputComponent(TUIUtils.getTWebComboBox("table.currency", "table.currency"));
 		addInputComponent(TUIUtils.getTWebComboBox("preflopStrategy", "table.strategy"));
 		addInputComponent(TUIUtils.getTWebComboBox("minHandPotential", "handRanks"));
 		addInputComponent(TUIUtils.getTWebComboBox("oddCalculation", "oddMethod"));
@@ -34,6 +35,7 @@ public class TrooperPanel extends TUIFormPanel {
 		builder.append(getInputComponent("table.buyIn"));
 		builder.append(getInputComponent("table.bigBlid"));
 		builder.append(getInputComponent("table.smallBlid"));
+		builder.append(TStringUtils.getString("table.currency"), getInputComponent("table.currency"), 5);
 		builder.nextLine();
 
 		builder.appendSeparator("Trooper parameters");

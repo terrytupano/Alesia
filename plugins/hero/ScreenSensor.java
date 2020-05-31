@@ -35,7 +35,6 @@ public class ScreenSensor extends JPanel {
 	private String showImage;
 
 	private Shape shape;
-	private SensorsArray sensorsArray;
 	private int scaledWidth, scaledHeight;
 	private Color backgroundColor;
 	private double colorPercent;
@@ -46,10 +45,11 @@ public class ScreenSensor extends JPanel {
 	private Tesseract iTesseract;
 	private int ocrTime = -1;
 
-	public ScreenSensor(SensorsArray sa, Shape sha) {
+	private String currencySymbol;
+
+	public ScreenSensor(Shape sha) {
 		super(new BorderLayout());
 		this.images = new Hashtable<>();
-		this.sensorsArray = sa;
 		this.shape = sha;
 		this.imageLabel = new JLabel();
 		this.dataLabel = new JLabel();
@@ -69,7 +69,7 @@ public class ScreenSensor extends JPanel {
 		add(dataLabel, BorderLayout.CENTER);
 
 		this.iTesseract = Hero.getTesseract();
-		init();
+		clearEnviorement();
 		update();
 	}
 
@@ -90,29 +90,6 @@ public class ScreenSensor extends JPanel {
 		}
 		Hero.logger.finer("getOCRFromImage for sensor" + sName + ": image " + ocr + " found. Distance: " + dist);
 		return ocr == null || dist > minDist ? null : ocr;
-	}
-
-	private String getOCRFromImage(BufferedImage imagea, TreeMap<String, BufferedImage> images) {
-		String ocr = null;
-		double dif = 100.0;
-		double difThreshold = 30.0;
-
-		Set<String> names = images.keySet();
-		for (String name : names) {
-			BufferedImage imageb = images.get(name);
-			double s = TCVUtils.getImageDiferences(imagea, imageb, true);
-			Hero.logger.finer("file name: " + name + " Diference: " + s);
-			if (s < dif) {
-				dif = s;
-				ocr = name;
-			}
-		}
-		if (dif > difThreshold)
-			Hero.logger.finer("OCR not found for sensor " + getName() + ". min diference: " + dif);
-		else
-			Hero.logger.finer("OCR for sensor " + getName() + ": " + ocr + " found. Diference: " + dif);
-
-		return ocr == null || dif > difThreshold ? null : ocr;
 	}
 
 	/**
@@ -171,12 +148,12 @@ public class ScreenSensor extends JPanel {
 		// capture the image
 		if (Hero.isTestMode) {
 			// from the ppt file background
-			ImageIcon ii = sensorsArray.getSensorDisposition().getBackgroundImage();
+			ImageIcon ii = Hero.sensorsArray.getSensorDisposition().getBackgroundImage();
 			BufferedImage bgimage = ImageUtils.getBufferedImage(ii);
 			capturedImage = bgimage.getSubimage(bou.x, bou.y, bou.width, bou.height);
 		} else {
 			// from the screen
-			capturedImage = sensorsArray.getRobot().createScreenCapture(bou);
+			capturedImage = Hero.sensorsArray.getRobot().createScreenCapture(bou);
 		}
 
 		/*
@@ -218,6 +195,14 @@ public class ScreenSensor extends JPanel {
 	}
 
 	/**
+	 * Return the string representation of the {@link #backgroundColor} variable. the format is RRGGBB
+	 * 
+	 * @return
+	 */
+	public String getMaxColor() {
+		return TColorUtils.getOpaqueRGBColor(backgroundColor);
+	}
+	/**
 	 * Return the int value from this sensor. Some sensor has only numerical information or text/numerical information.
 	 * acording to this, this method will return that numerical information (if is available) or -1 if not. Also, -1 is
 	 * returned if any error is found during the parsing operation.
@@ -239,14 +224,6 @@ public class ScreenSensor extends JPanel {
 		return val;
 	}
 	/**
-	 * Return the string representation of the {@link #backgroundColor} variable. the format is RRGGBB
-	 * 
-	 * @return
-	 */
-	public String getMaxColor() {
-		return TColorUtils.getOpaqueRGBColor(backgroundColor);
-	}
-	/**
 	 * Retrun the optical caracter recognition extracted from the asociated area
 	 * 
 	 * @return OCR result
@@ -259,29 +236,12 @@ public class ScreenSensor extends JPanel {
 		return ocrTime;
 	}
 
-	/**
-	 * init this sensor variables. use this method to clean for a fresh start
-	 * 
-	 */
-	public void init() {
-		ocrResult = null;
-		preparedImage = null;
-		capturedImage = null;
-		lastOcrImage = null;
-		// TODO: put somethin to difierentiate the init status form others status
-		imageLabel.setIcon(null);
-		setEnabled(false);
-		repaint();
-	}
-
 	public boolean isActionArea() {
 		return shape.isActionArea;
 	}
-
 	public boolean isCardArea() {
 		return shape.isCardArea;
 	}
-
 	/**
 	 * Return <code>true</code> if this sensor is a comunity card sensor
 	 * 
@@ -307,6 +267,7 @@ public class ScreenSensor extends JPanel {
 	public boolean isNumericArea() {
 		return shape.isOCRNumericArea;
 	}
+
 	public boolean isTextArea() {
 		return shape.isOCRTextArea;
 	}
@@ -333,7 +294,6 @@ public class ScreenSensor extends JPanel {
 		imageLabel.setPreferredSize(dim);
 
 	}
-
 	/**
 	 * Central method to get OCR operations. This method clear and re sets the ocr and exception variables according to
 	 * the succed or failure of the ocr operation.
@@ -364,11 +324,11 @@ public class ScreenSensor extends JPanel {
 	private String getImageOCR() throws Exception {
 		// String ocr = getOCRFromImage(preparedImage, Hero.preparedCards);
 		String rank = iTesseract.doOCR(preparedImage).trim().toUpperCase();
-		
-//		rank correction (know errors)
+
+		// rank correction (know errors)
 		rank = "G".equals(rank) ? "Q" : rank;
 		rank = "ID".equals(rank) ? "T" : rank;
-		
+
 		String suit = "";
 		// TODO: temp ?? if tesseract can detect the rank, return a empty string !?!?!?!?!
 		if (!"".equals(rank)) {
@@ -388,6 +348,30 @@ public class ScreenSensor extends JPanel {
 		}
 		return rank + suit;
 	}
+
+	private String getOCRFromImage(BufferedImage imagea, TreeMap<String, BufferedImage> images) {
+		String ocr = null;
+		double dif = 100.0;
+		double difThreshold = 30.0;
+
+		Set<String> names = images.keySet();
+		for (String name : names) {
+			BufferedImage imageb = images.get(name);
+			double s = TCVUtils.getImageDiferences(imagea, imageb, true);
+			Hero.logger.finer("file name: " + name + " Diference: " + s);
+			if (s < dif) {
+				dif = s;
+				ocr = name;
+			}
+		}
+		if (dif > difThreshold)
+			Hero.logger.finer("OCR not found for sensor " + getName() + ". min diference: " + dif);
+		else
+			Hero.logger.finer("OCR for sensor " + getName() + ": " + ocr + " found. Diference: " + dif);
+
+		return ocr == null || dif > difThreshold ? null : ocr;
+	}
+
 	/**
 	 * Perform tesseract ocr operation for generic areas.
 	 * 
@@ -398,6 +382,8 @@ public class ScreenSensor extends JPanel {
 	private String getTesseractOCR() throws TesseractException {
 		String srcocr = iTesseract.doOCR(preparedImage);
 
+		if ("pot".equals(getName()))
+			System.out.println("ScreenSensor.getTesseractOCR()");
 		// draw segmented regions (only on prepared image) and ONLY when the prepared image is request to be visible
 		if (showImage.equals(PREPARED) && preparedImage != null) {
 			int pageIteratorLevel = TessAPI.TessPageIteratorLevel.RIL_WORD;
@@ -427,7 +413,11 @@ public class ScreenSensor extends JPanel {
 
 		// standar procedure for numeric sensors
 		if (isNumericArea()) {
-			srcocd = srcocd.replaceAll("[^.1234567890]", "");
+			srcocd = srcocd.replaceAll("[^" + currencySymbol + ".1234567890]", "");
+			// at this point the var mus contain the currency simbol as first caracter. in case of error, the first
+			// caracter maybe is a number. as a fail safe, remove allways the first caracter.
+			if (!"".equals(currencySymbol) && srcocd.length() > 1)
+				srcocd = srcocd.substring(1).trim();
 		}
 
 		// standar procedure: remove all blanks caracters
@@ -439,7 +429,6 @@ public class ScreenSensor extends JPanel {
 
 		return srcocd;
 	}
-
 	/**
 	 * perform image operation to set globals variables relatet with the image previous to OCR, color count operations.
 	 * acording to the type of area that this sensor represent, the underling image can be transformed in diferent ways.
@@ -501,5 +490,17 @@ public class ScreenSensor extends JPanel {
 				+ "<br>Background: <B style= \"color: #" + maxc + "\">" + maxc + "</B>" + "<br>OCR: " + ocrResult
 				+ "</html>";
 		dataLabel.setText(text);
+	}
+
+	protected void clearEnviorement() {
+		ocrResult = null;
+		preparedImage = null;
+		capturedImage = null;
+		lastOcrImage = null;
+		setEnabled(false);
+		Hashtable<String, Object> vals = Hero.heroPanel.getTrooperPanel().getValues();
+		this.currencySymbol = vals.get("table.currency").toString();
+		currencySymbol = "*none".equals(currencySymbol) ? "" : currencySymbol;
+		repaint();
 	}
 }
