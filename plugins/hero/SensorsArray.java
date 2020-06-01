@@ -385,7 +385,8 @@ public class SensorsArray {
 			gameRecorder.updateDB();
 			StringBuffer sb = new StringBuffer();
 			gameRecorder.getPlayers().forEach(
-					gp -> sb.append(gp.getName() + " --- " + gp.getStats() + " --- " + gp.getPreviousStats() + "<br>"));
+//					gp -> sb.append(gp.getName() + " = " + gp.getStats() + " --- " + gp.getPreviousStats() + "<br>"));
+			gp -> sb.append(gp.getName() + " = " + gp.getStats() + "<br>"));
 			pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
 		}
 

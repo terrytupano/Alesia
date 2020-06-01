@@ -231,8 +231,6 @@ public class PokerSimulator {
 	 */
 	public double getCurrentHandStreng() {
 		double rank = UoAHandEvaluator.rankHand(uoAHand);
-		// TEST: the minimun is a pair of 22
-		// rank = Math.max(0, rank - minHandRank);
 		return rank / topHandRank;
 	}
 	public int getCurrentRound() {
@@ -254,7 +252,8 @@ public class PokerSimulator {
 		double hp = 0.0;
 		String hs = "";
 		if (myHandStatsHelper != null) {
-			int toh = Hand.STRAIGHT_FLUSH - minHandPotential;
+			// int toh = Hand.STRAIGHT_FLUSH - minHandPotential;
+			int toh = Hand.STRAIGHT_FLUSH - Hand.PAIR;
 			float[] list = myHandStatsHelper.getAllProbs();
 			for (int i = 0; i < toh; i++) {
 				hp += list[i];
@@ -264,7 +263,10 @@ public class PokerSimulator {
 		}
 		hs += "= " + twoDigitFormat.format(hp);
 		setVariable("simulator.hand streng", hs);
-		return hp;
+
+		// empirical top: .8 prob with 20 ouds of improbe hand in the folowin example: Ts Qs Js Tc Ks
+		// whit a pair of ten, handevaluator return 0.1315 of strengt
+		return hp / 0.8;
 	}
 
 	public double getHandStrengBase() {

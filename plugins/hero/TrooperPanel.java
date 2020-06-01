@@ -58,6 +58,5 @@ public class TrooperPanel extends TUIFormPanel {
 		setToolBar("runTrooper", "testTrooper", "stopTrooper", "pauseTrooper");
 		setBodyComponent(builder.getPanel());
 		registreSettings();
-		
 	}
 }

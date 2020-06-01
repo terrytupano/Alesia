@@ -124,12 +124,24 @@ public class GamePlayer {
 		}
 	}
 
+	/**
+	 * return the mean but expresed in BB
+	 * 
+	 * @return means in BB format
+	 */
 	public double getMean() {
 		return getMean(bettingPattern);
 	}
 
+	/**
+	 * return the mean but expresed in BB
+	 * 
+	 * @param stats - {@link DescriptiveStatistics}
+	 * @return means in BB format
+	 */
 	private double getMean(DescriptiveStatistics stats) {
 		double mean = stats.getMean();
+		mean = mean / array.getPokerSimulator().getBigBlind();
 		mean = ((int) (mean * 100)) / 100.0;
 		return mean;
 	}

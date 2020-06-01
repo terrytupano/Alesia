@@ -201,32 +201,37 @@ public class Trooper extends Task {
 	 * @return amunitions
 	 */
 	private double getAmmunitions() {
-		double handStreng = pokerSimulator.getCurrentHandStreng();
-		double potential = pokerSimulator.getHandPotential();
-//		double chips = pokerSimulator.getHeroChips();
-//		double buyIn = pokerSimulator.getBuyIn();
+		double bigBlind = pokerSimulator.getBigBlind();
 		double pot = pokerSimulator.getPotValue();
+		double handStreng = pokerSimulator.getCurrentHandStreng();
+		double handPotential = pokerSimulator.getHandPotential();
+		// this function compute the amount of ammunitions according to the villans. the idea is maximize the amount of
+		// chips in the pot.
+		// -- for few villas, this function assing more chips.
+		// -- for many villans assign fewer, so hero can maximize the chips in the pot only whit few ammount of
+		// call/raise
+		double base = (sensorsArray.getVillans() - sensorsArray.getActiveVillans()) * 12 * bigBlind;
 
-		// the source of invest can arrive from 2 sources: hero.s chips or buy in.: When hero is poor, fight safe. when
-		// is richt, fight with the max ammount of space.
-		// TODO: previous version show than hero is praticaly unbeateble allowhim play not with buyIn value, but allwais
-		// with pot. teest again this posivility
-		// double invest = Math.min(chips, buyIn);
-
-		// repercution: the action that i will do with my ammunitions, will affect the pot 
-		double repercution = pokerSimulator.getBigBlind() * sensorsArray.getActiveVillans();
 		// the current fraction of the pot ammount that until now, is really mine
-		double myPot = (pot * handStreng);
-		// the invest resources
+		double myPot = pot * handStreng;
+		// ----------------------------
+		// 200601: con esta nueva formula para ammunitionControl, parece que ahora si la pege !!!!! manana compor 10€ en
+		// una tarjeta y pruebo con dinero real !!! al menos hero tiene 1.6BB de average de ganacia !! espero que ahora
+		// si funcione todo !!
+		// ----------------------------
+		// the invest resources: the pot diference
 		double invest = pot - myPot;
-		double ammunitions = repercution + myPot + (invest * potential);
 
-		String txt1 = twoDigitFormat.format(repercution) + " + " + twoDigitFormat.format(myPot) + " + ("
-				+ twoDigitFormat.format(invest) + " * " + twoDigitFormat.format(potential) + ") = "
+		// double ammunitions = base + myPot + ((base + invest) * handPotential);
+		double ammunitions = ((base + pot) * handStreng) + ((base + invest) * handPotential);
+
+		String txt1 = "((" + twoDigitFormat.format(base) + " + " + twoDigitFormat.format(pot) + ") * "
+				+ twoDigitFormat.format(handStreng) + ") + ((" + twoDigitFormat.format(base) + " + "
+				+ twoDigitFormat.format(invest) + ") * " + twoDigitFormat.format(handPotential) + ") = "
 				+ twoDigitFormat.format(ammunitions);
 
 		setVariableAndLog(EXPLANATION, txt1);
-		
+
 		// temporal for record stats in sensorarray
 		pokerSimulator.setVariable("Trooper.ammoControl", ammunitions);
 
@@ -456,22 +461,22 @@ public class Trooper extends Task {
 		// can i check ??
 		if (call == 0) {
 			availableActions.put("call", 0.0);
+		} else {
+			// can i call ?
+			if (call > 0 && (call + currentHandCost) < maxRekonAmmo) {
+				availableActions.put("call", call);
+			} else {
+				// the raise is mariginal ??
+				if (raise != -1 && (raise + currentHandCost) < maxRekonAmmo) {
+					availableActions.put("raise", raise);
+				}
+			}
 		}
-		// can i call ?
-		if (call > 0 && (call + currentHandCost) < maxRekonAmmo) {
-			availableActions.put("call", call);
-		}
-		// the raise is mariginal ??
-		if (raise != -1 && (raise + currentHandCost) < maxRekonAmmo) {
-			availableActions.put("raise", raise);
-		}
-		// use buy in just as reference
+		// just for cost table update
 		calculateOdds(pokerSimulator.getBuyIn());
-		setVariableAndLog(EXPLANATION, prehand + "Preflop hand not good.");
 		String txt1 = prehand + " " + twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(ammo) + " * "
 				+ twoDigitFormat.format(streng) + ") = " + twoDigitFormat.format(maxRekonAmmo);
 		setVariableAndLog(EXPLANATION, txt1);
-
 	}
 
 	private void setVariableAndLog(String key, Object value) {
@@ -537,7 +542,7 @@ public class Trooper extends Task {
 			// the i.m back button is active (at this point, the enviorement must only being showing the i.m back
 			// button)
 			if (sensorsArray.isSensorEnabled("imBack")) {
-				robotActuator.perform("imBack");
+				// robotActuator.perform("imBack");
 				continue;
 			}
 
