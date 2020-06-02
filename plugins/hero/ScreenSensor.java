@@ -500,7 +500,6 @@ public class ScreenSensor extends JPanel {
 		setEnabled(false);
 		Hashtable<String, Object> vals = Hero.heroPanel.getTrooperPanel().getValues();
 		this.currencySymbol = vals.get("table.currency").toString();
-		currencySymbol = "*none".equals(currencySymbol) ? "" : currencySymbol;
 		repaint();
 	}
 }
