@@ -370,6 +370,12 @@ public class PokerSimulator {
 			Hero.logger.warning("minimun hand rank for an oportunity must be > Hand.PAIR. Method ignored.");
 			return null;
 		}
+		
+		// TEST: exeption for FLUSH: Flush hand is too visible and when hero attack, all the villans run away. so, even
+		// when heroa has Flush (set) this method don.t see as oportunity in order to fool the villas.
+		if (myHandHelper.getHandRank() == Hand.FLUSH)
+			return null;
+		
 		// the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
 		if (currentRound == FLOP_CARDS_DEALT || currentRound == TURN_CARD_DEALT) {
 			// table parameters conditions

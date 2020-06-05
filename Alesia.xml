@@ -4,7 +4,7 @@
   <logging.level type="ComboBoxState" selectedIndex="3"/>
   <minHandPotential type="ComboBoxState" selectedIndex="2"/>
   <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
-  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="0"/>
+  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="2"/>
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
   <SensorPanel.imageType type="ComboBoxState" selectedIndex="0"/>
   <buyIn type="string"></buyIn>
@@ -34,7 +34,7 @@
       </DockableList>
     </root>
   </FlickaDockablePane>
-  <preflopStrategy type="ComboBoxState" selectedIndex="2"/>
+  <preflopStrategy type="ComboBoxState" selectedIndex="0"/>
   <TWebFrame type="WindowState" location="0,40" size="547,735" state="0"/>
   <smallBlid type="string"></smallBlid>
   <preflopRekonAmmo.base type="TextComponentState" text="2" caretPosition="1"/>
