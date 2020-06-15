@@ -384,9 +384,7 @@ public class SensorsArray {
 			villansBeacon = 0;
 			gameRecorder.updateDB();
 			StringBuffer sb = new StringBuffer();
-			gameRecorder.getPlayers().forEach(
-//					gp -> sb.append(gp.getName() + " = " + gp.getStats() + " --- " + gp.getPreviousStats() + "<br>"));
-			gp -> sb.append(gp.getName() + " = " + gp.getStats() + "<br>"));
+			gameRecorder.getAssesment().forEach(str -> sb.append(str + "<br>"));
 			pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
 		}
 

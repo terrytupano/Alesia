@@ -82,7 +82,6 @@ public class PokerSimulator {
 	// private long lastStepMillis;
 	private double bestProbability;
 	private UoAHand uoAHand;
-	private String oddCalculation;
 	private double preflopBase;
 	private double handStrengBase;
 	private Hashtable<Integer, String> tmplist = new Hashtable<>();
@@ -171,7 +170,7 @@ public class PokerSimulator {
 		// parameters from the panel
 		Hashtable<String, Object> vals = Hero.heroPanel.getTrooperPanel().getValues();
 		this.minHandPotential = Integer.parseInt(vals.get("minHandPotential").toString());
-		this.oddCalculation = vals.get("oddCalculation").toString();
+		this.BBFactor = Integer.parseInt(vals.get("bigBlindFactor").toString());
 		this.buyIn = ((Number) vals.get("table.buyIn")).doubleValue();
 		this.smallBlind = ((Number) vals.get("table.smallBlid")).doubleValue();
 		this.bigBlind = ((Number) vals.get("table.bigBlid")).doubleValue();
@@ -294,10 +293,6 @@ public class PokerSimulator {
 		return numSimPlayers;
 	}
 
-	public String getOddCalculation() {
-		return this.oddCalculation;
-	}
-
 	public double getPotValue() {
 		return potValue;
 	}
@@ -344,6 +339,10 @@ public class PokerSimulator {
 		return variableList;
 	}
 
+	private int BBFactor;
+	public int getBBFactor() {
+		return BBFactor;
+	}
 	public String isdraw() {
 		String drw = null;
 		drw = myHandHelper.isFlushDraw() ? "Flush draw" : drw;
@@ -370,11 +369,6 @@ public class PokerSimulator {
 			Hero.logger.warning("minimun hand rank for an oportunity must be > Hand.PAIR. Method ignored.");
 			return null;
 		}
-		
-		// TEST: exeption for FLUSH: Flush hand is too visible and when hero attack, all the villans run away. so, even
-		// when heroa has Flush (set) this method don.t see as oportunity in order to fool the villas.
-		if (myHandHelper.getHandRank() == Hand.FLUSH)
-			return null;
 		
 		// the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
 		if (currentRound == FLOP_CARDS_DEALT || currentRound == TURN_CARD_DEALT) {

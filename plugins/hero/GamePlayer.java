@@ -24,7 +24,7 @@ public class GamePlayer {
 	private String name;
 	private String oldName = "";
 	private DescriptiveStatistics bettingPattern;
-	private DescriptiveStatistics previousBettingPattern;
+	// private DescriptiveStatistics previousBettingPattern;
 	private SensorsArray array;
 	private int playerId;
 	private String prefix;
@@ -37,7 +37,7 @@ public class GamePlayer {
 		this.prevValue = -1;
 		this.array = Hero.sensorsArray;
 		this.bettingPattern = new DescriptiveStatistics(100);
-		this.previousBettingPattern = new DescriptiveStatistics(100);
+		// this.previousBettingPattern = new DescriptiveStatistics(100);
 	}
 
 	public int getId() {
@@ -46,10 +46,10 @@ public class GamePlayer {
 	public String getName() {
 		return name;
 	}
-	public String getPreviousStats() {
-		return getMean(previousBettingPattern) + " (" + previousBettingPattern.getN() + ")";
-
-	}
+	// public String getPreviousStats() {
+	// return getMean(previousBettingPattern) + " (" + previousBettingPattern.getN() + ")";
+	//
+	// }
 
 	public String getStats() {
 		return getMean() + " (" + bettingPattern.getN() + ")";
@@ -100,10 +100,11 @@ public class GamePlayer {
 		name = name == null ? prefix : name;
 		if (!(name.equals(prefix) || name.equals(oldName))) {
 			oldName = name;
-			Game gh = Game.findFirst("NAME = ? AND TABLEPARAMS = ? ORDER BY SESSION DESC", name,
+			Game gh = Game.findFirst("NAME = ? AND TABLEPARAMS = ?", name,
 					array.getPokerSimulator().getTableParameters());
 			if (gh != null) {
-				previousBettingPattern = (DescriptiveStatistics) TResources
+				// TODO: current data will be lost. i muss the current data copy to the store stadistic
+				bettingPattern = (DescriptiveStatistics) TResources
 						.getObjectFromByteArray(gh.getBytes("BEATTIN_PATTERN"));
 			}
 		}
@@ -116,8 +117,7 @@ public class GamePlayer {
 
 	public void updateDB() {
 		if (!name.equals(prefix)) {
-			Game gh = Game.findOrInit("SESSION", Hero.getSesionID(), "tableparams",
-					array.getPokerSimulator().getTableParameters(), "name", name);
+			Game gh = Game.findOrInit("tableparams", array.getPokerSimulator().getTableParameters(), "name", name);
 			gh.set("ASSESMENT", getStats());
 			gh.set("BEATTIN_PATTERN", TResources.getByteArrayFromObject(bettingPattern));
 			gh.save();

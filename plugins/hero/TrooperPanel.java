@@ -12,18 +12,16 @@ import gui.*;
 public class TrooperPanel extends TUIFormPanel {
 
 	public TrooperPanel() {
-		// addInputComponent(TUIUtils.getNumericTextField("table.buyIn", null, 5, "#.00"), true, true);
-		// addInputComponent(TUIUtils.getNumericTextField("table.bigBlid", null, 5, "#.00"), true, true);
-		// addInputComponent(TUIUtils.getNumericTextField("table.smallBlid", null, 5, "#.00"), true, true);
-		// addInputComponent(TUIUtils.getTWebComboBox("table.currency", "table.currency"));
 		addInputComponent(TUIUtils.getTWebComboBox("table.parameters", "table.parameters"));
+		
 		addInputComponent(TUIUtils.getTWebComboBox("preflopStrategy", "table.strategy"));
 		addInputComponent(TUIUtils.getTWebComboBox("minHandPotential", "handRanks"));
-		addInputComponent(TUIUtils.getTWebComboBox("oddCalculation", "oddMethod"));
+		addInputComponent(TUIUtils.getTWebComboBox("bigBlindFactor", "bbFactor"));
+		addInputComponent(TUIUtils.getWebTextField("availableActions", null, 50));
+		addInputComponent(TUIUtils.getWebCheckBox("takeOportunity"));
+
 		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.base", null, 5, null), true, true);
 		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.hand", null, 5, null), true, true);
-		addInputComponent(TUIUtils.getWebCheckBox("takeOportunity"));
-		addInputComponent(TUIUtils.getWebTextField("availableActions", null, 50));
 
 		FormLayout layout = new FormLayout("right:pref, 3dlu, left:pref, 3dlu, left:pref, 3dlu, left:pref", "");
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG);
@@ -37,7 +35,7 @@ public class TrooperPanel extends TUIFormPanel {
 		builder.nextLine();
 		builder.append(TStringUtils.getString("preflopStrategy"), getInputComponent("preflopStrategy"), 5);
 		builder.append(TStringUtils.getString("minHandPotential"), getInputComponent("minHandPotential"), 5);
-		builder.append(TStringUtils.getString("oddCalculation"), getInputComponent("oddCalculation"), 5);
+		builder.append(TStringUtils.getString("bigBlindFactor"), getInputComponent("bigBlindFactor"), 5);
 		builder.append(TStringUtils.getString("availableActions"), getInputComponent("availableActions"), 5);
 		builder.append(getInputComponent("takeOportunity"));
 		builder.nextLine();

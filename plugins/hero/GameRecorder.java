@@ -32,9 +32,23 @@ public class GameRecorder {
 		return players;
 	}
 	public ArrayList<String> getAssesment() {
-		ArrayList<String> means = new ArrayList<>(players.size());
-		players.forEach(gp -> means.add(gp.toString()));
-		return means;
+		tempList.clear();
+		tempList2.clear();
+		for (int i = 1; i < players.size(); i++) {
+			GamePlayer gp = players.elementAt(i);
+			tempList.add(new TEntry<>(gp, gp.getMean()));
+		}
+		tempList.sort(null);
+		// Hero
+		tempList2.add("Hero " + players.elementAt(0).getStats());
+		// Boss & minion
+		if (tempList.size() > 0) {
+			GamePlayer gp = tempList.get(tempList.size() - 1).getKey();
+			tempList2.add(gp.getName() + " " + gp.getStats());
+			gp = tempList.get(0).getKey();
+			tempList2.add(gp.getName() + " " + gp.getStats());
+		}
+		return tempList2;
 	}
 
 	public String getAssest(int playerId) {
@@ -50,23 +64,8 @@ public class GameRecorder {
 		players.forEach(gr -> gr.updateDB());
 	}
 
-	private ArrayList<TEntry<String, Double>> tempList = new ArrayList<>();
-
-	/**
-	 * Return the Boss. The boss of the villans is the villan with the hihest mean
-	 * 
-	 * @return
-	 */
-	public String getBoss() {
-		tempList.clear();
-		for (int i = 1; i < players.size(); i++) {
-			GamePlayer gp = players.elementAt(i);
-			tempList.add(new TEntry<>(gp.toString(), gp.getMean()));
-		}
-		tempList.sort(null);
-		String boss = tempList.size() > 0 ? tempList.get(tempList.size() - 1).getKey() : "No boss detected.";
-		return boss;
-	}
+	private ArrayList<TEntry<GamePlayer, Double>> tempList = new ArrayList<>();
+	private ArrayList<String> tempList2 = new ArrayList<>();
 
 	public GamePlayer getGamePlayer(int index) {
 		return players.elementAt(index);

@@ -4,13 +4,13 @@
   <logging.level type="ComboBoxState" selectedIndex="3"/>
   <minHandPotential type="ComboBoxState" selectedIndex="2"/>
   <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
-  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="2"/>
+  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="0"/>
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
   <SensorPanel.imageType type="ComboBoxState" selectedIndex="0"/>
   <buyIn type="string"></buyIn>
-  <takeOportunity type="ButtonState" selected="true"/>
+  <takeOportunity type="ButtonState" selected="false"/>
   <table.smallBlid type="TextComponentState" text="1000" caretPosition="4"/>
-  <preflopRekonAmmo.hand type="TextComponentState" text="4" caretPosition="1"/>
+  <preflopRekonAmmo.hand type="TextComponentState" text="5" caretPosition="1"/>
   <rememberUser type="string">admin</rememberUser>
   <bigBlid type="string"></bigBlid>
   <availableActions type="TextComponentState" text="*all" caretPosition="4"/>
@@ -19,7 +19,7 @@
   <table.parameters type="ComboBoxState" selectedIndex="0"/>
   <PokerSimulator.HelperFilter type="ComboBoxState" selectedIndex="5"/>
   <oddCalculation type="ComboBoxState" selectedIndex="1"/>
-  <SensorPanel.filter type="ComboBoxState" selectedIndex="8"/>
+  <SensorPanel.filter type="ComboBoxState" selectedIndex="10"/>
   <FlickaDockablePane type="DockablePaneState">
     <root class="DockableList" id="EL-EpOpr-I8QK0-8FIyF-i9P6o-ID" size="479,664" orientation="vertical">
       <DockableList id="EL-sJamJ-UrxRl-1UQ5v-EBIfK-ID" size="1037,530" orientation="horizontal">
@@ -34,9 +34,10 @@
       </DockableList>
     </root>
   </FlickaDockablePane>
+  <bigBlindFactor type="ComboBoxState" selectedIndex="4"/>
   <preflopStrategy type="ComboBoxState" selectedIndex="0"/>
   <TWebFrame type="WindowState" location="0,40" size="547,735" state="0"/>
   <smallBlid type="string"></smallBlid>
-  <preflopRekonAmmo.base type="TextComponentState" text="2" caretPosition="1"/>
+  <preflopRekonAmmo.base type="TextComponentState" text="1" caretPosition="1"/>
   <table.buyIn type="TextComponentState" text="200000" caretPosition="6"/>
 </SettingsGroup>

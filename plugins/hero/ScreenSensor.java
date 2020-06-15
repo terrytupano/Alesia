@@ -383,7 +383,6 @@ public class ScreenSensor extends JPanel {
 		String srcocr = iTesseract.doOCR(preparedImage);
 
 		if ("pot".equals(getName()))
-			System.out.println("ScreenSensor.getTesseractOCR()");
 		// draw segmented regions (only on prepared image) and ONLY when the prepared image is request to be visible
 		if (showImage.equals(PREPARED) && preparedImage != null) {
 			int pageIteratorLevel = TessAPI.TessPageIteratorLevel.RIL_WORD;

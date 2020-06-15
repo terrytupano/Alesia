@@ -205,30 +205,34 @@ public class Trooper extends Task {
 		double pot = pokerSimulator.getPotValue();
 		double handStreng = pokerSimulator.getCurrentHandStreng();
 		double handPotential = pokerSimulator.getHandPotential();
+		int bbFactor = pokerSimulator.getBBFactor();
 		// this function compute the amount of ammunitions according to the villans. the idea is maximize the amount of
 		// chips in the pot.
 		// -- for few villas, this function assing more chips.
 		// -- for many villans assign fewer, so hero can maximize the chips in the pot only whit few ammount of
 		// call/raise
-		double base = (sensorsArray.getVillans() - sensorsArray.getActiveVillans()) * 12 * bigBlind;
+		// ORIGINAL NUMER. 12
+		double base = (sensorsArray.getVillans() - sensorsArray.getActiveVillans()) * bbFactor * bigBlind;
 
 		// the current fraction of the pot ammount that until now, is really mine
-		double myPot = pot * handStreng;
+		// double myPot = pot * handStreng;
+		double myPot = (base + pot) * handStreng;
 		// ----------------------------
 		// 200601: con esta nueva formula para ammunitionControl, parece que ahora si la pege !!!!! manana compor 10€ en
 		// una tarjeta y pruebo con dinero real !!! al menos hero tiene 1.6BB de average de ganacia !! espero que ahora
 		// si funcione todo !!
 		// ----------------------------
 		// the invest resources: the pot diference
-		double invest = pot - myPot;
+		// double invest = pot - myPot;
+		double invest = ((base + pot) - myPot) * handPotential;
 
-		// double ammunitions = base + myPot + ((base + invest) * handPotential);
-		double ammunitions = ((base + pot) * handStreng) + ((base + invest) * handPotential);
+		// double ammunitions = ((base + pot) * handStreng) + ((base + invest) * handPotential);
+		double ammunitions = myPot + invest;
 
-		String txt1 = "((" + twoDigitFormat.format(base) + " + " + twoDigitFormat.format(pot) + ") * "
-				+ twoDigitFormat.format(handStreng) + ") + ((" + twoDigitFormat.format(base) + " + "
-				+ twoDigitFormat.format(invest) + ") * " + twoDigitFormat.format(handPotential) + ") = "
-				+ twoDigitFormat.format(ammunitions);
+		String txt1 = "((" + twoDigitFormat.format(base) + "+" + twoDigitFormat.format(pot) + "*"
+				+ twoDigitFormat.format(handStreng) + ")+((" + twoDigitFormat.format(base) + "+"
+				+ twoDigitFormat.format(pot) + "-" + twoDigitFormat.format(myPot) + ")*"
+				+ twoDigitFormat.format(handPotential) + ")=" + twoDigitFormat.format(ammunitions);
 
 		setVariableAndLog(EXPLANATION, txt1);
 
@@ -252,18 +256,20 @@ public class Trooper extends Task {
 		int elements = availableActions.size();
 		double denom = availableActions.values().stream().mapToDouble(dv -> dv.doubleValue()).sum();
 		int[] singletos = new int[elements];
-		Vector<Double> vals = new Vector<>(availableActions.values());
 		double[] probabilities = new double[elements];
+		Vector<TEntry<String, Double>> actProb = new Vector<>();
+		availableActions.forEach((key, val) -> actProb.add(new TEntry(key, val)));
+		Collections.sort(actProb, Collections.reverseOrder());
 		for (int i = 0; i < elements; i++) {
 			singletos[i] = i;
-			double cost = vals.get(i);
-			probabilities[i] = cost / denom;
+			TEntry<String, Double> te = actProb.elementAt(i);
+			double EVal = te.getValue();
+			probabilities[i] = EVal / denom;
+			te.setValue(probabilities[i]);
 		}
 		EnumeratedIntegerDistribution dist = new EnumeratedIntegerDistribution(singletos, probabilities);
-		Vector<TEntry<String, Double>> visv = new Vector<>();
-		availableActions.forEach((key, val) -> visv.add(new TEntry(key, val)));
-		String selact = visv.elementAt(dist.sample()).getKey();
-		pokerSimulator.setActionsData(selact, visv);
+		String selact = actProb.elementAt(dist.sample()).getKey();
+		pokerSimulator.setActionsData(selact, actProb);
 		return selact;
 	}
 
@@ -284,11 +290,26 @@ public class Trooper extends Task {
 			txt = "strategy = ALL";
 			return txt;
 		}
-
-		HoleCards hc = pokerSimulator.getMyHoleCards();
+		// upper half of deck (234567 >> 89TJQKA)
+		if (strategy.equals("UPPER")) {
+			Card[] heroc = pokerSimulator.getMyHoleCards().getCards();
+			// pocket pair
+			if (pokerSimulator.getMyHandHelper().isPocketPair()) {
+				txt = "A pocket pair";
+			}
+			if (heroc[0].getRank() >= Card.EIGHT && heroc[1].getRank() >= Card.EIGHT) {
+				txt = "Upper half";
+			}
+			// A or K suited
+			if (pokerSimulator.getMyHoleCards().isSuited()
+					&& (heroc[0].getRank() > Card.QUEEN || heroc[1].getRank() > Card.QUEEN))
+				txt = "A or K suited";
+			return txt;
+		}
 
 		// play only preflop list
 		if (strategy.equals("PRELIST")) {
+			HoleCards hc = pokerSimulator.getMyHoleCards();
 			String s = hc.isSuited() ? "s" : "";
 			String c1 = hc.getFirstCard().toString().substring(0, 1) + hc.getSecondCard().toString().substring(0, 1);
 			String c2 = hc.getSecondCard().toString().substring(0, 1) + hc.getFirstCard().toString().substring(0, 1);
@@ -371,16 +392,16 @@ public class Trooper extends Task {
 		if (raise > 0 && sensorsArray.getSensor("raise.slider").isEnabled()) {
 			// check for int or double values for blinds
 			boolean isInt = (new Double(bb)).intValue() == bb && (new Double(sb)).intValue() == sb;
-			double tick = (chips - raise) / 10.0;
-			// not 11 because 11 is equal to allin
+			// only take the first 10
+			double tick = bb*4;
 			for (int c = 1; c < 10; c++) {
-				double tickVal = raise + (tick * c);
+				tick += raise;
 				// round value to look natural (dont write 12345. write 12340 or 12350)
 				if (isInt)
-					tickVal = ((int) (tickVal / 10)) * 10;
+					tick = ((int) (tick / 10)) * 10;
 
-				String txt = isInt ? "" + (int) tickVal : twoDigitFormat.format(tickVal);
-				availableActions.put("raise.text,dc;raise.text,k=" + txt + ";raise", tickVal);
+				String txt = isInt ? "" + (int) tick : twoDigitFormat.format(tick);
+				availableActions.put("raise.text,dc;raise.text,k=" + txt + ";raise", tick);
 			}
 		}
 		// check form oportunity
@@ -402,24 +423,24 @@ public class Trooper extends Task {
 		if (!ava.contains("*all"))
 			availableActions.keySet().removeIf(key -> !ava.contains(key));
 
-		String computationType = pokerSimulator.getOddCalculation();
-		if ("ODDS_EV".equals(computationType)) {
-			calculateOdds(ammunitions);
-			Vector<TEntry<String, Double>> tmp = new Vector<>();
-			availableActions.forEach((k, v) -> tmp.add(new TEntry<>(k, v)));
-			Collections.sort(tmp, Collections.reverseOrder());
-			availableActions.clear();
-			tmp.forEach(te -> availableActions.put(te.getKey(), te.getValue()));
-		}
-		if ("ODDS_MREV".equals(computationType)) {
-			calculateRegretMinOdds(ammunitions);
-		}
+		// String computationType = pokerSimulator.getOddCalculation();
+		// if ("ODDS_EV".equals(computationType)) {
+		calculateOdds(ammunitions);
+//		Vector<TEntry<String, Double>> tmp = new Vector<>();
+//		availableActions.forEach((k, v) -> tmp.add(new TEntry<>(k, v)));
+//		Collections.sort(tmp, Collections.reverseOrder());
+//		availableActions.clear();
+//		tmp.forEach(te -> availableActions.put(te.getKey(), te.getValue()));
+		// }
+		// if ("ODDS_MREV".equals(computationType)) {
+		// calculateRegretMinOdds(ammunitions);
+		// }
 
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 		String val = availableActions.keySet().stream().map(k -> k + "=" + twoDigitFormat.format(asociatedCost.get(k)))
 				.collect(Collectors.joining(", "));
 		val = val.trim().isEmpty() ? "No positive EV" : val;
-		Hero.logger.info(computationType + " " + val);
+		// Hero.logger.info(computationType + " " + val);
 	}
 
 	/**
