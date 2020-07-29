@@ -53,6 +53,11 @@ public class Hero extends TPlugin {
 	protected static String getSesionID() {
 		return dateFormat.format(startDate);
 	}
+	
+	public static Date getStartDate() {
+		return startDate;
+	}
+	
 	public Hero() {
 		// iTesseract.setLanguage("pok");
 		dateFormat = DateFormat.getDateTimeInstance();

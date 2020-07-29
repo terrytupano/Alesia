@@ -2,15 +2,14 @@
   <table.currency type="ComboBoxState" selectedIndex="2"/>
   <UserLogIn.rememberUser type="ButtonState" selected="true"/>
   <logging.level type="ComboBoxState" selectedIndex="3"/>
-  <minHandPotential type="ComboBoxState" selectedIndex="2"/>
   <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
   <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="0"/>
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
   <SensorPanel.imageType type="ComboBoxState" selectedIndex="0"/>
   <buyIn type="string"></buyIn>
-  <takeOportunity type="ButtonState" selected="false"/>
+  <takeOportunity type="ButtonState" selected="true"/>
   <table.smallBlid type="TextComponentState" text="1000" caretPosition="4"/>
-  <preflopRekonAmmo.hand type="TextComponentState" text="5" caretPosition="1"/>
+  <preflopRekonAmmo.hand type="TextComponentState" text="6" caretPosition="1"/>
   <rememberUser type="string">admin</rememberUser>
   <bigBlid type="string"></bigBlid>
   <availableActions type="TextComponentState" text="*all" caretPosition="4"/>
@@ -34,8 +33,9 @@
       </DockableList>
     </root>
   </FlickaDockablePane>
-  <bigBlindFactor type="ComboBoxState" selectedIndex="4"/>
-  <preflopStrategy type="ComboBoxState" selectedIndex="0"/>
+  <bigBlindFactor type="ComboBoxState" selectedIndex="0"/>
+  <preflopStrategy type="ComboBoxState" selectedIndex="3"/>
+  <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>
   <TWebFrame type="WindowState" location="0,40" size="547,735" state="0"/>
   <smallBlid type="string"></smallBlid>
   <preflopRekonAmmo.base type="TextComponentState" text="1" caretPosition="1"/>

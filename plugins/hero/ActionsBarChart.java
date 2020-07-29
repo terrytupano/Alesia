@@ -57,7 +57,10 @@ public class ActionsBarChart {
 	}
 
 	private String removePrefix(String action) {
-		return action.replace("raise.", "");
+		String rs = action.replace("raise.", "");
+//		rs = rs.replace("raise.text,dc;raise.text,", "");
+		rs = rs.replace("text,dc;text,", "");
+		return rs;
 	}
 	public void setCategoryMarker(String category) {
 		CategoryPlot categoryPlot = (CategoryPlot) chart.getPlot();

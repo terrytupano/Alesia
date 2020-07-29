@@ -77,7 +77,7 @@ public class PokerSimulator {
 	private double buyIn;
 	private double smallBlind;
 	private double bigBlind;
-	private int minHandPotential;
+	private int minHandForOportunity;
 	private ActionsBarChart actionsBarChart;
 	// private long lastStepMillis;
 	private double bestProbability;
@@ -169,7 +169,7 @@ public class PokerSimulator {
 		heroChips = -1;
 		// parameters from the panel
 		Hashtable<String, Object> vals = Hero.heroPanel.getTrooperPanel().getValues();
-		this.minHandPotential = Integer.parseInt(vals.get("minHandPotential").toString());
+		this.minHandForOportunity = Integer.parseInt(vals.get("minHandForOportunity").toString());
 		this.BBFactor = Integer.parseInt(vals.get("bigBlindFactor").toString());
 		this.buyIn = ((Number) vals.get("table.buyIn")).doubleValue();
 		this.smallBlind = ((Number) vals.get("table.smallBlid")).doubleValue();
@@ -183,6 +183,12 @@ public class PokerSimulator {
 			availableActions.add(string);
 	}
 
+	private double playTime;
+	
+	public double getPlayTime() {
+		return playTime;
+	}
+	
 	/**
 	 * this mathod act like a buffer betwen {@link SensorsArray} and this class to set the cards based on the name/value
 	 * of the {@link ScreenSensor} component while the cards arrive at the game table. For example durin a reading
@@ -239,10 +245,10 @@ public class PokerSimulator {
 	/**
 	 * This methos return the propability of my hand will become a better hand. The poker adapter is cofigured for take
 	 * into account only the probabilites of inprove my hand (the probabilities of get a hand better that i currently
-	 * have). To allow more presicion, The parameter {@link #minHandPotential} control the minimun rank to take into
+	 * have). To allow more presicion, The parameter {@link #minHandForOportunity} control the minimun rank to take into
 	 * acount.
 	 * <p>
-	 * e.g: if {@link #minHandPotential} = {@link Hand#TWO_PAIRS} this method will return the potential of the current
+	 * e.g: if {@link #minHandForOportunity} = {@link Hand#TWO_PAIRS} this method will return the potential of the current
 	 * hand of become better than {@link Hand#TWO_PAIRS}
 	 * 
 	 * @return the probabilities of become a better hand
@@ -251,7 +257,7 @@ public class PokerSimulator {
 		double hp = 0.0;
 		String hs = "";
 		if (myHandStatsHelper != null) {
-			// int toh = Hand.STRAIGHT_FLUSH - minHandPotential;
+			// int toh = Hand.STRAIGHT_FLUSH - minHandForOportunity;
 			int toh = Hand.STRAIGHT_FLUSH - Hand.PAIR;
 			float[] list = myHandStatsHelper.getAllProbs();
 			for (int i = 0; i < toh; i++) {
@@ -265,7 +271,8 @@ public class PokerSimulator {
 
 		// empirical top: .8 prob with 20 ouds of improbe hand in the folowin example: Ts Qs Js Tc Ks
 		// whit a pair of ten, handevaluator return 0.1315 of strengt
-		return hp / 0.8;
+//		return hp / 0.8;
+		return hp;
 	}
 
 	public double getHandStrengBase() {
@@ -353,7 +360,7 @@ public class PokerSimulator {
 	/**
 	 * check whether is an oportunity. An oportunity is present when the current street is {@link #FLOP_CARDS_DEALT} or
 	 * {@link #TURN_CARD_DEALT} and one of the following conditions is found:
-	 * <li>The current hand rank is >= ({@link #minHandPotential} + 1) <b>AND</b> The hand is a set (both card in
+	 * <li>The current hand rank is >= ({@link #minHandForOportunity} + 1) <b>AND</b> The hand is a set (both card in
 	 * heros.s hands participate in the action)
 	 * <li>the hand is the nut
 	 * 
@@ -365,7 +372,7 @@ public class PokerSimulator {
 		if (!takeOportunity)
 			return txt;
 		// fail safe. an oportunity must be more than a pair
-		if (minHandPotential < Hand.PAIR) {
+		if (minHandForOportunity < Hand.PAIR) {
 			Hero.logger.warning("minimun hand rank for an oportunity must be > Hand.PAIR. Method ignored.");
 			return null;
 		}
@@ -373,7 +380,7 @@ public class PokerSimulator {
 		// the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
 		if (currentRound == FLOP_CARDS_DEALT || currentRound == TURN_CARD_DEALT) {
 			// table parameters conditions
-			if (myHandHelper.getHandRank() >= (minHandPotential + 1)) {
+			if (myHandHelper.getHandRank() >= minHandForOportunity) {
 				String sts = getSignificantCards();
 				String nh = UoAHandEvaluator.nameHand(uoAHand);
 				txt = sts.length() == 5 ? "Troper has " + nh + " (set)" : txt;

@@ -29,7 +29,7 @@ import core.*;
  * <ul>
  * <li>Invest his chips only in calculated 0 or positive EV. When the EV for pot odd return an empty list, for example,
  * pot=0 (initial bet and hero is the dealer) the EV function will return negative espectative even with AAs. in this
- * case, the {@link #setPrefloopActions()} is called as a last resource.
+ * case, the {@link #setPreflopActions()} is called as a last resource.
  * <li>Table Position: In this implementation, the tableposition is irrelevant because the normal odd action take the
  * values of the the pot odd actions are imp the table position are implied in the normal odd actions. this mean, the
  * convination of odd actions and preflophand evaluation has the hero table position already implied.
@@ -45,6 +45,7 @@ public class Trooper extends Task {
 	private static Trooper instance;
 	private static DecimalFormat fourDigitFormat = new DecimalFormat("#0.0000");
 	private static DecimalFormat twoDigitFormat = new DecimalFormat("#0.00");
+	private static DateFormat timeFormat = DateFormat.getTimeInstance();
 
 	public static String EXPLANATION = "aa.Troper Explanation";
 	public static String STATUS = "aa.Troper Status";
@@ -136,7 +137,7 @@ public class Trooper extends Task {
 		// PREFLOP
 		// if normal pot odd action has no action todo, check the preflopcards.
 		if (pokerSimulator.getCurrentRound() == PokerSimulator.HOLE_CARDS_DEALT) {
-			setPrefloopActions();
+			setPreflopActions();
 		}
 
 		// FLOP AND FUTHER
@@ -252,7 +253,7 @@ public class Trooper extends Task {
 	 * return.
 	 * 
 	 */
-	private String getSubOptimalAction() {
+	private String getSubOptimalAction2() {
 		int elements = availableActions.size();
 		double denom = availableActions.values().stream().mapToDouble(dv -> dv.doubleValue()).sum();
 		int[] singletos = new int[elements];
@@ -269,6 +270,35 @@ public class Trooper extends Task {
 		}
 		EnumeratedIntegerDistribution dist = new EnumeratedIntegerDistribution(singletos, probabilities);
 		String selact = actProb.elementAt(dist.sample()).getKey();
+		pokerSimulator.setActionsData(selact, actProb);
+		return selact;
+	}
+
+	private String getSubOptimalAction() {
+		Vector<TEntry<String, Double>> actProb = new Vector<>();
+		availableActions.forEach((key, val) -> actProb.add(new TEntry(key, val)));
+		Collections.sort(actProb, Collections.reverseOrder());
+
+		int elements = availableActions.size();
+		double mode = pokerSimulator.getCurrentHandStreng() * elements;
+		TriangularDistribution tdist = new TriangularDistribution(0, mode, elements + 2);
+		int[] singletos = new int[elements];
+		double[] probabilities = new double[elements];
+		for (int i = 0; i < elements; i++) {
+			singletos[i] = i;
+			TEntry<String, Double> te = actProb.elementAt(i);
+			probabilities[i] = tdist.density(i + 1);
+			te.setValue(probabilities[i]);
+		}
+		// TEST: select only action equal or less to the mode
+		int ele = 99;
+		while (ele > mode + 1) {
+			ele = (int) tdist.sample();
+			// check lower and upper bound
+			ele = (ele < 0) ? 0 : ele;
+			ele = (ele >= elements) ? elements - 1 : ele;
+		}
+		String selact = actProb.elementAt(ele).getKey();
 		pokerSimulator.setActionsData(selact, actProb);
 		return selact;
 	}
@@ -300,10 +330,11 @@ public class Trooper extends Task {
 			if (heroc[0].getRank() >= Card.EIGHT && heroc[1].getRank() >= Card.EIGHT) {
 				txt = "Upper half";
 			}
-			// A or K suited
-			if (pokerSimulator.getMyHoleCards().isSuited()
-					&& (heroc[0].getRank() > Card.QUEEN || heroc[1].getRank() > Card.QUEEN))
-				txt = "A or K suited";
+			// A or K
+			// if (pokerSimulator.getMyHoleCards().isSuited()
+			if ((heroc[0].getRank() > Card.QUEEN || heroc[1].getRank() > Card.QUEEN))
+				// txt = "A or K suited";
+				txt = "A or K";
 			return txt;
 		}
 
@@ -392,10 +423,12 @@ public class Trooper extends Task {
 		if (raise > 0 && sensorsArray.getSensor("raise.slider").isEnabled()) {
 			// check for int or double values for blinds
 			boolean isInt = (new Double(bb)).intValue() == bb && (new Double(sb)).intValue() == sb;
-			// only take the first 10
-			double tick = bb*4;
-			for (int c = 1; c < 10; c++) {
-				tick += raise;
+			// only take the first 5
+			double tick = raise;
+			for (int c = 0; c < 5; c++) {
+				// tick = 100, 200, 400, 800, 1600, ...
+				// tick += raise;
+				tick = tick * 2;
 				// round value to look natural (dont write 12345. write 12340 or 12350)
 				if (isInt)
 					tick = ((int) (tick / 10)) * 10;
@@ -426,11 +459,11 @@ public class Trooper extends Task {
 		// String computationType = pokerSimulator.getOddCalculation();
 		// if ("ODDS_EV".equals(computationType)) {
 		calculateOdds(ammunitions);
-//		Vector<TEntry<String, Double>> tmp = new Vector<>();
-//		availableActions.forEach((k, v) -> tmp.add(new TEntry<>(k, v)));
-//		Collections.sort(tmp, Collections.reverseOrder());
-//		availableActions.clear();
-//		tmp.forEach(te -> availableActions.put(te.getKey(), te.getValue()));
+		// Vector<TEntry<String, Double>> tmp = new Vector<>();
+		// availableActions.forEach((k, v) -> tmp.add(new TEntry<>(k, v)));
+		// Collections.sort(tmp, Collections.reverseOrder());
+		// availableActions.clear();
+		// tmp.forEach(te -> availableActions.put(te.getKey(), te.getValue()));
 		// }
 		// if ("ODDS_MREV".equals(computationType)) {
 		// calculateRegretMinOdds(ammunitions);
@@ -452,7 +485,7 @@ public class Trooper extends Task {
 	 * the general idea here is try to put the trooper in folp, so the normal odds operation has chance to decide, at
 	 * lower posible cost
 	 */
-	private void setPrefloopActions() {
+	private void setPreflopActions() {
 		availableActions.clear();
 		String prehand = isGoodPreflopHand();
 		if (prehand == null) {
@@ -680,6 +713,12 @@ public class Trooper extends Task {
 				continue;
 			}
 
+//			play time counter 
+			long t = System.currentTimeMillis();
+			double pt = pokerSimulator.getPlayTime()*3600*1000;
+			pt = 
+					
+			if (Hero.getStartDate())
 			boolean ingt = watchEnviorement();
 
 			// if i can reach the gametable, dismiss the troper
