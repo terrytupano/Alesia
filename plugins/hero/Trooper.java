@@ -8,6 +8,7 @@ import org.apache.commons.math3.distribution.*;
 import org.apache.commons.math3.stat.descriptive.*;
 import org.jdesktop.application.*;
 
+import com.alee.utils.*;
 import com.javaflair.pokerprophesier.api.adapter.*;
 import com.javaflair.pokerprophesier.api.card.*;
 
@@ -45,10 +46,10 @@ public class Trooper extends Task {
 	private static Trooper instance;
 	private static DecimalFormat fourDigitFormat = new DecimalFormat("#0.0000");
 	private static DecimalFormat twoDigitFormat = new DecimalFormat("#0.00");
-	private static DateFormat timeFormat = DateFormat.getTimeInstance();
-
+	private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 	public static String EXPLANATION = "aa.Troper Explanation";
 	public static String STATUS = "aa.Troper Status";
+	
 	private PokerSimulator pokerSimulator;
 	private SensorsArray sensorsArray;
 	private RobotActuator robotActuator;
@@ -65,8 +66,8 @@ public class Trooper extends Task {
 	private String lastHoleCards = "";
 	private double maxRekonAmmo;
 	boolean oportinity = false;
-
 	private double currentHandCost;
+	private long playTime;
 
 	public Trooper() {
 		super(Alesia.getInstance());
@@ -83,11 +84,11 @@ public class Trooper extends Task {
 	public static Trooper getInstance() {
 		return instance;
 	}
-
 	public void cancelTrooper(boolean interrupt) {
 		setVariableAndLog(STATUS, "Trooper Canceled.");
 		super.cancel(interrupt);
 	}
+
 	public boolean isPaused() {
 		return paused;
 	}
@@ -96,7 +97,6 @@ public class Trooper extends Task {
 		this.paused = pause;
 		setVariableAndLog(STATUS, paused ? "Trooper paused" : "Trooper resumed");
 	}
-
 	/**
 	 * clear the enviorement for a new round.
 	 * 
@@ -114,6 +114,7 @@ public class Trooper extends Task {
 		this.parameters = Hero.heroPanel.getTrooperPanel().getValues();
 		Hero.logger.fine("Game play time average=" + TStringUtils.formatSpeed((long) outGameStats.getMean()));
 	}
+
 	/**
 	 * decide de action(s) to perform. This method is called when the {@link Trooper} detect that is my turn to play. At
 	 * this point, the game enviorement is waiting for an accion.
@@ -162,30 +163,6 @@ public class Trooper extends Task {
 			availableActions.put("fold", 1.0);
 			asociatedCost.put("fold", 0.0);
 		}
-	}
-
-	private double getAmmunitions2() {
-		double HS = pokerSimulator.getCurrentHandStreng();
-		double pHS = pokerSimulator.getHandPotential();
-		double pot = pokerSimulator.getPotValue();
-		int villans = sensorsArray.getActiveVillans();
-
-		double EHS = HS + (1 - HS) * pHS;
-		// empirical base
-		double base = pokerSimulator.getBigBlind() * villans;
-
-		// double number = base + myPot + (invest * potential);
-		double number = base + pot * EHS;
-
-		String txt1 = twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(pot) + " * "
-				+ twoDigitFormat.format(HS) + ") + (1 - " + twoDigitFormat.format(HS) + ") * "
-				+ twoDigitFormat.format(pHS) + " = " + twoDigitFormat.format(number);
-		setVariableAndLog(EXPLANATION, txt1);
-
-		// temporal for record stats in sensorarray
-		pokerSimulator.setVariable("EHSValue", number);
-
-		return number;
 	}
 
 	/**
@@ -243,35 +220,28 @@ public class Trooper extends Task {
 		return ammunitions;
 	}
 
-	/**
-	 * perform a random selection of the available actions. this method build a probability distribution and select
-	 * randmly a variate of that distribution. this is suboptimal because the objetive function already has the optimal
-	 * action to perfomr. but this behavior make the trooper visible to the villans that can use this informatiion for
-	 * trap or fool the troper.
-	 * <p>
-	 * the available actions and his values must be previous evaluated. The action value express the hihest expected
-	 * return.
-	 * 
-	 */
-	private String getSubOptimalAction2() {
-		int elements = availableActions.size();
-		double denom = availableActions.values().stream().mapToDouble(dv -> dv.doubleValue()).sum();
-		int[] singletos = new int[elements];
-		double[] probabilities = new double[elements];
-		Vector<TEntry<String, Double>> actProb = new Vector<>();
-		availableActions.forEach((key, val) -> actProb.add(new TEntry(key, val)));
-		Collections.sort(actProb, Collections.reverseOrder());
-		for (int i = 0; i < elements; i++) {
-			singletos[i] = i;
-			TEntry<String, Double> te = actProb.elementAt(i);
-			double EVal = te.getValue();
-			probabilities[i] = EVal / denom;
-			te.setValue(probabilities[i]);
-		}
-		EnumeratedIntegerDistribution dist = new EnumeratedIntegerDistribution(singletos, probabilities);
-		String selact = actProb.elementAt(dist.sample()).getKey();
-		pokerSimulator.setActionsData(selact, actProb);
-		return selact;
+	private double getAmmunitions2() {
+		double HS = pokerSimulator.getCurrentHandStreng();
+		double pHS = pokerSimulator.getHandPotential();
+		double pot = pokerSimulator.getPotValue();
+		int villans = sensorsArray.getActiveVillans();
+
+		double EHS = HS + (1 - HS) * pHS;
+		// empirical base
+		double base = pokerSimulator.getBigBlind() * villans;
+
+		// double number = base + myPot + (invest * potential);
+		double number = base + pot * EHS;
+
+		String txt1 = twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(pot) + " * "
+				+ twoDigitFormat.format(HS) + ") + (1 - " + twoDigitFormat.format(HS) + ") * "
+				+ twoDigitFormat.format(pHS) + " = " + twoDigitFormat.format(number);
+		setVariableAndLog(EXPLANATION, txt1);
+
+		// temporal for record stats in sensorarray
+		pokerSimulator.setVariable("EHSValue", number);
+
+		return number;
 	}
 
 	private String getSubOptimalAction() {
@@ -299,6 +269,37 @@ public class Trooper extends Task {
 			ele = (ele >= elements) ? elements - 1 : ele;
 		}
 		String selact = actProb.elementAt(ele).getKey();
+		pokerSimulator.setActionsData(selact, actProb);
+		return selact;
+	}
+
+	/**
+	 * perform a random selection of the available actions. this method build a probability distribution and select
+	 * randmly a variate of that distribution. this is suboptimal because the objetive function already has the optimal
+	 * action to perfomr. but this behavior make the trooper visible to the villans that can use this informatiion for
+	 * trap or fool the troper.
+	 * <p>
+	 * the available actions and his values must be previous evaluated. The action value express the hihest expected
+	 * return.
+	 * 
+	 */
+	private String getSubOptimalAction2() {
+		int elements = availableActions.size();
+		double denom = availableActions.values().stream().mapToDouble(dv -> dv.doubleValue()).sum();
+		int[] singletos = new int[elements];
+		double[] probabilities = new double[elements];
+		Vector<TEntry<String, Double>> actProb = new Vector<>();
+		availableActions.forEach((key, val) -> actProb.add(new TEntry(key, val)));
+		Collections.sort(actProb, Collections.reverseOrder());
+		for (int i = 0; i < elements; i++) {
+			singletos[i] = i;
+			TEntry<String, Double> te = actProb.elementAt(i);
+			double EVal = te.getValue();
+			probabilities[i] = EVal / denom;
+			te.setValue(probabilities[i]);
+		}
+		EnumeratedIntegerDistribution dist = new EnumeratedIntegerDistribution(singletos, probabilities);
+		String selact = actProb.elementAt(dist.sample()).getKey();
 		pokerSimulator.setActionsData(selact, actProb);
 		return selact;
 	}
@@ -374,11 +375,11 @@ public class Trooper extends Task {
 		}
 		return null;
 	}
-
 	private boolean isMyTurnToPlay() {
 		return sensorsArray.isSensorEnabled("fold") || sensorsArray.isSensorEnabled("call")
 				|| sensorsArray.isSensorEnabled("raise");
 	}
+
 	/**
 	 * thie method build a list of all actions available for the troper to perform. this mean, all action at first are
 	 * consider alls posible. After the list ist build, this list is procesed acording to the selected method. those
@@ -532,11 +533,14 @@ public class Trooper extends Task {
 				+ twoDigitFormat.format(streng) + ") = " + twoDigitFormat.format(maxRekonAmmo);
 		setVariableAndLog(EXPLANATION, txt1);
 	}
-
 	private void setVariableAndLog(String key, Object value) {
 		String value1 = value.toString();
 		if (value instanceof Double)
 			value1 = fourDigitFormat.format(((Double) value).doubleValue());
+		// append the playtime to the status (visual purpose only)
+		if (STATUS.equals(key)) {
+			value = "Play time " + timeFormat.format(new Date(playTime)) + ". " + value.toString();
+		}
 		pokerSimulator.setVariable(key, value);
 		// don.t log the status, only the explanatio
 		if (!STATUS.equals(key)) {
@@ -713,16 +717,21 @@ public class Trooper extends Task {
 				continue;
 			}
 
-//			play time counter 
-			long t = System.currentTimeMillis();
-			double pt = pokerSimulator.getPlayTime()*3600*1000;
-			pt = 
-					
-			if (Hero.getStartDate())
 			boolean ingt = watchEnviorement();
 
 			// if i can reach the gametable, dismiss the troper
 			if (!ingt) {
+				return null;
+			}
+
+			// play time counter. when the play time is reach, the action sit.out is clicked and hero return
+			Hashtable<String, Object> vals = Hero.heroPanel.getTrooperPanel().getValues();
+			double ptd = Double.parseDouble(vals.get("play.time").toString());
+			long pt = (long) (ptd * 3600 * 1000);
+			playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
+			if (playTime > pt && sensorsArray.isSensorEnabled("sit.out")) {
+				robotActuator.perform("sit.out");
+				setVariableAndLog(EXPLANATION, "play time reach. mission accomplisch.");
 				return null;
 			}
 

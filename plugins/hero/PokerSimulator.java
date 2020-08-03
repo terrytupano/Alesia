@@ -182,12 +182,6 @@ public class PokerSimulator {
 		for (String string : actions)
 			availableActions.add(string);
 	}
-
-	private double playTime;
-	
-	public double getPlayTime() {
-		return playTime;
-	}
 	
 	/**
 	 * this mathod act like a buffer betwen {@link SensorsArray} and this class to set the cards based on the name/value

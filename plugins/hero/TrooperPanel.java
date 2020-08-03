@@ -13,7 +13,7 @@ public class TrooperPanel extends TUIFormPanel {
 
 	public TrooperPanel() {
 		addInputComponent(TUIUtils.getTWebComboBox("table.parameters", "table.parameters"));
-		addInputComponent(TUIUtils.getNumericTextField("play.time", null, 2, null), true, true);
+		addInputComponent(TUIUtils.getNumericTextField("play.time", null, 5, null), true, true);
 		
 		addInputComponent(TUIUtils.getTWebComboBox("preflopStrategy", "table.strategy"));
 		addInputComponent(TUIUtils.getTWebComboBox("minHandForOportunity", "handRanks"));
@@ -62,7 +62,7 @@ public class TrooperPanel extends TUIFormPanel {
 		vals.put("table.buyIn", new Double(tparms[0]));
 		vals.put("table.bigBlid", new Double(tparms[1]));
 		vals.put("table.smallBlid", new Double(tparms[2]));
-		// simbol if is present of "" if not
+		// simbol if its present of "" if not
 		vals.put("table.currency", tparms.length > 3 ? tparms[3] : "");
 		return vals;
 	}
