@@ -24,22 +24,22 @@ public class TrooperPanel extends TUIFormPanel {
 		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.base", null, 5, null), true, true);
 		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.hand", null, 5, null), true, true);
 
-		FormLayout layout = new FormLayout("right:pref, 3dlu, left:pref, 3dlu, left:pref, 3dlu, left:pref", "");
+		FormLayout layout = new FormLayout("right:pref, 3dlu, left:pref, 3dlu, left:pref, 3dlu, left:pref, 60dlu", "");
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG);
 
 		builder.appendSeparator("Table parameters");
 		builder.nextLine();
 		builder.append(TStringUtils.getString("play.time"), getInputComponent("play.time"));
 		builder.nextLine();
-		builder.append(TStringUtils.getString("table.parameters"), getInputComponent("table.parameters"), 5);
+		builder.append(TStringUtils.getString("table.parameters"), getInputComponent("table.parameters"), 6);
 		builder.nextLine();
 
 		builder.appendSeparator("Trooper parameters");
 		builder.nextLine();
-		builder.append(TStringUtils.getString("preflopStrategy"), getInputComponent("preflopStrategy"), 5);
-		builder.append(TStringUtils.getString("minHandForOportunity"), getInputComponent("minHandForOportunity"), 5);
-		builder.append(TStringUtils.getString("bigBlindFactor"), getInputComponent("bigBlindFactor"), 5);
-		builder.append(TStringUtils.getString("availableActions"), getInputComponent("availableActions"), 5);
+		builder.append(TStringUtils.getString("preflopStrategy"), getInputComponent("preflopStrategy"), 6);
+		builder.append(TStringUtils.getString("minHandForOportunity"), getInputComponent("minHandForOportunity"), 6);
+		builder.append(TStringUtils.getString("bigBlindFactor"), getInputComponent("bigBlindFactor"), 6);
+		builder.append(TStringUtils.getString("availableActions"), getInputComponent("availableActions"), 6);
 		builder.append(getInputComponent("takeOportunity"));
 		builder.nextLine();
 

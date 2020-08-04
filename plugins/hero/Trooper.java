@@ -2,13 +2,13 @@ package plugins.hero;
 
 import java.text.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.*;
 
 import org.apache.commons.math3.distribution.*;
 import org.apache.commons.math3.stat.descriptive.*;
 import org.jdesktop.application.*;
 
-import com.alee.utils.*;
 import com.javaflair.pokerprophesier.api.adapter.*;
 import com.javaflair.pokerprophesier.api.card.*;
 
@@ -49,7 +49,7 @@ public class Trooper extends Task {
 	private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 	public static String EXPLANATION = "aa.Troper Explanation";
 	public static String STATUS = "aa.Troper Status";
-	
+
 	private PokerSimulator pokerSimulator;
 	private SensorsArray sensorsArray;
 	private RobotActuator robotActuator;
@@ -183,7 +183,7 @@ public class Trooper extends Task {
 		double pot = pokerSimulator.getPotValue();
 		double handStreng = pokerSimulator.getCurrentHandStreng();
 		double handPotential = pokerSimulator.getHandPotential();
-		int bbFactor = pokerSimulator.getBBFactor();
+		int bbFactor = Integer.parseInt(parameters.get("bigBlindFactor").toString());
 		// this function compute the amount of ammunitions according to the villans. the idea is maximize the amount of
 		// chips in the pot.
 		// -- for few villas, this function assing more chips.
@@ -498,8 +498,10 @@ public class Trooper extends Task {
 		// take a factor dependin of the card dealed. the idea is try to survive the "pot stoler" that generaly
 		// start the preflop with hight amounts and after the preflop raise all in to steal the pot. the constant 5% of
 		// the chip, leave hero vulnerable to those buffons and the chips start to dropping out whiout control.
-		double base = pokerSimulator.getBigBlind() * pokerSimulator.getPreflopBase();
-		double ammo = pokerSimulator.getBigBlind() * pokerSimulator.getHandStrengBase();
+		double pfBase = ((Number) parameters.get("preflopRekonAmmo.base")).doubleValue();
+		double pfHStreng = ((Number) parameters.get("preflopRekonAmmo.hand")).doubleValue();
+		double base = pokerSimulator.getBigBlind() * pfBase;
+		double ammo = pokerSimulator.getBigBlind() * pfHStreng;
 		double streng = pokerSimulator.getPreFlopHandStreng();
 		if (pokerSimulator.getCurrentRound() == PokerSimulator.HOLE_CARDS_DEALT && maxRekonAmmo == -1) {
 			maxRekonAmmo = base + (ammo * streng);
@@ -539,7 +541,8 @@ public class Trooper extends Task {
 			value1 = fourDigitFormat.format(((Double) value).doubleValue());
 		// append the playtime to the status (visual purpose only)
 		if (STATUS.equals(key)) {
-			value = "Play time " + timeFormat.format(new Date(playTime)) + ". " + value.toString();
+			value = "Play time " + timeFormat.format(new Date(playTime - TimeUnit.HOURS.toMillis(1))) + ". "
+					+ value.toString();
 		}
 		pokerSimulator.setVariable(key, value);
 		// don.t log the status, only the explanatio
@@ -605,8 +608,7 @@ public class Trooper extends Task {
 			}
 
 			// if any of this are active, do nothig. raise.text in this case, is wachit a chackbok for check
-			if (sensorsArray.isSensorEnabled("raise.text") || sensorsArray.isSensorEnabled("sensor1")
-					|| sensorsArray.isSensorEnabled("sensor2")) {
+			if (sensorsArray.isSensorEnabled("raise.text") || sensorsArray.isSensorEnabled("sensor1")) {
 				continue;
 			}
 
@@ -725,12 +727,12 @@ public class Trooper extends Task {
 			}
 
 			// play time counter. when the play time is reach, the action sit.out is clicked and hero return
-			Hashtable<String, Object> vals = Hero.heroPanel.getTrooperPanel().getValues();
-			double ptd = Double.parseDouble(vals.get("play.time").toString());
+			double ptd = Double.parseDouble(parameters.get("play.time").toString());
 			long pt = (long) (ptd * 3600 * 1000);
 			playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
 			if (playTime > pt && sensorsArray.isSensorEnabled("sit.out")) {
 				robotActuator.perform("sit.out");
+				robotActuator.perform("fold");
 				setVariableAndLog(EXPLANATION, "play time reach. mission accomplisch.");
 				return null;
 			}

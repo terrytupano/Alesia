@@ -82,8 +82,6 @@ public class PokerSimulator {
 	// private long lastStepMillis;
 	private double bestProbability;
 	private UoAHand uoAHand;
-	private double preflopBase;
-	private double handStrengBase;
 	private Hashtable<Integer, String> tmplist = new Hashtable<>();
 	private boolean takeOportunity = false;
 	private ArrayList<String> availableActions;
@@ -170,12 +168,9 @@ public class PokerSimulator {
 		// parameters from the panel
 		Hashtable<String, Object> vals = Hero.heroPanel.getTrooperPanel().getValues();
 		this.minHandForOportunity = Integer.parseInt(vals.get("minHandForOportunity").toString());
-		this.BBFactor = Integer.parseInt(vals.get("bigBlindFactor").toString());
 		this.buyIn = ((Number) vals.get("table.buyIn")).doubleValue();
 		this.smallBlind = ((Number) vals.get("table.smallBlid")).doubleValue();
 		this.bigBlind = ((Number) vals.get("table.bigBlid")).doubleValue();
-		this.preflopBase = ((Number) vals.get("preflopRekonAmmo.base")).doubleValue();
-		this.handStrengBase = ((Number) vals.get("preflopRekonAmmo.hand")).doubleValue();
 		this.takeOportunity = ((Boolean) vals.get("takeOportunity"));
 		String actions[] = vals.get("availableActions").toString().split("[|]");
 		availableActions.clear();
@@ -269,10 +264,6 @@ public class PokerSimulator {
 		return hp;
 	}
 
-	public double getHandStrengBase() {
-		return handStrengBase;
-	}
-
 	public double getHeroChips() {
 		return heroChips;
 	}
@@ -296,10 +287,6 @@ public class PokerSimulator {
 
 	public double getPotValue() {
 		return potValue;
-	}
-
-	public double getPreflopBase() {
-		return preflopBase;
 	}
 
 	public double getPreFlopHandStreng() {
@@ -340,10 +327,6 @@ public class PokerSimulator {
 		return variableList;
 	}
 
-	private int BBFactor;
-	public int getBBFactor() {
-		return BBFactor;
-	}
 	public String isdraw() {
 		String drw = null;
 		drw = myHandHelper.isFlushDraw() ? "Flush draw" : drw;
