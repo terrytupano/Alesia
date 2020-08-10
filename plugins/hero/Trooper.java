@@ -611,7 +611,6 @@ public class Trooper extends Task {
 			if (sensorsArray.isSensorEnabled("raise.text") || sensorsArray.isSensorEnabled("sensor1")) {
 				continue;
 			}
-
 		}
 		setVariableAndLog(EXPLANATION, "Can.t reach the main gametable. Trooper return.");
 		return false;

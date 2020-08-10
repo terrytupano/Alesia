@@ -24,7 +24,7 @@ public class TrooperPanel extends TUIFormPanel {
 		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.base", null, 5, null), true, true);
 		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.hand", null, 5, null), true, true);
 
-		FormLayout layout = new FormLayout("right:pref, 3dlu, left:pref, 3dlu, left:pref, 3dlu, left:pref, 60dlu", "");
+		FormLayout layout = new FormLayout("right:pref, 3dlu, left:pref, 3dlu, left:pref, 3dlu, left:pref, 70dlu", "");
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG);
 
 		builder.appendSeparator("Table parameters");
