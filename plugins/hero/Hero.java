@@ -120,8 +120,9 @@ public class Hero extends TPlugin {
 		heroPanel = new HeroPanel();
 		Alesia.getMainPanel().setContentPanel(heroPanel);
 		// temp: change the main frame using this coordenates: 0,40 547,735
-		// temporal: must be loaded from troperPanel
-		tableFile = new File("plugins/hero/resources/ps-main table.ppt");
+		// temporal: must be loaded from troperPanel 
+//		tableFile = new File("plugins/hero/resources/ps-main table.ppt");
+		tableFile = new File("plugins/hero/resources/ps-10.ppt");
 		initGlovalVars();
 		Alesia.mainFrame.setBounds(0, 40, 547, 735);
 	}

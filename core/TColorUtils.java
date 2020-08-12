@@ -385,7 +385,8 @@ public class TColorUtils {
 
 		Vector<String> ks = new Vector<>(temp.keySet());
 		int max = -1;
-		String scol = null;
+		// TODO: if ignore color ist the only color in the image, return pink in order to avoid error
+		String scol = getOpaqueRGBColor(Color.PINK);
 		for (String col : ks) {
 			int cnt = temp.get(col);
 			if (max < cnt) {
@@ -393,6 +394,10 @@ public class TColorUtils {
 				scol = col;
 			}
 		}
+		
+//		if(max == -1)
+//			System.out.println("Warning: no bacground detected");
+		
 		return getOpaqueRGBColor(scol);
 	}
 

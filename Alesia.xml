@@ -3,11 +3,11 @@
   <UserLogIn.rememberUser type="ButtonState" selected="true"/>
   <logging.level type="ComboBoxState" selectedIndex="3"/>
   <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
-  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="2"/>
+  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="3"/>
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
   <SensorPanel.imageType type="ComboBoxState" selectedIndex="0"/>
   <buyIn type="string"></buyIn>
-  <takeOportunity type="ButtonState" selected="true"/>
+  <takeOportunity type="ButtonState" selected="false"/>
   <table.smallBlid type="TextComponentState" text="1000" caretPosition="4"/>
   <preflopRekonAmmo.hand type="TextComponentState" text="6" caretPosition="1"/>
   <rememberUser type="string">admin</rememberUser>
