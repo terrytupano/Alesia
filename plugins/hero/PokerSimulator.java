@@ -47,10 +47,10 @@ public class PokerSimulator {
 	public static String STATUS_ERROR = "Error";
 	private static DecimalFormat fourDigitFormat = new DecimalFormat("#0.0000");
 	private static DecimalFormat twoDigitFormat = new DecimalFormat("#.00");
-	// royal flush
-	private static int topHandRank = 2970356;
+	// top upper hand
+	private static int topUpperHand;
 	// pair of 22
-	private static int minHandRank = 371293;
+	// private static int minHandRank = 371293;
 	// top hol card (no pair)
 	private static int topHoleRank = 167;
 	// Number of simulations, total players
@@ -80,13 +80,22 @@ public class PokerSimulator {
 	private int minHandForOportunity;
 	private ActionsBarChart actionsBarChart;
 	// private long lastStepMillis;
-	private double bestProbability;
+	private double winPlusTieProbability;
 	private UoAHand uoAHand;
 	private Hashtable<Integer, String> tmplist = new Hashtable<>();
+	private Vector<Integer> handStrengSamples = new Vector<>();
 	private boolean takeOportunity = false;
-	private ArrayList<String> availableActions;
 
 	public PokerSimulator() {
+		handStrengSamples.add(2970352); // straight_flush
+		handStrengSamples.add(2599136); // four_of_a_kind
+		handStrengSamples.add(2227843); // full_house
+		handStrengSamples.add(2101414); // flush
+		handStrengSamples.add(1485180); // straight
+		handStrengSamples.add(1114893); // three_of_a_kind
+		handStrengSamples.add(743847); // two_pairs
+		handStrengSamples.add(384475); // pair
+		handStrengSamples.add(0); // hight card
 
 		tmplist.put(0, "straight_flush");
 		tmplist.put(1, "four_of_a_kind");
@@ -98,7 +107,6 @@ public class PokerSimulator {
 		tmplist.put(7, "pair");
 		tmplist.put(8, "high_card");
 
-		this.availableActions = new ArrayList<>();
 		this.cardsBuffer = new Hashtable<String, String>();
 		this.uoAHand = new UoAHand();
 		// Create an adapter to communicate with the simulator
@@ -165,6 +173,7 @@ public class PokerSimulator {
 		callValue = -1;
 		raiseValue = -1;
 		heroChips = -1;
+		topUpperHand = 2970356; // Royal flush
 		// parameters from the panel
 		Hashtable<String, Object> vals = Hero.heroPanel.getTrooperPanel().getValues();
 		this.minHandForOportunity = Integer.parseInt(vals.get("minHandForOportunity").toString());
@@ -172,12 +181,9 @@ public class PokerSimulator {
 		this.smallBlind = ((Number) vals.get("table.smallBlid")).doubleValue();
 		this.bigBlind = ((Number) vals.get("table.bigBlid")).doubleValue();
 		this.takeOportunity = ((Boolean) vals.get("takeOportunity"));
-		String actions[] = vals.get("availableActions").toString().split("[|]");
-		availableActions.clear();
-		for (String string : actions)
-			availableActions.add(string);
+		topUpperHand = handStrengSamples.get(Integer.parseInt(vals.get("topUpperHand").toString()));
 	}
-	
+
 	/**
 	 * this mathod act like a buffer betwen {@link SensorsArray} and this class to set the cards based on the name/value
 	 * of the {@link ScreenSensor} component while the cards arrive at the game table. For example durin a reading
@@ -191,11 +197,13 @@ public class PokerSimulator {
 	public PokerProphesierAdapter getAdapter() {
 		return adapter;
 	}
-	public ArrayList<String> getAvailableActions() {
-		return availableActions;
-	}
-	public double getBestProbability() {
-		return bestProbability;
+	/**
+	 * return the probability of win plus tie
+	 * 
+	 * @return the probability of win + prob of tie
+	 */
+	public double getProbability() {
+		return winPlusTieProbability;
 	}
 	public double getBigBlind() {
 		return bigBlind;
@@ -225,20 +233,46 @@ public class PokerSimulator {
 	 */
 	public double getCurrentHandStreng() {
 		double rank = UoAHandEvaluator.rankHand(uoAHand);
-		return rank / topHandRank;
+		return rank / topUpperHand;
 	}
 	public int getCurrentRound() {
 		return currentRound;
 	}
 
 	/**
+	 * this method compute the "mass center" of the Hero outs. the method return a number that muss be around of the
+	 * median for the future outcome. When this value tend to 1.0 meaning that the future out tend to royal flush. on
+	 * the other hands, 0 represent a hand that has no future
+	 * 
+	 * @return factor that represent the mass center of the future outcome.
+	 */
+	public double getHandPotentialCenter() {
+		double hpMS = 0.0;
+		String hs = "";
+
+		if (myHandStatsHelper != null) {
+			float[] list = myHandStatsHelper.getAllProbs();
+			for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
+				hpMS += handStrengSamples.get(i) * list[i];
+				if (list[i] > 0)
+					hs += tmplist.get(i) + " " + twoDigitFormat.format(list[i]) + " ";
+			}
+		}
+		hpMS = hpMS / topUpperHand;
+		hs += "= " + twoDigitFormat.format(hpMS);
+		setVariable("simulator.hand streng", hs);
+		return hpMS;
+	}
+	/**
 	 * This methos return the propability of my hand will become a better hand. The poker adapter is cofigured for take
 	 * into account only the probabilites of inprove my hand (the probabilities of get a hand better that i currently
-	 * have). To allow more presicion, The parameter {@link #minHandForOportunity} control the minimun rank to take into
-	 * acount.
+	 * have).
+	 * 
+	 * TODO: villeich das ist eine gute Idee : ein parameter ´das mindesten hand potentcial führt To allow more
+	 * presicion, The parameter {@link #minHandForOportunity} control the minimun rank to take into acount.
 	 * <p>
-	 * e.g: if {@link #minHandForOportunity} = {@link Hand#TWO_PAIRS} this method will return the potential of the current
-	 * hand of become better than {@link Hand#TWO_PAIRS}
+	 * e.g: if {@link #minHandForOportunity} = {@link Hand#TWO_PAIRS} this method will return the potential of the
+	 * current hand of become better than {@link Hand#TWO_PAIRS}
 	 * 
 	 * @return the probabilities of become a better hand
 	 */
@@ -258,9 +292,8 @@ public class PokerSimulator {
 		hs += "= " + twoDigitFormat.format(hp);
 		setVariable("simulator.hand streng", hs);
 
-		// empirical top: .8 prob with 20 ouds of improbe hand in the folowin example: Ts Qs Js Tc Ks
-		// whit a pair of ten, handevaluator return 0.1315 of strengt
-//		return hp / 0.8;
+		// empirical top: 0.8131 prob with 20 ouds of improbe hand in the folowin example: Ts Qs Js Tc Ks
+		// return hp / 0.8131;
 		return hp;
 	}
 
@@ -353,7 +386,7 @@ public class PokerSimulator {
 			Hero.logger.warning("minimun hand rank for an oportunity must be > Hand.PAIR. Method ignored.");
 			return null;
 		}
-		
+
 		// the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
 		if (currentRound == FLOP_CARDS_DEALT || currentRound == TURN_CARD_DEALT) {
 			// table parameters conditions
@@ -651,11 +684,11 @@ public class PokerSimulator {
 	 * update the simulation result to the console
 	 */
 	private void updateSimulationResults() {
-		bestProbability = myGameStatsHelper == null
+		winPlusTieProbability = myGameStatsHelper == null
 				? 0
 				: myGameStatsHelper.getWinProb() + myGameStatsHelper.getTieProb();
 
-		variableList.put("simulator.Troper probability", fourDigitFormat.format(bestProbability));
+		variableList.put("simulator.Troper probability", fourDigitFormat.format(winPlusTieProbability));
 		variableList.put("simulator.Trooper Current hand", getMyHandHelper().getHand().toString());
 		variableList.put("simulator.Table cards", getMyHoleCards().getFirstCard() + ", "
 				+ getMyHoleCards().getSecondCard() + ", " + getCommunityCards().toString());

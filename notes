@@ -1,4 +1,8 @@
 TODO:
+TODO:
+TEST: modificar subOptimal method para que elimine las acciones de alto costo. 
+- colocar nuevo parametro: avoid boss. la lista contiene "no avoid" mas la lista estandar de manos. cuando se selecciona una mano, indica a hero que el boss sera evitado solo hasta que hero tenga una mano icual o superior a la mano seleccionada
+- colocar nueva medida estadistica. Cuando hero entra en la batalla, inmediatamente se calcula la diferencia entre buyin y el valor actual. esto permite a hero determinar inmediatamente al jefe y secuases.
 
 add new actions to allog hero more options for actions. this actions need to be click conunted based on the sb value. 
 for examples, in PS:

@@ -883,9 +883,7 @@ public class TUIUtils {
 
 		ntf.setName(name);
 		ntf.putClientProperty("settingsProcessor", new Configuration<TextComponentState>(name));
-		String tt = TStringUtils.getString(name + ".tt");
-		// if (tt != null)
-		// ntf.setToolTip(tt);
+		setToolTip(name, ntf);
 		return ntf;
 	}
 

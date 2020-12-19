@@ -3,7 +3,8 @@
   <UserLogIn.rememberUser type="ButtonState" selected="true"/>
   <logging.level type="ComboBoxState" selectedIndex="3"/>
   <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
-  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="3"/>
+  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="2"/>
+  <tDistributionRange type="ComboBoxState" selectedIndex="0"/>
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
   <SensorPanel.imageType type="ComboBoxState" selectedIndex="0"/>
   <buyIn type="string"></buyIn>
@@ -11,15 +12,17 @@
   <table.smallBlid type="TextComponentState" text="1000" caretPosition="4"/>
   <preflopRekonAmmo.hand type="TextComponentState" text="6" caretPosition="1"/>
   <rememberUser type="string">admin</rememberUser>
+  <topUpperHand type="ComboBoxState" selectedIndex="0"/>
   <bigBlid type="string"></bigBlid>
   <availableActions type="TextComponentState" text="*all" caretPosition="4"/>
   <table.bigBlid type="TextComponentState" text="2000" caretPosition="4"/>
-  <play.time type="TextComponentState" text="3" caretPosition="1"/>
+  <play.time type="TextComponentState" text="4" caretPosition="1"/>
   <test type="TextComponentState" text="02+01 preflop" caretPosition="13"/>
-  <table.parameters type="ComboBoxState" selectedIndex="0"/>
+  <table.parameters type="ComboBoxState" selectedIndex="2"/>
   <PokerSimulator.HelperFilter type="ComboBoxState" selectedIndex="5"/>
   <oddCalculation type="ComboBoxState" selectedIndex="1"/>
-  <SensorPanel.filter type="ComboBoxState" selectedIndex="10"/>
+  <postflopAmmoControl type="ComboBoxState" selectedIndex="0"/>
+  <SensorPanel.filter type="ComboBoxState" selectedIndex="9"/>
   <FlickaDockablePane type="DockablePaneState">
     <root class="DockableList" id="EL-EpOpr-I8QK0-8FIyF-i9P6o-ID" size="479,664" orientation="vertical">
       <DockableList id="EL-sJamJ-UrxRl-1UQ5v-EBIfK-ID" size="1037,530" orientation="horizontal">
@@ -34,7 +37,7 @@
       </DockableList>
     </root>
   </FlickaDockablePane>
-  <bigBlindFactor type="ComboBoxState" selectedIndex="0"/>
+  <bigBlindFactor type="ComboBoxState" selectedIndex="5"/>
   <preflopStrategy type="ComboBoxState" selectedIndex="0"/>
   <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>
   <TWebFrame type="WindowState" location="0,40" size="547,735" state="0"/>

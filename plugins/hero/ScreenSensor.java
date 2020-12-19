@@ -301,8 +301,8 @@ public class ScreenSensor extends JPanel {
 	private void doOCR() {
 		ocrResult = null;
 		try {
-			if (isCardArea())
-				ocrResult = getImageOCR();
+			if (isCardArea() && isEnabled() && (isComunityCard() || isHoleCard()))
+				ocrResult = getCardOCR();
 			if (isTextArea() || isNumericArea())
 				ocrResult = getTesseractOCR();
 
@@ -312,26 +312,27 @@ public class ScreenSensor extends JPanel {
 	}
 
 	/**
-	 * return the String representation of the card area by comparing the {@link ScreenSensor#getCapturedImage()} image
-	 * against the list of card loaded in {@link #preparedCards} static variable. The most probable image file name is
-	 * return.
-	 * <p>
-	 * This method is intendet for card areas. a card area is practicaly equals if the diference is < 3%. This method
-	 * will return <code>null</code> if the captured image is less than 50% of the original shape dimensions
+	 * return the string representation of the car area using a convination of tessearct for rank und collor comparation
+	 * for suit
 	 * 
 	 * @return the ocr retrived from the original file name or <code>null</code>
 	 */
-	private String getImageOCR() throws Exception {
+	private String getCardOCR() throws Exception {
 		// String ocr = getOCRFromImage(preparedImage, Hero.preparedCards);
 		String rank = iTesseract.doOCR(preparedImage).trim().toUpperCase();
+		Hero.logger.finer(getName() + ": Card OCR performed. Raw OCR without correction = " + rank);
 
 		// rank correction (know errors)
 		rank = "G".equals(rank) ? "Q" : rank;
-		rank = "ID".equals(rank) ? "T" : rank;
+		rank = "B".equals(rank) ? "6" : rank;
+		rank = "I0".equals(rank) ? "T" : rank;
 
+		// report error and return empty string
 		String suit = "";
-		// TODO: temp ?? if tesseract can detect the rank, return a empty string !?!?!?!?!
-		if (!"".equals(rank)) {
+		if ("".equals(rank)) {
+			Hero.logger.severe(getName() + ": Card OCR Fail. raw OCR = " + rank);
+			return "";
+		} else {
 			String cn = TColorUtils.colorNames.get(backgroundColor);
 			// suit como from the baground color
 			suit = "red".equals(cn) ? "h" : suit;
@@ -383,23 +384,23 @@ public class ScreenSensor extends JPanel {
 		String srcocr = iTesseract.doOCR(preparedImage);
 
 		if ("pot".equals(getName()))
-		// draw segmented regions (only on prepared image) and ONLY when the prepared image is request to be visible
-		if (showImage.equals(PREPARED) && preparedImage != null) {
-			int pageIteratorLevel = TessAPI.TessPageIteratorLevel.RIL_WORD;
-			// List<Word> wlst = Hero.iTesseract.getWords(preparedImage, pageIteratorLevel);
-			List<Rectangle> regions = iTesseract.getSegmentedRegions(preparedImage, pageIteratorLevel);
-			Graphics2D g2d = (Graphics2D) preparedImage.getGraphics();
-			g2d.setColor(Color.BLUE);
-			if (regions != null) {
-				for (int i = 0; i < regions.size(); i++) {
-					Rectangle region = regions.get(i);
-					g2d.drawRect(region.x, region.y, region.width, region.height);
+			// draw segmented regions (only on prepared image) and ONLY when the prepared image is request to be visible
+			if (showImage.equals(PREPARED) && preparedImage != null) {
+				int pageIteratorLevel = TessAPI.TessPageIteratorLevel.RIL_WORD;
+				// List<Word> wlst = Hero.iTesseract.getWords(preparedImage, pageIteratorLevel);
+				List<Rectangle> regions = iTesseract.getSegmentedRegions(preparedImage, pageIteratorLevel);
+				Graphics2D g2d = (Graphics2D) preparedImage.getGraphics();
+				g2d.setColor(Color.BLUE);
+				if (regions != null) {
+					for (int i = 0; i < regions.size(); i++) {
+						Rectangle region = regions.get(i);
+						g2d.drawRect(region.x, region.y, region.width, region.height);
+					}
 				}
+				// Hero.logger.finer(getName() + ": list of words: " + wlst);
+				// Hero.logger.finer(getName() + ": Tesseract OCR performed. Regions: " + regions.size() + " OCR=" +
+				// srcocr);
 			}
-			// Hero.logger.finer(getName() + ": list of words: " + wlst);
-			// Hero.logger.finer(getName() + ": Tesseract OCR performed. Regions: " + regions.size() + " OCR=" +
-			// srcocr);
-		}
 		Hero.logger.finer(getName() + ": Tesseract OCR performed. Raw OCR whitout correction=" + srcocr);
 		return OCRCorrection(srcocr);
 	}
@@ -456,6 +457,7 @@ public class ScreenSensor extends JPanel {
 		if (isCardArea()) {
 			TCVUtils.parameteres.setProperty("borderColor", "808080");
 			bufimg = TCVUtils.paintBorder(capturedImage);
+			bufimg = ImageHelper.getScaledInstance(bufimg, scaledWidth, scaledHeight);
 			bufimg = ImageHelper.convertImageToGrayscale(bufimg);
 		}
 
