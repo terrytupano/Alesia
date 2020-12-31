@@ -389,28 +389,28 @@ public class SensorsArray {
 		}
 
 		// pot value information
-		Statistic s = Statistic.findOrInit("session", Hero.getSesionID(), "tableparams",
-				pokerSimulator.getTableParameters(), "STREET", pokerSimulator.getCurrentRound(), "name", "pot");
-		DescriptiveStatistics sts = potValStats.get(pokerSimulator.getCurrentRound());
-		sts.addValue(pokerSimulator.getPotValue());
-		s.set("mean", sts.getMean());
-		s.set("min", sts.getMin());
-		s.set("max", sts.getMax());
-		s.save();
-
-		// ammoControl value information
-		String ammoControl = (String) pokerSimulator.getVariables().get("Trooper.ammoControl");
-		if (ammoControl != null) {
-			s = Statistic.findOrInit("session", Hero.getSesionID(), "tableparams", pokerSimulator.getTableParameters(),
-					"STREET", pokerSimulator.getCurrentRound(), "name", "ammoControl");
-			sts = ammoControlStats.get(pokerSimulator.getCurrentRound());
-			// data for getAmmunition
-			sts.addValue(Double.parseDouble(ammoControl));
-			s.set("mean", sts.getMean());
-			s.set("min", sts.getMin());
-			s.set("max", sts.getMax());
-			s.save();
-		}
+//		Statistic s = Statistic.findOrInit("session", Hero.getSesionID(), "tableparams",
+//				pokerSimulator.getTableParameters(), "STREET", pokerSimulator.getCurrentRound(), "name", "pot");
+//		DescriptiveStatistics sts = potValStats.get(pokerSimulator.getCurrentRound());
+//		sts.addValue(pokerSimulator.getPotValue());
+//		s.set("mean", sts.getMean());
+//		s.set("min", sts.getMin());
+//		s.set("max", sts.getMax());
+//		s.save();
+//
+//		// ammoControl value information
+//		String ammoControl = (String) pokerSimulator.getVariables().get("Trooper.ammoControl");
+//		if (ammoControl != null) {
+//			s = Statistic.findOrInit("session", Hero.getSesionID(), "tableparams", pokerSimulator.getTableParameters(),
+//					"STREET", pokerSimulator.getCurrentRound(), "name", "ammoControl");
+//			sts = ammoControlStats.get(pokerSimulator.getCurrentRound());
+//			// data for getAmmunition
+//			sts.addValue(Double.parseDouble(ammoControl));
+//			s.set("mean", sts.getMean());
+//			s.set("min", sts.getMin());
+//			s.set("max", sts.getMax());
+//			s.save();
+//		}
 	}
 	/**
 	 * Perform the read operation for all {@link ScreenSensor} passed int the list argument.

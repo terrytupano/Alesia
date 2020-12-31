@@ -7,6 +7,7 @@ import java.util.stream.*;
 
 import org.apache.commons.math3.distribution.*;
 import org.apache.commons.math3.stat.descriptive.*;
+import org.apache.poi.hsmf.parsers.*;
 import org.jdesktop.application.*;
 
 import com.javaflair.pokerprophesier.api.adapter.*;
@@ -67,6 +68,7 @@ public class Trooper extends Task {
 	private double maxRekonAmmo;
 	boolean oportinity = false;
 	private double currentHandCost;
+	private double playGoal;
 	private long playTime;
 
 	public Trooper() {
@@ -165,31 +167,6 @@ public class Trooper extends Task {
 		}
 	}
 
-	private double getEffectiveHandPotential() {
-		double pot = pokerSimulator.getPotValue();
-		double handStreng = pokerSimulator.getCurrentHandStreng();
-		double hpCenter = pokerSimulator.getHandPotentialCenter();
-		double heroChips = pokerSimulator.getHeroChips();
-
-		// the current fraction of the pot ammount that until now, is already mine
-		double myPot = pot * handStreng;
-
-		// ammount of ammo that is worth to invest according to future outcome
-		double invest = heroChips * hpCenter;
-		double ammunitions = myPot + invest;
-
-		String txt1 = "(" + twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng) + ") + ("
-				+ twoDigitFormat.format(heroChips) + " * " + twoDigitFormat.format(hpCenter) + ") = "
-				+ twoDigitFormat.format(ammunitions);
-		setVariableAndLog(EXPLANATION, txt1);
-
-		// temporal for record stats in sensorarray
-		pokerSimulator.setVariable("Trooper.ammoControl", ammunitions);
-
-		return ammunitions;
-
-	}
-
 	/**
 	 * compute and return the amount of chips available for actions. The number of amount are directe related to the
 	 * currnet hand rank. More the rank, more chips to invest. This allow the troper invest ammunitons acording to a
@@ -202,8 +179,9 @@ public class Trooper extends Task {
 	 * whit poor hands
 	 * 
 	 * @return amunitions
+	 * @deprecated
 	 */
-	private double getAmmunitions() {
+	private double getAmmunitions2() {
 		double bigBlind = pokerSimulator.getBigBlind();
 		double pot = pokerSimulator.getPotValue();
 		double handStreng = pokerSimulator.getCurrentHandStreng();
@@ -246,10 +224,57 @@ public class Trooper extends Task {
 		// + twoDigitFormat.format(handPotential) + ")=" + twoDigitFormat.format(ammunitions);
 
 		setVariableAndLog(EXPLANATION, txt1);
+		return ammunitions;
+	}
+	
+	private double getImpliedOdd() {
+		double call = pokerSimulator.getCallValue();
+		double raise = pokerSimulator.getRaiseValue();
+		double pot = pokerSimulator.getPotValue();
 
-		// temporal for record stats in sensorarray
-		pokerSimulator.setVariable("Trooper.ammoControl", ammunitions);
+		if (call >= 0)
+			availableActions.put("call", call);
 
+		
+//		if (raise >= 0)
+//			availableActions.put("raise", raise);
+
+		return 0.0;
+	}
+
+	private double getAmmunitions() {
+		double pot = pokerSimulator.getPotValue();
+		double handStreng = pokerSimulator.getCurrentHandStreng();
+		double hpCenter = pokerSimulator.getHandPotentialCenter();
+		double chips = pokerSimulator.getHeroChips();
+		double buyin = pokerSimulator.getBuyIn();
+		double twoBB = pokerSimulator.getBigBlind() * 2;
+
+		// chips or buyin. this function allow hero more room to manuver when he ist low on chips
+		// double base = Math.max(chips, buyin);
+		// temporal. allways use buy in
+		double base = buyin;
+
+		// the current fraction of the pot ammount that until now, is already mine
+		double myPot = pot * handStreng;
+
+//		activevillans
+		double villans = sensorsArray.getActiveVillans() * twoBB;
+
+		
+		// ammount of ammo that is worth to invest according to future outcome
+		double invest = villans + ((pot - myPot) * hpCenter);
+
+		// double invest = base * hpCenter;
+
+		// double invest = base + ((pot - myPot) * handPotential);
+
+		double ammunitions = myPot + invest;
+
+		String txt1 = "(" + twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng) + ") + "
+				+ twoDigitFormat.format(villans) + " + (" + twoDigitFormat.format((pot - myPot)) + " * "
+				+ twoDigitFormat.format(hpCenter) + ") = " + twoDigitFormat.format(ammunitions);
+		setVariableAndLog(EXPLANATION, txt1);
 		return ammunitions;
 	}
 
@@ -293,6 +318,8 @@ public class Trooper extends Task {
 	 * the available actions and his values must be previous evaluated. The action value express the hihest expected
 	 * return.
 	 * 
+	 * @deprecated
+	 * 
 	 */
 	private String getSubOptimalAction2() {
 		int elements = availableActions.size();
@@ -314,7 +341,6 @@ public class Trooper extends Task {
 		pokerSimulator.setActionsData(selact, actProb);
 		return selact;
 	}
-
 	/**
 	 * Check acordig to the <code>preflopStrategy</code> parameter, if this hand is a good preflop hand. if this metod
 	 * return <code>null</code>, it is because this hand is not a good preflopa hand
@@ -386,6 +412,7 @@ public class Trooper extends Task {
 		}
 		return null;
 	}
+
 	private boolean isMyTurnToPlay() {
 		return sensorsArray.isSensorEnabled("fold") || sensorsArray.isSensorEnabled("call")
 				|| sensorsArray.isSensorEnabled("raise");
@@ -406,14 +433,8 @@ public class Trooper extends Task {
 	 * @param sourceValue - the value
 	 */
 	private void setPostFlopActions() {
-		// double ammunitions = getAmmunitions();
-		double ammunitions = getEffectiveHandPotential();
 		availableActions.clear();
-		// no calculation for 0 value
-		if (ammunitions == 0) {
-			Hero.logger.info("No posible positive EV for ammunitions " + ammunitions);
-			return;
-		}
+
 		double call = pokerSimulator.getCallValue();
 		double raise = pokerSimulator.getRaiseValue();
 		double chips = pokerSimulator.getHeroChips();
@@ -464,7 +485,7 @@ public class Trooper extends Task {
 			return;
 		}
 
-		calculateOdds(ammunitions);
+		performDecisionMethod();
 
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 		String val = availableActions.keySet().stream().map(k -> k + "=" + twoDigitFormat.format(asociatedCost.get(k)))
@@ -488,11 +509,6 @@ public class Trooper extends Task {
 			setVariableAndLog(EXPLANATION, "Preflop hand not good.");
 			return;
 		}
-
-		// test: empirical result set the buy in for preflop to 0.05 of the hero chips. now, from the original 5%, i
-		// take a factor dependin of the card dealed. the idea is try to survive the "pot stoler" that generaly
-		// start the preflop with hight amounts and after the preflop raise all in to steal the pot. the constant 5% of
-		// the chip, leave hero vulnerable to those buffons and the chips start to dropping out whiout control.
 		double pfBase = ((Number) parameters.get("preflopRekonAmmo.base")).doubleValue();
 		double pfHStreng = ((Number) parameters.get("preflopRekonAmmo.hand")).doubleValue();
 		double base = pokerSimulator.getBigBlind() * pfBase;
@@ -524,8 +540,7 @@ public class Trooper extends Task {
 				}
 			}
 		}
-		// just for cost table update
-		calculateOdds(pokerSimulator.getBuyIn());
+		updateAsociatedCost();
 		String txt1 = prehand + " " + twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(ammo) + " * "
 				+ twoDigitFormat.format(streng) + ") = " + twoDigitFormat.format(maxRekonAmmo);
 		setVariableAndLog(EXPLANATION, txt1);
@@ -536,8 +551,8 @@ public class Trooper extends Task {
 			value1 = fourDigitFormat.format(((Double) value).doubleValue());
 		// append the playtime to the status (visual purpose only)
 		if (STATUS.equals(key)) {
-			value = "Play time " + timeFormat.format(new Date(playTime - TimeUnit.HOURS.toMillis(1))) + ". "
-					+ value.toString();
+			value = "Play time " + timeFormat.format(new Date(playTime - TimeUnit.HOURS.toMillis(1))) + " Goal "
+					+ twoDigitFormat.format(playGoal) + " " + value.toString();
 		}
 		pokerSimulator.setVariable(key, value);
 		// don.t log the status, only the explanatio
@@ -628,39 +643,6 @@ public class Trooper extends Task {
 		robotActuator.perform(ha);
 	}
 
-	/**
-	 * Compute the EV for all actions inside of the <code>list</code> parameter. after this method, the list contain
-	 * only the actions with +EV. in this case, for less cost, better EV. the {@link #getSubOptimalAction()} method
-	 * reverse the order of the list to correctly select the option whit best EV
-	 * <p>
-	 * to comply with rule 1, this method retrive his probability from {@link PokerSimulator#getProbability()
-	 * 
-	 * <h5>MoP page 54</h5>
-	 * 
-	 * @param base - ammount of ammo calculated in {@link #getAmmunitions()}
-	 * @param list - list of action (call/bet/raise/...) with his asociated cost
-	 * 
-	 */
-	protected void calculateOdds(double base) {
-		// Preconditions.checkArgument(base >= 0 && cost >= 0, "Odd function accept only 0 or positive values.");
-		double prob = pokerSimulator.getProbability();
-		if (prob == 0) {
-			availableActions.clear();
-			setVariableAndLog(EXPLANATION, "no posible +EV with probability = " + prob);
-		}
-		asociatedCost.clear();
-		for (String act : availableActions.keySet()) {
-			double cost = availableActions.get(act);
-			// MoP page 54
-			double ev = (prob * base) - cost;
-			availableActions.put(act, ev);
-			if (ev > 0)
-				asociatedCost.put(act, cost);
-		}
-		// remove all negative values
-		availableActions.values().removeIf(dv -> dv < 0);
-	}
-
 	@Override
 	protected Object doInBackground() throws Exception {
 
@@ -692,17 +674,33 @@ public class Trooper extends Task {
 
 			// if i can reach the gametable, dismiss the troper
 			if (!ingt) {
+				setVariableAndLog(EXPLANATION, "Trooper can.t reach gametable. Tropper dismiss.");
 				return null;
 			}
 
-			// play time counter. when the play time is reach, the action sit.out is clicked and hero return
+			// play time or play goal parameters. when the play time is reach, the action sit.out is clicked and hero
+			// return
+			// play time.
 			double ptd = Double.parseDouble(parameters.get("play.time").toString());
-			long pt = (long) (ptd * 3600 * 1000);
+			long playtimeParm = (long) (ptd * 3600 * 1000);
 			playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
-			if (playTime > pt && sensorsArray.isSensorEnabled("sit.out")) {
+
+			// play goal
+			int playgoalParm = Integer.parseInt(parameters.get("play.goal").toString());
+			double chips = pokerSimulator.getHeroChips();
+			// if chips are not available, show the last computed play goal %
+			if (chips > 0) {
+				double buyin = pokerSimulator.getBuyIn();
+				playGoal = (playgoalParm / 100.0 * buyin) + buyin;
+				// playgoal expresed in porcentage: 100% means goal reach !!
+				playGoal = (chips / playGoal) * 100;
+			}
+
+			if ((playtimeParm > 0 && playTime > playtimeParm)
+					|| (playgoalParm > 0 && playGoal >= 100) && sensorsArray.isSensorEnabled("sit.out")) {
 				robotActuator.perform("sit.out");
 				robotActuator.perform("fold");
-				setVariableAndLog(EXPLANATION, "play time reach. mission accomplisch.");
+				setVariableAndLog(EXPLANATION, "Play time or play goal reach. mission accomplisch.");
 				return null;
 			}
 
@@ -712,6 +710,57 @@ public class Trooper extends Task {
 		}
 		return null;
 	}
+
+	/**
+	 * Compute the EV for all actions inside of the <code>list</code> parameter. after this method, the list contain
+	 * only the actions with +EV. in this case, for less cost, better EV. the {@link #getSubOptimalAction()} method
+	 * reverse the order of the list to correctly select the option whit best EV
+	 * <p>
+	 * to comply with rule 1, this method retrive his probability from {@link PokerSimulator#getProbability()
+	 * 
+	 * <h5>MoP page 54</h5>
+	 * 
+	 * @param base - ammount of ammo calculated in {@link #getAmmunitions()}
+	 * @param list - list of action (call/bet/raise/...) with his asociated cost
+	 * 
+	 */
+	protected void performDecisionMethod() {
+		double prob = 0.0;
+		double ammunitions = 0.0;
+
+		// decition method
+		String decisionM = parameters.get("decisionMethod").toString();
+		if ("potOdd".equals(decisionM)) {
+			// MoP page 54
+			prob = pokerSimulator.getProbability();
+			ammunitions = getAmmunitions();
+		} else {
+			prob = pokerSimulator.getCurrentHandStreng();
+			ammunitions = pokerSimulator.getPotValue();
+			// temporal log
+			String txt1 = "Hand String = " + pokerSimulator.getCurrentHandStrengName() + " " + twoDigitFormat.format(prob);
+			setVariableAndLog(EXPLANATION, txt1);
+			// set 1 when the factor is > 1
+			prob = (prob > 1) ? 1 : prob;
+		}
+
+		// no calculation for 0 values
+		if (ammunitions == 0 || prob == 0) {
+			availableActions.clear();
+			Hero.logger.info("No posible decision for values prob = " + twoDigitFormat.format(prob) + " or ammuntion = "
+					+ twoDigitFormat.format(ammunitions));
+			return;
+		}
+		updateAsociatedCost();
+		for (String act : availableActions.keySet()) {
+			double cost = availableActions.get(act);
+			double ev = (prob * ammunitions) - cost;
+			availableActions.put(act, ev);
+		}
+		// remove all negative values
+		availableActions.values().removeIf(dv -> dv < 0);
+	}
+
 	/**
 	 * This method is invoked during the idle phase (after {@link #act()} and before {@link #decide()}. use this method
 	 * to perform large computations.
@@ -721,5 +770,17 @@ public class Trooper extends Task {
 		// sensorsArray.readVillan();
 		// 191020: ayer ya la implementacion por omision jugo una partida completa y estuvo a punto de vencer a la
 		// chatarra de Texas poker - poker holdem. A punto de vencer porque jugaba tan lento que me aburri del sueno :D
+	}
+	/**
+	 * update the internal table with de cost of each action.
+	 * <p>
+	 * NOTE: call this metod befor {@link #decisionMethod(double)} because this method change the cost by EV.
+	 */
+	protected void updateAsociatedCost() {
+		asociatedCost.clear();
+		for (String act : availableActions.keySet()) {
+			double cost = availableActions.get(act);
+			asociatedCost.put(act, cost);
+		}
 	}
 }
