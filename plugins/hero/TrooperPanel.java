@@ -17,15 +17,14 @@ public class TrooperPanel extends TUIFormPanel {
 		addInputComponent(TUIUtils.getNumericTextField("play.goal", null, 5, null), false, true);
 		
 		addInputComponent(TUIUtils.getTWebComboBox("preflopStrategy", "table.strategy"));
-		addInputComponent(TUIUtils.getTWebComboBox("minHandForOportunity", "handRanks"));
 		addInputComponent(TUIUtils.getTWebComboBox("decisionMethod", "decisionMet"));
 		
 		addInputComponent(TUIUtils.getTWebComboBox("tDistributionRange", "tdisrange"));
 		
 		addInputComponent(TUIUtils.getWebTextField("availableActions", null, 50));
 		addInputComponent(TUIUtils.getWebCheckBox("takeOportunity"));
-		addInputComponent(TUIUtils.getTWebComboBox("topUpperHand", "topUpperHand"));
-
+		addInputComponent(TUIUtils.getNumericTextField("bluff", null, 5, null), false, true);
+		
 		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.base", null, 5, null), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.hand", null, 5, null), false, true);
 
@@ -43,12 +42,11 @@ public class TrooperPanel extends TUIFormPanel {
 		builder.appendSeparator("Trooper parameters");
 		builder.nextLine();
 		builder.append(TStringUtils.getString("preflopStrategy"), getInputComponent("preflopStrategy"), 6);
-		builder.append(TStringUtils.getString("minHandForOportunity"), getInputComponent("minHandForOportunity"), 6);
 		builder.append(getInputComponent("takeOportunity"));
+		builder.append(TStringUtils.getString("bluff"), getInputComponent("bluff"));
 		builder.nextLine();
 		builder.append(TStringUtils.getString("decisionMethod"), getInputComponent("decisionMethod"), 6);
 		builder.append(TStringUtils.getString("tDistributionRange"), getInputComponent("tDistributionRange"), 6);
-		builder.append(TStringUtils.getString("topUpperHand"), getInputComponent("topUpperHand"), 6);
 		builder.nextLine();
 
 		builder.appendSeparator("pre flop rekon parameteres");

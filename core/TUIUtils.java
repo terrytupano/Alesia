@@ -26,6 +26,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.text.*;
 import javax.swing.text.html.*;
 
+import org.apache.commons.text.*;
 import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 
@@ -732,10 +733,10 @@ public class TUIUtils {
 		}
 		WebCheckBoxList<TEntry> boxList = new WebCheckBoxList<>(model);
 		boxList.setName(name);
-//		TODO: i must write the procesor !!!O.o no tnk, not today
-//		boxList.putClientProperty("settingsProcessor", new Configuration<list>(name));
+		// TODO: i must write the procesor !!!O.o no tnk, not today
+		// boxList.putClientProperty("settingsProcessor", new Configuration<list>(name));
 		return boxList;
-		
+
 	}
 
 	public static WebCheckBox getWebCheckBox(String name) {
@@ -1081,12 +1082,15 @@ public class TUIUtils {
 	 */
 	public static void setToolTip(String name, JComponent cmp) {
 		if (name != null) {
-			String tooltip = TStringUtils.getString(name + ".tt");
-			// tooltip = tooltip.length() > 80 ? WordUtils.wrap(tooltip, 80) : tooltip;
-			if (cmp instanceof ToolTipMethods)
-				((ToolTipMethods) cmp).setToolTip(tooltip);
-			else
-				cmp.setToolTipText(tooltip);
+			String n1 = name + ".tt";
+			String tooltip = TStringUtils.getString(n1);
+			if (!n1.equals(tooltip)) {
+				tooltip = tooltip.length() > 80 ? WordUtils.wrap(tooltip, 80) : tooltip;
+				if (cmp instanceof ToolTipMethods)
+					((ToolTipMethods) cmp).setToolTip(tooltip);
+				else
+					cmp.setToolTipText(tooltip);
+			}
 		}
 	}
 

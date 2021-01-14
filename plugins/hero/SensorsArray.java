@@ -58,7 +58,6 @@ public class SensorsArray {
 	private PokerSimulator pokerSimulator;
 	private ShapeAreas screenAreas;
 	DescriptiveStatistics tesseractTime = new DescriptiveStatistics(10);
-	DescriptiveStatistics imageDiffereceTime = new DescriptiveStatistics(10);
 	private ArrayList<DescriptiveStatistics> potValStats;
 	private ArrayList<DescriptiveStatistics> ammoControlStats;
 	private GameRecorder gameRecorder;
@@ -68,7 +67,7 @@ public class SensorsArray {
 		this.pokerSimulator = new PokerSimulator();
 		this.robot = Hero.getNewRobot();
 		this.readingBorder = new LineBorder(Color.BLUE, 2);
-		this.lookingBorder = new LineBorder(Color.GREEN, 2);
+		this.lookingBorder = new LineBorder(Color.ORANGE, 2);
 		this.standByBorder = new LineBorder(new JPanel().getBackground(), 2);
 		this.screenSensors = new TreeMap<>();
 		this.potValStats = new ArrayList<>();
@@ -331,8 +330,9 @@ public class SensorsArray {
 			slist.removeIf(ss -> ss.getName().startsWith("villan"));
 			readSensors(true, slist);
 
-			// TODO: until now, i.m not using table position for any calculation.
-			// updateTablePosition();
+			slist = allSensors.stream().filter(ss -> ss.isButtonArea()).collect(Collectors.toList());
+			readSensors(false, slist);
+			updateTablePosition();
 
 			pokerSimulator.setPotValue(getSensor("pot").getNumericOCR());
 			pokerSimulator.setCallValue(getSensor("hero.call").getNumericOCR());
@@ -367,8 +367,7 @@ public class SensorsArray {
 
 		// performance variables and update report
 		// pokerSimulator.setVariable("sensorArray.Total readed sensors", slist.size());
-		pokerSimulator.setVariable("sensorArray.Performance", "Tesseract " + ((int) tesseractTime.getMean())
-				+ " ImageDiference " + ((int) imageDiffereceTime.getMean()));
+		pokerSimulator.setVariable("sensorArray.Performance", "Tesseract " + ((int) tesseractTime.getMean()));
 	}
 
 	/**
@@ -389,28 +388,28 @@ public class SensorsArray {
 		}
 
 		// pot value information
-//		Statistic s = Statistic.findOrInit("session", Hero.getSesionID(), "tableparams",
-//				pokerSimulator.getTableParameters(), "STREET", pokerSimulator.getCurrentRound(), "name", "pot");
-//		DescriptiveStatistics sts = potValStats.get(pokerSimulator.getCurrentRound());
-//		sts.addValue(pokerSimulator.getPotValue());
-//		s.set("mean", sts.getMean());
-//		s.set("min", sts.getMin());
-//		s.set("max", sts.getMax());
-//		s.save();
-//
-//		// ammoControl value information
-//		String ammoControl = (String) pokerSimulator.getVariables().get("Trooper.ammoControl");
-//		if (ammoControl != null) {
-//			s = Statistic.findOrInit("session", Hero.getSesionID(), "tableparams", pokerSimulator.getTableParameters(),
-//					"STREET", pokerSimulator.getCurrentRound(), "name", "ammoControl");
-//			sts = ammoControlStats.get(pokerSimulator.getCurrentRound());
-//			// data for getAmmunition
-//			sts.addValue(Double.parseDouble(ammoControl));
-//			s.set("mean", sts.getMean());
-//			s.set("min", sts.getMin());
-//			s.set("max", sts.getMax());
-//			s.save();
-//		}
+		// Statistic s = Statistic.findOrInit("session", Hero.getSesionID(), "tableparams",
+		// pokerSimulator.getTableParameters(), "STREET", pokerSimulator.getCurrentRound(), "name", "pot");
+		// DescriptiveStatistics sts = potValStats.get(pokerSimulator.getCurrentRound());
+		// sts.addValue(pokerSimulator.getPotValue());
+		// s.set("mean", sts.getMean());
+		// s.set("min", sts.getMin());
+		// s.set("max", sts.getMax());
+		// s.save();
+		//
+		// // ammoControl value information
+		// String ammoControl = (String) pokerSimulator.getVariables().get("Trooper.ammoControl");
+		// if (ammoControl != null) {
+		// s = Statistic.findOrInit("session", Hero.getSesionID(), "tableparams", pokerSimulator.getTableParameters(),
+		// "STREET", pokerSimulator.getCurrentRound(), "name", "ammoControl");
+		// sts = ammoControlStats.get(pokerSimulator.getCurrentRound());
+		// // data for getAmmunition
+		// sts.addValue(Double.parseDouble(ammoControl));
+		// s.set("mean", sts.getMean());
+		// s.set("min", sts.getMin());
+		// s.set("max", sts.getMax());
+		// s.save();
+		// }
 	}
 	/**
 	 * Perform the read operation for all {@link ScreenSensor} passed int the list argument.
@@ -428,11 +427,7 @@ public class SensorsArray {
 			ss.capture(read);
 			// mesure only efective lecture
 			if (ss.isEnabled() && ss.getOCRPerformanceTime() > 0) {
-				if (ss.isCardArea()) {
-					imageDiffereceTime.addValue(ss.getOCRPerformanceTime());
-				} else {
-					tesseractTime.addValue(ss.getOCRPerformanceTime());
-				}
+				tesseractTime.addValue(ss.getOCRPerformanceTime());
 			}
 		}
 		setStandByBorder();
@@ -442,15 +437,16 @@ public class SensorsArray {
 	 * this method read all {@link #TYPE_CARDS} areas from the .ppt file and perform the standar ocr operation. fur test
 	 * purporse
 	 */
-	public void testCards() {
+	public void testAreas() {
 		// if the trooper is active, do nothig (oüviously)
 		Trooper t = Trooper.getInstance();
 		if (t != null && t.isStarted())
 			return;
 
 		Hero.isTestMode = true;
-		List<ScreenSensor> slist = screenSensors.values().stream().filter(ss -> ss.isCardArea())
-				.collect(Collectors.toList());
+		// List<ScreenSensor> slist = screenSensors.values().stream().filter(ss -> ss.isCardArea())
+		// .collect(Collectors.toList());
+		List<ScreenSensor> slist = screenSensors.values().stream().collect(Collectors.toList());
 		readSensors(true, slist);
 	}
 
@@ -467,7 +463,8 @@ public class SensorsArray {
 	 */
 	private void updateTablePosition() {
 		int dbp = getDealerButtonPosition();
-		int tp = Math.abs(dbp - (getActiveSeats() + 1));
+		// int tp = Math.abs(dbp - (getActiveSeats() + 1));
+		int tp = Math.abs(dbp - (getVillans() + 1));
 		pokerSimulator.setTablePosition(tp);
 	}
 	/**

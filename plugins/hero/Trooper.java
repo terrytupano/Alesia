@@ -62,6 +62,7 @@ public class Trooper extends Task {
 	private boolean paused = false;
 	private Hashtable<String, Object> parameters;
 	private Hashtable<String, String> preflopHands;
+	private Hashtable<String, Hashtable<Integer, Double>> bluffHands;
 	long stepMillis;
 	// This variable is ONLY used and cleaned by ensuregametable method
 	private String lastHoleCards = "";
@@ -81,6 +82,18 @@ public class Trooper extends Task {
 		this.pokerSimulator = sensorsArray.getPokerSimulator();
 		instance = this;
 		this.preflopHands = TStringUtils.getProperties("preflop.card");
+		// build bluff hand
+		this.bluffHands = new Hashtable<>();
+		Hashtable<String, String> tmp = TStringUtils.getProperties("bluff.card");
+		ArrayList<String> l = new ArrayList<>(tmp.keySet());
+		for (String key : l) {
+			String[] row = tmp.get(key).split("[\t]");
+			Hashtable positions = new Hashtable<Integer, Double>();
+			String hand = row[0];
+			for (int i = 1; i < row.length; i++)
+				positions.put(i, new Double(row[i]));
+			bluffHands.put(hand, positions);
+		}
 	}
 
 	public static Trooper getInstance() {
@@ -140,7 +153,8 @@ public class Trooper extends Task {
 		// PREFLOP
 		// if normal pot odd action has no action todo, check the preflopcards.
 		if (pokerSimulator.getCurrentRound() == PokerSimulator.HOLE_CARDS_DEALT) {
-			setPreflopActions();
+			if (!checkBluff())
+				setPreflopActions();
 		}
 
 		// FLOP AND FUTHER
@@ -167,6 +181,35 @@ public class Trooper extends Task {
 		}
 	}
 
+	private boolean checkBluff() {
+		boolean bluff = false;
+		HoleCards hc = pokerSimulator.getMyHoleCards();
+		String s = hc.isSuited() ? "s" : "";
+		String c1 = hc.getFirstCard().toString().substring(0, 1) + hc.getSecondCard().toString().substring(0, 1);
+		String c2 = hc.getSecondCard().toString().substring(0, 1) + hc.getFirstCard().toString().substring(0, 1);
+		Hashtable<Integer, Double> evvalues = bluffHands.get(c1 + s) == null
+				? bluffHands.get(c2 + s)
+				: bluffHands.get(c1 + s);
+		int tablep = pokerSimulator.getTablePosition();
+		if (evvalues != null && tablep > -1) {
+			// chack bluff parameter
+			int bluffParm = Integer.parseInt(parameters.get("bluff").toString());
+			double chips = pokerSimulator.getHeroChips();
+			// if chips are available
+			if (chips > 0) {
+				double buyin = pokerSimulator.getBuyIn();
+				double lowB = (bluffParm / 100.0 * buyin);
+				Double ev = evvalues.get(tablep);
+				if (ev > 0 && chips <= lowB && sensorsArray.getSensor("raise.allin").isEnabled()) {
+					setVariableAndLog(EXPLANATION, "Hero is able to bluff. EV = " + twoDigitFormat.format(ev));
+					availableActions.clear();
+					availableActions.put("raise.allin;raise", chips);
+					bluff = true;
+				}
+			}
+		}
+		return bluff;
+	}
 	/**
 	 * compute and return the amount of chips available for actions. The number of amount are directe related to the
 	 * currnet hand rank. More the rank, more chips to invest. This allow the troper invest ammunitons acording to a
@@ -226,7 +269,7 @@ public class Trooper extends Task {
 		setVariableAndLog(EXPLANATION, txt1);
 		return ammunitions;
 	}
-	
+
 	private double getImpliedOdd() {
 		double call = pokerSimulator.getCallValue();
 		double raise = pokerSimulator.getRaiseValue();
@@ -235,9 +278,8 @@ public class Trooper extends Task {
 		if (call >= 0)
 			availableActions.put("call", call);
 
-		
-//		if (raise >= 0)
-//			availableActions.put("raise", raise);
+		// if (raise >= 0)
+		// availableActions.put("raise", raise);
 
 		return 0.0;
 	}
@@ -248,32 +290,28 @@ public class Trooper extends Task {
 		double hpCenter = pokerSimulator.getHandPotentialCenter();
 		double chips = pokerSimulator.getHeroChips();
 		double buyin = pokerSimulator.getBuyIn();
-		double twoBB = pokerSimulator.getBigBlind() * 2;
-
-		// chips or buyin. this function allow hero more room to manuver when he ist low on chips
-		// double base = Math.max(chips, buyin);
-		// temporal. allways use buy in
-		double base = buyin;
+		double bBlind = pokerSimulator.getBigBlind();
 
 		// the current fraction of the pot ammount that until now, is already mine
 		double myPot = pot * handStreng;
 
-//		activevillans
-		double villans = sensorsArray.getActiveVillans() * twoBB;
+		// TODO: temp ??? active villans make a base for allow hero more room to manuver
+		double base = sensorsArray.getActiveVillans() * bBlind;
 
-		
 		// ammount of ammo that is worth to invest according to future outcome
-		double invest = villans + ((pot - myPot) * hpCenter);
+		double invest = ((pot - myPot) * hpCenter);
 
 		// double invest = base * hpCenter;
 
 		// double invest = base + ((pot - myPot) * handPotential);
 
+		// double ammunitions = base + myPot + invest;
 		double ammunitions = myPot + invest;
 
-		String txt1 = "(" + twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng) + ") + "
-				+ twoDigitFormat.format(villans) + " + (" + twoDigitFormat.format((pot - myPot)) + " * "
-				+ twoDigitFormat.format(hpCenter) + ") = " + twoDigitFormat.format(ammunitions);
+		// String txt1 = twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(pot) + " * "
+		String txt1 = "(" + twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng) + ") + ("
+				+ twoDigitFormat.format((pot - myPot)) + " * " + twoDigitFormat.format(hpCenter) + ") = "
+				+ twoDigitFormat.format(ammunitions);
 		setVariableAndLog(EXPLANATION, txt1);
 		return ammunitions;
 	}
@@ -358,25 +396,29 @@ public class Trooper extends Task {
 			txt = "strategy = ALL";
 			return txt;
 		}
-		// upper half of deck (234567 >> 89TJQKA)
+		// upper half (2345678 | 9TJQKA)
 		if (strategy.equals("UPPER")) {
 			Card[] heroc = pokerSimulator.getMyHoleCards().getCards();
 			// pocket pair
 			if (pokerSimulator.getMyHandHelper().isPocketPair()) {
 				txt = "A pocket pair";
 			}
-			if (heroc[0].getRank() >= Card.EIGHT && heroc[1].getRank() >= Card.EIGHT) {
+			if (heroc[0].getRank() >= Card.NINE && heroc[1].getRank() >= Card.NINE) {
 				txt = "Upper half";
 			}
 			// A or K
-			// if (pokerSimulator.getMyHoleCards().isSuited()
 			if ((heroc[0].getRank() > Card.QUEEN || heroc[1].getRank() > Card.QUEEN))
-				// txt = "A or K suited";
 				txt = "A or K";
+			
+			// TEMP: suited Q
+			if ((heroc[0].getRank() > Card.JACK || heroc[1].getRank() > Card.JACK)
+					&& pokerSimulator.getMyHoleCards().isSuited())
+				txt = "Suited Queen";
+
 			return txt;
 		}
 
-		// play only preflop list
+		// +EV list
 		if (strategy.equals("PRELIST")) {
 			HoleCards hc = pokerSimulator.getMyHoleCards();
 			String s = hc.isSuited() ? "s" : "";
@@ -413,6 +455,13 @@ public class Trooper extends Task {
 		return null;
 	}
 
+	private String decodeMyCards() {
+		HoleCards hc = pokerSimulator.getMyHoleCards();
+		String suited = hc.isSuited() ? "s" : "";
+		String card = hc.getFirstCard().toString().substring(0, 1) + hc.getSecondCard().toString().substring(0, 1);
+		return card + suited;
+	}
+
 	private boolean isMyTurnToPlay() {
 		return sensorsArray.isSensorEnabled("fold") || sensorsArray.isSensorEnabled("call")
 				|| sensorsArray.isSensorEnabled("raise");
@@ -423,11 +472,6 @@ public class Trooper extends Task {
 	 * consider alls posible. After the list ist build, this list is procesed acording to the selected method. those
 	 * method will analize all entryes and select the actions acordinly. the result is stored in the gobal valiabel
 	 * {@link #availableActions}
-	 * 
-	 * 
-	 * TODO: maybe implement some kind of threshold to alow 1 more action (bluff)
-	 * <p>
-	 * TODO: the extreme values: fold=-1 and allin=x must be agree whit mathematical poker model to allow bluff.
 	 * 
 	 * @param sourceName - the name of the source
 	 * @param sourceValue - the value
@@ -460,8 +504,8 @@ public class Trooper extends Task {
 			// only take the first 5
 			double tick = raise;
 			for (int c = 0; c < 5; c++) {
-				// tick = 100, 200, 400, 800, 1600, ...
 				// tick += raise;
+				// tick = 100, 200, 400, 800, 1600, ...
 				tick = tick * 2;
 				// round value to look natural (dont write 12345. write 12340 or 12350)
 				if (isInt)
@@ -613,7 +657,7 @@ public class Trooper extends Task {
 			// the i.m back button is active (at this point, the enviorement must only being showing the i.m back
 			// button)
 			if (sensorsArray.isSensorEnabled("imBack")) {
-				// robotActuator.perform("imBack");
+				robotActuator.perform("imBack");
 				continue;
 			}
 
@@ -738,7 +782,8 @@ public class Trooper extends Task {
 			prob = pokerSimulator.getCurrentHandStreng();
 			ammunitions = pokerSimulator.getPotValue();
 			// temporal log
-			String txt1 = "Hand String = " + pokerSimulator.getCurrentHandStrengName() + " " + twoDigitFormat.format(prob);
+			String txt1 = "Hand String = " + pokerSimulator.getCurrentHandStrengName() + " "
+					+ twoDigitFormat.format(prob);
 			setVariableAndLog(EXPLANATION, txt1);
 			// set 1 when the factor is > 1
 			prob = (prob > 1) ? 1 : prob;

@@ -242,6 +242,9 @@ public class ScreenSensor extends JPanel {
 	public boolean isCardArea() {
 		return shape.isCardArea;
 	}
+	public boolean isButtonArea() {
+		return shape.isButtonArea;
+	}
 	/**
 	 * Return <code>true</code> if this sensor is a comunity card sensor
 	 * 

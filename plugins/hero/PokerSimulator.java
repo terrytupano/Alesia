@@ -78,7 +78,6 @@ public class PokerSimulator {
 	private double buyIn;
 	private double smallBlind;
 	private double bigBlind;
-	private int minHandForOportunity;
 	private ActionsBarChart actionsBarChart;
 	// private long lastStepMillis;
 	private double winPlusTieProbability;
@@ -181,7 +180,6 @@ public class PokerSimulator {
 
 		// parameters from the panel
 		this.parameters = Hero.heroPanel.getTrooperPanel().getValues();
-		this.minHandForOportunity = Integer.parseInt(parameters.get("minHandForOportunity").toString());
 		this.buyIn = ((Number) parameters.get("table.buyIn")).doubleValue();
 		this.smallBlind = ((Number) parameters.get("table.smallBlid")).doubleValue();
 		this.bigBlind = ((Number) parameters.get("table.bigBlid")).doubleValue();
@@ -263,7 +261,7 @@ public class PokerSimulator {
 			for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
 				if (list[i] > 0 && oppTopHand == -1) {
 					oppTopHand = i;
-					msg = tmplist.get(i) + " " + twoDigitFormat.format(list[i]);
+					msg = tmplist.get(i) + " " + fourDigitFormat.format(list[i]);
 				}
 			}
 		}
@@ -284,6 +282,28 @@ public class PokerSimulator {
 	 * @return factor that represent the mass center of the future outcome.
 	 */
 	public double getHandPotentialCenter() {
+		double handPotentialMS = 0.0;
+		int cnt = 0;
+		String hs = "";
+		if (myHandStatsHelper != null) {
+			float[] list = myHandStatsHelper.getAllProbs();
+			for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
+				if (list[i] > 0) {
+					cnt++;
+					handPotentialMS += handStrengSamples.get(i);
+					hs += tmplist.get(i) + " " + twoDigitFormat.format(list[i]) + " ";
+				}
+			}
+		}
+		if(handPotentialMS > 0) {
+			handPotentialMS = handPotentialMS / cnt;
+			handPotentialMS = handPotentialMS / topUpperHand;
+		}
+		hs += "= " + twoDigitFormat.format(handPotentialMS);
+		setVariable("simulator.Hand potential", hs);
+		return handPotentialMS;
+	}
+	public double getHandPotentialCenterOld() {
 		double handPotentialMS = 0.0;
 		String hs = "";
 		if (myHandStatsHelper != null) {
@@ -306,12 +326,6 @@ public class PokerSimulator {
 	 * into account only the probabilites of inprove my hand (the probabilities of get a hand better that i currently
 	 * have).
 	 * 
-	 * TODO: villeich das ist eine gute Idee : ein parameter ´das mindesten hand potentcial führt To allow more
-	 * presicion, The parameter {@link #minHandForOportunity} control the minimun rank to take into acount.
-	 * <p>
-	 * e.g: if {@link #minHandForOportunity} = {@link Hand#TWO_PAIRS} this method will return the potential of the
-	 * current hand of become better than {@link Hand#TWO_PAIRS}
-	 * 
 	 * @return the probabilities of become a better hand
 	 * @deprecated
 	 */
@@ -319,7 +333,6 @@ public class PokerSimulator {
 		double hp = 0.0;
 		String hs = "";
 		if (myHandStatsHelper != null) {
-			// int toh = Hand.STRAIGHT_FLUSH - minHandForOportunity;
 			int toh = Hand.STRAIGHT_FLUSH - Hand.PAIR;
 			float[] list = myHandStatsHelper.getAllProbs();
 			for (int i = 0; i < toh; i++) {
@@ -411,35 +424,36 @@ public class PokerSimulator {
 	}
 	/**
 	 * check whether is an oportunity. An oportunity is present when the current street is {@link #FLOP_CARDS_DEALT} or
-	 * {@link #TURN_CARD_DEALT} and one of the following conditions is found:
-	 * <li>The current hand rank is >= ({@link #minHandForOportunity} + 1) <b>AND</b> The hand is a set (both card in
-	 * heros.s hands participate in the action)
-	 * <li>the hand is the nut
+	 * futher and the following conditions is found:
+	 * <li>Heros hand muss be equal to the ranck return by {@link #getOppTopHand()}
+	 * <li>The hand is a set (both card in heros.s hands participate in the action)
+	 * <li>OR the hand is the nut
 	 * 
 	 * @return a text explain what oportunity is detected or <code>null</code> if no oportunity are present
 	 */
 	public String isOportunity() {
 		String txt = null;
-		// check if hero must check for oportunity
+		// Hero must check for oportunity
 		if (!takeOportunity)
 			return txt;
-		// fail safe. an oportunity must be more than a pair
-		if (minHandForOportunity < Hand.PAIR) {
-			Hero.logger.warning("minimun hand rank for an oportunity must be > Hand.PAIR. Method ignored.");
-			return null;
+		// the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
+		if (currentRound < FLOP_CARDS_DEALT)
+			return txt;
+		// hero.s hand is = villan.s top hands
+//		temp. 
+//		if ((Hand.STRAIGHT_FLUSH - getOppTopHand()) > myHandHelper.getHandRank())
+		if ((Hand.STRAIGHT_FLUSH - getOppTopHand() - 1) > myHandHelper.getHandRank())
+			return txt;
+
+		String sts = getSignificantCards();
+		// set hand but > pair
+		if (myHandHelper.getHandRank() > Hand.PAIR && sts.length() == 5) {
+			String nh = UoAHandEvaluator.nameHand(uoAHand);
+			txt = "Troper has " + nh + " (set)";
 		}
 
-		// the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
-		if (currentRound == FLOP_CARDS_DEALT || currentRound == TURN_CARD_DEALT) {
-			// table parameters conditions
-			if (myHandHelper.getHandRank() >= minHandForOportunity) {
-				String sts = getSignificantCards();
-				String nh = UoAHandEvaluator.nameHand(uoAHand);
-				txt = sts.length() == 5 ? "Troper has " + nh + " (set)" : txt;
-			}
-			// is the nut
-			txt = currentRound > HOLE_CARDS_DEALT && getMyHandHelper().isTheNuts() ? "is the nuts" : txt;
-		}
+		// is the nut
+		txt = getMyHandHelper().isTheNuts() ? "is the nuts" : txt;
 		return txt;
 	}
 	/**
@@ -481,9 +495,7 @@ public class PokerSimulator {
 			myHandStatsHelper = adapter.getMyHandStatsHelper();
 			oppHandStatsHelper = adapter.getOppHandStatsHelper();
 			myHandHelper = adapter.getMyHandHelper();
-
 			topUpperHand = handStrengSamples.get(getOppTopHand());
-			// topUpperHand = handStrengSamples.get(Integer.parseInt(parameters.get("topUpperHand").toString()));
 
 			updateSimulationResults();
 			variableList.put(STATUS, STATUS_OK);
@@ -739,9 +751,8 @@ public class PokerSimulator {
 		variableList.put("simulator.Trooper Current hand", getMyHandHelper().getHand().toString());
 		variableList.put("simulator.Table cards", getMyHoleCards().getFirstCard() + ", "
 				+ getMyHoleCards().getSecondCard() + ", " + getCommunityCards().toString());
-		// variableList.put("Table Position", getTablePosition());
 		String txt = "Amunitions " + getHeroChips() + " Pot " + getPotValue() + " Call " + getCallValue() + " Raise "
-				+ getRaiseValue();
+				+ getRaiseValue() + " Position " + getTablePosition();
 		variableList.put("simulator.Table values", txt);
 		variableList.put("simulator.Simulator values", "Round " + getCurrentRound() + " Players " + getNumSimPlayers());
 

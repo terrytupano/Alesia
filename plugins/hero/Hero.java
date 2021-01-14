@@ -165,8 +165,8 @@ public class Hero extends TPlugin {
 	}
 
 	@org.jdesktop.application.Action
-	public void testCards(ActionEvent event) {
-		sensorsArray.testCards();
+	public void testAreas(ActionEvent event) {
+		sensorsArray.testAreas();
 	}
 
 	@org.jdesktop.application.Action
