@@ -47,8 +47,8 @@ public class PokerSimulator {
 	public static String STATUS_ERROR = "Error";
 	private static DecimalFormat fourDigitFormat = new DecimalFormat("#0.0000");
 	private static DecimalFormat twoDigitFormat = new DecimalFormat("#0.00");
-	// top upper hand
-	private static int topUpperHand;
+	// villan top hand
+	private static int oppTopHand;
 	// pair of 22
 	// private static int minHandRank = 371293;
 	// top hol card (no pair)
@@ -71,6 +71,7 @@ public class PokerSimulator {
 	private WebComboBox helperFilterComboBox;
 	private MyHandHelper myHandHelper;
 	private MyHandStatsHelper myHandStatsHelper;
+	private MyOutsHelper myOutsHelper;
 	private OppHandStatsHelper oppHandStatsHelper;
 	private MyGameStatsHelper myGameStatsHelper;
 	private Hashtable<Integer, Double> upperProbability;
@@ -174,9 +175,7 @@ public class PokerSimulator {
 		callValue = -1;
 		raiseValue = -1;
 		heroChips = -1;
-
-		// Royal flush. this variable is update in #runSimulation() method
-		topUpperHand = 2970356;
+		oppTopHand = 0;
 
 		// parameters from the panel
 		this.parameters = Hero.heroPanel.getTrooperPanel().getValues();
@@ -229,13 +228,13 @@ public class PokerSimulator {
 
 	/**
 	 * return the current hand streng. this fraction is close to 0 when the troper has nothing (like 23) and increase to
-	 * 1 for royal flush. this value is affected by the parameter {@value #topUpperHand}
+	 * 1 for royal flush. this value is affected by the parameter {@value #oppTopHand}
 	 * 
 	 * @return the hero hand rank.
 	 */
 	public double getCurrentHandStreng() {
 		double rank = UoAHandEvaluator.rankHand(uoAHand);
-		return rank / topUpperHand;
+		return rank / oppTopHand;
 	}
 
 	public String getCurrentHandStrengName() {
@@ -253,7 +252,7 @@ public class PokerSimulator {
 	 * 
 	 * @return the top opponent hand (0 = straight_flush, 1 = four_of_a_kind and so on)
 	 */
-	public int getOppTopHand() {
+	private int getOppTopHand() {
 		int oppTopHand = -1;
 		String msg = "";
 		if (oppHandStatsHelper != null) {
@@ -276,77 +275,59 @@ public class PokerSimulator {
 	}
 	/**
 	 * this method compute the "mass center" of the Hero outs. the method return a number that muss be around of the
-	 * median for the future outcome. When this value tend to 1.0 meaning that the future out tend to royal flush. on
-	 * the other hands, 0 represent a hand that has no future
+	 * median for the future outcome. When this value tend to 0 represent a hand that has no future.
+	 * 
+	 * 
 	 * 
 	 * @return factor that represent the mass center of the future outcome.
 	 */
-	public double getHandPotentialCenter() {
-		double handPotentialMS = 0.0;
+	public double getHandPotential() {
+		double handPotential = 0.0;
 		int cnt = 0;
 		String hs = "";
-		if (myHandStatsHelper != null) {
-			float[] list = myHandStatsHelper.getAllProbs();
+		if (myOutsHelper != null) {
+			Card cards[][] = myOutsHelper.getAllOuts();
 			for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
-				if (list[i] > 0) {
-					cnt++;
-					handPotentialMS += handStrengSamples.get(i);
-					hs += tmplist.get(i) + " " + twoDigitFormat.format(list[i]) + " ";
+				int outs = cards[i].length;
+				if (outs > 0) {
+					cnt += outs;
+					// 210117: with this modification, hero supportet 3 hour of continuous battle in a table with
+					// oportunity and hold steady without loosing his chips. :D
+					handPotential += outs * handStrengSamples.get(i);
+					hs += tmplist.get(i) + " " + outs + " ";
 				}
 			}
 		}
-		if(handPotentialMS > 0) {
-			handPotentialMS = handPotentialMS / cnt;
-			handPotentialMS = handPotentialMS / topUpperHand;
+		if (handPotential > 0) {
+			handPotential = handPotential / cnt;
+			handPotential = handPotential / oppTopHand;
 		}
-		hs += "= " + twoDigitFormat.format(handPotentialMS);
+		hs += "= " + twoDigitFormat.format(handPotential);
 		setVariable("simulator.Hand potential", hs);
-		return handPotentialMS;
+		return handPotential;
 	}
-	public double getHandPotentialCenterOld() {
-		double handPotentialMS = 0.0;
+	public double getHandPotentialCopy() {
+		double handPotential = 0.0;
+		int cnt = 0;
 		String hs = "";
-		if (myHandStatsHelper != null) {
-			float[] list = myHandStatsHelper.getAllProbs();
+		if (myOutsHelper != null) {
+			Card cards[][] = myOutsHelper.getAllOuts();
+			float[] probs = myHandStatsHelper.getAllProbs();
 			for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
-				handPotentialMS += handStrengSamples.get(i) * list[i];
-				if (list[i] > 0)
-					hs += tmplist.get(i) + " " + twoDigitFormat.format(list[i]) + " ";
+				if (probs[i] > 0) {
+					cnt++;
+					handPotential += handStrengSamples.get(i);
+					hs += tmplist.get(i) + " " + twoDigitFormat.format(probs[i]) + " ";
+				}
 			}
 		}
-		// empirical top: 0.8131 prob with 20 ouds of improbe hand in the folowin example: Ts Qs Js Tc Ks
-		// return hp / 0.8131;
-		handPotentialMS = handPotentialMS / topUpperHand;
-		hs += "= " + twoDigitFormat.format(handPotentialMS);
+		if (handPotential > 0) {
+			handPotential = handPotential / cnt;
+			handPotential = handPotential / oppTopHand;
+		}
+		hs += "= " + twoDigitFormat.format(handPotential);
 		setVariable("simulator.Hand potential", hs);
-		return handPotentialMS;
-	}
-	/**
-	 * This methos return the propability of my hand will become a better hand. The poker adapter is cofigured for take
-	 * into account only the probabilites of inprove my hand (the probabilities of get a hand better that i currently
-	 * have).
-	 * 
-	 * @return the probabilities of become a better hand
-	 * @deprecated
-	 */
-	public double getHandPotential() {
-		double hp = 0.0;
-		String hs = "";
-		if (myHandStatsHelper != null) {
-			int toh = Hand.STRAIGHT_FLUSH - Hand.PAIR;
-			float[] list = myHandStatsHelper.getAllProbs();
-			for (int i = 0; i < toh; i++) {
-				hp += list[i];
-				if (list[i] > 0)
-					hs += tmplist.get(i) + " " + twoDigitFormat.format(list[i]) + " ";
-			}
-		}
-		hs += "= " + twoDigitFormat.format(hp);
-		setVariable("simulator.hand streng", hs);
-
-		// empirical top: 0.8131 prob with 20 ouds of improbe hand in the folowin example: Ts Qs Js Tc Ks
-		// return hp / 0.8131;
-		return hp;
+		return handPotential;
 	}
 
 	public double getHeroChips() {
@@ -440,8 +421,8 @@ public class PokerSimulator {
 		if (currentRound < FLOP_CARDS_DEALT)
 			return txt;
 		// hero.s hand is = villan.s top hands
-//		temp. 
-//		if ((Hand.STRAIGHT_FLUSH - getOppTopHand()) > myHandHelper.getHandRank())
+		// temp.
+		// if ((Hand.STRAIGHT_FLUSH - getOppTopHand()) > myHandHelper.getHandRank())
 		if ((Hand.STRAIGHT_FLUSH - getOppTopHand() - 1) > myHandHelper.getHandRank())
 			return txt;
 
@@ -494,8 +475,9 @@ public class PokerSimulator {
 			myGameStatsHelper = adapter.getMyGameStatsHelper();
 			myHandStatsHelper = adapter.getMyHandStatsHelper();
 			oppHandStatsHelper = adapter.getOppHandStatsHelper();
+			myOutsHelper = adapter.getMyOutsHelper();
 			myHandHelper = adapter.getMyHandHelper();
-			topUpperHand = handStrengSamples.get(getOppTopHand());
+			oppTopHand = handStrengSamples.get(getOppTopHand());
 
 			updateSimulationResults();
 			variableList.put(STATUS, STATUS_OK);

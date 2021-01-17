@@ -4,8 +4,8 @@
   <UserLogIn.rememberUser type="ButtonState" selected="true"/>
   <logging.level type="ComboBoxState" selectedIndex="3"/>
   <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
-  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="2"/>
-  <tDistributionRange type="ComboBoxState" selectedIndex="1"/>
+  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="0"/>
+  <tDistributionRange type="ComboBoxState" selectedIndex="0"/>
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
   <SensorPanel.imageType type="ComboBoxState" selectedIndex="0"/>
   <buyIn type="string"></buyIn>

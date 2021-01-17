@@ -7,7 +7,6 @@ import java.util.stream.*;
 
 import org.apache.commons.math3.distribution.*;
 import org.apache.commons.math3.stat.descriptive.*;
-import org.apache.poi.hsmf.parsers.*;
 import org.jdesktop.application.*;
 
 import com.javaflair.pokerprophesier.api.adapter.*;
@@ -210,65 +209,6 @@ public class Trooper extends Task {
 		}
 		return bluff;
 	}
-	/**
-	 * compute and return the amount of chips available for actions. The number of amount are directe related to the
-	 * currnet hand rank. More the rank, more chips to invest. This allow the troper invest ammunitons acording to a
-	 * real chance of winning. The previos estimation based on probabilities send the trooper to invest a lot on
-	 * amunitions in low value hands an is easy anbush by villans.
-	 * 
-	 * TODO: control the number of amunitions per street. the trooper most dangeros disadvantege is when all the villas
-	 * put small amount of chips during a lager period of time in a single street (generaly preflop) hero must avoid
-	 * this situation because in subsecuent street, the pot will be so hight that hero will be available to go allin
-	 * whit poor hands
-	 * 
-	 * @return amunitions
-	 * @deprecated
-	 */
-	private double getAmmunitions2() {
-		double bigBlind = pokerSimulator.getBigBlind();
-		double pot = pokerSimulator.getPotValue();
-		double handStreng = pokerSimulator.getCurrentHandStreng();
-		double handPotential = pokerSimulator.getHandPotential();
-		int bbFactor = Integer.parseInt(parameters.get("bigBlindFactor").toString());
-
-		// double EHS = HS + (1 - HS) * pHS;
-
-		// this function compute the amount of ammunitions according to the villans. the idea is maximize the amount of
-		// chips in the pot.
-		// -- for few villas, this function assing more chips.
-		// -- for many villans assign fewer, so hero can maximize the chips in the pot only whit few ammount of
-		// call/raise
-		// ORIGINAL NUMER. 12
-		double base = (sensorsArray.getVillans() - sensorsArray.getActiveVillans()) * bbFactor * bigBlind;
-
-		// the current fraction of the pot ammount that until now, is really mine
-		double myPot = pot * handStreng;
-		// double myPot = (base + pot) * handStreng;
-		// ----------------------------
-		// 200601: con esta nueva formula para ammunitionControl, parece que ahora si la pege !!!!! manana compor 10€ en
-		// una tarjeta y pruebo con dinero real !!! al menos hero tiene 1.6BB de average de ganacia !! espero que ahora
-		// si funcione todo !!
-		// ----------------------------
-		// the invest resources: the pot diference
-		// double invest = pot - myPot;
-		double invest = base + ((pot - myPot) * handPotential);
-		// double invest = ((base + pot) - myPot) * handPotential;
-
-		// double ammunitions = ((base + pot) * handStreng) + ((base + invest) * handPotential);
-		double ammunitions = myPot + invest;
-
-		String txt1 = "(" + twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng) + ") + ("
-				+ twoDigitFormat.format(pot - myPot) + " + " + twoDigitFormat.format(base) + ") * "
-				+ twoDigitFormat.format(handPotential) + " = " + twoDigitFormat.format(ammunitions);
-
-		// String txt1 = "((" + twoDigitFormat.format(base) + "+" + twoDigitFormat.format(pot) + "*"
-		// + twoDigitFormat.format(handStreng) + ")+((" + twoDigitFormat.format(base) + "+"
-		// + twoDigitFormat.format(pot) + "-" + twoDigitFormat.format(myPot) + ")*"
-		// + twoDigitFormat.format(handPotential) + ")=" + twoDigitFormat.format(ammunitions);
-
-		setVariableAndLog(EXPLANATION, txt1);
-		return ammunitions;
-	}
 
 	private double getImpliedOdd() {
 		double call = pokerSimulator.getCallValue();
@@ -284,10 +224,24 @@ public class Trooper extends Task {
 		return 0.0;
 	}
 
+	/**
+	 * compute and return the amount of chips available for actions. The number of amount are directe related to the
+	 * currnet hand rank. More the rank, more chips to invest. This allow the troper invest ammunitons acording to a
+	 * real chance of winning. The previos estimation based on probabilities send the trooper to invest a lot on
+	 * amunitions in low value hands an is easy anbush by villans.
+	 * 
+	 * // double EHS = HS + (1 - HS) * pHS; // empirical top: 0.8131 prob with 20 ouds of improbe hand in the folowin
+	 * example: Ts Qs Js Tc Ks // return hp / 0.8131;
+	 * 
+	 * TODO: control the number of amunitions per street. the trooper most dangeros disadvantege is when all the villas
+	 * put small amount of chips during a lager period of time in a single street (generaly preflop) hero must avoid
+	 * this situation because in subsecuent street, the pot will be so hight that hero will be available to go allin
+	 * whit poor hands
+	 **/
 	private double getAmmunitions() {
 		double pot = pokerSimulator.getPotValue();
 		double handStreng = pokerSimulator.getCurrentHandStreng();
-		double hpCenter = pokerSimulator.getHandPotentialCenter();
+		double hpCenter = pokerSimulator.getHandPotential();
 		double chips = pokerSimulator.getHeroChips();
 		double buyin = pokerSimulator.getBuyIn();
 		double bBlind = pokerSimulator.getBigBlind();
@@ -660,7 +614,8 @@ public class Trooper extends Task {
 			}
 
 			// if buy-in window is displayed, hero lost the battle
-			if (sensorsArray.isSensorEnabled("buyIn.cancel") && sensorsArray.isSensorEnabled("buyIn.ok")) {
+			if (sensorsArray.isSensorEnabled("buyIn.cancel") && sensorsArray.isSensorEnabled("buyIn.ok")
+					&& sensorsArray.isSensorEnabled("buyIn.point3")) {
 				robotActuator.perform("buyIn.cancel");
 				setVariableAndLog(EXPLANATION, "Trooper lost the battle !!!!");
 				return false;
