@@ -409,7 +409,7 @@ public class Trooper extends Task {
 			// A or K
 			if ((heroc[0].getRank() > Card.QUEEN || heroc[1].getRank() > Card.QUEEN))
 				txt = "A or K";
-			
+
 			// TEMP: suited Q
 			if ((heroc[0].getRank() > Card.JACK || heroc[1].getRank() > Card.JACK)
 					&& pokerSimulator.getMyHoleCards().isSuited())
@@ -609,8 +609,13 @@ public class Trooper extends Task {
 	/**
 	 * This metod check all the sensor areas and perform the corrections to get the troper into the fight. The
 	 * conbination of enabled/disabled status of the sensor determine the action to perform. If the enviorement request
-	 * the trooper to play, this method return <code>true</code>, else this method will try to reach the gametable until
-	 * an fix amount of time is reached. In that case, this method return <code>false</code>
+	 * the trooper to play, this method return <code>true</code>,
+	 * <p>
+	 * This method return <code>false</code> when:
+	 * <ol>
+	 * <li>try to reach the gametable until an fix amount of time is reached. In that case, this method return
+	 * <code>false</code>.
+	 * <li>the buy-in window is displayed, in this case, cancel option is selected
 	 * 
 	 * @return <code>true</code> if the enviorement is waiting for the troper to {@link #decide()} and {@link #act()}.
 	 */
@@ -654,6 +659,13 @@ public class Trooper extends Task {
 				return true;
 			}
 
+			// if buy-in window is displayed, hero lost the battle
+			if (sensorsArray.isSensorEnabled("buyIn.cancel") && sensorsArray.isSensorEnabled("buyIn.ok")) {
+				robotActuator.perform("buyIn.cancel");
+				setVariableAndLog(EXPLANATION, "Trooper lost the battle !!!!");
+				return false;
+			}
+
 			// the i.m back button is active (at this point, the enviorement must only being showing the i.m back
 			// button)
 			if (sensorsArray.isSensorEnabled("imBack")) {
@@ -666,7 +678,7 @@ public class Trooper extends Task {
 				continue;
 			}
 		}
-		setVariableAndLog(EXPLANATION, "Can.t reach the main gametable. Trooper return.");
+		setVariableAndLog(EXPLANATION, "Can.t reach the main gametable.");
 		return false;
 	}
 
@@ -716,9 +728,9 @@ public class Trooper extends Task {
 
 			boolean ingt = watchEnviorement();
 
-			// if i can reach the gametable, dismiss the troper
+			// if watchEnviorement() methdo return false, dismiss the troper.
 			if (!ingt) {
-				setVariableAndLog(EXPLANATION, "Trooper can.t reach gametable. Tropper dismiss.");
+				setVariableAndLog(EXPLANATION, "Tropper dismiss.");
 				return null;
 			}
 
