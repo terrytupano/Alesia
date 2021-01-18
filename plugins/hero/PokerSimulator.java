@@ -291,7 +291,7 @@ public class PokerSimulator {
 				int outs = cards[i].length;
 				if (outs > 0) {
 					cnt += outs;
-					// 210117: with this modification, hero supportet 3 hour of continuous battle in a table with
+					// 210117: with this modification, hero supportet 3 hour of continuous battle in a table without
 					// oportunity and hold steady without loosing his chips. :D
 					handPotential += outs * handStrengSamples.get(i);
 					hs += tmplist.get(i) + " " + outs + " ";
