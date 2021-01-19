@@ -62,22 +62,27 @@ public class TStringUtils {
 		return rs;
 	}
 	/**
-	 * return a {@link Hashtable} of string with all properties from all .properties files registres in Alesia) that
-	 * begginen with the geven argument. the key for the returned list will be the property and the value, the property
-	 * value
+	 * return a {@link TreeMap} of string with all properties from all .properties files registres in Alesia) that
+	 * beging with the given argument. the key for the returned list will be the property and the value, the property
+	 * value.
+	 * <p>
+	 * NOTE: the list is sort accordint to the key argument. all elements are returned in the same order as in the
+	 * property list
 	 * 
 	 * @param group - prefix of the property to look.
 	 * 
 	 * @return list for property values
 	 */
-	public static Hashtable<String, String> getProperties(String group) {
+	public static TreeMap<String, String> getProperties(String group) {
 		ArrayList<String> keys = new ArrayList(allProperties.keySet());
-		Hashtable<String, String> list = new Hashtable<>();
+		TreeMap<String, String> list = new TreeMap<>();
 		for (String key : keys) {
 			if (key.startsWith(group)) {
 				list.put(key, allProperties.getProperty(key));
 			}
 		}
+		// Hashtable<String, String> l2 = new Hashtable<>(list);
+		// return l2;
 		return list;
 	}
 

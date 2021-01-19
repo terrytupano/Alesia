@@ -60,8 +60,9 @@ public class Trooper extends Task {
 	private DescriptiveStatistics outGameStats;
 	private boolean paused = false;
 	private Hashtable<String, Object> parameters;
-	private Hashtable<String, String> preflopHands;
-	private Hashtable<String, Hashtable<Integer, Double>> bluffHands;
+	private TreeMap<String, String> preflopHands;
+	private Vector<String> bluffHands;
+	private Vector<Hashtable<Integer, Double>> bluffEVValues;
 	long stepMillis;
 	// This variable is ONLY used and cleaned by ensuregametable method
 	private String lastHoleCards = "";
@@ -82,16 +83,18 @@ public class Trooper extends Task {
 		instance = this;
 		this.preflopHands = TStringUtils.getProperties("preflop.card");
 		// build bluff hand
-		this.bluffHands = new Hashtable<>();
-		Hashtable<String, String> tmp = TStringUtils.getProperties("bluff.card");
+		this.bluffHands = new Vector();
+		this.bluffEVValues = new Vector();
+		TreeMap<String, String> tmp = TStringUtils.getProperties("bluff.card");
 		ArrayList<String> l = new ArrayList<>(tmp.keySet());
 		for (String key : l) {
 			String[] row = tmp.get(key).split("[\t]");
 			Hashtable positions = new Hashtable<Integer, Double>();
 			String hand = row[0];
-			for (int i = 1; i < row.length; i++)
+			for (int i = 2; i < row.length; i++)
 				positions.put(i, new Double(row[i]));
-			bluffHands.put(hand, positions);
+			bluffHands.add(hand);
+			bluffEVValues.add(positions);
 		}
 	}
 
@@ -152,7 +155,7 @@ public class Trooper extends Task {
 		// PREFLOP
 		// if normal pot odd action has no action todo, check the preflopcards.
 		if (pokerSimulator.getCurrentRound() == PokerSimulator.HOLE_CARDS_DEALT) {
-			if (!checkBluff())
+			if (!checkPreflopBluff())
 				setPreflopActions();
 		}
 
@@ -180,26 +183,55 @@ public class Trooper extends Task {
 		}
 	}
 
-	private boolean checkBluff() {
+	/**
+	 * this method check the bluff parameter and act accordinly. the bluff parameter is expresed in porcentage of when
+	 * hero is allow to bluff. E.G: bluff=300, buyIn=10000, Nro. of elements in blufflist=10. With this parameteres,
+	 * hero build a list of level 10000/10 = 10 levels. When an bluff oportunity is present, hero if only available to
+	 * bluff when:
+	 * <ul>
+	 * <li>the EV ist > 0
+	 * <li>the ammunitions is <= to the upper bound
+	 * <li>the index of the currend hand (allow to bluf) >= ammunitions level.
+	 * </ul>
+	 * <p>
+	 * the last option, allow hero to bluff with poor hand when hero is in hard situation. when hero recovery his chips,
+	 * the index ist hi
+	 * 
+	 * @return <code>true</code> when this method clear the main variable {@link #availableActions} and set only reise
+	 *         all actions for hero to bluff. false otherwise.
+	 */
+	private boolean checkPreflopBluff() {
 		boolean bluff = false;
 		HoleCards hc = pokerSimulator.getMyHoleCards();
 		String s = hc.isSuited() ? "s" : "";
 		String c1 = hc.getFirstCard().toString().substring(0, 1) + hc.getSecondCard().toString().substring(0, 1);
 		String c2 = hc.getSecondCard().toString().substring(0, 1) + hc.getFirstCard().toString().substring(0, 1);
-		Hashtable<Integer, Double> evvalues = bluffHands.get(c1 + s) == null
-				? bluffHands.get(c2 + s)
-				: bluffHands.get(c1 + s);
+		int idx1 = bluffHands.indexOf(c1 + s);
+		int idx2 = bluffHands.indexOf(c2 + s);
+		Hashtable<Integer, Double> evvalues = null;
+		int index = -1;
+		if (idx1 > -1) {
+			evvalues = bluffEVValues.elementAt(idx1);
+			index = idx1;
+		}
+		if (idx2 > -1) {
+			evvalues = bluffEVValues.elementAt(idx2);
+			index = idx2;
+		}
 		int tablep = pokerSimulator.getTablePosition();
 		if (evvalues != null && tablep > -1) {
-			// chack bluff parameter
+			// check bluff parameter
 			int bluffParm = Integer.parseInt(parameters.get("bluff").toString());
 			double chips = pokerSimulator.getHeroChips();
 			// if chips are available
 			if (chips > 0) {
 				double buyin = pokerSimulator.getBuyIn();
-				double lowB = (bluffParm / 100.0 * buyin);
+				double upperB = (bluffParm / 100.0 * buyin);
+				int ammolvl = (int) upperB / bluffHands.size();
+				int indexlvl = (bluffHands.size() - index) * ammolvl;
 				Double ev = evvalues.get(tablep);
-				if (ev > 0 && chips <= lowB && sensorsArray.getSensor("raise.allin").isEnabled()) {
+				if (ev > 0 && chips <= upperB && indexlvl >= chips
+						&& sensorsArray.getSensor("raise.allin").isEnabled()) {
 					setVariableAndLog(EXPLANATION, "Hero is able to bluff. EV = " + twoDigitFormat.format(ev));
 					availableActions.clear();
 					availableActions.put("raise.allin;raise", chips);
