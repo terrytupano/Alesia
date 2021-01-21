@@ -9,7 +9,7 @@
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
   <SensorPanel.imageType type="ComboBoxState" selectedIndex="0"/>
   <buyIn type="string"></buyIn>
-  <play.goal type="TextComponentState" text="0" caretPosition="1"/>
+  <play.goal type="TextComponentState" text="400" caretPosition="3"/>
   <takeOportunity type="ButtonState" selected="true"/>
   <table.smallBlid type="TextComponentState" text="1000" caretPosition="4"/>
   <preflopRekonAmmo.hand type="TextComponentState" text="10" caretPosition="2"/>
@@ -45,6 +45,6 @@
   <TWebFrame type="WindowState" location="0,40" size="547,735" state="0"/>
   <smallBlid type="string"></smallBlid>
   <preflopRekonAmmo.base type="TextComponentState" text="1" caretPosition="1"/>
-  <bluff type="TextComponentState" text="300" caretPosition="3"/>
+  <bluff type="TextComponentState" text="490" caretPosition="3"/>
   <table.buyIn type="TextComponentState" text="200000" caretPosition="6"/>
 </SettingsGroup>

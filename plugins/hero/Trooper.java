@@ -92,7 +92,7 @@ public class Trooper extends Task {
 			Hashtable positions = new Hashtable<Integer, Double>();
 			String hand = row[0];
 			for (int i = 2; i < row.length; i++)
-				positions.put(i, new Double(row[i]));
+				positions.put(i-1, new Double(row[i]));
 			bluffHands.add(hand);
 			bluffEVValues.add(positions);
 		}
@@ -221,7 +221,7 @@ public class Trooper extends Task {
 		int tablep = pokerSimulator.getTablePosition();
 		if (evvalues != null && tablep > -1) {
 			// check bluff parameter
-			int bluffParm = Integer.parseInt(parameters.get("bluff").toString());
+			double bluffParm = Double.parseDouble(parameters.get("bluff").toString());
 			double chips = pokerSimulator.getHeroChips();
 			// if chips are available
 			if (chips > 0) {
@@ -230,7 +230,7 @@ public class Trooper extends Task {
 				int ammolvl = (int) upperB / bluffHands.size();
 				int indexlvl = (bluffHands.size() - index) * ammolvl;
 				Double ev = evvalues.get(tablep);
-				if (ev > 0 && chips <= upperB && indexlvl >= chips
+				if (ev > 0 && chips <= upperB && chips <= indexlvl
 						&& sensorsArray.getSensor("raise.allin").isEnabled()) {
 					setVariableAndLog(EXPLANATION, "Hero is able to bluff. EV = " + twoDigitFormat.format(ev));
 					availableActions.clear();
@@ -396,8 +396,8 @@ public class Trooper extends Task {
 			if ((heroc[0].getRank() > Card.QUEEN || heroc[1].getRank() > Card.QUEEN))
 				txt = "A or K";
 
-			// TEMP: suited Q
-			if ((heroc[0].getRank() > Card.JACK || heroc[1].getRank() > Card.JACK)
+//			TEMP: suited Q
+			if ((heroc[0].getRank() == Card.QUEEN || heroc[1].getRank() == Card.QUEEN)
 					&& pokerSimulator.getMyHoleCards().isSuited())
 				txt = "Suited Queen";
 
@@ -729,12 +729,12 @@ public class Trooper extends Task {
 			playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
 
 			// play goal
-			int playgoalParm = Integer.parseInt(parameters.get("play.goal").toString());
+			double playgoalParm = Double.parseDouble(parameters.get("play.goal").toString());
 			double chips = pokerSimulator.getHeroChips();
 			// if chips are not available, show the last computed play goal %
 			if (chips > 0) {
 				double buyin = pokerSimulator.getBuyIn();
-				playGoal = (playgoalParm / 100.0 * buyin) + buyin;
+				playGoal = (playgoalParm / 100.0 * buyin);
 				// playgoal expresed in porcentage: 100% means goal reach !!
 				playGoal = (chips / playGoal) * 100;
 			}
