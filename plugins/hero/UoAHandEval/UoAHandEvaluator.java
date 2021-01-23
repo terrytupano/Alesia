@@ -16,10 +16,8 @@ package plugins.hero.UoAHandEval;
 public class UoAHandEvaluator {
 
 	public static void main(String args[]) {
-		UoAHand hand1 = new UoAHand("Ts Qs Js Tc Ks");
+		UoAHand hand1 = new UoAHand("As Kh");
 		UoAHand hand2 = new UoAHand("6s 8s 2h 3d 4c");
-		// a Pair of Eights 8c 8h
-		// 384475
 		// a Pair of Eights 8c 8h
 		// 384475
 		// Two Pair, Nines and Eights 8c 8h 9c 9h

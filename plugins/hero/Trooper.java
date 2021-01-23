@@ -92,7 +92,7 @@ public class Trooper extends Task {
 			Hashtable positions = new Hashtable<Integer, Double>();
 			String hand = row[0];
 			for (int i = 2; i < row.length; i++)
-				positions.put(i-1, new Double(row[i]));
+				positions.put(i - 1, new Double(row[i]));
 			bluffHands.add(hand);
 			bluffEVValues.add(positions);
 		}
@@ -230,8 +230,9 @@ public class Trooper extends Task {
 				int ammolvl = (int) upperB / bluffHands.size();
 				int indexlvl = (bluffHands.size() - index) * ammolvl;
 				Double ev = evvalues.get(tablep);
-				if (ev > 0 && chips <= upperB && chips <= indexlvl
-						&& sensorsArray.getSensor("raise.allin").isEnabled()) {
+				// dont check sensorsArray.getSensor("raise.allin").isEnabled() status because when someone is allready
+				// all in, the raise sensor is enable but all in sensor not
+				if (ev > 0 && chips <= upperB && chips <= indexlvl) {
 					setVariableAndLog(EXPLANATION, "Hero is able to bluff. EV = " + twoDigitFormat.format(ev));
 					availableActions.clear();
 					availableActions.put("raise.allin;raise", chips);
@@ -308,6 +309,7 @@ public class Trooper extends Task {
 		Collections.sort(actProb, Collections.reverseOrder());
 
 		int elements = availableActions.size();
+		// TODO: modify: getCurrentHandStreng() can return valuer > 1
 		double mode = pokerSimulator.getCurrentHandStreng() * elements;
 		TriangularDistribution tdist = new TriangularDistribution(0, mode, elements + 2);
 		int[] singletos = new int[elements];
@@ -396,7 +398,7 @@ public class Trooper extends Task {
 			if ((heroc[0].getRank() > Card.QUEEN || heroc[1].getRank() > Card.QUEEN))
 				txt = "A or K";
 
-//			TEMP: suited Q
+			// TEMP: suited Q
 			if ((heroc[0].getRank() == Card.QUEEN || heroc[1].getRank() == Card.QUEEN)
 					&& pokerSimulator.getMyHoleCards().isSuited())
 				txt = "Suited Queen";
