@@ -184,6 +184,35 @@ public class Trooper extends Task {
 	}
 
 	/**
+	 * return the EV for the preflop card accourding to the blufflist. this method return <code>-1</code> if no EV was
+	 * found
+	 * 
+	 * @return ev or -1
+	 */
+	private double getPreflopEV() {
+		double ev = -1;
+		HoleCards hc = pokerSimulator.getMyHoleCards();
+		String s = hc.isSuited() ? "s" : "";
+		String c1 = hc.getFirstCard().toString().substring(0, 1) + hc.getSecondCard().toString().substring(0, 1);
+		String c2 = hc.getSecondCard().toString().substring(0, 1) + hc.getFirstCard().toString().substring(0, 1);
+		int idx1 = bluffHands.indexOf(c1 + s);
+		int idx2 = bluffHands.indexOf(c2 + s);
+		Hashtable<Integer, Double> evvalues = null;
+		int index = -1;
+		if (idx1 > -1) {
+			evvalues = bluffEVValues.elementAt(idx1);
+			index = idx1;
+		}
+		if (idx2 > -1) {
+			evvalues = bluffEVValues.elementAt(idx2);
+			index = idx2;
+		}
+		int tablep = pokerSimulator.getTablePosition();
+		if (evvalues != null && tablep > -1)
+			ev = evvalues.get(tablep);
+		return ev;
+	}
+	/**
 	 * this method check the bluff parameter and act accordinly. the bluff parameter is expresed in porcentage of when
 	 * hero is allow to bluff. E.G: bluff=300, buyIn=10000, Nro. of elements in blufflist=10. With this parameteres,
 	 * hero build a list of level 10000/10 = 10 levels. When an bluff oportunity is present, hero if only available to
@@ -202,42 +231,25 @@ public class Trooper extends Task {
 	 */
 	private boolean checkPreflopBluff() {
 		boolean bluff = false;
-		HoleCards hc = pokerSimulator.getMyHoleCards();
-		String s = hc.isSuited() ? "s" : "";
-		String c1 = hc.getFirstCard().toString().substring(0, 1) + hc.getSecondCard().toString().substring(0, 1);
-		String c2 = hc.getSecondCard().toString().substring(0, 1) + hc.getFirstCard().toString().substring(0, 1);
-		int idx1 = bluffHands.indexOf(c1 + s);
-		int idx2 = bluffHands.indexOf(c2 + s);
-		Hashtable<Integer, Double> evvalues = null;
-		int index = -1;
-		if (idx1 > -1) {
-			evvalues = bluffEVValues.elementAt(idx1);
-			index = idx1;
-		}
-		if (idx2 > -1) {
-			evvalues = bluffEVValues.elementAt(idx2);
-			index = idx2;
-		}
-		int tablep = pokerSimulator.getTablePosition();
-		if (evvalues != null && tablep > -1) {
-			// check bluff parameter
-			double bluffParm = Double.parseDouble(parameters.get("bluff").toString());
-			double chips = pokerSimulator.getHeroChips();
-			// if chips are available
-			if (chips > 0) {
-				double buyin = pokerSimulator.getBuyIn();
-				double upperB = (bluffParm / 100.0 * buyin);
-				int ammolvl = (int) upperB / bluffHands.size();
-				int indexlvl = (bluffHands.size() - index) * ammolvl;
-				Double ev = evvalues.get(tablep);
-				// dont check sensorsArray.getSensor("raise.allin").isEnabled() status because when someone is allready
-				// all in, the raise sensor is enable but all in sensor not
-				if (ev > 0 && chips <= upperB && chips <= indexlvl) {
-					setVariableAndLog(EXPLANATION, "Hero is able to bluff. EV = " + twoDigitFormat.format(ev));
-					availableActions.clear();
-					availableActions.put("raise.allin;raise", chips);
-					bluff = true;
-				}
+		double bluffParm = Double.parseDouble(parameters.get("bluff").toString());
+		double chips = pokerSimulator.getHeroChips();
+		// if chips and bluff
+		if (chips > 0 && bluffParm > 0) {
+			double buyin = pokerSimulator.getBuyIn();
+			double upperB = (bluffParm / 100.0 * buyin);
+			double ev = getPreflopEV();
+			int ammolvl = (int) upperB / bluffHands.size();
+
+			// int indexlvl = (bluffHands.size() - index) * ammolvl;
+			int indexlvl = 0;
+
+			// dont check sensorsArray.getSensor("raise.allin").isEnabled() status because when someone is allready
+			// all in, the raise sensor is enable but all in sensor not
+			if (ev > 0 && chips <= upperB && chips <= indexlvl) {
+				setVariableAndLog(EXPLANATION, "Hero is able to bluff. EV = " + twoDigitFormat.format(ev));
+				availableActions.clear();
+				availableActions.put("raise.allin;raise", chips);
+				bluff = true;
 			}
 		}
 		return bluff;
@@ -335,38 +347,6 @@ public class Trooper extends Task {
 		return selact;
 	}
 
-	/**
-	 * perform a random selection of the available actions. this method build a probability distribution and select
-	 * randmly a variate of that distribution. this is suboptimal because the objetive function already has the optimal
-	 * action to perfomr. but this behavior make the trooper visible to the villans that can use this informatiion for
-	 * trap or fool the troper.
-	 * <p>
-	 * the available actions and his values must be previous evaluated. The action value express the hihest expected
-	 * return.
-	 * 
-	 * @deprecated
-	 * 
-	 */
-	private String getSubOptimalAction2() {
-		int elements = availableActions.size();
-		double denom = availableActions.values().stream().mapToDouble(dv -> dv.doubleValue()).sum();
-		int[] singletos = new int[elements];
-		double[] probabilities = new double[elements];
-		Vector<TEntry<String, Double>> actProb = new Vector<>();
-		availableActions.forEach((key, val) -> actProb.add(new TEntry(key, val)));
-		Collections.sort(actProb, Collections.reverseOrder());
-		for (int i = 0; i < elements; i++) {
-			singletos[i] = i;
-			TEntry<String, Double> te = actProb.elementAt(i);
-			double EVal = te.getValue();
-			probabilities[i] = EVal / denom;
-			te.setValue(probabilities[i]);
-		}
-		EnumeratedIntegerDistribution dist = new EnumeratedIntegerDistribution(singletos, probabilities);
-		String selact = actProb.elementAt(dist.sample()).getKey();
-		pokerSimulator.setActionsData(selact, actProb);
-		return selact;
-	}
 	/**
 	 * Check acordig to the <code>preflopStrategy</code> parameter, if this hand is a good preflop hand. if this metod
 	 * return <code>null</code>, it is because this hand is not a good preflopa hand
@@ -542,11 +522,21 @@ public class Trooper extends Task {
 			return;
 		}
 		double pfBase = ((Number) parameters.get("preflopRekonAmmo.base")).doubleValue();
+		double chips = pokerSimulator.getHeroChips();
 		double pfHStreng = ((Number) parameters.get("preflopRekonAmmo.hand")).doubleValue();
 		double base = pokerSimulator.getBigBlind() * pfBase;
 		double ammo = pokerSimulator.getBigBlind() * pfHStreng;
 		double streng = pokerSimulator.getPreFlopHandStreng();
-		if (pokerSimulator.getCurrentRound() == PokerSimulator.HOLE_CARDS_DEALT && maxRekonAmmo == -1) {
+
+		// temp TEST:
+		double pfev = getPreflopEV();
+		if (pfev > 0) {
+			ammo = chips;
+			streng = pfev;
+		}
+		// /////////////////
+
+		if (maxRekonAmmo == -1) {
 			maxRekonAmmo = base + (ammo * streng);
 		}
 
@@ -557,26 +547,28 @@ public class Trooper extends Task {
 
 		double call = pokerSimulator.getCallValue();
 		double raise = pokerSimulator.getRaiseValue();
-
 		// can i check ??
 		if (call == 0) {
 			availableActions.put("call", 0.0);
-		} else {
-			// can i call ?
-			if (call > 0 && (call + currentHandCost) < maxRekonAmmo) {
-				availableActions.put("call", call);
-			} else {
-				// the raise is mariginal ??
-				if (raise != -1 && (raise + currentHandCost) < maxRekonAmmo) {
-					availableActions.put("raise", raise);
-				}
-			}
+			// } else {
 		}
+		// can i call ?
+		if (call > 0 && (call + currentHandCost) < maxRekonAmmo) {
+			availableActions.put("call", call);
+		}
+		// } else {
+		// the raise is mariginal ??
+		if (raise != -1 && (raise + currentHandCost) < maxRekonAmmo) {
+			availableActions.put("raise", raise);
+		}
+		// }
 		updateAsociatedCost();
+
 		String txt1 = prehand + " " + twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(ammo) + " * "
 				+ twoDigitFormat.format(streng) + ") = " + twoDigitFormat.format(maxRekonAmmo);
 		setVariableAndLog(EXPLANATION, txt1);
 	}
+
 	private void setVariableAndLog(String key, Object value) {
 		String value1 = value.toString();
 		if (value instanceof Double)
@@ -616,6 +608,9 @@ public class Trooper extends Task {
 			// pause ?
 			if (paused) {
 				Thread.sleep(100);
+				// update t1 var while is out. this avoid troper dismist because large pause is interpreted as a faule
+				// in enviorement and trooper can.t reach the main table
+				t1 = System.currentTimeMillis();
 				continue;
 			}
 			// canceled ?

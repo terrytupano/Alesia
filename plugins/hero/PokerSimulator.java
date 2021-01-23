@@ -270,6 +270,7 @@ public class PokerSimulator {
 				}
 			}
 		}
+
 		// no villand hand detected? posibly because we ar in preflop. set to max
 		if (oppTopHand == -1) {
 			oppTopHand = Hand.STRAIGHT_FLUSH;
