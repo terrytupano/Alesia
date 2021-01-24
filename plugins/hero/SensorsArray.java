@@ -12,8 +12,6 @@ import org.apache.commons.math3.stat.descriptive.*;
 
 import com.jgoodies.common.base.*;
 
-import core.datasource.model.*;
-
 /**
  * This class control the array of sensor inside of the screen. This class is responsable for reading all the sensor
  * configurated in the {@link DrawingPanel} passsed as argument in the {@link #createSensorsArray(DrawingPanel)} method.
@@ -383,7 +381,11 @@ public class SensorsArray {
 			villansBeacon = 0;
 			gameRecorder.updateDB();
 			StringBuffer sb = new StringBuffer();
-			gameRecorder.getAssesment().forEach(str -> sb.append(str + "<br>"));
+			ArrayList<String> list = gameRecorder.getAssesment();
+			if (list.size() > 0)
+				gameRecorder.getAssesment().forEach(str -> sb.append(str + "<br>"));
+			else
+				sb.append("Unknow <br>");
 			pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
 		}
 

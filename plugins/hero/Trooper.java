@@ -235,17 +235,9 @@ public class Trooper extends Task {
 		double chips = pokerSimulator.getHeroChips();
 		// if chips and bluff
 		if (chips > 0 && bluffParm > 0) {
-			double buyin = pokerSimulator.getBuyIn();
-			double upperB = (bluffParm / 100.0 * buyin);
 			double ev = getPreflopEV();
-			int ammolvl = (int) upperB / bluffHands.size();
-
-			// int indexlvl = (bluffHands.size() - index) * ammolvl;
-			int indexlvl = 0;
-
-			// dont check sensorsArray.getSensor("raise.allin").isEnabled() status because when someone is allready
-			// all in, the raise sensor is enable but all in sensor not
-			if (ev > 0 && chips <= upperB && chips <= indexlvl) {
+			// TEMP: only bluff whit super duper hands !!!
+			if (ev >= 1) {
 				setVariableAndLog(EXPLANATION, "Hero is able to bluff. EV = " + twoDigitFormat.format(ev));
 				availableActions.clear();
 				availableActions.put("raise.allin;raise", chips);
@@ -550,18 +542,17 @@ public class Trooper extends Task {
 		// can i check ??
 		if (call == 0) {
 			availableActions.put("call", 0.0);
-			// } else {
+		} else {
+			// can i call ?
+			if (call > 0 && (call + currentHandCost) < maxRekonAmmo) {
+				availableActions.put("call", call);
+			} else {
+				// the raise is mariginal ??
+				if (raise != -1 && (raise + currentHandCost) < maxRekonAmmo) {
+					availableActions.put("raise", raise);
+				}
+			}
 		}
-		// can i call ?
-		if (call > 0 && (call + currentHandCost) < maxRekonAmmo) {
-			availableActions.put("call", call);
-		}
-		// } else {
-		// the raise is mariginal ??
-		if (raise != -1 && (raise + currentHandCost) < maxRekonAmmo) {
-			availableActions.put("raise", raise);
-		}
-		// }
 		updateAsociatedCost();
 
 		String txt1 = prehand + " " + twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(ammo) + " * "
@@ -653,7 +644,7 @@ public class Trooper extends Task {
 			// the i.m back button is active (at this point, the enviorement must only being showing the i.m back
 			// button)
 			if (sensorsArray.isSensorEnabled("imBack")) {
-				robotActuator.perform("imBack");
+				// robotActuator.perform("imBack");
 				continue;
 			}
 

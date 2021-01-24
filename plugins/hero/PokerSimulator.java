@@ -271,10 +271,12 @@ public class PokerSimulator {
 			}
 		}
 
-		// no villand hand detected? posibly because we ar in preflop. set to max
+		// no detection of oppTopHand can be from 2 was. hero is in preflop or the current hand flavor hero (is the
+		// nut).
+		// manual set to the standar Hand.THREE_OF_A_KIND
 		if (oppTopHand == -1) {
-			oppTopHand = Hand.STRAIGHT_FLUSH;
-			msg = "NOT DETECTED. Set to Hand.STRAIGHT_FLUSH.";
+			oppTopHand = Hand.THREE_OF_A_KIND;
+			msg = "Manual setted to Hand.THREE_OF_A_KIND.";
 		}
 		setVariable("simulator.Hand streng villans", msg);
 	}
@@ -404,22 +406,25 @@ public class PokerSimulator {
 		// the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
 		if (currentRound < FLOP_CARDS_DEALT)
 			return txt;
+		
+		// is the nut
+		if (getMyHandHelper().isTheNuts())
+			return "Is the Nuts";
+
 		// hero.s hand is = villan.s top hands
-		// temp.
-		// if ((Hand.STRAIGHT_FLUSH - getOppTopHand()) > myHandHelper.getHandRank())
-		// if ((Hand.STRAIGHT_FLUSH - oppTopHand - 1) > myHandHelper.getHandRank())
-		if ((oppTopHand - 1) > myHandHelper.getHandRank())
+		if (oppTopHand > myHandHelper.getHandRank())
 			return txt;
 
-		String sts = getSignificantCards();
-		// set hand but > pair
-		if (myHandHelper.getHandRank() > Hand.PAIR && sts.length() == 5) {
-			String nh = UoAHandEvaluator.nameHand(uoAHand);
-			txt = "Troper has " + nh + " (set)";
-		}
+		// String sts = getSignificantCards();
+		// // set hand but > pair
+		// if (myHandHelper.getHandRank() > Hand.PAIR && sts.length() == 5) {
+		// String nh = UoAHandEvaluator.nameHand(uoAHand);
+		// txt = "Troper has " + nh + " (set)";
+		// }
 
-		// is the nut
-		txt = getMyHandHelper().isTheNuts() ? "is the nuts" : txt;
+		String nh = UoAHandEvaluator.nameHand(uoAHand);
+		txt = "Troper has " + nh;
+
 		return txt;
 	}
 	/**

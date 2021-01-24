@@ -31,28 +31,27 @@ public class GameRecorder {
 	public Vector<GamePlayer> getPlayers() {
 		return players;
 	}
+	/**
+	 * 
+	 * @return
+	 */
 	public ArrayList<String> getAssesment() {
 		tempList.clear();
 		tempList2.clear();
-		for (int i = 1; i < players.size(); i++) {
+		for (int i = 0; i < players.size(); i++) {
 			GamePlayer gp = players.elementAt(i);
-			tempList.add(new TEntry<>(gp, gp.getMean()));
+			// active player only
+			if (gp.isActive())
+				tempList.add(new TEntry<>(gp, gp.getMean()));
 		}
-		tempList.sort(null);
-		// Hero
-		tempList2.add("Hero " + players.elementAt(0).getStats());
-		// Boss & minion
+		tempList.sort(Comparator.reverseOrder());
 		if (tempList.size() > 0) {
-			GamePlayer gp = tempList.get(tempList.size() - 1).getKey();
-			tempList2.add(gp.getName() + " " + gp.getStats());
-			gp = tempList.get(0).getKey();
-			tempList2.add(gp.getName() + " " + gp.getStats());
+			for (int i = 0; i < Math.min(4, tempList.size()); i++) {
+				GamePlayer gp = tempList.get(i).getKey();
+				tempList2.add(gp.getId() + " " + gp.getName() + " " + gp.getStats());
+			}
 		}
 		return tempList2;
-	}
-
-	public String getAssest(int playerId) {
-		return players.elementAt(playerId).toString();
 	}
 
 	/**

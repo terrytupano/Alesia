@@ -4,9 +4,6 @@ import java.util.*;
 
 import org.apache.commons.math3.stat.descriptive.*;
 
-import core.*;
-import core.datasource.model.*;
-
 /**
  * encapsulate all player information. this class collect the necesary information to make a wild guess over the
  * villans.
@@ -24,25 +21,29 @@ public class GamePlayer {
 	private String name;
 	private String oldName = "";
 	private DescriptiveStatistics bettingPattern;
-	// private DescriptiveStatistics previousBettingPattern;
-	private SensorsArray array;
 	private int playerId;
-	private String prefix;
 	private double prevValue;
+	private boolean isActive;
 
 	public GamePlayer(int playerId) {
 		this.playerId = playerId;
-		this.prefix = "villan" + playerId;
-		this.name = prefix;
 		this.prevValue = -1;
-		this.array = Hero.sensorsArray;
 		this.bettingPattern = new DescriptiveStatistics(100);
-		// this.previousBettingPattern = new DescriptiveStatistics(100);
 	}
 
 	public int getId() {
 		return playerId;
 	}
+
+	public boolean isActive() {
+		return isActive;
+	}
+	/**
+	 * return the name of the villan in this position. can return <code>null</code> if no complete information is
+	 * available at this moment
+	 * 
+	 * @return villan name or <code>null</code>
+	 */
 	public String getName() {
 		return name;
 	}
@@ -51,6 +52,11 @@ public class GamePlayer {
 	//
 	// }
 
+	/**
+	 * Return a visual representation of the internal statistic.
+	 * 
+	 * @return String with statistic
+	 */
 	public String getStats() {
 		return getMean() + " (" + bettingPattern.getN() + ")";
 	}
@@ -60,54 +66,74 @@ public class GamePlayer {
 	 * 
 	 */
 	public void readSensors() {
-		// record only if the player is active
-		if (!array.isActive(playerId))
-			return;
+		isActive = false;
+		String sensors = (playerId == 0) ? "hero" : "villan" + playerId;
+		List<ScreenSensor> list = Hero.sensorsArray.getSensors(sensors);
+		Hero.sensorsArray.readSensors(true, list);
 
-		List<ScreenSensor> list = new ArrayList<>();
-		if (playerId == 0) {
-			list.add(array.getSensor("hero.chips"));
-		} else {
-			list = array.getSensors("villan" + playerId);
-		}
-		array.readSensors(true, list);
+		if (!Hero.sensorsArray.isActive(playerId))
+			return;
 
 		// amunitions
 		double chips = 0.0;
 		if (playerId == 0) {
-			chips = array.getPokerSimulator().getHeroChips();
+			chips = Hero.sensorsArray.getSensor("hero.chips").getNumericOCR();
 		} else {
-			chips = array.getSensor("villan" + playerId + ".chips").getNumericOCR();
+			chips = Hero.sensorsArray.getSensor("villan" + playerId + ".chips").getNumericOCR();
 		}
 
-		// chips = -1 because this seat is inactive or the player fold
-		if (chips == -1)
-			return;
-
-		// at the beginnin of the record process, i just set the initial values. after that, i start the record process.
-		if (prevValue == -1) {
-			prevValue = chips;
-			return;
-		}
-
-		// at this point, all is set to start the record process
 		// name
 		if (playerId == 0)
 			name = "Hero";
 		else
-			name = array.getSensor(prefix + ".name").getOCR();
+			name = Hero.sensorsArray.getSensor("villan" + playerId + ".name").getOCR();
 
-		name = name == null ? prefix : name;
-		if (!(name.equals(prefix) || name.equals(oldName))) {
-			oldName = name;
-			Game gh = Game.findFirst("NAME = ? AND TABLEPARAMS = ?", name,
-					array.getPokerSimulator().getTableParameters());
-			if (gh != null) {
-				// TODO: current data will be lost. i muss the current data copy to the store stadistic
-				bettingPattern = (DescriptiveStatistics) TResources
-						.getObjectFromByteArray(gh.getBytes("BEATTIN_PATTERN"));
-			}
+		// both values must be available to continue the process
+		if (chips == -1 || name == null)
+			return;
+
+		isActive = true;
+
+		// new player ??
+		if (!oldName.equals(name)) {
+			bettingPattern.clear();
+			prevValue = -1;
 		}
+
+		// an the beginning of the record process, set the buyIN as basic anc compute the average winnigs/lose
+		if (prevValue == -1) {
+			double buyIn = Hero.sensorsArray.getPokerSimulator().getBuyIn();
+			double bb = Hero.sensorsArray.getPokerSimulator().getBigBlind();
+
+			// +/-10 BB mean the player is a new player
+			double win = bb * 10;
+			if ((chips < buyIn - win) || (chips > buyIn + win)) {
+				double diff = chips - buyIn;
+				int wins = bettingPattern.getWindowSize() / 2;
+				double num = diff / ((double) wins);
+				for (int i = 0; i < wins; i++)
+					bettingPattern.addValue(num);
+			}
+			prevValue = chips;
+			oldName = name;
+			return;
+		}
+
+		// at this point, all is set to start the record process
+
+		// name = name == null ? prefix : name;
+		// if (!(name.equals(prefix) || name.equals(oldName))) {
+		// if (!oldName.equals(name)) {
+		// oldName = name;
+		// bettingPattern.clear();
+		// prevValue = -1;
+		// Game gh = Game.findFirst("NAME = ? AND TABLEPARAMS = ?", name,
+		// Hero.sensorsArray.getPokerSimulator().getTableParameters());
+		// if (gh != null) {
+		// bettingPattern = (DescriptiveStatistics) TResources
+		// .getObjectFromByteArray(gh.getBytes("BEATTIN_PATTERN"));
+		// }
+		// }
 
 		// negative for betting, positive for winnigs (don.t record 0 value because affect statistical values)
 		if (chips - prevValue != 0)
@@ -116,12 +142,13 @@ public class GamePlayer {
 	}
 
 	public void updateDB() {
-		if (!name.equals(prefix)) {
-			Game gh = Game.findOrInit("tableparams", array.getPokerSimulator().getTableParameters(), "name", name);
-			gh.set("ASSESMENT", getStats());
-			gh.set("BEATTIN_PATTERN", TResources.getByteArrayFromObject(bettingPattern));
-			gh.save();
-		}
+		// if (!name.equals(prefix)) {
+		// Game gh = Game.findOrInit("tableparams", Hero.sensorsArray.getPokerSimulator().getTableParameters(), "name",
+		// name);
+		// gh.set("ASSESMENT", getStats());
+		// gh.set("BEATTIN_PATTERN", TResources.getByteArrayFromObject(bettingPattern));
+		// gh.save();
+		// }
 	}
 
 	/**
@@ -133,6 +160,13 @@ public class GamePlayer {
 		return getMean(bettingPattern);
 	}
 
+	private boolean isNewPlayer(double chips) {
+		double buyIn = Hero.sensorsArray.getPokerSimulator().getBuyIn();
+		double bb = Hero.sensorsArray.getPokerSimulator().getBigBlind();
+		// +/-10 BB mean the player is a new player
+		double win = bb * 10;
+		return (chips < buyIn - win) || (chips > buyIn + win);
+	}
 	/**
 	 * return the mean but expresed in BB
 	 * 
@@ -141,7 +175,7 @@ public class GamePlayer {
 	 */
 	private double getMean(DescriptiveStatistics stats) {
 		double mean = stats.getMean();
-		mean = mean / array.getPokerSimulator().getBigBlind();
+		mean = mean / Hero.sensorsArray.getPokerSimulator().getBigBlind();
 		mean = ((int) (mean * 100)) / 100.0;
 		return mean;
 	}
