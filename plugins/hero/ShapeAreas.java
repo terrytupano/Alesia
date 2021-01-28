@@ -5,6 +5,7 @@ import java.awt.geom.*;
 import java.io.*;
 import java.util.*;
 import java.util.function.*;
+import java.util.logging.*;
 
 import javax.swing.*;
 
@@ -55,7 +56,7 @@ public class ShapeAreas {
 			HSLFFill fill = master.getBackground().getFill();
 			HSLFPictureData pic = fill.getPictureData();
 			byte[] data = pic.getData();
-			Hero.logger.finer(
+			Hero.heroLogger.finer(
 					"background detected type=" + pic.getType() + " Dimesions " + pic.getImageDimensionInPixels());
 			backgroundImage = new ImageIcon(data);
 			for (HSLFSlide slide : ppt.getSlides()) {
@@ -82,7 +83,7 @@ public class ShapeAreas {
 						anchor.setRect(anchor.getX() * 1.3333, anchor.getY() * 1.3333, anchor.getWidth() * 1.3333,
 								anchor.getHeight() * 1.3333);
 						Shape sha = new Shape(anchor.getBounds());
-						Hero.logger.finer("shape found " + shape + " Bounds" + "[x=" + sha.bounds.x + ",y="
+						Hero.heroLogger.finer("shape found " + shape + " Bounds" + "[x=" + sha.bounds.x + ",y="
 								+ sha.bounds.y + ",width=" + sha.bounds.width + ",height=" + sha.bounds.height + "]");
 						// mark action areas. modify the shape variable
 						if (shape.startsWith("action.")) {
@@ -130,14 +131,14 @@ public class ShapeAreas {
 		shapes.values().stream().filter(predicate)
 				.forEach(sh -> stat.addValue(sh.bounds.getWidth() * sh.bounds.getHeight()));
 		if (stat.getMax() != stat.getMin()) {
-			Hero.logger.severe(msgPrefix + " HAS NOT the same dimensions.");
-			Hero.logger.severe(msgPrefix + " of reference: " + base.width + " height=" + base.height);
+			Hero.heroLogger.severe(msgPrefix + " HAS NOT the same dimensions.");
+			Hero.heroLogger.severe(msgPrefix + " of reference: " + base.width + " height=" + base.height);
 			shapes.values().stream().filter(predicate.and(sh -> !base.equals(sh.bounds.getSize())))
-					.forEach(losh -> Hero.logger
+					.forEach(losh -> Hero.heroLogger
 							.severe(losh.name + " with=" + losh.bounds.width + " height=" + losh.bounds.height));
 
 		} else {
-			Hero.logger.info(msgPrefix + " checked. all areas have width=" + base.width + " height=" + base.height);
+			Hero.heroLogger.info(msgPrefix + " checked. all areas have width=" + base.width + " height=" + base.height);
 		}
 	}
 

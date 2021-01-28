@@ -49,7 +49,7 @@ public class ConsolePanel extends WebPanel {
 
 		OutputStream os = new TextAreaOutputStream(editorPane);
 		handler = new TextAreaHandler(os);
-		logger.addHandler(handler);
+		this.logger.addHandler(handler);
 
 		// temporal
 		WebPanel toolbar = new WebPanel(new LineLayout(LineLayout.HORIZONTAL));

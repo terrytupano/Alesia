@@ -2,6 +2,9 @@ package plugins.hero;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.logging.*;
+
+import core.*;
 
 /**
  * Base class to send programaticily events throw the mouse or the keyboard. each action recived by this class is the
@@ -51,7 +54,7 @@ public class RobotActuator {
 
 			Shape fig = Hero.shapeAreas.getShapes().get(action);
 			if (fig == null) {
-				Hero.logger.severe("RobotActuator: Action " + action + " not found.");
+				Hero.heroLogger.severe("RobotActuator: Action " + action + " not found.");
 				continue;
 			}
 
@@ -61,7 +64,7 @@ public class RobotActuator {
 			// perform double clicks
 			if (actValue.startsWith("dc")) {
 				doubleClick();
-				Hero.logger.info("Action " + action + " double click performed.");
+				Hero.heroLogger.info("Action " + action + " double click performed.");
 				continue;
 			}
 
@@ -71,7 +74,7 @@ public class RobotActuator {
 				for (int c = 0; c < clicks; c++) {
 					doClick();
 				}
-				Hero.logger.info("Action " + action + " " + clicks + " click(s)  performed.");
+				Hero.heroLogger.info("Action " + action + " " + clicks + " click(s)  performed.");
 				continue;
 			}
 
@@ -79,7 +82,7 @@ public class RobotActuator {
 			if (actValue.startsWith("k=")) {
 				String text = actValue.substring(2);
 				type(text);
-				Hero.logger.info("Action " + action + " Text= " + text + " writed.");
+				Hero.heroLogger.info("Action " + action + " Text= " + text + " writed.");
 				continue;
 			}
 		}

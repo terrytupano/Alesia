@@ -129,7 +129,7 @@ public class Trooper extends Task {
 		time1 = System.currentTimeMillis();
 		// read troper variables again
 		this.parameters = Hero.heroPanel.getTrooperPanel().getValues();
-		Hero.logger.fine("Game play time average=" + TStringUtils.formatSpeed((long) outGameStats.getMean()));
+		Hero.heroLogger.fine("Game play time average=" + TStringUtils.formatSpeed((long) outGameStats.getMean()));
 	}
 
 	/**
@@ -233,14 +233,19 @@ public class Trooper extends Task {
 		boolean bluff = false;
 		double bluffParm = Double.parseDouble(parameters.get("bluff").toString());
 		double chips = pokerSimulator.getHeroChips();
+		double buyIn = pokerSimulator.getBuyIn();
+		double ev = getPreflopEV();
 		// if chips and bluff
-		if (chips > 0 && bluffParm > 0) {
-			double ev = getPreflopEV();
+		bluffParm = (bluffParm / 100.0 * buyIn);
+		// playGoal = (chips / playGoal) * 100;
+
+		if (chips > 0 && chips < bluffParm) {
 			// TEMP: only bluff whit super duper hands !!!
 			if (ev >= 1) {
 				setVariableAndLog(EXPLANATION, "Hero is able to bluff. EV = " + twoDigitFormat.format(ev));
 				availableActions.clear();
-				availableActions.put("raise.allin;raise", chips);
+				availableActions.put("raise.allin;raise", 0.5);
+				availableActions.put("raise.pot;raise", 0.5);
 				bluff = true;
 			}
 		}
@@ -278,7 +283,7 @@ public class Trooper extends Task {
 	private double getAmmunitions() {
 		double pot = pokerSimulator.getPotValue();
 		double handStreng = pokerSimulator.getCurrentHandStreng();
-		double hpCenter = pokerSimulator.getHandPotential();
+		double handPotential = pokerSimulator.getHandPotential();
 		double chips = pokerSimulator.getHeroChips();
 		double buyin = pokerSimulator.getBuyIn();
 		double bBlind = pokerSimulator.getBigBlind();
@@ -287,21 +292,16 @@ public class Trooper extends Task {
 		double myPot = pot * handStreng;
 
 		// TODO: temp ??? active villans make a base for allow hero more room to manuver
-		double base = sensorsArray.getActiveVillans() * bBlind;
+		// double base = sensorsArray.getActiveVillans() * bBlind;
 
 		// ammount of ammo that is worth to invest according to future outcome
-		double invest = ((pot - myPot) * hpCenter);
+		double invest = ((pot - myPot) * handPotential);
 
-		// double invest = base * hpCenter;
-
-		// double invest = base + ((pot - myPot) * handPotential);
-
-		// double ammunitions = base + myPot + invest;
 		double ammunitions = myPot + invest;
 
 		// String txt1 = twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(pot) + " * "
 		String txt1 = "(" + twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng) + ") + ("
-				+ twoDigitFormat.format((pot - myPot)) + " * " + twoDigitFormat.format(hpCenter) + ") = "
+				+ twoDigitFormat.format((pot - myPot)) + " * " + twoDigitFormat.format(handPotential) + ") = "
 				+ twoDigitFormat.format(ammunitions);
 		setVariableAndLog(EXPLANATION, txt1);
 		return ammunitions;
@@ -415,13 +415,6 @@ public class Trooper extends Task {
 		return null;
 	}
 
-	private String decodeMyCards() {
-		HoleCards hc = pokerSimulator.getMyHoleCards();
-		String suited = hc.isSuited() ? "s" : "";
-		String card = hc.getFirstCard().toString().substring(0, 1) + hc.getSecondCard().toString().substring(0, 1);
-		return card + suited;
-	}
-
 	private boolean isMyTurnToPlay() {
 		return sensorsArray.isSensorEnabled("fold") || sensorsArray.isSensorEnabled("call")
 				|| sensorsArray.isSensorEnabled("raise");
@@ -484,8 +477,8 @@ public class Trooper extends Task {
 				availableActions.keySet().removeIf(key -> !key.equals("raise.pot;raise"));
 			else
 				availableActions.keySet().removeIf(key -> !key.equals("raise"));
-			Hero.logger.info("Oportunity detected ----------");
-			Hero.logger.info(txt);
+			Hero.heroLogger.info("Oportunity detected ----------");
+			Hero.heroLogger.info(txt);
 			return;
 		}
 
@@ -574,7 +567,7 @@ public class Trooper extends Task {
 		if (!STATUS.equals(key)) {
 			String key1 = key.replace(EXPLANATION, "");
 			// 200210: Hero play his first 2 hours with REAL +EV. Convert 10000 chips in 64000
-			Hero.logger.info(key1 + value1);
+			Hero.heroLogger.info(key1 + value1);
 		}
 	}
 	/**
@@ -683,7 +676,7 @@ public class Trooper extends Task {
 			Alesia.openDB("hero");
 		} catch (Exception e) {
 			// just a warning log because reiterated pause/stop/play can generate error re opening the connection
-			Hero.logger.warning(e.getMessage());
+			Hero.heroLogger.warning(e.getMessage());
 		}
 
 		clearEnviorement();
@@ -779,8 +772,8 @@ public class Trooper extends Task {
 		// no calculation for 0 values
 		if (ammunitions == 0 || prob == 0) {
 			availableActions.clear();
-			Hero.logger.info("No posible decision for values prob = " + twoDigitFormat.format(prob) + " or ammuntion = "
-					+ twoDigitFormat.format(ammunitions));
+			Hero.heroLogger.info("No posible decision for values prob = " + twoDigitFormat.format(prob)
+					+ " or ammuntion = " + twoDigitFormat.format(ammunitions));
 			return;
 		}
 		updateAsociatedCost();

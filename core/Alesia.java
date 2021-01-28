@@ -100,35 +100,6 @@ public class Alesia extends Application {
 	public static void main(String[] args) {
 		Locale.setDefault(Locale.US);
 
-		// Loggin configuration. this step is performed here for conbenence
-		// TODO: For slf4j: the bridge betwen slf4j is set using the slf4j-jdk14-1.7.25 jar lib
-		// for Apache: Set the system property
-		// For Alesia. look on the configuration file. if the file exist, i use it
-		System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
-		System.setProperty("org.apache.commons.logging.Log", Jdk14Logger.class.getName());
-		File logc = new File("logging.properties");
-		logger = Logger.getLogger("Alesia");
-		if (logc.exists()) {
-			System.setProperty("java.util.logging.config.file", logc.getName());
-			try {
-				LogManager.getLogManager().readConfiguration();
-			} catch (Exception e) {
-				ExceptionDialog.showDialog(e);
-			}
-		}
-		logger.info("Wellcome to Alesia.");
-
-		// update alesia.propertyes to eviorement variables. this step is performed here for convenience
-		try {
-			Properties prp = new Properties();
-			prp.load(new FileInputStream(new File("Alesia.properties")));
-			Properties sysprp = System.getProperties();
-			prp.keySet().forEach(key -> sysprp.put(key, prp.get(key)));
-		} catch (Exception e) {
-			logger.log(Level.SEVERE, "Exception found loading propertys from file system.", e);
-			// ExceptionDialog.showDialog(e);
-			System.exit(-1);
-		}
 
 		Application.launch(Alesia.class, args);
 	}
@@ -263,7 +234,7 @@ public class Alesia extends Application {
 		// System.getProperties().put("connectTimeout", 10 * 1000);
 		// System.getProperties().put("socketTimeout", 10 * 1000);
 		try {
-			logger.info("Connecting to local database ...");
+			Alesia.logger.info("Connecting to local database ...");
 			Properties activeprp = getDBProperties();
 
 			// set the produccion connection data to the sytem variables for activejdbc use
@@ -293,7 +264,7 @@ public class Alesia extends Application {
 			if (e instanceof InitException) {
 				SQLException se = (SQLException) e.getCause();
 				if (se.getSQLState().equals("S1000")) {
-					logger.warning("Another active instance found. Sending request maximize.");
+					Alesia.logger.warning("Another active instance found. Sending request maximize.");
 					SettingsManager.set(REQUEST_MAXIMIZE, true);
 					System.exit(0);
 				}
@@ -393,11 +364,11 @@ public class Alesia extends Application {
 			try {
 				currentUser.login(token);
 			} catch (UnknownAccountException uae) {
-				logger.info("There is no user with username of " + token.getPrincipal());
+				Alesia.logger.info("There is no user with username of " + token.getPrincipal());
 			} catch (IncorrectCredentialsException ice) {
-				logger.info("Password for account " + token.getPrincipal() + " was incorrect!");
+				Alesia.logger.info("Password for account " + token.getPrincipal() + " was incorrect!");
 			} catch (LockedAccountException lae) {
-				logger.info("The account for username " + token.getPrincipal() + " is locked.  "
+				Alesia.logger.info("The account for username " + token.getPrincipal() + " is locked.  "
 						+ "Please contact your administrator to unlock it.");
 			}
 			// ... catch more exceptions here (maybe custom ones specific to your application?
@@ -408,28 +379,28 @@ public class Alesia extends Application {
 
 		// say who they are:
 		// print their identifying principal (in this case, a username):
-		logger.info("User [" + currentUser.getPrincipal() + "] logged in successfully.");
+		Alesia.logger.info("User [" + currentUser.getPrincipal() + "] logged in successfully.");
 
 		// test a role:
 		if (currentUser.hasRole("schwartz")) {
-			logger.info("May the Schwartz be with you!");
+			Alesia.logger.info("May the Schwartz be with you!");
 		} else {
-			logger.info("Hello, mere mortal.");
+			Alesia.logger.info("Hello, mere mortal.");
 		}
 
 		// test a typed permission (not instance-level)
 		if (currentUser.isPermitted("lightsaber:wield")) {
-			logger.info("You may use a lightsaber ring.  Use it wisely.");
+			Alesia.logger.info("You may use a lightsaber ring.  Use it wisely.");
 		} else {
-			logger.info("Sorry, lightsaber rings are for schwartz masters only.");
+			Alesia.logger.info("Sorry, lightsaber rings are for schwartz masters only.");
 		}
 
 		// a (very powerful) Instance Level permission:
 		if (currentUser.isPermitted("winnebago:drive:eagle5")) {
-			logger.info("You are permitted to 'drive' the winnebago with license plate (id) 'eagle5'.  "
+			Alesia.logger.info("You are permitted to 'drive' the winnebago with license plate (id) 'eagle5'.  "
 					+ "Here are the keys - have fun!");
 		} else {
-			logger.info("Sorry, you aren't allowed to drive the 'eagle5' winnebago!");
+			Alesia.logger.info("Sorry, you aren't allowed to drive the 'eagle5' winnebago!");
 		}
 
 		// all done - log out!
@@ -449,6 +420,38 @@ public class Alesia extends Application {
 
 	@Override
 	protected void initialize(String[] args) {
+
+		// Loggin configuration. this step is performed here for conbenence
+		// TODO: For slf4j: the bridge betwen slf4j is set using the slf4j-jdk14-1.7.25 jar lib
+		// for Apache: Set the system property
+		// For Alesia. look on the configuration file. if the file exist, i use it
+
+		System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
+		System.setProperty("org.apache.commons.logging.Log", Jdk14Logger.class.getName());
+
+		File logc = new File("logging.properties");
+		if (logc.exists()) {
+			System.setProperty("java.util.logging.config.file", logc.getName());
+			try {
+				LogManager.getLogManager().readConfiguration();
+			} catch (Exception e) {
+				ExceptionDialog.showDialog(e);
+			}
+		}
+		logger = Logger.getLogger("Alesia");
+		logger.info("Wellcome to Alesia.");
+
+		// update alesia.propertyes to eviorement variables. this step is performed here for convenience
+		try {
+			Properties prp = new Properties();
+			prp.load(new FileInputStream(new File("Alesia.properties")));
+			Properties sysprp = System.getProperties();
+			prp.keySet().forEach(key -> sysprp.put(key, prp.get(key)));
+		} catch (Exception e) {
+			Alesia.logger.log(Level.SEVERE, "Exception found loading propertys from file system.", e);
+			// ExceptionDialog.showDialog(e);
+			System.exit(-1);
+		}
 
 		System.out.println(getWmicValue("bios", "SerialNumber"));
 		System.out.println(getWmicValue("cpu", "SystemName"));
@@ -520,10 +523,10 @@ public class Alesia extends Application {
 
 	@Override
 	protected void shutdown() {
-		logger.info("Preapering to leave the application ...");
+		Alesia.logger.info("Preapering to leave the application ...");
 		SettingsManager.set(IS_RUNNING, false);
 		alesiaDB.close();
-		logger.info("Bye !!!");
+		Alesia.logger.info("Bye !!!");
 	}
 
 	@Override

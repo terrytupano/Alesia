@@ -34,9 +34,9 @@ public class Hero extends TPlugin {
 
 	// protected static Tesseract iTesseract;
 	protected static ActionMap actionMap;
+	protected static Logger heroLogger;
 	protected static ConsolePanel consolePanel;
 	protected static HeroPanel heroPanel;
-	protected static Logger logger;
 	protected static File tableFile;
 	protected static boolean isTestMode;
 	protected static SensorsArray sensorsArray;
@@ -53,18 +53,18 @@ public class Hero extends TPlugin {
 	protected static String getSesionID() {
 		return dateFormat.format(startDate);
 	}
-	
+
 	public static Date getStartDate() {
 		return startDate;
 	}
-	
+
 	public Hero() {
 		// iTesseract.setLanguage("pok");
 		dateFormat = DateFormat.getDateTimeInstance();
 		actionMap = Alesia.getInstance().getContext().getActionMap(this);
-		logger = Logger.getLogger("Hero");
-		consolePanel = new ConsolePanel(logger);
-		// preparedCards = TCVUtils.loadCards(CARDS_FOLDER);
+		heroLogger = Logger.getLogger("Hero");
+		 consolePanel = new ConsolePanel(heroLogger);
+//		 preparedCards = TCVUtils.loadCards(CARDS_FOLDER);
 		TActionsFactory.insertActions(actionMap);
 	}
 
@@ -120,8 +120,8 @@ public class Hero extends TPlugin {
 		heroPanel = new HeroPanel();
 		Alesia.getMainPanel().setContentPanel(heroPanel);
 		// temp: change the main frame using this coordenates: 0,40 547,735
-		// temporal: must be loaded from troperPanel 
-//		tableFile = new File("plugins/hero/resources/ps-main table.ppt");
+		// temporal: must be loaded from troperPanel
+		// tableFile = new File("plugins/hero/resources/ps-main table.ppt");
 		tableFile = new File("plugins/hero/resources/ps-10.ppt");
 		initGlovalVars();
 		Alesia.mainFrame.setBounds(0, 40, 547, 735);

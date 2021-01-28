@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.image.*;
 import java.util.*;
 import java.util.List;
+import java.util.logging.*;
 
 import javax.swing.*;
 
@@ -82,13 +83,13 @@ public class ScreenSensor extends JPanel {
 		Set<String> keys = imageHashes.keySet();
 		for (String key : keys) {
 			int d = TCVUtils.getHammingDistance(s1, imageHashes.get(key));
-			Hero.logger.finer("file name: " + key + "Distance: " + d);
+			Hero.heroLogger.finer("file name: " + key + "Distance: " + d);
 			if (d < dist) {
 				dist = d;
 				ocr = key;
 			}
 		}
-		Hero.logger.finer("getOCRFromImage for sensor" + sName + ": image " + ocr + " found. Distance: " + dist);
+		Hero.heroLogger.finer("getOCRFromImage for sensor" + sName + ": image " + ocr + " found. Distance: " + dist);
 		return ocr == null || dist > minDist ? null : ocr;
 	}
 
@@ -219,7 +220,7 @@ public class ScreenSensor extends JPanel {
 				val = Double.parseDouble(ocr);
 			}
 		} catch (Exception e) {
-			Hero.logger.severe(getName() + ": Fail getting double value. The OCR is: " + ocr);
+			Hero.heroLogger.severe(getName() + ": Fail getting double value. The OCR is: " + ocr);
 		}
 		return val;
 	}
@@ -310,7 +311,7 @@ public class ScreenSensor extends JPanel {
 				ocrResult = getTesseractOCR();
 
 		} catch (Exception e) {
-			Hero.logger.severe(getName() + ": Fail trying doOCR " + e);
+			Hero.heroLogger.severe(getName() + ": Fail trying doOCR " + e);
 		}
 	}
 
@@ -323,7 +324,7 @@ public class ScreenSensor extends JPanel {
 	private String getCardOCR() throws Exception {
 		// String ocr = getOCRFromImage(preparedImage, Hero.preparedCards);
 		String rank = iTesseract.doOCR(preparedImage).trim().toUpperCase();
-		Hero.logger.finer(getName() + ": Card OCR performed. Raw OCR without correction = " + rank);
+		Hero.heroLogger.finer(getName() + ": Card OCR performed. Raw OCR without correction = " + rank);
 
 		// rank correction (know errors)
 		rank = "G".equals(rank) ? "Q" : rank;
@@ -333,7 +334,7 @@ public class ScreenSensor extends JPanel {
 		// report error and return empty string
 		String suit = "";
 		if ("".equals(rank)) {
-			Hero.logger.severe(getName() + ": Card OCR Fail. raw OCR = " + rank);
+			Hero.heroLogger.severe(getName() + ": Card OCR Fail. raw OCR = " + rank);
 			return "";
 		} else {
 			String cn = TColorUtils.colorNames.get(backgroundColor);
@@ -362,16 +363,16 @@ public class ScreenSensor extends JPanel {
 		for (String name : names) {
 			BufferedImage imageb = images.get(name);
 			double s = TCVUtils.getImageDiferences(imagea, imageb, true);
-			Hero.logger.finer("file name: " + name + " Diference: " + s);
+			Hero.heroLogger.finer("file name: " + name + " Diference: " + s);
 			if (s < dif) {
 				dif = s;
 				ocr = name;
 			}
 		}
 		if (dif > difThreshold)
-			Hero.logger.finer("OCR not found for sensor " + getName() + ". min diference: " + dif);
+			Hero.heroLogger.finer("OCR not found for sensor " + getName() + ". min diference: " + dif);
 		else
-			Hero.logger.finer("OCR for sensor " + getName() + ": " + ocr + " found. Diference: " + dif);
+			Hero.heroLogger.finer("OCR for sensor " + getName() + ": " + ocr + " found. Diference: " + dif);
 
 		return ocr == null || dif > difThreshold ? null : ocr;
 	}
@@ -400,11 +401,11 @@ public class ScreenSensor extends JPanel {
 						g2d.drawRect(region.x, region.y, region.width, region.height);
 					}
 				}
-				// Hero.logger.finer(getName() + ": list of words: " + wlst);
-				// Hero.logger.finer(getName() + ": Tesseract OCR performed. Regions: " + regions.size() + " OCR=" +
+				// Hero.heroLogger.finer(getName() + ": list of words: " + wlst);
+				// Hero.heroLogger.finer(getName() + ": Tesseract OCR performed. Regions: " + regions.size() + " OCR=" +
 				// srcocr);
 			}
-		Hero.logger.finer(getName() + ": Tesseract OCR performed. Raw OCR whitout correction=" + srcocr);
+		Hero.heroLogger.finer(getName() + ": Tesseract OCR performed. Raw OCR whitout correction=" + srcocr);
 		return OCRCorrection(srcocr);
 	}
 	/**

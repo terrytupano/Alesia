@@ -85,7 +85,7 @@ public class PokerSimulator {
 	// private long lastStepMillis;
 	private double winPlusTieProbability;
 	private UoAHand uoAHand;
-	private Hashtable<Integer, String> tmplist = new Hashtable<>();
+	private Hashtable<Integer, String> handNames = new Hashtable<>();
 	private Vector<Integer> handStrengSamples = new Vector<>();
 	private boolean takeOportunity = false;
 	private Hashtable<String, Object> parameters;
@@ -101,15 +101,15 @@ public class PokerSimulator {
 		handStrengSamples.add(384475); // pair
 		handStrengSamples.add(0); // hight card
 
-		tmplist.put(0, "straight_flush");
-		tmplist.put(1, "four_of_a_kind");
-		tmplist.put(2, "full_house");
-		tmplist.put(3, "flush");
-		tmplist.put(4, "straight");
-		tmplist.put(5, "three_of_a_kind");
-		tmplist.put(6, "two_pairs");
-		tmplist.put(7, "pair");
-		tmplist.put(8, "high_card");
+		handNames.put(0, "straight_flush");
+		handNames.put(1, "four_of_a_kind");
+		handNames.put(2, "full_house");
+		handNames.put(3, "flush");
+		handNames.put(4, "straight");
+		handNames.put(5, "three_of_a_kind");
+		handNames.put(6, "two_pairs");
+		handNames.put(7, "pair");
+		handNames.put(8, "high_card");
 
 		this.cardsBuffer = new Hashtable<String, String>();
 		this.uoAHand = new UoAHand();
@@ -231,16 +231,20 @@ public class PokerSimulator {
 
 	/**
 	 * return the current hand streng. this fraction is close to 0 when the troper has nothing (like 23) and increase to
-	 * 1 for royal flush. this value is affected by the parameter {@value #oppTopRanck}. this value cann be > 1 when
-	 * hero has a hand better that any villan
+	 * 1 for royal flush. this value is affected by the parameter {@value #oppTopRanck}.
+	 * <p>
+	 * if Hero has a better hand that any villans, this hand is the nuts. this method return 2
 	 * 
 	 * @return the hero hand rank.
 	 */
 	public double getCurrentHandStreng() {
+		double rtnval = 0.0;
 		// double rank = UoAHandEvaluator.rankHand(uoAHand);
 		// return rank / oppTopRanck;
 		double rank = myHandHelper.getHandRank();
-		return rank / oppTopHand;
+		// rtnval = getMyHandHelper().isTheNuts() ? 2 : rank / oppTopHand;
+		rtnval = oppTopHand == -1 ? 2 : rank / oppTopHand;
+		return rtnval;
 	}
 
 	public String getCurrentHandStrengName() {
@@ -251,22 +255,22 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * return the top opponent hand that any villan could hold.
+	 * this method update the gloval variable {@link #oppTopHand} whit the hihest hand that any villan can hold
 	 * <p>
 	 * The probabilities aren't future predictions of what hand one or many opponents may achieve by the river, rather
 	 * they reflect the current hand that any single opponent may have already achieved.
-	 * 
-	 * @return the top opponent hand (9 = straight_flush, 8 = four_of_a_kind and so on)
+	 * <p>
+	 * This method can return -1 this means hero has a better hand that any villan can hold (is the nuts)
 	 */
 	private void updateOppTopHand() {
 		oppTopHand = -1;
-		String msg = "";
+		String msg = "Is the nut.";
 		if (oppHandStatsHelper != null) {
 			float[] list = oppHandStatsHelper.getAllProbs();
 			for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
 				if (list[i] > 0 && oppTopHand == -1) {
 					oppTopHand = Hand.STRAIGHT_FLUSH - i;
-					msg = tmplist.get(i) + " " + fourDigitFormat.format(list[i]);
+					msg = handNames.get(i) + " " + fourDigitFormat.format(list[i]);
 				}
 			}
 		}
@@ -274,19 +278,19 @@ public class PokerSimulator {
 		// no detection of oppTopHand can be from 2 was. hero is in preflop or the current hand flavor hero (is the
 		// nut).
 		// manual set to the standar Hand.THREE_OF_A_KIND
-		if (oppTopHand == -1) {
+		if (oppTopHand == -1 && currentRound < FLOP_CARDS_DEALT) {
 			oppTopHand = Hand.THREE_OF_A_KIND;
 			msg = "Manual setted to Hand.THREE_OF_A_KIND.";
 		}
 		setVariable("simulator.Hand streng villans", msg);
 	}
+
 	/**
-	 * this method compute the "mass center" of the Hero outs. the method return a number that muss be around of the
-	 * median for the future outcome. When this value tend to 0 represent a hand that has no future.
+	 * return the ????
+	 * <p>
+	 * this method return 0 when hero has the best posible hand (the nut)
 	 * 
-	 * 
-	 * 
-	 * @return factor that represent the mass center of the future outcome.
+	 * @return
 	 */
 	public double getHandPotential() {
 		double handPotential = 0.0;
@@ -296,13 +300,14 @@ public class PokerSimulator {
 			Card cards[][] = myOutsHelper.getAllOuts();
 			for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
 				int outs = cards[i].length;
-				if (outs > 0) {
+				// TEMP: only select the best hand
+				if (outs > 0 && handPotential == 0) {
 					cnt += outs;
 					// 210117: with this modification, hero supportet 3 hour of continuous battle in a table without
 					// oportunity and hold steady without loosing his chips. :D
 					handPotential += outs * (Hand.STRAIGHT_FLUSH - i);
 					// handPotential += outs * handStrengSamples.get(i);
-					hs += tmplist.get(i) + " " + outs + " ";
+					hs += handNames.get(i) + " " + outs + " ";
 				}
 			}
 		}
@@ -406,7 +411,7 @@ public class PokerSimulator {
 		// the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
 		if (currentRound < FLOP_CARDS_DEALT)
 			return txt;
-		
+
 		// is the nut
 		if (getMyHandHelper().isTheNuts())
 			return "Is the Nuts";
@@ -478,12 +483,12 @@ public class PokerSimulator {
 		} catch (SimulatorException e) {
 			setVariable(STATUS, STATUS_ERROR);
 			// setVariable(STATUS, e.getClass().getSimpleName() + e.getMessage());
-			Hero.logger.warning(e.getMessage() + "\n\tCurrent round: " + currentRound + "\n\tHole cards: " + holeCards
-					+ "\n\tComunity cards: " + communityCards);
+			Hero.heroLogger.warning(e.getMessage() + "\n\tCurrent round: " + currentRound + "\n\tHole cards: "
+					+ holeCards + "\n\tComunity cards: " + communityCards);
 		} catch (Exception e) {
 			setVariable(STATUS, STATUS_ERROR);
 			// setVariable(STATUS, e.getClass().getSimpleName() + " " + e.getMessage());
-			Hero.logger.log(Level.SEVERE, e.getMessage(), e);
+			Hero.heroLogger.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 	public void setActionsData(String aperformed, Vector<TEntry<String, Double>> actions) {
@@ -572,7 +577,7 @@ public class PokerSimulator {
 		text += "</html>";
 		reportJLabel.setText(text);
 		reportJLabel.repaint();
-		// Hero.logger.severe("updateMyOutsHelperInfo(): " + (System.currentTimeMillis() - t1));
+		// Hero.heroLogger.severe("updateMyOutsHelperInfo(): " + (System.currentTimeMillis() - t1));
 	}
 
 	/**
@@ -618,7 +623,7 @@ public class PokerSimulator {
 		if (rank > 0 && suit > 0)
 			car = new Card(rank, suit);
 		else
-			Hero.logger.warning("String " + card + " for card representation incorrect. Card not created");
+			Hero.heroLogger.warning("String " + card + " for card representation incorrect. Card not created");
 
 		return car;
 	}
@@ -728,11 +733,13 @@ public class PokerSimulator {
 		variableList.put("simulator.Table values", txt);
 		variableList.put("simulator.Simulator values", "Round " + getCurrentRound() + " Players " + getNumSimPlayers());
 
-		Hero.logger.info("Table parameters: " + getTableParameters());
-		Hero.logger.info("Table values: " + variableList.get("simulator.Table values"));
-		Hero.logger.info("Troper probability: " + variableList.get("simulator.Troper probability"));
-		Hero.logger.info("Trooper Current hand: " + variableList.get("simulator.Trooper Current hand"));
-		Hero.logger.info("Simulator values: " + variableList.get("simulator.Simulator values"));
+		Hero.heroLogger.info("Table parameters: " + getTableParameters());
+		Hero.heroLogger.info("Table values: " + variableList.get("simulator.Table values"));
+		Hero.heroLogger.info("Troper probability: " + variableList.get("simulator.Troper probability"));
+		Hero.heroLogger.info("Trooper Current hand: " + variableList.get("simulator.Trooper Current hand"));
+		Hero.heroLogger.info("Simulator values: " + variableList.get("simulator.Simulator values"));
+		Hero.heroLogger.info("Hand: Potential " + variableList.get("simulator.Hand potential") + " OppTopHand "
+				+ handNames.get(Hand.STRAIGHT_FLUSH - oppTopHand));
 
 	}
 }

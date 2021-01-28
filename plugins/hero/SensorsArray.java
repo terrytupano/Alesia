@@ -103,7 +103,7 @@ public class SensorsArray {
 		}
 		// at this point at least must be 1 villan active set
 		if (av == 0)
-			Hero.logger.severe("Fail to detect active seats");
+			Hero.heroLogger.severe("Fail to detect active seats");
 		return av;
 	}
 
@@ -157,7 +157,7 @@ public class SensorsArray {
 			bp = getSensor("villan" + i + ".button").isEnabled() ? i : bp;
 		}
 		if (bp == -1) {
-			Hero.logger.severe("Fail to detect table position.");
+			Hero.heroLogger.severe("Fail to detect table position.");
 		}
 		return bp;
 	}
@@ -377,16 +377,24 @@ public class SensorsArray {
 		// gamers information
 		gameRecorder.getGamePlayer(villansBeacon).readSensors();
 		villansBeacon++;
+		StringBuffer sb = new StringBuffer();
+		ArrayList<String> list = gameRecorder.getAssesment();
+		if (list.size() > 0)
+			gameRecorder.getAssesment().forEach(str -> sb.append(str + "<br>"));
+		else
+			sb.append("Unknow <br>");
+		pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
+
 		if (villansBeacon > getVillans()) {
 			villansBeacon = 0;
-			gameRecorder.updateDB();
-			StringBuffer sb = new StringBuffer();
-			ArrayList<String> list = gameRecorder.getAssesment();
-			if (list.size() > 0)
-				gameRecorder.getAssesment().forEach(str -> sb.append(str + "<br>"));
-			else
-				sb.append("Unknow <br>");
-			pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
+			// gameRecorder.updateDB();
+			// StringBuffer sb = new StringBuffer();
+			// ArrayList<String> list = gameRecorder.getAssesment();
+			// if (list.size() > 0)
+			// gameRecorder.getAssesment().forEach(str -> sb.append(str + "<br>"));
+			// else
+			// sb.append("Unknow <br>");
+			// pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
 		}
 
 		// pot value information
