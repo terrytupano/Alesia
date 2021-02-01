@@ -18,6 +18,7 @@ public class ActionsBarChart {
 	private ChartPanel chartPanel;
 	private JFreeChart chart;
 	private DefaultCategoryDataset dataset;
+	private final int maxSlot = 15;
 
 	public ActionsBarChart() {
 		this.dataset = new DefaultCategoryDataset();
@@ -86,7 +87,7 @@ public class ActionsBarChart {
 			example = new Vector<>();
 
 		example.forEach(te -> dataset.addValue(te.getValue(), "", removePrefix(te.getKey())));
-		int morec = 15 - dataset.getColumnCount();
+		int morec = maxSlot - dataset.getColumnCount();
 		if (morec < 1)
 			return;
 

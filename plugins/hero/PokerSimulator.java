@@ -416,7 +416,7 @@ public class PokerSimulator {
 		if (getMyHandHelper().isTheNuts())
 			return "Is the Nuts";
 
-		// hero.s hand is = villan.s top hands
+		// villan.s top hands is stronger as hero.s hand
 		if (oppTopHand > myHandHelper.getHandRank())
 			return txt;
 
