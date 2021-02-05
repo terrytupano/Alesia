@@ -47,14 +47,14 @@ public class PokerSimulator {
 	public static String STATUS_ERROR = "Error";
 	private static DecimalFormat fourDigitFormat = new DecimalFormat("#0.0000");
 	private static DecimalFormat twoDigitFormat = new DecimalFormat("#0.00");
-	// villan top hand
-	private static int oppTopRanck;
-	// villans top hand
-	private static int oppTopHand;
 	// pair of 22
 	// private static int minHandRank = 371293;
 	// top hole card (no pair) (AK)
 	private static int topHoleRank = 167;
+	// villans top hand
+	private int oppTopHand;
+	private int handPotential;
+	private int handPotentialOuts;
 	// Number of simulations, total players
 	private int numSimulations = 100000;
 	// temporal storage for incoming cards
@@ -177,9 +177,7 @@ public class PokerSimulator {
 		callValue = -1;
 		raiseValue = -1;
 		heroChips = -1;
-		oppTopRanck = 0;
 		oppTopHand = Hand.STRAIGHT_FLUSH;
-
 		// parameters from the panel
 		this.parameters = Hero.heroPanel.getTrooperPanel().getValues();
 		this.buyIn = ((Number) parameters.get("table.buyIn")).doubleValue();
@@ -201,18 +199,9 @@ public class PokerSimulator {
 	public PokerProphesierAdapter getAdapter() {
 		return adapter;
 	}
-	/**
-	 * return the probability of win plus tie
-	 * 
-	 * @return the probability of win + prob of tie
-	 */
-	public double getProbability() {
-		return winPlusTieProbability;
-	}
 	public double getBigBlind() {
 		return bigBlind;
 	}
-
 	public double getBuyIn() {
 		return buyIn;
 	}
@@ -230,96 +219,66 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * return the current hand streng. this fraction is close to 0 when the troper has nothing (like 23) and increase to
-	 * 1 for royal flush. this value is affected by the parameter {@value #oppTopRanck}.
-	 * <p>
-	 * if Hero has a better hand that any villans, this hand is the nuts. this method return 2
-	 * 
-	 * @return the hero hand rank.
+	 * this method compute and return the relation between gloval variable {@link #oppTopHand} and the current hero
+	 * hand. this range is: [0.11,3]
 	 */
 	public double getCurrentHandStreng() {
 		double rtnval = 0.0;
-		// double rank = UoAHandEvaluator.rankHand(uoAHand);
-		// return rank / oppTopRanck;
 		double rank = myHandHelper.getHandRank();
-		// rtnval = getMyHandHelper().isTheNuts() ? 2 : rank / oppTopHand;
-		rtnval = oppTopHand == -1 ? 2 : rank / oppTopHand;
+		rtnval = rank / oppTopHand;
 		return rtnval;
 	}
 
 	public String getCurrentHandStrengName() {
 		return UoAHandEvaluator.nameHand(uoAHand);
 	}
+
 	public int getCurrentRound() {
 		return currentRound;
 	}
-
-	/**
-	 * this method update the gloval variable {@link #oppTopHand} whit the hihest hand that any villan can hold
-	 * <p>
-	 * The probabilities aren't future predictions of what hand one or many opponents may achieve by the river, rather
-	 * they reflect the current hand that any single opponent may have already achieved.
-	 * <p>
-	 * This method can return -1 this means hero has a better hand that any villan can hold (is the nuts)
-	 */
-	private void updateOppTopHand() {
-		oppTopHand = -1;
-		String msg = "Is the nut.";
-		if (oppHandStatsHelper != null) {
-			float[] list = oppHandStatsHelper.getAllProbs();
-			for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
-				if (list[i] > 0 && oppTopHand == -1) {
-					oppTopHand = Hand.STRAIGHT_FLUSH - i;
-					msg = handNames.get(i) + " " + fourDigitFormat.format(list[i]);
-				}
-			}
-		}
-
-		// no detection of oppTopHand can be from 2 was. hero is in preflop or the current hand flavor hero (is the
-		// nut).
-		// manual set to the standar Hand.THREE_OF_A_KIND
-		if (oppTopHand == -1 && currentRound < FLOP_CARDS_DEALT) {
-			oppTopHand = Hand.THREE_OF_A_KIND;
-			msg = "Manual setted to Hand.THREE_OF_A_KIND.";
-		}
-		setVariable("simulator.Hand streng villans", msg);
-	}
-
-	/**
-	 * return the ????
-	 * <p>
-	 * this method return 0 when hero has the best posible hand (the nut)
-	 * 
-	 * @return
-	 */
-	public double getHandPotential() {
-		double handPotential = 0.0;
-		int cnt = 0;
-		String hs = "";
-		if (myOutsHelper != null) {
-			Card cards[][] = myOutsHelper.getAllOuts();
-			for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
-				int outs = cards[i].length;
-				// TEMP: only select the best hand
-				if (outs > 0 && handPotential == 0) {
-					cnt += outs;
-					// 210117: with this modification, hero supportet 3 hour of continuous battle in a table without
-					// oportunity and hold steady without loosing his chips. :D
-					handPotential += outs * (Hand.STRAIGHT_FLUSH - i);
-					// handPotential += outs * handStrengSamples.get(i);
-					hs += handNames.get(i) + " " + outs + " ";
-				}
-			}
-		}
-		if (handPotential > 0) {
-			handPotential = handPotential / cnt;
-			// handPotential = handPotential / oppTopRanck;
-			handPotential = handPotential / oppTopHand;
-		}
-		hs += "= " + twoDigitFormat.format(handPotential);
-		setVariable("simulator.Hand potential", hs);
+	public int getHandPotential() {
 		return handPotential;
 	}
+
+	public int getHandPotentialOuts() {
+		return handPotentialOuts;
+	}
+
+	/**
+	 * this method return a factor 0 to (possible max value) 2 that represent the relation between the the best hand
+	 * that hero can posible have and the best hand that any villan can hold.
+	 * <p>
+	 * E.g. Hero: Ac As, flop Ad 7d 4h. at this point, Hero hat the Nut, {@link #oppTopHand} = Hand.THREE_OF_A_KIND. the
+	 * best hand that hero can have will be Hand.FOUR_OF_A_KIND. this metod will return 2
+	 * 
+	 * @see #updateHandValues()
+	 * 
+	 * @return the hand potential
+	 */
+	// public Pair<Double, Integer> getHandPotential() {
+	// double handPotential = 0.0;
+	// String hs = "";
+	// int outs = 0;
+	//
+	// if (myOutsHelper != null) {
+	// Card cards[][] = myOutsHelper.getAllOuts();
+	// for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
+	// int currOut = cards[i].length;
+	// if (currOut > 0 && currOut > outs) {
+	// outs = currOut;
+	// handPotential = (Hand.STRAIGHT_FLUSH - i);
+	// // 210117: with this modification, hero supportet 3 hour of continuous battle in a table without
+	// // oportunity and hold steady without loosing his chips. :D
+	// hs += handNames.get(i) + " " + outs + " ";
+	// }
+	// }
+	// }
+	// // if (handPotential > 0)
+	// // handPotential = handPotential / oppTopHand;
+	// hs += "= " + twoDigitFormat.format(handPotential);
+	// setVariable("simulator.Hand potential", hs);
+	// return new Pair<>(handPotential, outs);
+	// }
 
 	public double getHeroChips() {
 		return heroChips;
@@ -327,24 +286,27 @@ public class PokerSimulator {
 	public MyGameStatsHelper getMyGameStatsHelper() {
 		return myGameStatsHelper;
 	}
+
 	public MyHandHelper getMyHandHelper() {
 		return myHandHelper;
 	}
-
 	public MyHandStatsHelper getMyHandStatsHelper() {
 		return myHandStatsHelper;
+	}
+	public HoleCards getMyHoleCards() {
+		return holeCards;
+	}
+
+	public int getNumSimPlayers() {
+		return numSimPlayers;
 	}
 
 	public OppHandStatsHelper getOppHandStatsHelper() {
 		return oppHandStatsHelper;
 	}
-	public HoleCards getMyHoleCards() {
-		return holeCards;
+	public int getOppTopHand() {
+		return oppTopHand;
 	}
-	public int getNumSimPlayers() {
-		return numSimPlayers;
-	}
-
 	public double getPotValue() {
 		return potValue;
 	}
@@ -354,6 +316,15 @@ public class PokerSimulator {
 		// if is already a poket pair, assig 1
 		rank = myHandHelper.isPocketPair() ? 1.0 : rank / topHoleRank;
 		return rank;
+	}
+
+	/**
+	 * return the probability of win plus tie
+	 * 
+	 * @return the probability of win + prob of tie
+	 */
+	public double getProbability() {
+		return winPlusTieProbability;
 	}
 	public double getRaiseValue() {
 		return raiseValue;
@@ -417,7 +388,8 @@ public class PokerSimulator {
 			return "Is the Nuts";
 
 		// villan.s top hands is stronger as hero.s hand
-		if (oppTopHand > myHandHelper.getHandRank())
+		// TEMP oppTopHand+1
+		if (oppTopHand + 1 > myHandHelper.getHandRank())
 			return txt;
 
 		// String sts = getSignificantCards();
@@ -472,8 +444,7 @@ public class PokerSimulator {
 			oppHandStatsHelper = adapter.getOppHandStatsHelper();
 			myOutsHelper = adapter.getMyOutsHelper();
 			myHandHelper = adapter.getMyHandHelper();
-			updateOppTopHand();
-			// oppTopRanck = handStrengSamples.get(oppTopHand);
+			updateHandValues();
 			updateSimulationResults();
 			variableList.put(STATUS, STATUS_OK);
 			String oportunity = isOportunity();
@@ -717,6 +688,67 @@ public class PokerSimulator {
 	}
 
 	/**
+	 * this method update the gloval variable {@link #oppTopHand} whit the hihest hand that any villan can hold
+	 * <p>
+	 * The probabilities aren't future predictions of what hand one or many opponents may achieve by the river, rather
+	 * they reflect the current hand that any single opponent may have already achieved.
+	 * <p>
+	 * this method allways set a minimum value for the gloval variable. when hero hat the nuts, set this variable as
+	 * <code>Hand.THREE_OF_A_KIND</code>
+	 */
+	private void updateHandValues() {
+		// TEMP: for opptop hand and handstreng select the most probable
+		/////////////////////////////////////////////
+		// the initialization of global variable happen in clearenviorement method
+
+		// oppTopHand = -1;
+		String msg = "";
+		handPotential = Hand.HIGH_CARD;
+		handPotentialOuts = 0;
+
+		// select the most probable hand (avoiding the hight card and pair)
+		double lastVal = 0.0;
+		if (oppHandStatsHelper != null) {
+			float[] list = oppHandStatsHelper.getAllProbs();
+			for (int i = 0; i < Hand.STRAIGHT_FLUSH - 2; i++) {
+				if (list[i] > 0 && list[i] > lastVal) {
+					lastVal = list[i];
+					oppTopHand = Hand.STRAIGHT_FLUSH - i;
+					msg = handNames.get(i) + " " + fourDigitFormat.format(list[i]);
+				}
+			}
+		}
+
+		// no detection of oppTopHand can be from 2 way. hero is in preflop or the current hand favor hero (is the
+		// nut). manual set to the standar Hand.THREE_OF_A_KIND
+		if (oppTopHand == -1 || currentRound < FLOP_CARDS_DEALT) {
+			oppTopHand = Hand.THREE_OF_A_KIND;
+			msg = "Manual setted to Hand.THREE_OF_A_KIND.";
+		}
+		setVariable("simulator.Hand streng villans", msg);
+
+		// TEMP. select as potential, the hand whit more out.
+		msg = "";
+		if (myOutsHelper != null) {
+			Card cards[][] = myOutsHelper.getAllOuts();
+			for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
+				int currOut = cards[i].length;
+				if (currOut > 0 && currOut > handPotentialOuts) {
+					handPotentialOuts = currOut;
+					handPotential = (Hand.STRAIGHT_FLUSH - i);
+					// 210117: with this modification, hero supportet 3 hour of continuous battle in a table without
+					// oportunity and hold steady without loosing his chips. :D
+				}
+			}
+		}
+		// if (handPotential > 0)
+		// handPotential = handPotential / oppTopHand;
+
+		msg += handNames.get(Hand.STRAIGHT_FLUSH - handPotential) + " with " + handPotentialOuts + " outs";
+		setVariable("simulator.Hand potential", msg);
+	}
+
+	/**
 	 * update the simulation result to the console
 	 */
 	private void updateSimulationResults() {
@@ -738,7 +770,7 @@ public class PokerSimulator {
 		Hero.heroLogger.info("Troper probability: " + variableList.get("simulator.Troper probability"));
 		Hero.heroLogger.info("Trooper Current hand: " + variableList.get("simulator.Trooper Current hand"));
 		Hero.heroLogger.info("Simulator values: " + variableList.get("simulator.Simulator values"));
-		Hero.heroLogger.info("Hand: Potential " + variableList.get("simulator.Hand potential") + " OppTopHand "
+		Hero.heroLogger.info("Hand: " + variableList.get("simulator.Hand potential") + " OppTopHand "
 				+ handNames.get(Hand.STRAIGHT_FLUSH - oppTopHand));
 
 	}

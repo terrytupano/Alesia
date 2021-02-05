@@ -217,7 +217,6 @@ public class Trooper extends Task {
 
 		// FLOP AND FUTHER
 		if (pokerSimulator.getCurrentRound() > PokerSimulator.HOLE_CARDS_DEALT) {
-			loadPostFlopActions();
 			if (!checkOportunities())
 				performDecisionMethod();
 
@@ -258,8 +257,10 @@ public class Trooper extends Task {
 	private double getAmmunitions() {
 		double pot = pokerSimulator.getPotValue();
 		double handStreng = pokerSimulator.getCurrentHandStreng();
-		double handPotential = pokerSimulator.getHandPotential();
-		double chips = pokerSimulator.getHeroChips();
+		int handPotential = pokerSimulator.getHandPotential();
+		int handOuts = pokerSimulator.getHandPotentialOuts();
+		int oppHand = pokerSimulator.getOppTopHand();
+		// double chips = pokerSimulator.getHeroChips();
 		double buyin = pokerSimulator.getBuyIn();
 		double bBlind = pokerSimulator.getBigBlind();
 
@@ -270,17 +271,27 @@ public class Trooper extends Task {
 		// double base = sensorsArray.getActiveVillans() * bBlind;
 
 		// ammount of ammo that is worth to invest according to future outcome
-		double invest = ((pot - myPot) * handPotential);
+		double outAmmo = handOuts * bBlind;
+		double fhp = (handPotential*1.0) / (oppHand*1.0);
+		double hsdiff = (pot - myPot) * fhp ;
+		double invest = 0.0;
+		String msg = "";
+		if (outAmmo > hsdiff) {
+			invest = outAmmo;
+			msg = handOuts + " BB";
+		} else {
+			invest = hsdiff;
+			msg = twoDigitFormat.format((pot - myPot)) + " * " + twoDigitFormat.format(fhp);
+		}
 
 		double ammunitions = myPot + invest;
 
-		// String txt1 = twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(pot) + " * "
-		String txt1 = "(" + twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng) + ") + ("
-				+ twoDigitFormat.format((pot - myPot)) + " * " + twoDigitFormat.format(handPotential) + ") = "
-				+ twoDigitFormat.format(ammunitions);
+		String txt1 = "(" + twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng) + ") + (" + msg
+				+ ") = " + twoDigitFormat.format(ammunitions);
 		setVariableAndLog(EXPLANATION, txt1);
 		return ammunitions;
 	}
+
 	private double getImpliedOdd() {
 		double call = pokerSimulator.getCallValue();
 		double raise = pokerSimulator.getRaiseValue();
@@ -331,15 +342,15 @@ public class Trooper extends Task {
 		Collections.sort(actProb, Collections.reverseOrder());
 
 		int elements = availableActions.size();
-		// TODO: modify: getCurrentHandStreng() can return valuer > 1
-		double mode = pokerSimulator.getCurrentHandStreng() * elements;
-		TriangularDistribution tdist = new TriangularDistribution(0, mode, elements + 2);
+		double hs = pokerSimulator.getCurrentHandStreng() * elements;
+		double mode = (hs > 1) ? elements : hs * elements;
+		TriangularDistribution tdist = new TriangularDistribution(0, mode, elements);
 		int[] singletos = new int[elements];
 		double[] probabilities = new double[elements];
 		for (int i = 0; i < elements; i++) {
 			singletos[i] = i;
 			TEntry<String, Double> te = actProb.elementAt(i);
-			probabilities[i] = tdist.density(i + 1);
+			probabilities[i] = tdist.probability(i, i + 1);
 			te.setValue(probabilities[i]);
 		}
 
@@ -348,9 +359,6 @@ public class Trooper extends Task {
 		int ele = 99;
 		while ((ele < mode - actran) || (ele > mode + actran)) {
 			ele = (int) tdist.sample();
-			// check lower and upper bound
-			ele = (ele < 0) ? 0 : ele;
-			ele = (ele >= elements) ? elements - 1 : ele;
 		}
 		String selact = actProb.elementAt(ele).getKey();
 		pokerSimulator.setActionsData(selact, actProb);
@@ -447,7 +455,58 @@ public class Trooper extends Task {
 	 * @param sourceName - the name of the source
 	 * @param sourceValue - the value
 	 */
-	private void loadPostFlopActions() {
+	private void loadPostFlopActions(double maximum) {
+		availableActions.clear();
+		double call = pokerSimulator.getCallValue();
+		double raise = pokerSimulator.getRaiseValue();
+		double chips = pokerSimulator.getHeroChips();
+		double pot = pokerSimulator.getPotValue();
+
+		double imax = maximum == chips ? chips : pot;
+
+		if (call >= 0)
+			availableActions.put("call", call);
+
+		if (raise >= 0)
+			availableActions.put("raise", raise);
+
+		if (pot >= 0 && sensorsArray.getSensor("raise.pot").isEnabled())
+			availableActions.put("raise.pot;raise", pot);
+
+		if (chips >= 0 && sensorsArray.getSensor("raise.allin").isEnabled())
+			availableActions.put("raise.allin;raise", chips);
+
+		double sb = pokerSimulator.getSmallBlind();
+		double bb = pokerSimulator.getBigBlind();
+		if (raise > 0 && sensorsArray.getSensor("raise.slider").isEnabled()) {
+			// check for int or double values for blinds
+			boolean isInt = (new Double(bb)).intValue() == bb && (new Double(sb)).intValue() == sb;
+			double tick = raise;
+			int step = 5;
+			double ammoinc = imax / (step * 1.0);
+			// if the differencie bettween raise and imax is less than 10bb is because the reise value extremly
+			// hight or hero hat low imax. in this case, ignore the reise text actions because are irrelevant. the
+			// relevant actions here are button actions (pot, call, reise, max)
+			// if (ammoinc > bb * 2) {
+			for (int c = 0; (c < step && (tick + ammoinc) < imax); c++) {
+				tick += ammoinc;
+				// round value to look natural (dont write 12345. write 12340 or 12350)
+				if (isInt)
+					tick = ((int) (tick / 10)) * 10;
+
+				String txt = isInt ? "" + (int) tick : twoDigitFormat.format(tick);
+				availableActions.put("raise.text,dc;raise.text,k=" + txt + ";raise", tick);
+			}
+			// }
+		}
+
+		// ////////////////////////
+		// if (maximum == pot)
+		// availableActions.values().removeIf(dv -> dv > maximum);
+
+	}
+
+	private void loadPostFlopActionsOrg() {
 		availableActions.clear();
 
 		double call = pokerSimulator.getCallValue();
@@ -754,39 +813,37 @@ public class Trooper extends Task {
 		return null;
 	}
 
+	private void handStrengFilter() {
+		// fail safe.
+		if (availableActions.isEmpty()) {
+			Hero.heroLogger.info("handStrengFilter() has no actions to filter");
+			return;
+		}
+		int orgActNum = availableActions.size();
+		double handS = pokerSimulator.getCurrentHandStreng();
+		double max = availableActions.values().stream().mapToDouble(val -> val).max().getAsDouble();
+		double upperB = max * handS;
+		availableActions.values().removeIf(val -> val > upperB);
+		updateAsociatedCost();
+		// invert sing so, suboptimal mehtod can order in the right way
+		availableActions.values().forEach(val -> val = val * -1.0);
+		String fila = availableActions.size() == 0 ? "all" : "" + (orgActNum - availableActions.size());
+		setVariableAndLog(EXPLANATION,
+				"Hero hand streng ratio = " + twoDigitFormat.format(handS) + " " + fila + " actions removed");
+	}
+
 	/**
-	 * Compute the EV for all actions inside of the <code>list</code> parameter. after this method, the list contain
-	 * only the actions with +EV. in this case, for less cost, better EV. the {@link #getSubOptimalAction()} method
-	 * reverse the order of the list to correctly select the option whit best EV
+	 * Compute the EV for all actions inside of the global variable {@link #availableActions}. after this method, the
+	 * list contain only the actions with +EV. *
 	 * <p>
 	 * to comply with rule 1, this method retrive his probability from {@link PokerSimulator#getProbability()
 	 * 
 	 * <h5>MoP page 54</h5>
 	 * 
-	 * @param base - ammount of ammo calculated in {@link #getAmmunitions()}
-	 * @param list - list of action (call/bet/raise/...) with his asociated cost
-	 * 
 	 */
-	protected void performDecisionMethod() {
-		double prob = 0.0;
-		double ammunitions = 0.0;
-
-		// decition method
-		String decisionM = parameters.get("decisionMethod").toString();
-		if ("potOdd".equals(decisionM)) {
-			// MoP page 54
-			prob = pokerSimulator.getProbability();
-			ammunitions = getAmmunitions();
-		} else {
-			prob = pokerSimulator.getCurrentHandStreng();
-			ammunitions = pokerSimulator.getPotValue();
-			// temporal log
-			String txt1 = "Hand String = " + pokerSimulator.getCurrentHandStrengName() + " "
-					+ twoDigitFormat.format(prob);
-			setVariableAndLog(EXPLANATION, txt1);
-			// set 1 when the factor is > 1
-			prob = (prob > 1) ? 1 : prob;
-		}
+	private void potOdd() {
+		double prob = pokerSimulator.getProbability();
+		double ammunitions = getAmmunitions();
 
 		// no calculation for 0 values
 		if (ammunitions == 0 || prob == 0) {
@@ -809,6 +866,16 @@ public class Trooper extends Task {
 				.collect(Collectors.joining(", "));
 		val = val.trim().isEmpty() ? "No positive EV" : val;
 		// TODO: log availa actions??
+	}
+	protected void performDecisionMethod() {
+		String decisionM = parameters.get("decisionMethod").toString();
+		if ("potOdd".equals(decisionM)) {
+			loadPostFlopActions(pokerSimulator.getHeroChips());
+			potOdd();
+		} else {
+			loadPostFlopActions(pokerSimulator.getPotValue());
+			handStrengFilter();
+		}
 	}
 
 	/**

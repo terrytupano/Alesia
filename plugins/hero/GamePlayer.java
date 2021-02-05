@@ -109,10 +109,11 @@ public class GamePlayer {
 			double win = bb * 10;
 			if ((chips < buyIn - win) || (chips > buyIn + win)) {
 				double diff = chips - buyIn;
-				int wins = bettingPattern.getWindowSize() / 2;
-				double num = diff / ((double) wins);
-				for (int i = 0; i < wins; i++)
-					bettingPattern.addValue(num);
+				bettingPattern.addValue(diff);
+//				int wins = bettingPattern.getWindowSize() / 2;
+//				double num = diff / ((double) wins);
+//				for (int i = 0; i < wins; i++)
+//					bettingPattern.addValue(num);
 			}
 			prevValue = chips;
 			oldName = name;
