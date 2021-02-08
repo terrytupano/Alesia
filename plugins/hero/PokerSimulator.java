@@ -703,7 +703,7 @@ public class PokerSimulator {
 
 		// oppTopHand = -1;
 		String msg = "";
-		handPotential = Hand.HIGH_CARD;
+		handPotential = 0;
 		handPotentialOuts = 0;
 
 		// select the most probable hand (avoiding the hight card and pair)
