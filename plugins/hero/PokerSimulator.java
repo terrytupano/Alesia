@@ -78,6 +78,7 @@ public class PokerSimulator {
 	private MyGameStatsHelper myGameStatsHelper;
 	private Hashtable<Integer, Double> upperProbability;
 	private double heroChips;
+	private double heroChipsMax;
 	private double buyIn;
 	private double smallBlind;
 	private double bigBlind;
@@ -111,6 +112,7 @@ public class PokerSimulator {
 		handNames.put(7, "pair");
 		handNames.put(8, "high_card");
 
+		this.heroChipsMax = -1;
 		this.cardsBuffer = new Hashtable<String, String>();
 		this.uoAHand = new UoAHand();
 		// Create an adapter to communicate with the simulator
@@ -474,6 +476,12 @@ public class PokerSimulator {
 
 	public void setHeroChips(double heroChips) {
 		this.heroChips = heroChips;
+		if (heroChips > heroChipsMax)
+			heroChipsMax = heroChips;
+	}
+	public double getHeroChipsMax() {
+		// TODO: all heromax chips related muss be tracked by the correct instance of {@link GameRecorder}
+		return heroChipsMax;
 	}
 	public void setNunOfPlayers(int p) {
 		this.numSimPlayers = p;

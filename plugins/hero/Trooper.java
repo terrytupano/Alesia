@@ -69,7 +69,7 @@ public class Trooper extends Task {
 	private double maxRekonAmmo;
 	boolean oportinity = false;
 	private double currentHandCost;
-	private double playGoal;
+	private double playUntil;
 	private long playTime;
 
 	public Trooper() {
@@ -272,8 +272,8 @@ public class Trooper extends Task {
 
 		// ammount of ammo that is worth to invest according to future outcome
 		double outAmmo = handOuts * bBlind;
-		double fhp = (handPotential*1.0) / (oppHand*1.0);
-		double hsdiff = (pot - myPot) * fhp ;
+		double fhp = (handPotential * 1.0) / (oppHand * 1.0);
+		double hsdiff = (pot - myPot) * fhp;
 		double invest = 0.0;
 		String msg = "";
 		if (outAmmo > hsdiff) {
@@ -637,8 +637,8 @@ public class Trooper extends Task {
 			value1 = fourDigitFormat.format(((Double) value).doubleValue());
 		// append the playtime to the status (visual purpose only)
 		if (STATUS.equals(key)) {
-			value = "Play time " + timeFormat.format(new Date(playTime - TimeUnit.HOURS.toMillis(1))) + " Goal "
-					+ twoDigitFormat.format(playGoal) + " " + value.toString();
+			value = "Play time " + timeFormat.format(new Date(playTime - TimeUnit.HOURS.toMillis(1))) + " loss limit "
+					+ twoDigitFormat.format(playUntil) + " " + value.toString();
 		}
 		pokerSimulator.setVariable(key, value);
 		// don.t log the status, only the explanatio
@@ -787,22 +787,18 @@ public class Trooper extends Task {
 			long playtimeParm = (long) (ptd * 3600 * 1000);
 			playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
 
-			// play goal
-			double playgoalParm = Double.parseDouble(parameters.get("play.goal").toString());
+			// play until parameter
+			double playUntilParm = Double.parseDouble(parameters.get("play.until").toString());
 			double chips = pokerSimulator.getHeroChips();
-			// if chips are not available, show the last computed play goal %
-			if (chips > 0) {
-				double buyin = pokerSimulator.getBuyIn();
-				playGoal = (playgoalParm / 100.0 * buyin);
-				// playgoal expresed in porcentage: 100% means goal reach !!
-				playGoal = (chips / playGoal) * 100;
-			}
+			// if chips are not available, show the last computed play safe value
+			if (chips > 0) 
+				playUntil = pokerSimulator.getHeroChipsMax() - (playUntilParm * pokerSimulator.getBuyIn());
 
-			if ((playtimeParm > 0 && playTime > playtimeParm)
-					|| (playgoalParm > 0 && playGoal >= 100) && sensorsArray.isSensorEnabled("sit.out")) {
+			if ((playtimeParm > 0 && playTime > playtimeParm) || (chips > 0 && playUntilParm > 0 && chips <= playUntil)
+					&& sensorsArray.isSensorEnabled("sit.out")) {
 				robotActuator.perform("sit.out");
 				robotActuator.perform("fold");
-				setVariableAndLog(EXPLANATION, "Play time or play goal reach. mission accomplisch.");
+				setVariableAndLog(EXPLANATION, "Play time or loss fail safe reach. mission accomplisch.");
 				return null;
 			}
 

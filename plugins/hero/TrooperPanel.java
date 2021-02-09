@@ -14,7 +14,7 @@ public class TrooperPanel extends TUIFormPanel {
 	public TrooperPanel() {
 		addInputComponent(TUIUtils.getTWebComboBox("table.parameters", "table.parameters"));
 		addInputComponent(TUIUtils.getNumericTextField("play.time", null, 5, null), false, true);
-		addInputComponent(TUIUtils.getNumericTextField("play.goal", null, 5, null), false, true);
+		addInputComponent(TUIUtils.getNumericTextField("play.until", null, 5, null), false, true);
 		
 		addInputComponent(TUIUtils.getTWebComboBox("preflopStrategy", "table.strategy"));
 		addInputComponent(TUIUtils.getTWebComboBox("decisionMethod", "decisionMet"));
@@ -34,7 +34,7 @@ public class TrooperPanel extends TUIFormPanel {
 		builder.appendSeparator("Table parameters");
 		builder.nextLine();
 		builder.append(TStringUtils.getString("play.time"), getInputComponent("play.time"));
-		builder.append(TStringUtils.getString("play.goal"), getInputComponent("play.goal"));
+		builder.append(TStringUtils.getString("play.until"), getInputComponent("play.until"));
 		builder.nextLine();
 		builder.append(TStringUtils.getString("table.parameters"), getInputComponent("table.parameters"), 6);
 		builder.nextLine();
