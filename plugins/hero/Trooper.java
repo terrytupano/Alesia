@@ -259,35 +259,40 @@ public class Trooper extends Task {
 		double handStreng = pokerSimulator.getCurrentHandStreng();
 		int handPotential = pokerSimulator.getHandPotential();
 		int handOuts = pokerSimulator.getHandPotentialOuts();
-		int oppHand = pokerSimulator.getOppTopHand();
-		// double chips = pokerSimulator.getHeroChips();
-		double buyin = pokerSimulator.getBuyIn();
+		int oppHand = pokerSimulator.getOppMostProbHand();
 		double bBlind = pokerSimulator.getBigBlind();
 
 		// the current fraction of the pot ammount that until now, is already mine
 		double myPot = pot * handStreng;
-
-		// TODO: temp ??? active villans make a base for allow hero more room to manuver
-		// double base = sensorsArray.getActiveVillans() * bBlind;
 
 		// ammount of ammo that is worth to invest according to future outcome
 		double outAmmo = handOuts * bBlind;
 		double fhp = (handPotential * 1.0) / (oppHand * 1.0);
 		double hsdiff = (pot - myPot) * fhp;
 		double invest = 0.0;
-		String msg = "";
+		String investMsg = "";
 		if (outAmmo > hsdiff) {
 			invest = outAmmo;
-			msg = handOuts + " BB";
+			investMsg = handOuts + " BB";
 		} else {
 			invest = hsdiff;
-			msg = twoDigitFormat.format((pot - myPot)) + " * " + twoDigitFormat.format(fhp);
+			investMsg = twoDigitFormat.format((pot - myPot)) + " * " + twoDigitFormat.format(fhp);
 		}
 
 		double ammunitions = myPot + invest;
+		String myPotMsg = twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng);
+		// test: when the diference between the previous pot is too high, check that my hand is in uper half
+		double actvlim = (pot - pokerSimulator.getPrevPotValue()) / sensorsArray.getActiveVillans();
+		if (actvlim > 20) {
+			Card[] heroc = pokerSimulator.getMyHoleCards().getCards();
+			if (heroc[0].getRank() < Card.NINE && heroc[1].getRank() < Card.NINE) {
+				handStreng = 0;
+				myPotMsg = "WARNING!!";
+			}
+		}
+		///////////////
 
-		String txt1 = "(" + twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng) + ") + (" + msg
-				+ ") = " + twoDigitFormat.format(ammunitions);
+		String txt1 = "(" + myPotMsg + ") + (" + investMsg + ") = " + twoDigitFormat.format(ammunitions);
 		setVariableAndLog(EXPLANATION, txt1);
 		return ammunitions;
 	}
@@ -780,8 +785,8 @@ public class Trooper extends Task {
 				return null;
 			}
 
-			// play time or play goal parameters. when the play time is reach, the action sit.out is clicked and hero
-			// return
+			// play time or play sae parameter parameters. when the play time is reach, the action sit.out is clicked
+			// and hero return
 			// play time.
 			double ptd = Double.parseDouble(parameters.get("play.time").toString());
 			long playtimeParm = (long) (ptd * 3600 * 1000);
@@ -791,7 +796,7 @@ public class Trooper extends Task {
 			double playUntilParm = Double.parseDouble(parameters.get("play.until").toString());
 			double chips = pokerSimulator.getHeroChips();
 			// if chips are not available, show the last computed play safe value
-			if (chips > 0) 
+			if (chips > 0)
 				playUntil = pokerSimulator.getHeroChipsMax() - (playUntilParm * pokerSimulator.getBuyIn());
 
 			if ((playtimeParm > 0 && playTime > playtimeParm) || (chips > 0 && playUntilParm > 0 && chips <= playUntil)

@@ -161,13 +161,17 @@ public class SensorsArray {
 		}
 		return bp;
 	}
+	public GameRecorder getGameRecorder() {
+		return gameRecorder;
+	}
+
 	public PokerSimulator getPokerSimulator() {
 		return pokerSimulator;
 	}
-
 	public Robot getRobot() {
 		return robot;
 	}
+
 	/**
 	 * return the {@link ScreenSensor} by name. The name comes from property <code>name</code>
 	 * 
@@ -231,7 +235,6 @@ public class SensorsArray {
 		return (int) screenSensors.keySet().stream().filter(sn -> sn.startsWith("villan") && sn.contains("name"))
 				.count();
 	}
-
 	/**
 	 * return <code>true</code> if the player identifyed as id argument is active (hero or villan). A PLAYER IS ACTIVE
 	 * IF HE HAS CARDS IN THIS HANDS. if a player fold his card. this method will not count that player. from this
@@ -246,6 +249,7 @@ public class SensorsArray {
 		ScreenSensor vc2 = getSensor(prefix + ".card2");
 		return vc1.isEnabled() && vc2.isEnabled();
 	}
+
 	/**
 	 * return <code>true</code> if the villanId seat is active. A seat is active if there are a villan sittion on it.
 	 * this method check the villan name sensor and the villan chip sensor. if both are active, the seat is active.
@@ -287,7 +291,6 @@ public class SensorsArray {
 		readSensors(false, sslist);
 		System.out.println("lookActionSensors() " + (System.currentTimeMillis() - t1));
 	}
-
 	/**
 	 * this metho campture all screeen´s areas without do any ocr operation. Use this mothod to retrive all sensor areas
 	 * and set the enable status for fast comparation.
@@ -300,6 +303,7 @@ public class SensorsArray {
 		long t2 = System.currentTimeMillis() - t1;
 		pokerSimulator.setVariable("sensorArray.Look table time", sslist.size() + " sensors " + t2);
 	}
+
 	/**
 	 * Perform read operation on the {@link ScreenSensor} acoording to the type of the sensor. The type can be any of
 	 * TYPE_ global constatn passed as argument. This method perform the OCR operation on the selected areas and update
@@ -367,7 +371,6 @@ public class SensorsArray {
 		// pokerSimulator.setVariable("sensorArray.Total readed sensors", slist.size());
 		pokerSimulator.setVariable("sensorArray.Performance", "Tesseract " + ((int) tesseractTime.getMean()));
 	}
-
 	/**
 	 * read one unit of information. This method is intented to retrive information from the enviorement in small amount
 	 * to avoid exces of time comsumption.

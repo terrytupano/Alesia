@@ -52,7 +52,7 @@ public class PokerSimulator {
 	// top hole card (no pair) (AK)
 	private static int topHoleRank = 167;
 	// villans top hand
-	private int oppTopHand;
+	private int oppMostProbHand;
 	private int handPotential;
 	private int handPotentialOuts;
 	// Number of simulations, total players
@@ -63,7 +63,7 @@ public class PokerSimulator {
 	private int numSimPlayers;
 	private TreeMap<String, Object> variableList;
 	private PokerProphesierAdapter adapter;
-	private double callValue, raiseValue, potValue;
+	private double callValue, raiseValue, potValue, prevPotValue;
 	private CommunityCards communityCards;
 	private JLabel reportJLabel;
 	private TUIPanel reportPanel;
@@ -113,6 +113,7 @@ public class PokerSimulator {
 		handNames.put(8, "high_card");
 
 		this.heroChipsMax = -1;
+		this.prevPotValue = -1;
 		this.cardsBuffer = new Hashtable<String, String>();
 		this.uoAHand = new UoAHand();
 		// Create an adapter to communicate with the simulator
@@ -179,7 +180,7 @@ public class PokerSimulator {
 		callValue = -1;
 		raiseValue = -1;
 		heroChips = -1;
-		oppTopHand = Hand.STRAIGHT_FLUSH;
+		oppMostProbHand = Hand.STRAIGHT_FLUSH;
 		// parameters from the panel
 		this.parameters = Hero.heroPanel.getTrooperPanel().getValues();
 		this.buyIn = ((Number) parameters.get("table.buyIn")).doubleValue();
@@ -221,13 +222,13 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * this method compute and return the relation between gloval variable {@link #oppTopHand} and the current hero
+	 * this method compute and return the relation between gloval variable {@link #oppMostProbHand} and the current hero
 	 * hand. this range is: [0.11,3]
 	 */
 	public double getCurrentHandStreng() {
 		double rtnval = 0.0;
 		double rank = myHandHelper.getHandRank();
-		rtnval = rank / oppTopHand;
+		rtnval = rank / oppMostProbHand;
 		return rtnval;
 	}
 
@@ -250,7 +251,7 @@ public class PokerSimulator {
 	 * this method return a factor 0 to (possible max value) 2 that represent the relation between the the best hand
 	 * that hero can posible have and the best hand that any villan can hold.
 	 * <p>
-	 * E.g. Hero: Ac As, flop Ad 7d 4h. at this point, Hero hat the Nut, {@link #oppTopHand} = Hand.THREE_OF_A_KIND. the
+	 * E.g. Hero: Ac As, flop Ad 7d 4h. at this point, Hero hat the Nut, {@link #oppMostProbHand} = Hand.THREE_OF_A_KIND. the
 	 * best hand that hero can have will be Hand.FOUR_OF_A_KIND. this metod will return 2
 	 * 
 	 * @see #updateHandValues()
@@ -306,8 +307,8 @@ public class PokerSimulator {
 	public OppHandStatsHelper getOppHandStatsHelper() {
 		return oppHandStatsHelper;
 	}
-	public int getOppTopHand() {
-		return oppTopHand;
+	public int getOppMostProbHand() {
+		return oppMostProbHand;
 	}
 	public double getPotValue() {
 		return potValue;
@@ -370,7 +371,7 @@ public class PokerSimulator {
 	/**
 	 * check whether is an oportunity. An oportunity is present when the current street is {@link #FLOP_CARDS_DEALT} or
 	 * futher and the following conditions is found:
-	 * <li>Heros hand muss be >= to the hand setted in {@link #oppTopHand} gobal variable
+	 * <li>Heros hand muss be >= to the hand setted in {@link #oppMostProbHand} gobal variable
 	 * <li>The hand is a set (both card in heros.s hands participate in the action)
 	 * <li>OR the hand is the nut
 	 * 
@@ -391,7 +392,7 @@ public class PokerSimulator {
 
 		// villan.s top hands is stronger as hero.s hand
 		// TEMP oppTopHand+1
-		if (oppTopHand + 1 > myHandHelper.getHandRank())
+		if (oppMostProbHand + 1 > myHandHelper.getHandRank())
 			return txt;
 
 		// String sts = getSignificantCards();
@@ -487,7 +488,13 @@ public class PokerSimulator {
 		this.numSimPlayers = p;
 	}
 
+	public double getPrevPotValue() {
+		// TODO: all heromax chips related muss be tracked by the correct instance of {@link GameRecorder}
+		return prevPotValue;
+	}
+	
 	public void setPotValue(double potValue) {
+		this.prevPotValue = this.potValue;
 		this.potValue = potValue;
 	}
 	public void setRaiseValue(double raiseValue) {
@@ -696,7 +703,7 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * this method update the gloval variable {@link #oppTopHand} whit the hihest hand that any villan can hold
+	 * this method update the gloval variable {@link #oppMostProbHand} whit the hihest hand that any villan can hold
 	 * <p>
 	 * The probabilities aren't future predictions of what hand one or many opponents may achieve by the river, rather
 	 * they reflect the current hand that any single opponent may have already achieved.
@@ -721,16 +728,16 @@ public class PokerSimulator {
 			for (int i = 0; i < Hand.STRAIGHT_FLUSH - 2; i++) {
 				if (list[i] > 0 && list[i] > lastVal) {
 					lastVal = list[i];
-					oppTopHand = Hand.STRAIGHT_FLUSH - i;
+					oppMostProbHand = Hand.STRAIGHT_FLUSH - i;
 					msg = handNames.get(i) + " " + fourDigitFormat.format(list[i]);
 				}
 			}
 		}
 
-		// no detection of oppTopHand can be from 2 way. hero is in preflop or the current hand favor hero (is the
+		// no detection of oppMostProbHand can be from 2 way. hero is in preflop or the current hand favor hero (is the
 		// nut). manual set to the standar Hand.THREE_OF_A_KIND
-		if (oppTopHand == -1 || currentRound < FLOP_CARDS_DEALT) {
-			oppTopHand = Hand.THREE_OF_A_KIND;
+		if (oppMostProbHand == -1 || currentRound < FLOP_CARDS_DEALT) {
+			oppMostProbHand = Hand.THREE_OF_A_KIND;
 			msg = "Manual setted to Hand.THREE_OF_A_KIND.";
 		}
 		setVariable("simulator.Hand streng villans", msg);
@@ -778,8 +785,8 @@ public class PokerSimulator {
 		Hero.heroLogger.info("Troper probability: " + variableList.get("simulator.Troper probability"));
 		Hero.heroLogger.info("Trooper Current hand: " + variableList.get("simulator.Trooper Current hand"));
 		Hero.heroLogger.info("Simulator values: " + variableList.get("simulator.Simulator values"));
-		Hero.heroLogger.info("Hand: " + variableList.get("simulator.Hand potential") + " OppTopHand "
-				+ handNames.get(Hand.STRAIGHT_FLUSH - oppTopHand));
+		Hero.heroLogger.info("Hand: " + variableList.get("simulator.Hand potential") + " OppMostProbHand "
+				+ handNames.get(Hand.STRAIGHT_FLUSH - oppMostProbHand));
 
 	}
 }
