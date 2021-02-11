@@ -7,6 +7,7 @@ import java.util.stream.*;
 
 import org.apache.commons.math3.distribution.*;
 import org.apache.commons.math3.stat.descriptive.*;
+import org.apache.poi.hsmf.parsers.*;
 import org.jdesktop.application.*;
 
 import com.javaflair.pokerprophesier.api.adapter.*;
@@ -256,7 +257,7 @@ public class Trooper extends Task {
 	 **/
 	private double getAmmunitions() {
 		double pot = pokerSimulator.getPotValue();
-		double handStreng = pokerSimulator.getCurrentHandStreng();
+		double handStreng = pokerSimulator.getCurrentHandStreng(true);
 		int handPotential = pokerSimulator.getHandPotential();
 		int handOuts = pokerSimulator.getHandPotentialOuts();
 		int oppHand = pokerSimulator.getOppMostProbHand();
@@ -281,15 +282,24 @@ public class Trooper extends Task {
 
 		double ammunitions = myPot + invest;
 		String myPotMsg = twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng);
-		// test: when the diference between the previous pot is too high, check that my hand is in uper half
-		double actvlim = (pot - pokerSimulator.getPrevPotValue()) / sensorsArray.getActiveVillans();
-		if (actvlim > 20) {
-			Card[] heroc = pokerSimulator.getMyHoleCards().getCards();
-			if (heroc[0].getRank() < Card.NINE && heroc[1].getRank() < Card.NINE) {
-				handStreng = 0;
-				myPotMsg = "WARNING!!";
-			}
+
+		// TEST: fail safe: when topOpphand and mostProbHand are equals, is because this is a real danger. set the pot =
+		// 0 to force fold
+		boolean danger = pokerSimulator.getOppMostProbHand() == pokerSimulator.getOppTopHand();
+		if (danger && pokerSimulator.getCurrentHandRank() < pokerSimulator.getOppTopHand()) {
+			myPotMsg = "WARNING!!";
+			ammunitions = 0;
 		}
+
+		// double actvlim = (pot - pokerSimulator.getPrevPotValue()) / sensorsArray.getActiveVillans();
+		// actvlim = actvlim/bBlind;
+		// if (actvlim > 20) {
+		// Card[] heroc = pokerSimulator.getMyHoleCards().getCards();
+		// if (heroc[0].getRank() < Card.NINE || heroc[1].getRank() < Card.NINE) {
+		// handStreng = 0;
+		// myPotMsg = "WARNING!!";
+		// }
+		// }
 		///////////////
 
 		String txt1 = "(" + myPotMsg + ") + (" + investMsg + ") = " + twoDigitFormat.format(ammunitions);
@@ -695,6 +705,31 @@ public class Trooper extends Task {
 			if (!("".equals(hch) || lastHoleCards.equals(hch))) {
 				lastHoleCards = hch;
 				setVariableAndLog(EXPLANATION, "new round ----------");
+
+				// play time or play sae parameter parameters. when the play time is reach, the action sit.out is
+				// clicked
+				// and hero return
+				// play time.
+				double ptd = Double.parseDouble(parameters.get("play.time").toString());
+				long playtimeParm = (long) (ptd * 3600 * 1000);
+				playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
+
+				// play until parameter
+				double playUntilParm = Double.parseDouble(parameters.get("play.until").toString());
+				double chips = pokerSimulator.getHeroChips();
+				// if chips are not available, show the last computed play safe value
+				if (chips > 0)
+					playUntil = pokerSimulator.getHeroChipsMax() - (playUntilParm * pokerSimulator.getBuyIn());
+
+				if ((playtimeParm > 0 && playTime > playtimeParm)
+						|| (chips > 0 && playUntilParm > 0 && chips <= playUntil)
+								&& sensorsArray.isSensorEnabled("sit.out")) {
+					robotActuator.perform("sit.out");
+					robotActuator.perform("fold");
+					setVariableAndLog(EXPLANATION, "Play time or loss fail safe reach. mission accomplisch.");
+					return false;
+				}
+
 				clearEnviorement();
 				setVariableAndLog(STATUS, "Looking the table ...");
 				continue;
@@ -782,28 +817,6 @@ public class Trooper extends Task {
 			// if watchEnviorement() methdo return false, dismiss the troper.
 			if (!ingt) {
 				setVariableAndLog(EXPLANATION, "Tropper dismiss.");
-				return null;
-			}
-
-			// play time or play sae parameter parameters. when the play time is reach, the action sit.out is clicked
-			// and hero return
-			// play time.
-			double ptd = Double.parseDouble(parameters.get("play.time").toString());
-			long playtimeParm = (long) (ptd * 3600 * 1000);
-			playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
-
-			// play until parameter
-			double playUntilParm = Double.parseDouble(parameters.get("play.until").toString());
-			double chips = pokerSimulator.getHeroChips();
-			// if chips are not available, show the last computed play safe value
-			if (chips > 0)
-				playUntil = pokerSimulator.getHeroChipsMax() - (playUntilParm * pokerSimulator.getBuyIn());
-
-			if ((playtimeParm > 0 && playTime > playtimeParm) || (chips > 0 && playUntilParm > 0 && chips <= playUntil)
-					&& sensorsArray.isSensorEnabled("sit.out")) {
-				robotActuator.perform("sit.out");
-				robotActuator.perform("fold");
-				setVariableAndLog(EXPLANATION, "Play time or loss fail safe reach. mission accomplisch.");
 				return null;
 			}
 
