@@ -285,21 +285,22 @@ public class Trooper extends Task {
 
 		// TEST: fail safe: when topOpphand and mostProbHand are equals, is because this is a real danger. set the pot =
 		// 0 to force fold
-		boolean danger = pokerSimulator.getOppMostProbHand() == pokerSimulator.getOppTopHand();
-		if (danger && pokerSimulator.getCurrentHandRank() < pokerSimulator.getOppTopHand()) {
-			myPotMsg = "WARNING!!";
-			ammunitions = 0;
-		}
+//		boolean danger = pokerSimulator.getOppMostProbHand() == pokerSimulator.getOppTopHand();
+//		if (danger && pokerSimulator.getCurrentHandRank() < pokerSimulator.getOppTopHand()) {
+//			myPotMsg = "WARNING!!";
+//			ammunitions = 1;
+//		}
 
-		// double actvlim = (pot - pokerSimulator.getPrevPotValue()) / sensorsArray.getActiveVillans();
-		// actvlim = actvlim/bBlind;
-		// if (actvlim > 20) {
-		// Card[] heroc = pokerSimulator.getMyHoleCards().getCards();
-		// if (heroc[0].getRank() < Card.NINE || heroc[1].getRank() < Card.NINE) {
-		// handStreng = 0;
-		// myPotMsg = "WARNING!!";
-		// }
-		// }
+//		TEST: in dangerous situations, check the lest significant cart. if my cards are < upper halft, force fold
+		double actvlim = (pot - pokerSimulator.getPrevPotValue()) / sensorsArray.getActiveVillans();
+		actvlim = actvlim / bBlind;
+		if (actvlim > 20) {
+			Card[] heroc = pokerSimulator.getMyHoleCards().getCards();
+			if (heroc[0].getRank() < Card.NINE || heroc[1].getRank() < Card.NINE) {
+				ammunitions = 1;
+				myPotMsg = "WARNING!!";
+			}
+		}
 		///////////////
 
 		String txt1 = "(" + myPotMsg + ") + (" + investMsg + ") = " + twoDigitFormat.format(ammunitions);
@@ -840,7 +841,7 @@ public class Trooper extends Task {
 		availableActions.values().removeIf(val -> val > upperB);
 		updateAsociatedCost();
 		// invert sing so, suboptimal mehtod can order in the right way
-		availableActions.values().forEach(val -> val = val * -1.0);
+		availableActions.replaceAll((key, val) -> val * -1.0);
 		String fila = availableActions.size() == 0 ? "all" : "" + (orgActNum - availableActions.size());
 		setVariableAndLog(EXPLANATION,
 				"Hero hand streng ratio = " + twoDigitFormat.format(handS) + " " + fila + " actions removed");
@@ -887,7 +888,8 @@ public class Trooper extends Task {
 			loadPostFlopActions(pokerSimulator.getHeroChips());
 			potOdd();
 		} else {
-			loadPostFlopActions(pokerSimulator.getPotValue());
+			loadPostFlopActions(pokerSimulator.getHeroChips());
+//			loadPostFlopActions(pokerSimulator.getPotValue());
 			handStrengFilter();
 		}
 	}

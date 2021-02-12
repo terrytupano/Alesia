@@ -412,8 +412,8 @@ public class PokerSimulator {
 			return "Is the Nuts";
 
 		// villan.s most probable hands is stronger as hero.s hand
-		if (oppTopHand > myHandHelper.getHandRank())
-			return txt;
+//		if (oppTopHand > myHandHelper.getHandRank())
+//			return txt;
 
 		// String sts = getSignificantCards();
 		// // set hand but > pair
@@ -422,8 +422,8 @@ public class PokerSimulator {
 		// txt = "Troper has " + nh + " (set)";
 		// }
 
-		String nh = UoAHandEvaluator.nameHand(uoAHand);
-		txt = "Troper has " + nh;
+//		String nh = UoAHandEvaluator.nameHand(uoAHand);
+//		txt = "Troper has " + nh;
 
 		return txt;
 	}
