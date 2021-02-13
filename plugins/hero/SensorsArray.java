@@ -334,8 +334,8 @@ public class SensorsArray {
 
 			slist = allSensors.stream().filter(ss -> ss.isButtonArea()).collect(Collectors.toList());
 			readSensors(false, slist);
-			updateTablePosition();
-
+			
+			pokerSimulator.setTablePosition(getDealerButtonPosition(), getActiveVillans());
 			pokerSimulator.setPotValue(getSensor("pot").getNumericOCR());
 			pokerSimulator.setCallValue(getSensor("hero.call").getNumericOCR());
 			pokerSimulator.setHeroChips(getSensor("hero.chips").getNumericOCR());
@@ -467,19 +467,6 @@ public class SensorsArray {
 		screenSensors.values().stream().forEach(ss -> ss.setBorder(standByBorder));
 	}
 
-	/**
-	 * Update the table position. the Hero´s table position is determinated detecting the dealer button and counting
-	 * clockwise. For examples, in a 4 villans table:
-	 * <li>If hero has the dealer button, this method return 5;
-	 * <li>if villan4 is the dealer, this method return 1. Hero is small blind
-	 * <li>if villan1 is the dealer, this method return 4. Hero is in middle table position.
-	 */
-	private void updateTablePosition() {
-		int dbp = getDealerButtonPosition();
-		// int tp = Math.abs(dbp - (getActiveSeats() + 1));
-		int tp = Math.abs(dbp - (getVillans() + 1));
-		pokerSimulator.setTablePosition(tp);
-	}
 	/**
 	 * Create the array of sensors setted in the {@link ShapeAreas}.
 	 * <p>

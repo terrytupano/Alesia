@@ -7,7 +7,6 @@ import java.util.stream.*;
 
 import org.apache.commons.math3.distribution.*;
 import org.apache.commons.math3.stat.descriptive.*;
-import org.apache.poi.hsmf.parsers.*;
 import org.jdesktop.application.*;
 
 import com.javaflair.pokerprophesier.api.adapter.*;
@@ -61,9 +60,8 @@ public class Trooper extends Task {
 	private DescriptiveStatistics outGameStats;
 	private boolean paused = false;
 	private Hashtable<String, Object> parameters;
-	private TreeMap<String, String> preflopHands;
-	private Vector<String> bluffHands;
-	private Vector<Hashtable<Integer, Double>> bluffEVValues;
+	private ArrayList<ArrayList<String>> sklanskyPreflop;
+	private ArrayList<ArrayList<String>> bluffHands;
 	long stepMillis;
 	// This variable is ONLY used and cleaned by ensuregametable method
 	private String lastHoleCards = "";
@@ -82,23 +80,29 @@ public class Trooper extends Task {
 		this.outGameStats = new DescriptiveStatistics(10);
 		this.pokerSimulator = sensorsArray.getPokerSimulator();
 		instance = this;
-		this.preflopHands = TStringUtils.getProperties("preflop.card");
-		// build bluff hand
-		this.bluffHands = new Vector();
-		this.bluffEVValues = new Vector();
-		TreeMap<String, String> tmp = TStringUtils.getProperties("bluff.card");
-		ArrayList<String> l = new ArrayList<>(tmp.keySet());
-		for (String key : l) {
-			String[] row = tmp.get(key).split("[\t]");
-			Hashtable positions = new Hashtable<Integer, Double>();
-			String hand = row[0];
-			for (int i = 2; i < row.length; i++)
-				positions.put(i - 1, new Double(row[i]));
-			bluffHands.add(hand);
-			bluffEVValues.add(positions);
-		}
+		this.sklanskyPreflop = getTabProperties("preflop.card");
+		this.bluffHands = getTabProperties("bluff.card");
 	}
 
+	/**
+	 * return an <code>ArrayList<ArrayList<String>></code> contain the list of element described in the propertifile
+	 * under the group parameter. the array of array contain ilve the values tabulator separated. the result is similar
+	 * to a matriz. the order of the rows elements are determinated by the natural order form the key in the
+	 * propertyfile.
+	 * 
+	 * @param group - group of elements
+	 * @return <code>ArrayList<ArrayList<String>></code> wiht all the values loaded
+	 */
+	public static ArrayList<ArrayList<String>> getTabProperties(String group) {
+		TreeMap<String, String> tmp = TStringUtils.getProperties(group);
+		ArrayList<String> keys = new ArrayList<>(tmp.keySet());
+		ArrayList<ArrayList<String>> rtnList = new ArrayList<>();
+		for (String key : keys) {
+			String[] row = tmp.get(key).split("[\t]");
+			rtnList.add(new ArrayList<>(Arrays.asList(row)));
+		}
+		return rtnList;
+	}
 	public static Trooper getInstance() {
 		return instance;
 	}
@@ -124,15 +128,22 @@ public class Trooper extends Task {
 	 * @see #setBluffActions()
 	 */
 	private boolean checkOportunities() {
-		// check form oportunity
-		String txt = pokerSimulator.isOportunity();
+		String txt = null;
+
+		if (pokerSimulator.getMyHandHelper().isTheNuts())
+			txt = "Is the Nuts";
+
+		double prob = pokerSimulator.getProbability();
+		if (pokerSimulator.getMyHandHelper().isHoleCardHand() && prob > 0.60) {
+			Card[] cards = pokerSimulator.getMyHandHelper().getSignificantCards();
+			txt = cards.length + " Significant card with " + twoDigitFormat.format(prob);
+		}
+
 		if (txt != null) {
 			setBluffActions();
-			Hero.heroLogger.info("Oportunity detected ----------");
-			Hero.heroLogger.info(txt);
-			return true;
+			setVariableAndLog(EXPLANATION, "Oportunity detected " + txt);
 		}
-		return false;
+		return txt != null;
 	}
 
 	/**
@@ -181,6 +192,7 @@ public class Trooper extends Task {
 		maxRekonAmmo = -1;
 		currentHandCost = 0;
 		oportinity = false;
+		subObtimalDist = "Triangular";
 		// at first time execution, a standar time of 10 second is used
 		long tt = time1 == 0 ? 10000 : System.currentTimeMillis() - time1;
 		outGameStats.addValue(tt);
@@ -285,22 +297,22 @@ public class Trooper extends Task {
 
 		// TEST: fail safe: when topOpphand and mostProbHand are equals, is because this is a real danger. set the pot =
 		// 0 to force fold
-//		boolean danger = pokerSimulator.getOppMostProbHand() == pokerSimulator.getOppTopHand();
-//		if (danger && pokerSimulator.getCurrentHandRank() < pokerSimulator.getOppTopHand()) {
-//			myPotMsg = "WARNING!!";
-//			ammunitions = 1;
-//		}
+		// boolean danger = pokerSimulator.getOppMostProbHand() == pokerSimulator.getOppTopHand();
+		// if (danger && pokerSimulator.getCurrentHandRank() < pokerSimulator.getOppTopHand()) {
+		// myPotMsg = "WARNING!!";
+		// ammunitions = 1;
+		// }
 
-//		TEST: in dangerous situations, check the lest significant cart. if my cards are < upper halft, force fold
-		double actvlim = (pot - pokerSimulator.getPrevPotValue()) / sensorsArray.getActiveVillans();
-		actvlim = actvlim / bBlind;
-		if (actvlim > 20) {
-			Card[] heroc = pokerSimulator.getMyHoleCards().getCards();
-			if (heroc[0].getRank() < Card.NINE || heroc[1].getRank() < Card.NINE) {
-				ammunitions = 1;
-				myPotMsg = "WARNING!!";
-			}
-		}
+		// TEST: in dangerous situations, check the lest significant cart. if my cards are < upper halft, force fold
+		// double actvlim = (pot - pokerSimulator.getPrevPotValue()) / sensorsArray.getActiveVillans();
+		// actvlim = actvlim / bBlind;
+		// if (actvlim > 20) {
+		// Card[] heroc = pokerSimulator.getMyHoleCards().getCards();
+		// if (heroc[0].getRank() < Card.NINE || heroc[1].getRank() < Card.NINE) {
+		// ammunitions = 1;
+		// myPotMsg = "WARNING!!";
+		// }
+		// }
 		///////////////
 
 		String txt1 = "(" + myPotMsg + ") + (" + investMsg + ") = " + twoDigitFormat.format(ammunitions);
@@ -334,23 +346,15 @@ public class Trooper extends Task {
 		String s = hc.isSuited() ? "s" : "";
 		String c1 = hc.getFirstCard().toString().substring(0, 1) + hc.getSecondCard().toString().substring(0, 1);
 		String c2 = hc.getSecondCard().toString().substring(0, 1) + hc.getFirstCard().toString().substring(0, 1);
-		int idx1 = bluffHands.indexOf(c1 + s);
-		int idx2 = bluffHands.indexOf(c2 + s);
-		Hashtable<Integer, Double> evvalues = null;
-		int index = -1;
-		if (idx1 > -1) {
-			evvalues = bluffEVValues.elementAt(idx1);
-			index = idx1;
-		}
-		if (idx2 > -1) {
-			evvalues = bluffEVValues.elementAt(idx2);
-			index = idx2;
-		}
+		ArrayList<String> list1 = bluffHands.stream().filter(lst -> lst.get(0).equals(c1 + s)).findFirst().orElse(null);
+		ArrayList<String> list2 = bluffHands.stream().filter(lst -> lst.get(0).equals(c2 + s)).findFirst().orElse(null);
+		ArrayList<String> evvalues = list1 == null ? list2 : list1;
 		int tablep = pokerSimulator.getTablePosition();
 		if (evvalues != null && tablep > -1)
-			ev = evvalues.get(tablep);
+			ev = Double.parseDouble(evvalues.get(tablep + 2));
 		return ev;
 	}
+	private String subObtimalDist;
 
 	private String getSubOptimalAction() {
 		Vector<TEntry<String, Double>> actProb = new Vector<>();
@@ -360,7 +364,9 @@ public class Trooper extends Task {
 		int elements = availableActions.size();
 		double hs = pokerSimulator.getCurrentHandStreng() * elements;
 		double mode = (hs > 1) ? elements : hs * elements;
-		TriangularDistribution tdist = new TriangularDistribution(0, mode, elements);
+		AbstractRealDistribution tdist = new TriangularDistribution(0, mode, elements);
+		if (subObtimalDist.equals("UniformReal"))
+			tdist = new UniformRealDistribution(0, elements);
 		int[] singletos = new int[elements];
 		double[] probabilities = new double[elements];
 		for (int i = 0; i < elements; i++) {
@@ -382,10 +388,29 @@ public class Trooper extends Task {
 	}
 
 	/**
+	 * return the ranck from preflop hand according to <b>Sklansky hand groups</b> this list is inverse and proportional
+	 * to ne number of amunitions that hero will be willing to invest in any hand.
+	 * <p>
+	 * e.g: if this metod return 8 this mean rank 2 in Sklansky hand groups. hero is able to bet until 8 BB in preflop.
+	 * 
+	 * @return the rank or numer of BB to bet
+	 */
+	private int getSklanskyRank() {
+		int rnk = -1;
+		HoleCards hc = pokerSimulator.getMyHoleCards();
+		String s = hc.isSuited() ? "s" : "";
+		String c1 = hc.getFirstCard().toString().substring(0, 1) + hc.getSecondCard().toString().substring(0, 1);
+		String c2 = hc.getSecondCard().toString().substring(0, 1) + hc.getFirstCard().toString().substring(0, 1);
+		ArrayList<String> list1 = sklanskyPreflop.stream().filter(lst -> lst.contains(c1 + s)).findFirst().orElse(null);
+		ArrayList<String> list2 = sklanskyPreflop.stream().filter(lst -> lst.contains(c2 + s)).findFirst().orElse(null);
+		ArrayList<String> prank = list1 == null ? list2 : list1;
+		if (prank != null)
+			rnk = Integer.parseInt(prank.get(0));
+		return rnk;
+	}
+	/**
 	 * Check acordig to the <code>preflopStrategy</code> parameter, if this hand is a good preflop hand. if this metod
 	 * return <code>null</code>, it is because this hand is not a good preflopa hand
-	 * 
-	 * TODO: Check Loky from UoA. there is a table with a complete hand distribution for preflop
 	 * 
 	 * return a String text for explanation. <code>null</code> for not good preflop hand
 	 */
@@ -412,7 +437,7 @@ public class Trooper extends Task {
 			if ((heroc[0].getRank() > Card.QUEEN || heroc[1].getRank() > Card.QUEEN))
 				txt = "A or K";
 
-			// TEMP: suited Q
+			// suited Q
 			if ((heroc[0].getRank() == Card.QUEEN || heroc[1].getRank() == Card.QUEEN)
 					&& pokerSimulator.getMyHoleCards().isSuited())
 				txt = "Suited Queen";
@@ -421,14 +446,8 @@ public class Trooper extends Task {
 		}
 
 		// +EV list
-		if (strategy.equals("PRELIST")) {
-			HoleCards hc = pokerSimulator.getMyHoleCards();
-			String s = hc.isSuited() ? "s" : "";
-			String c1 = hc.getFirstCard().toString().substring(0, 1) + hc.getSecondCard().toString().substring(0, 1);
-			String c2 = hc.getSecondCard().toString().substring(0, 1) + hc.getFirstCard().toString().substring(0, 1);
-			boolean inList = preflopHands.containsValue(c1 + s) || preflopHands.containsValue(c2 + s);
-			txt = inList ? "Preflop hand it is in positive EV list" : null;
-			return txt;
+		if (strategy.equals("SKLANSKY") && getSklanskyRank() > 0) {
+			return "In Sklansky and Malmuth list.";
 		}
 
 		// naive prflop selection
@@ -567,20 +586,31 @@ public class Trooper extends Task {
 	}
 
 	/**
-	 * clear the global variable {@link #availableActions} and set only <code>raise.pot</code> and/or
-	 * <code>raise.allin</code> actions whit equal probability. all actions or only one can be present depend of the
-	 * enviorement
+	 * clear the global variable {@link #availableActions} and set only <code>raise.pot</code> and
+	 * <code>raise.allin</code> actions whit equal probability.
+	 * <p>
+	 * This method signal {@link #getSubOptimalAction()} to use UniformRealDistribution. this allow true random
+	 * selection of all posible bluff actions
 	 */
 	private void setBluffActions() {
 		availableActions.clear();
+		subObtimalDist = "UniformReal";
 		double chips = pokerSimulator.getHeroChips();
 		double pot = pokerSimulator.getPotValue();
+		double raise = pokerSimulator.getRaiseValue();
 
 		if (pot >= 0 && sensorsArray.getSensor("raise.pot").isEnabled())
-			availableActions.put("raise.pot;raise", 0.5);
+			availableActions.put("raise.pot;raise", pot);
 
 		if (chips >= 0 && sensorsArray.getSensor("raise.allin").isEnabled())
-			availableActions.put("raise.allin;raise", 0.5);
+			availableActions.put("raise.allin;raise", chips);
+
+		// to this point, if availableactions are empty, means hero is responding a extreme hihgt raise. that mean meybe
+		// hero is weak. at this point reise mean all in. (call actions is not considerer because is not bluff)
+		if (availableActions.size() == 0 && raise >= 0)
+			availableActions.put("raise", raise);
+
+		updateAsociatedCost();
 	}
 
 	/**
@@ -889,7 +919,7 @@ public class Trooper extends Task {
 			potOdd();
 		} else {
 			loadPostFlopActions(pokerSimulator.getHeroChips());
-//			loadPostFlopActions(pokerSimulator.getPotValue());
+			// loadPostFlopActions(pokerSimulator.getPotValue());
 			handStrengFilter();
 		}
 	}

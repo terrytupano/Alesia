@@ -12,12 +12,12 @@ import gui.*;
 public class TrooperPanel extends TUIFormPanel {
 
 	public TrooperPanel() {
-		addInputComponent(TUIUtils.getTWebComboBox("table.parameters", "table.parameters"));
+		addInputComponent(TUIUtils.getTWebComboBox("table.parameters", "table.parameters0"));
 		addInputComponent(TUIUtils.getNumericTextField("play.time", null, 5, null), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("play.until", null, 5, null), false, true);
 		
 		addInputComponent(TUIUtils.getTWebComboBox("preflopStrategy", "table.strategy"));
-		addInputComponent(TUIUtils.getTWebComboBox("decisionMethod", "decisionMet"));
+		addInputComponent(TUIUtils.getTWebComboBox("decisionMethod", "decisionMet0"));
 		
 		addInputComponent(TUIUtils.getTWebComboBox("tDistributionRange", "tdisrange"));
 		

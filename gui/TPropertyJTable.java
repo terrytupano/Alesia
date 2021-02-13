@@ -46,10 +46,10 @@ public class TPropertyJTable extends JTable implements MouseListener {
 	 * @param prpl - String of properties in standar format key;value;key;value...
 	 */
 	public void setPropertys(String prpl) {
-		this.tableModel = new TPropertyTableModel(TStringUtils.getPropertys(prpl));
-		setModel(tableModel);
-		getTableHeader().getColumnModel().getColumn(0).setMaxWidth(20);
-		tableModel.fireTableDataChanged();
+//		this.tableModel = new TPropertyTableModel(TStringUtils.getPropertys(prpl));
+//		setModel(tableModel);
+//		getTableHeader().getColumnModel().getColumn(0).setMaxWidth(20);
+//		tableModel.fireTableDataChanged();
 	}
 
 	/** 

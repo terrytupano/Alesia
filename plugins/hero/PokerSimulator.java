@@ -91,7 +91,7 @@ public class PokerSimulator {
 	private boolean takeOportunity = false;
 	private Hashtable<String, Object> parameters;
 	private Hashtable<Integer, String> streetNames = new Hashtable<>();
-	
+
 	public PokerSimulator() {
 		handStrengSamples.add(2970352); // straight_flush
 		handStrengSamples.add(2599136); // four_of_a_kind
@@ -382,51 +382,44 @@ public class PokerSimulator {
 		return variableList;
 	}
 
-	public String isdraw() {
-		String drw = null;
-		drw = myHandHelper.isFlushDraw() ? "Flush draw" : drw;
-		drw = myHandHelper.isStraightDraw() ? "Strainht draw" : drw;
-		drw = myHandHelper.isStraightFlushDraw() ? "Straight Flush draw" : drw;
-		return drw;
-	}
-	/**
-	 * check whether is an oportunity. An oportunity is present when the current street is {@link #FLOP_CARDS_DEALT} or
-	 * futher and the following conditions is found:
-	 * <li>Heros hand muss be >= to the hand setted in {@link #oppMostProbHand} gobal variable
-	 * <li>The hand is a set (both card in heros.s hands participate in the action)
-	 * <li>OR the hand is the nut
-	 * 
-	 * @return a text explain what oportunity is detected or <code>null</code> if no oportunity are present
-	 */
-	public String isOportunity() {
-		String txt = null;
-		// Hero must check for oportunity
-		if (!takeOportunity)
-			return txt;
-		// the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
-		if (currentRound < FLOP_CARDS_DEALT)
-			return txt;
-
-		// is the nut
-		if (getMyHandHelper().isTheNuts())
-			return "Is the Nuts";
-
-		// villan.s most probable hands is stronger as hero.s hand
-//		if (oppTopHand > myHandHelper.getHandRank())
+//	/**
+//	 * check whether is an oportunity. An oportunity is present when the current street is {@link #FLOP_CARDS_DEALT} or
+//	 * futher and the following conditions is found:
+//	 * <li>Heros hand muss be >= to the hand setted in {@link #oppMostProbHand} gobal variable
+//	 * <li>The hand is a set (both card in heros.s hands participate in the action)
+//	 * <li>OR the hand is the nut
+//	 * 
+//	 * @return a text explain what oportunity is detected or <code>null</code> if no oportunity are present
+//	 */
+//	public String isOportunity() {
+//		String txt = null;
+//		// Hero must check for oportunity
+//		if (!takeOportunity)
 //			return txt;
-
-		// String sts = getSignificantCards();
-		// // set hand but > pair
-		// if (myHandHelper.getHandRank() > Hand.PAIR && sts.length() == 5) {
-		// String nh = UoAHandEvaluator.nameHand(uoAHand);
-		// txt = "Troper has " + nh + " (set)";
-		// }
-
-//		String nh = UoAHandEvaluator.nameHand(uoAHand);
-//		txt = "Troper has " + nh;
-
-		return txt;
-	}
+//		// the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
+//		if (currentRound < FLOP_CARDS_DEALT)
+//			return txt;
+//
+//		// is the nut
+//		if (getMyHandHelper().isTheNuts())
+//			return "Is the Nuts";
+//
+//		// villan.s most probable hands is stronger as hero.s hand
+//		// if (oppTopHand > myHandHelper.getHandRank())
+//		// return txt;
+//
+//		// String sts = getSignificantCards();
+//		// // set hand but > pair
+//		// if (myHandHelper.getHandRank() > Hand.PAIR && sts.length() == 5) {
+//		// String nh = UoAHandEvaluator.nameHand(uoAHand);
+//		// txt = "Troper has " + nh + " (set)";
+//		// }
+//
+//		// String nh = UoAHandEvaluator.nameHand(uoAHand);
+//		// txt = "Troper has " + nh;
+//
+//		return txt;
+//	}
 	/**
 	 * perform the PokerProphesier simulation. Call this method when all the cards on the table has been setted using
 	 * {@link #addCard(String, String)} this method will create the {@link HoleCards} and the {@link CommunityCards} (if
@@ -470,9 +463,9 @@ public class PokerSimulator {
 			updateHandValues();
 			updateSimulationResults();
 			variableList.put(STATUS, STATUS_OK);
-			String oportunity = isOportunity();
-			if (oportunity != null)
-				variableList.put(STATUS, oportunity);
+//			String oportunity = isOportunity();
+//			if (oportunity != null)
+//				variableList.put(STATUS, oportunity);
 			updateReport();
 		} catch (SimulatorException e) {
 			setVariable(STATUS, STATUS_ERROR);
@@ -520,9 +513,21 @@ public class PokerSimulator {
 	public void setRaiseValue(double raiseValue) {
 		this.raiseValue = raiseValue;
 	}
-	public void setTablePosition(int tp) {
-		this.tablePosition = tp;
+
+	/**
+	 * Update the table position. the Hero´s table position is determinated detecting the dealer button and counting
+	 * clockwise. For examples, in a 4 villans table:
+	 * <li>If hero has the dealer button, this method return 5;
+	 * <li>if villan4 is the dealer, this method return 1. Hero is small blind
+	 * <li>if villan1 is the dealer, this method return 4. Hero is in middle table position.
+	 * <p>
+	 * this metod is called during the {@link SensorsArray#read(String)} operation.
+	 */
+	public void setTablePosition(int dealerPos, int villans) {
+		// int tp = Math.abs(dbp - (getActiveSeats() + 1));
+		this.tablePosition = Math.abs(dealerPos - (villans + 1));
 	}
+	
 	public void setVariable(String key, Object value) {
 		// format double values
 		Object value1 = value;
@@ -801,7 +806,8 @@ public class PokerSimulator {
 		String txt = "Amunitions " + getHeroChips() + " Pot " + getPotValue() + " Call " + getCallValue() + " Raise "
 				+ getRaiseValue() + " Position " + getTablePosition();
 		variableList.put("simulator.Table values", txt);
-		variableList.put("simulator.Simulator values", "Round " + getCurrentRoundName() + " Players " + getNumSimPlayers());
+		variableList.put("simulator.Simulator values",
+				"Round " + getCurrentRoundName() + " Players " + getNumSimPlayers());
 
 		Hero.heroLogger.info("Table parameters: " + getTableParameters());
 		Hero.heroLogger.info("Table values: " + variableList.get("simulator.Table values"));
@@ -813,7 +819,7 @@ public class PokerSimulator {
 				+ handNames.get(Hand.STRAIGHT_FLUSH - oppTopHand));
 
 	}
-	
+
 	public String getCurrentRoundName() {
 		return streetNames.get(currentRound);
 	}

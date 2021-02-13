@@ -66,8 +66,7 @@ public class TStringUtils {
 	 * beging with the given argument. the key for the returned list will be the property and the value, the property
 	 * value.
 	 * <p>
-	 * NOTE: the list is sort accordint to the key argument. all elements are returned in the same order as in the
-	 * property list
+	 * NOTE: the list is sort accordint to the key argument from the property file.
 	 * 
 	 * @param group - prefix of the property to look.
 	 * 
@@ -116,18 +115,16 @@ public class TStringUtils {
 	 * @return array of entries
 	 */
 	public static TEntry[] getTEntryGroup(String group) {
-		ArrayList<String> keys = new ArrayList(allProperties.keySet());
-		Vector lst = new Vector();
-		for (String key : keys) {
-			if (key.startsWith(group)) {
-				String[] kv = allProperties.getProperty(key).split(";");
-				if (kv.length > 1) {
-					lst.add(new TEntry(kv[0], kv[1]));
-				}
-			}
+		TreeMap<String, String> prps = getProperties(group);
+		// 210213: jajaja ayer fue 12022021. palindrome y ambigram: se puede leer izq->der, der->izq y de arriba a
+		// abajo. mi ex profe Maria me mando ese meme
+		TEntry[] rntarray = new TEntry[prps.size()];
+		ArrayList<String> vals = new ArrayList(prps.values());
+		for (int i = 0; i < rntarray.length; i++) {
+			String[] kv = vals.get(i).split(";");
+			rntarray[i] = new TEntry<>(kv[0], kv[1]);
 		}
-		TEntry[] lte = (TEntry[]) lst.toArray(new TEntry[lst.size()]);
-		return lte;
+		return rntarray;
 	}
 
 	public static TEntry getTEntry(String tid) {
@@ -165,26 +162,6 @@ public class TStringUtils {
 	 */
 	public static String getStringDate(String f) {
 		return getStringDate(new Date(), f);
-	}
-
-	/**
-	 * return a {@link Vector} of {@link TEntry} converted form string of properies
-	 * 
-	 * @param prpl - String of properties in standar format: key;value;key;value...
-	 * 
-	 * @return vector of tentry
-	 */
-	public static Vector<TEntry> getPropertys(String prpl) {
-		Vector<TEntry> prpv = new Vector();
-		if (!prpl.equals("")) {
-			String[] kv = prpl.split(";");
-			for (int i = 0; i < kv.length; i = i + 2) {
-				// 171218: try to correct error in incoming string when key;value pair are not even
-				String v = (i + 1) > kv.length ? "" : kv[i + 1];
-				prpv.add(new TEntry(kv[i], v));
-			}
-		}
-		return prpv;
 	}
 
 	/**
