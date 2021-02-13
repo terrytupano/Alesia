@@ -208,12 +208,14 @@ public class Trooper extends Task {
 	 * 
 	 */
 	private void decide() {
-		setVariableAndLog(STATUS, "Deciding ...");
+		setVariableAndLog(STATUS, "Reading NUMBERS ...");
 		// read first the numbers to update the dashboard whit the numerical values. this allow me some time to inspect.
 		// only for visula purporse
 		sensorsArray.read(SensorsArray.TYPE_NUMBERS);
+		setVariableAndLog(STATUS, "Reading CARDS ...");
 		sensorsArray.read(SensorsArray.TYPE_CARDS);
 		availableActions.clear();
+		setVariableAndLog(STATUS, "Deciding ...");
 
 		// chek the status of the simulator in case of error. if an error is detected, fold
 		if (pokerSimulator.getVariables().get(PokerSimulator.STATUS).equals(PokerSimulator.STATUS_ERROR)) {
@@ -630,29 +632,31 @@ public class Trooper extends Task {
 			return;
 		}
 		double pfBase = ((Number) parameters.get("preflopRekonAmmo.base")).doubleValue();
-		double chips = pokerSimulator.getHeroChips();
-		double pfHStreng = ((Number) parameters.get("preflopRekonAmmo.hand")).doubleValue();
-		double base = pokerSimulator.getBigBlind() * pfBase;
-		double ammo = pokerSimulator.getBigBlind() * pfHStreng;
-		double streng = pokerSimulator.getPreFlopHandStreng();
+		double bBlind = pokerSimulator.getBigBlind();
+		double base = bBlind * pfBase;
+
+//		double chips = pokerSimulator.getHeroChips();
+		// double pfHStreng = ((Number) parameters.get("preflopRekonAmmo.hand")).doubleValue();
+		// double ammo = pokerSimulator.getBigBlind() * pfHStreng;
+//		double streng = pokerSimulator.getPreFlopHandStreng();
+
+		int sRank = getSklanskyRank();
+//		the char is not in table
+		sRank = (sRank == -1) ? 0 : sRank;
+		double preflopStr = base + (bBlind * sRank);
 
 		// standar preflop streng.
-		double preflopStr = base + (ammo * streng);
+		// double preflopStr = base + (ammo * streng);
 
 		// assign values from +EV list. this allow hero don.t throw good preflop so easily. preflop hand like AK cann
 		// suport more call form pot stillers
-		double pfev = getPreflopEV();
-		double pfsev = chips * pfev;
-		if (pfev > 0 && preflopStr < pfsev)
-			preflopStr = pfsev;
+//		double pfev = getPreflopEV();
+//		double pfsev = chips * pfev;
+//		if (pfev > 0 && preflopStr < pfsev)
+//			preflopStr = pfsev;
 
 		if (maxRekonAmmo == -1)
 			maxRekonAmmo = preflopStr;
-
-		if (currentHandCost >= maxRekonAmmo) {
-			setVariableAndLog(EXPLANATION, prehand + " but no more ammunition available.");
-			return;
-		}
 
 		double call = pokerSimulator.getCallValue();
 		double raise = pokerSimulator.getRaiseValue();
@@ -671,9 +675,13 @@ public class Trooper extends Task {
 			}
 		}
 		updateAsociatedCost();
+		if (availableActions.size() == 0) {
+			setVariableAndLog(EXPLANATION, prehand + " but no more ammunition available.");
+			return;
+		}
 
-		String txt1 = prehand + " " + twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(ammo) + " * "
-				+ twoDigitFormat.format(streng) + ") = " + twoDigitFormat.format(maxRekonAmmo);
+		String txt1 = prehand + " " + twoDigitFormat.format(base) + " + (" + twoDigitFormat.format(bBlind) + " * "
+				+ twoDigitFormat.format(sRank) + ") = " + twoDigitFormat.format(maxRekonAmmo);
 		setVariableAndLog(EXPLANATION, txt1);
 	}
 

@@ -41,11 +41,11 @@
     </root>
   </FlickaDockablePane>
   <bigBlindFactor type="ComboBoxState" selectedIndex="5"/>
-  <preflopStrategy type="ComboBoxState" selectedIndex="1"/>
+  <preflopStrategy type="ComboBoxState" selectedIndex="0"/>
   <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>
   <TWebFrame type="WindowState" location="0,40" size="547,735" state="0"/>
   <smallBlid type="string"></smallBlid>
-  <preflopRekonAmmo.base type="TextComponentState" text="1" caretPosition="1"/>
+  <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>
   <bluff type="TextComponentState" text="200" caretPosition="3"/>
   <table.buyIn type="TextComponentState" text="200000" caretPosition="6"/>
 </SettingsGroup>
