@@ -45,7 +45,7 @@ public class PokerSimulator {
 	public static String STATUS = "aa.Simulator Status";
 	public static String STATUS_OK = "Ok";
 	public static String STATUS_ERROR = "Error";
-	private static DecimalFormat fourDigitFormat = new DecimalFormat("#0.0000");
+	private static NumberFormat percentageFormat = NumberFormat.getPercentInstance();
 	private static DecimalFormat twoDigitFormat = new DecimalFormat("#0.00");
 	// pair of 22
 	// private static int minHandRank = 371293;
@@ -88,7 +88,6 @@ public class PokerSimulator {
 	private UoAHand uoAHand;
 	private Hashtable<Integer, String> handNames = new Hashtable<>();
 	private Vector<Integer> handStrengSamples = new Vector<>();
-	private boolean takeOportunity = false;
 	private Hashtable<String, Object> parameters;
 	private Hashtable<Integer, String> streetNames = new Hashtable<>();
 
@@ -194,7 +193,6 @@ public class PokerSimulator {
 		this.buyIn = ((Number) parameters.get("table.buyIn")).doubleValue();
 		this.smallBlind = ((Number) parameters.get("table.smallBlid")).doubleValue();
 		this.bigBlind = ((Number) parameters.get("table.bigBlid")).doubleValue();
-		this.takeOportunity = ((Boolean) parameters.get("takeOportunity"));
 	}
 
 	/**
@@ -382,44 +380,45 @@ public class PokerSimulator {
 		return variableList;
 	}
 
-//	/**
-//	 * check whether is an oportunity. An oportunity is present when the current street is {@link #FLOP_CARDS_DEALT} or
-//	 * futher and the following conditions is found:
-//	 * <li>Heros hand muss be >= to the hand setted in {@link #oppMostProbHand} gobal variable
-//	 * <li>The hand is a set (both card in heros.s hands participate in the action)
-//	 * <li>OR the hand is the nut
-//	 * 
-//	 * @return a text explain what oportunity is detected or <code>null</code> if no oportunity are present
-//	 */
-//	public String isOportunity() {
-//		String txt = null;
-//		// Hero must check for oportunity
-//		if (!takeOportunity)
-//			return txt;
-//		// the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
-//		if (currentRound < FLOP_CARDS_DEALT)
-//			return txt;
-//
-//		// is the nut
-//		if (getMyHandHelper().isTheNuts())
-//			return "Is the Nuts";
-//
-//		// villan.s most probable hands is stronger as hero.s hand
-//		// if (oppTopHand > myHandHelper.getHandRank())
-//		// return txt;
-//
-//		// String sts = getSignificantCards();
-//		// // set hand but > pair
-//		// if (myHandHelper.getHandRank() > Hand.PAIR && sts.length() == 5) {
-//		// String nh = UoAHandEvaluator.nameHand(uoAHand);
-//		// txt = "Troper has " + nh + " (set)";
-//		// }
-//
-//		// String nh = UoAHandEvaluator.nameHand(uoAHand);
-//		// txt = "Troper has " + nh;
-//
-//		return txt;
-//	}
+	// /**
+	// * check whether is an oportunity. An oportunity is present when the current street is {@link #FLOP_CARDS_DEALT}
+	// or
+	// * futher and the following conditions is found:
+	// * <li>Heros hand muss be >= to the hand setted in {@link #oppMostProbHand} gobal variable
+	// * <li>The hand is a set (both card in heros.s hands participate in the action)
+	// * <li>OR the hand is the nut
+	// *
+	// * @return a text explain what oportunity is detected or <code>null</code> if no oportunity are present
+	// */
+	// public String isOportunity() {
+	// String txt = null;
+	// // Hero must check for oportunity
+	// if (!takeOportunity)
+	// return txt;
+	// // the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
+	// if (currentRound < FLOP_CARDS_DEALT)
+	// return txt;
+	//
+	// // is the nut
+	// if (getMyHandHelper().isTheNuts())
+	// return "Is the Nuts";
+	//
+	// // villan.s most probable hands is stronger as hero.s hand
+	// // if (oppTopHand > myHandHelper.getHandRank())
+	// // return txt;
+	//
+	// // String sts = getSignificantCards();
+	// // // set hand but > pair
+	// // if (myHandHelper.getHandRank() > Hand.PAIR && sts.length() == 5) {
+	// // String nh = UoAHandEvaluator.nameHand(uoAHand);
+	// // txt = "Troper has " + nh + " (set)";
+	// // }
+	//
+	// // String nh = UoAHandEvaluator.nameHand(uoAHand);
+	// // txt = "Troper has " + nh;
+	//
+	// return txt;
+	// }
 	/**
 	 * perform the PokerProphesier simulation. Call this method when all the cards on the table has been setted using
 	 * {@link #addCard(String, String)} this method will create the {@link HoleCards} and the {@link CommunityCards} (if
@@ -463,9 +462,9 @@ public class PokerSimulator {
 			updateHandValues();
 			updateSimulationResults();
 			variableList.put(STATUS, STATUS_OK);
-//			String oportunity = isOportunity();
-//			if (oportunity != null)
-//				variableList.put(STATUS, oportunity);
+			// String oportunity = isOportunity();
+			// if (oportunity != null)
+			// variableList.put(STATUS, oportunity);
 			updateReport();
 		} catch (SimulatorException e) {
 			setVariable(STATUS, STATUS_ERROR);
@@ -527,12 +526,12 @@ public class PokerSimulator {
 		// int tp = Math.abs(dbp - (getActiveSeats() + 1));
 		this.tablePosition = Math.abs(dealerPos - (villans + 1));
 	}
-	
+
 	public void setVariable(String key, Object value) {
 		// format double values
 		Object value1 = value;
 		if (value instanceof Double)
-			value1 = fourDigitFormat.format(((Double) value).doubleValue());
+			value1 = twoDigitFormat.format(((Double) value).doubleValue());
 		variableList.put(key, value1);
 		if (Trooper.STATUS.equals(key)) {
 			// variableList.put("trooper.Performance Step time", (System.currentTimeMillis() - lastStepMillis));
@@ -711,20 +710,20 @@ public class PokerSimulator {
 		}
 		return "<table>" + res + "</table>";
 	}
+
 	/**
-	 * return a string representing the card in the troopers hand that participe in the hand Example:
-	 * <li>hero: 2s Ah, comunity: 2s 4h 4c this method return only 2s
-	 * <li>hero: 2s Ah, comunity: 2s Ah 4c this method return 2s Ah
+	 * check if trooper hat a set hand. a set Hand here is when both hole cards participaten in the hand AND is not a
+	 * pocker pair. the idea here is try to detect how hide is the ttrooper currend hand for the villans
 	 * 
-	 * @return the hole cards that participe in the hand
+	 * @return <code>true</code> when both cards in hole card participate in the hand
 	 */
-	private String getSignificantCards() {
-		String stimate = "";
+	public boolean isSet() {
+		int cnt = 0;
 		Card[] cards = myHandHelper.getSignificantCards();
-		for (Card card : cards) {
-			stimate += card.isHoleCard() ? card.toString().substring(0, 2) + " " : "";
-		}
-		return stimate.trim();
+		for (Card card : cards)
+			cnt = card.isHoleCard() ? cnt + 1 : cnt;
+		// return cnt == 2 && !myHandHelper.isPocketPair();
+		return cnt == 2;
 	}
 
 	/**
@@ -753,14 +752,14 @@ public class PokerSimulator {
 				if (list[i] > 0 && !oth) {
 					oth = true;
 					oppTopHand = Hand.STRAIGHT_FLUSH - i;
-					tophandMsg = handNames.get(i) + " " + fourDigitFormat.format(list[i]);
+					tophandMsg = handNames.get(i) + " " + percentageFormat.format(list[i]);
 				}
 
 				// most probable hand
 				if (list[i] > 0 && list[i] > lastVal) {
 					lastVal = list[i];
 					oppMostProbHand = Hand.STRAIGHT_FLUSH - i;
-					mostprobMsg = handNames.get(i) + " " + fourDigitFormat.format(list[i]);
+					mostprobMsg = handNames.get(i) + " " + percentageFormat.format(list[i]);
 				}
 			}
 		}
@@ -799,7 +798,7 @@ public class PokerSimulator {
 				? 0
 				: myGameStatsHelper.getWinProb() + myGameStatsHelper.getTieProb();
 
-		variableList.put("simulator.Troper probability", fourDigitFormat.format(winPlusTieProbability));
+		variableList.put("simulator.Troper probability", percentageFormat.format(winPlusTieProbability));
 		variableList.put("simulator.Trooper Current hand", getMyHandHelper().getHand().toString());
 		variableList.put("simulator.Table cards", getMyHoleCards().getFirstCard() + ", "
 				+ getMyHoleCards().getSecondCard() + ", " + getCommunityCards().toString());
@@ -814,10 +813,8 @@ public class PokerSimulator {
 		Hero.heroLogger.info("Troper probability: " + variableList.get("simulator.Troper probability"));
 		Hero.heroLogger.info("Trooper Current hand: " + variableList.get("simulator.Trooper Current hand"));
 		Hero.heroLogger.info("Simulator values: " + variableList.get("simulator.Simulator values"));
-		Hero.heroLogger.info("Hand: " + variableList.get("simulator.Hand potential") + " OppMostProbHand "
-				+ handNames.get(Hand.STRAIGHT_FLUSH - oppMostProbHand) + " OppTopHand "
-				+ handNames.get(Hand.STRAIGHT_FLUSH - oppTopHand));
-
+		Hero.heroLogger.info("Hand: " + variableList.get("simulator.Hand potential") + " "
+				+ variableList.get("simulator.Hand streng villans"));
 	}
 
 	public String getCurrentRoundName() {

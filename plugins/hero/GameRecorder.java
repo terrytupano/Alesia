@@ -48,7 +48,8 @@ public class GameRecorder {
 		if (tempList.size() > 0) {
 			for (int i = 0; i < Math.min(4, tempList.size()); i++) {
 				GamePlayer gp = tempList.get(i).getKey();
-				tempList2.add(gp.getId() + " " + gp.getName() + " " + gp.getStats());
+//				tempList2.add(gp.getId() + " " + gp.getName() + " " + gp.getStats());
+				tempList2.add(gp.getDesignation() + " " + gp.getStats());
 			}
 		}
 		return tempList2;

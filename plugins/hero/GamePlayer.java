@@ -31,6 +31,9 @@ public class GamePlayer {
 		this.bettingPattern = new DescriptiveStatistics(100);
 	}
 
+	public String getDesignation() {
+		return playerId == 0 ? "Hero" : "Villan "+playerId;
+	}
 	public int getId() {
 		return playerId;
 	}
@@ -74,6 +77,10 @@ public class GamePlayer {
 		if (!Hero.sensorsArray.isActive(playerId))
 			return;
 
+		// Active variable here to avoid blick in assesment. if in this moment can retrive all info, present the
+		// assesment any way
+		isActive = true;
+
 		// amunitions
 		double chips = 0.0;
 		if (playerId == 0) {
@@ -92,8 +99,6 @@ public class GamePlayer {
 		if (chips == -1 || name == null)
 			return;
 
-		isActive = true;
-
 		// new player ??
 		if (!oldName.equals(name)) {
 			bettingPattern.clear();
@@ -110,17 +115,17 @@ public class GamePlayer {
 			if ((chips < buyIn - win) || (chips > buyIn + win)) {
 				double diff = chips - buyIn;
 				bettingPattern.addValue(diff);
-//				int wins = bettingPattern.getWindowSize() / 2;
-//				double num = diff / ((double) wins);
-//				for (int i = 0; i < wins; i++)
-//					bettingPattern.addValue(num);
+				// int wins = bettingPattern.getWindowSize() / 2;
+				// double num = diff / ((double) wins);
+				// for (int i = 0; i < wins; i++)
+				// bettingPattern.addValue(num);
 			}
 			prevValue = chips;
 			oldName = name;
 			return;
 		}
 
-		// at this point, all is set to start the record process
+		// at this point, all is set to start/continue the record process
 
 		// name = name == null ? prefix : name;
 		// if (!(name.equals(prefix) || name.equals(oldName))) {
@@ -161,13 +166,6 @@ public class GamePlayer {
 		return getMean(bettingPattern);
 	}
 
-	private boolean isNewPlayer(double chips) {
-		double buyIn = Hero.sensorsArray.getPokerSimulator().getBuyIn();
-		double bb = Hero.sensorsArray.getPokerSimulator().getBigBlind();
-		// +/-10 BB mean the player is a new player
-		double win = bb * 10;
-		return (chips < buyIn - win) || (chips > buyIn + win);
-	}
 	/**
 	 * return the mean but expresed in BB
 	 * 

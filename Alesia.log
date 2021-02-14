@@ -1,315 +1,51 @@
 INFO: Loggin level set to INFO
-SEVERE: villan6.chips: Fail getting double value. The OCR is: 
-SEVERE: villan4.chips: Fail getting double value. The OCR is: 
 INFO: new round ----------
-INFO: new round ----------
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 8150.0 Pot 650.0 Call 50.0 Raise 200.0 Position 4
-INFO: Troper probability: 0.1737
-INFO: Trooper Current hand: HIGH_CARD:Qd*,9h*
-INFO: Simulator values: Round hole_cards_dealt Players 7
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL 150.00 + (100.00 * 2.00) = 350.00
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 8100.0 Pot 661.0 Call 0.0 Raise 100.0 Position 1
-INFO: Troper probability: 0.2575
-INFO: Trooper Current hand: PAIR:9h*,9d,Qd*,7c,2c
-INFO: Simulator values: Round flop Players 7
-INFO: Hand: two_pairs with 3 outs OppMostProbHand three_of_a_kind OppTopHand three_of_a_kind
-INFO: (661.00 * 0.50) + (3 BB) = 630.50
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 8100.0 Pot 1361.0 Call 700.0 Raise 1400.0 Position 1
-INFO: Troper probability: 0.3111
-INFO: Trooper Current hand: PAIR:9h*,9d,Qd*,7c,2c
-INFO: Simulator values: Round flop Players 6
-INFO: Hand: two_pairs with 3 outs OppMostProbHand three_of_a_kind OppTopHand three_of_a_kind
-INFO: (1361.00 * 0.50) + (680.50 * 0.75) = 1190.88
-INFO: Action fold 1 click(s)  performed.
-INFO: new round ----------
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 8100.0 Pot 2350.0 Call 700.0 Raise 1300.0 Position 7
-INFO: Troper probability: 0.1504
-INFO: Trooper Current hand: PAIR:3c*,3s*
-INFO: Simulator values: Round hole_cards_dealt Players 7
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL but no more ammunition available.
-INFO: Action fold 1 click(s)  performed.
-INFO: new round ----------
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 8100.0 Pot 350.0 Call 100.0 Raise 200.0 Position 5
-INFO: Troper probability: 0.2025
-INFO: Trooper Current hand: HIGH_CARD:Ah*,7s*
-INFO: Simulator values: Round hole_cards_dealt Players 6
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL 150.00 + (100.00 * 0.00) = 150.00
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 8000.0 Pot 2567.0 Call 1000.0 Raise 2000.0 Position 5
-INFO: Troper probability: 0.0913
-INFO: Trooper Current hand: HIGH_CARD:Ah*,Jh,9s,7s*,2s
-INFO: Simulator values: Round flop Players 6
-INFO: Hand: pair with 6 outs OppMostProbHand three_of_a_kind OppTopHand three_of_a_kind
-INFO: (2567.00 * 0.25) + (1925.25 * 0.50) = 1604.38
-INFO: Action fold 1 click(s)  performed.
-SEVERE: villan8.chips: Fail getting double value. The OCR is: 
-INFO: new round ----------
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 8000.0 Pot 350.0 Call 100.0 Raise 200.0 Position 3
-INFO: Troper probability: 0.1785
-INFO: Trooper Current hand: HIGH_CARD:Qs*,6s*
-INFO: Simulator values: Round hole_cards_dealt Players 7
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL 150.00 + (100.00 * 0.00) = 150.00
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7900.0 Pot 10300.0 Call 5600.0 Raise 8000.0 Position 2
-INFO: Troper probability: 0.2891
-INFO: Trooper Current hand: HIGH_CARD:Qs*,6s*
-INFO: Simulator values: Round hole_cards_dealt Players 4
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL but no more ammunition available.
-INFO: Action fold 1 click(s)  performed.
 SEVERE: villan1.chips: Fail getting double value. The OCR is: 
-SEVERE: villan1.chips: Fail getting double value. The OCR is: 
-SEVERE: villan4.chips: Fail getting double value. The OCR is: 
+SEVERE: villan2.chips: Fail getting double value. The OCR is: 
 INFO: new round ----------
 INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7900.0 Pot 11787.0 Call -1.0 Raise 7900.0 Position 4
-INFO: Troper probability: 0.1065
-INFO: Trooper Current hand: HIGH_CARD:4d*,3c*
-INFO: Simulator values: Round hole_cards_dealt Players 7
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL but no more ammunition available.
-INFO: Action fold 1 click(s)  performed.
-SEVERE: villan8.chips: Fail getting double value. The OCR is: 
-SEVERE: villan8.chips: Fail getting double value. The OCR is: 
-SEVERE: villan8.chips: Fail getting double value. The OCR is: 
-INFO: new round ----------
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7900.0 Pot 250.0 Call 100.0 Raise 200.0 Position 0
-INFO: Troper probability: 0.1309
-INFO: Trooper Current hand: HIGH_CARD:Kh*,2s*
-INFO: Simulator values: Round hole_cards_dealt Players 7
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL 150.00 + (100.00 * 0.00) = 150.00
+INFO: Table values: Amunitions 6420.0 Pot 150.0 Call 50.0 Raise 200.0 Position 1
+INFO: Troper probability: 63%
+INFO: Trooper Current hand: HIGH_CARD:Ah*,7h*
+INFO: Simulator values: Round hole_cards_dealt Players 2
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: In Sklansky and Malmuth list. 150.00 + (100.00 * 5.00) = 650.00
+INFO: trooper.Action performedcall current cost 50.00
 INFO: Action call 1 click(s)  performed.
 INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7800.0 Pot 567.0 Call 0.0 Raise 100.0 Position 2
-INFO: Troper probability: 0.3486
-INFO: Trooper Current hand: PAIR:Kh*,Kc,8c,7d,2s*
-INFO: Simulator values: Round flop Players 6
-INFO: Hand: two_pairs with 3 outs OppMostProbHand three_of_a_kind OppTopHand three_of_a_kind
-INFO: (567.00 * 0.50) + (3 BB) = 583.50
-INFO: Action raise 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7700.0 Pot 1039.0 Call 0.0 Raise 100.0 Position 1
-INFO: Troper probability: 0.2630
-INFO: Trooper Current hand: PAIR:Kh*,Kc,8c,7d,5c
-INFO: Simulator values: Round turn Players 5
-INFO: Hand: two_pairs with 3 outs OppMostProbHand flush OppTopHand flush
-INFO: (1039.00 * 0.33) + (692.67 * 0.50) = 692.67
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7700.0 Pot 1839.0 Call 400.0 Raise 800.0 Position 1
-INFO: Troper probability: 0.4835
-INFO: Trooper Current hand: PAIR:Kh*,Kc,8c,7d,5c
-INFO: Simulator values: Round turn Players 3
-INFO: Hand: two_pairs with 3 outs OppMostProbHand flush OppTopHand flush
-INFO: (1839.00 * 0.33) + (1226.00 * 0.50) = 1226.00
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7300.0 Pot 2173.0 Call 0.0 Raise 100.0 Position 1
-INFO: Troper probability: 0.1684
-INFO: Trooper Current hand: PAIR:Kh*,Kc,9c,8c,7d
-INFO: Simulator values: Round river Players 3
-INFO: Hand: null with 0 outs OppMostProbHand flush OppTopHand straight_flush
-INFO: (2173.00 * 0.22) + (1690.11 * 0.00) = 482.89
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7300.0 Pot 3373.0 Call 1200.0 Raise 2400.0 Position 2
-INFO: Troper probability: 0.4163
-INFO: Trooper Current hand: PAIR:Kh*,Kc,9c,8c,7d
-INFO: Simulator values: Round river Players 2
-INFO: Hand: null with 0 outs OppMostProbHand flush OppTopHand straight_flush
-INFO: (3373.00 * 0.22) + (2623.44 * 0.00) = 749.56
-INFO: Action fold 1 click(s)  performed.
-INFO: new round ----------
-INFO: new round ----------
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7300.0 Pot 250.0 Call 100.0 Raise 200.0 Position 3
-INFO: Troper probability: 0.1276
-INFO: Trooper Current hand: HIGH_CARD:9h*,6d*
-INFO: Simulator values: Round hole_cards_dealt Players 7
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL 150.00 + (100.00 * 0.00) = 150.00
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7200.0 Pot 567.0 Call 0.0 Raise 100.0 Position 1
-INFO: Troper probability: 0.7064
-INFO: Trooper Current hand: THREE_OF_A_KIND:9h*,9c,9s,Ks,6d*
-INFO: Simulator values: Round flop Players 6
-INFO: Hand: full_house with 6 outs OppMostProbHand three_of_a_kind OppTopHand full_house
-INFO: Oportunity detected 3 Significant card with 0.71
-INFO: Action raise.pot 1 click(s)  performed.
-INFO: Action raise 1 click(s)  performed.
-INFO: new round ----------
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7667.0 Pot 500.0 Call 0.0 Raise 200.0 Position 1
-INFO: Troper probability: 0.1885
-INFO: Trooper Current hand: HIGH_CARD:5h*,3h*
-INFO: Simulator values: Round hole_cards_dealt Players 5
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL 150.00 + (100.00 * 3.00) = 450.00
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7667.0 Pot 472.0 Call 0.0 Raise 100.0 Position 1
-INFO: Troper probability: 0.2130
-INFO: Trooper Current hand: PAIR:5h*,5d,Ad,7h,3h*
-INFO: Simulator values: Round flop Players 5
-INFO: Hand: two_pairs with 3 outs OppMostProbHand three_of_a_kind OppTopHand three_of_a_kind
-INFO: (472.00 * 0.50) + (3 BB) = 536.00
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7667.0 Pot 1744.0 Call 1072.0 Raise 1944.0 Position 1
-INFO: Troper probability: 0.3835
-INFO: Trooper Current hand: PAIR:5h*,5d,Ad,7h,3h*
-INFO: Simulator values: Round flop Players 3
-INFO: Hand: two_pairs with 3 outs OppMostProbHand three_of_a_kind OppTopHand three_of_a_kind
-INFO: (1744.00 * 0.50) + (872.00 * 0.75) = 1526.00
-INFO: Action fold 1 click(s)  performed.
-INFO: new round ----------
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7617.0 Pot 550.0 Call 150.0 Raise 300.0 Position 2
-INFO: Troper probability: 0.1828
-INFO: Trooper Current hand: HIGH_CARD:9s*,3d*
-INFO: Simulator values: Round hole_cards_dealt Players 4
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL but no more ammunition available.
-INFO: Action fold 1 click(s)  performed.
-INFO: new round ----------
-SEVERE: villan6.chips: Fail getting double value. The OCR is: 
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7617.0 Pot 21737.0 Call -1.0 Raise 7617.0 Position 6
-INFO: Troper probability: 0.1497
-INFO: Trooper Current hand: HIGH_CARD:Jh*,6d*
-INFO: Simulator values: Round hole_cards_dealt Players 6
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL but no more ammunition available.
-INFO: Action fold 1 click(s)  performed.
-SEVERE: villan6.chips: Fail getting double value. The OCR is: 
-SEVERE: villan8.chips: Fail getting double value. The OCR is: 
-SEVERE: villan6.chips: Fail getting double value. The OCR is: 
-INFO: new round ----------
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7617.0 Pot 250.0 Call 100.0 Raise 200.0 Position 0
-INFO: Troper probability: 0.2282
-INFO: Trooper Current hand: HIGH_CARD:Kh*,8c*
-INFO: Simulator values: Round hole_cards_dealt Players 5
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL 150.00 + (100.00 * 0.00) = 150.00
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7517.0 Pot 1275.0 Call 425.0 Raise 850.0 Position 2
-INFO: Troper probability: 0.1304
-INFO: Trooper Current hand: HIGH_CARD:Kh*,9s,8c*,3c,2s
-INFO: Simulator values: Round flop Players 4
-INFO: Hand: pair with 6 outs OppMostProbHand three_of_a_kind OppTopHand three_of_a_kind
-INFO: (1275.00 * 0.25) + (6 BB) = 918.75
-INFO: Action fold 1 click(s)  performed.
-INFO: new round ----------
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7517.0 Pot 300.0 Call 100.0 Raise 200.0 Position 1
-INFO: Troper probability: 0.2190
-INFO: Trooper Current hand: HIGH_CARD:Ac*,9h*
-INFO: Simulator values: Round hole_cards_dealt Players 6
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL 150.00 + (100.00 * 2.00) = 350.00
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7417.0 Pot 1560.0 Call 520.0 Raise 1040.0 Position 2
-INFO: Troper probability: 0.1424
-INFO: Trooper Current hand: HIGH_CARD:Ac*,9h*,7c,3h,2d
-INFO: Simulator values: Round flop Players 5
-INFO: Hand: pair with 6 outs OppMostProbHand three_of_a_kind OppTopHand three_of_a_kind
-INFO: (1560.00 * 0.25) + (6 BB) = 990.00
-INFO: Action fold 1 click(s)  performed.
-INFO: new round ----------
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7317.0 Pot 450.0 Call 100.0 Raise 300.0 Position 1
-INFO: Troper probability: 0.3302
-INFO: Trooper Current hand: HIGH_CARD:Td*,7s*
-INFO: Simulator values: Round hole_cards_dealt Players 3
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL 150.00 + (100.00 * 0.00) = 150.00
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7217.0 Pot 614.0 Call 0.0 Raise 100.0 Position 2
-INFO: Troper probability: 0.4044
-INFO: Trooper Current hand: HIGH_CARD:Kh,Qc,Js,Td*,7s*
-INFO: Simulator values: Round flop Players 3
-INFO: Hand: straight with 8 outs OppMostProbHand two_pairs OppTopHand straight
-INFO: (614.00 * 0.20) + (491.20 * 1.67) = 941.47
-INFO: Action raise 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7117.0 Pot 1628.0 Call 814.0 Raise 1728.0 Position 3
-INFO: Troper probability: 0.5723
-INFO: Trooper Current hand: HIGH_CARD:Kh,Qc,Js,Td*,7s*
+INFO: Table values: Amunitions 6370.0 Pot 189.0 Call 0.0 Raise 100.0 Position 2
+INFO: Troper probability: 72%
+INFO: Trooper Current hand: HIGH_CARD:Ah*,9h,7h*,6h,5s
 INFO: Simulator values: Round flop Players 2
-INFO: Hand: straight with 8 outs OppMostProbHand two_pairs OppTopHand straight
-INFO: (1628.00 * 0.20) + (1302.40 * 1.67) = 2496.27
+INFO: Hand: flush with 9 outs three_of_a_kind 3% straight 1%
+INFO: (189.00 * 0.25) + (9 BB) = 947.25
+INFO: trooper.Action performedcall current cost 50.00
 INFO: Action call 1 click(s)  performed.
 INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 6303.0 Pot 2342.0 Call 0.0 Raise 100.0 Position 3
-INFO: Troper probability: 0.6616
-INFO: Trooper Current hand: PAIR:7s*,7c,Kh,Qc,Js
+INFO: Table values: Amunitions 6370.0 Pot 189.0 Call 0.0 Raise 100.0 Position 2
+INFO: Troper probability: 57%
+INFO: Trooper Current hand: HIGH_CARD:Ah*,Js,9h,7h*,6h
 INFO: Simulator values: Round turn Players 2
-INFO: Hand: straight with 8 outs OppMostProbHand two_pairs OppTopHand straight
-INFO: Oportunity detected 2 Significant card with 0.66
-INFO: Action raise.pot 1 click(s)  performed.
+INFO: Hand: flush with 9 outs three_of_a_kind 5% straight 1%
+INFO: (189.00 * 0.25) + (9 BB) = 947.25
+INFO: trooper.Action performedraise current cost 150.00
 INFO: Action raise 1 click(s)  performed.
+INFO: Table parameters: 10000.0,100.0,50.0
+INFO: Table values: Amunitions 6270.0 Pot 378.0 Call 0.0 Raise 100.0 Position 2
+INFO: Troper probability: 31%
+INFO: Trooper Current hand: HIGH_CARD:Ah*,Js,9h,7h*,6h
+INFO: Simulator values: Round river Players 2
+INFO: Hand: null with 0 outs three_of_a_kind 6% straight 3%
+INFO: (378.00 * 0.25) + (283.50 * 0.00) = 94.50
+INFO: trooper.Action performedcall current cost 150.00
+INFO: Action call 1 click(s)  performed.
 INFO: new round ----------
 INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 8595.0 Pot 550.0 Call 50.0 Raise 200.0 Position 2
-INFO: Troper probability: 0.1028
-INFO: Trooper Current hand: HIGH_CARD:6d*,2c*
-INFO: Simulator values: Round hole_cards_dealt Players 6
-INFO: Hand: null with 0 outs OppMostProbHand three_of_a_kind OppTopHand straight_flush
-INFO: strategy = ALL 150.00 + (100.00 * 0.00) = 150.00
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 8545.0 Pot 567.0 Call 0.0 Raise 100.0 Position 2
-INFO: Troper probability: 0.7152
-INFO: Trooper Current hand: THREE_OF_A_KIND:2c*,2d,2s,Qs,6d*
-INFO: Simulator values: Round flop Players 6
-INFO: Hand: full_house with 6 outs OppMostProbHand full_house OppTopHand full_house
-INFO: Oportunity detected 3 Significant card with 0.72
-INFO: Action raise.pot 1 click(s)  performed.
-INFO: Action raise 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 7978.0 Pot 2174.0 Call 0.0 Raise 100.0 Position 5
-INFO: Troper probability: 0.8778
-INFO: Trooper Current hand: THREE_OF_A_KIND:2c*,2d,2s,Qs,Td
-INFO: Simulator values: Round turn Players 3
-INFO: Hand: full_house with 9 outs OppMostProbHand full_house OppTopHand full_house
-INFO: Oportunity detected 3 Significant card with 0.88
-INFO: Action raise.pot 1 click(s)  performed.
-INFO: Action raise 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 5804.0 Pot 8338.0 Call 0.0 Raise 100.0 Position 5
-INFO: Troper probability: 0.8551
-INFO: Trooper Current hand: THREE_OF_A_KIND:2c*,2d,2s,Qs,Td
-INFO: Simulator values: Round river Players 3
-INFO: Hand: null with 0 outs OppMostProbHand flush OppTopHand full_house
-INFO: Oportunity detected 3 Significant card with 0.86
-INFO: Action raise.allin 1 click(s)  performed.
-INFO: Action raise 1 click(s)  performed.
-SEVERE: hero.chips: Fail getting double value. The OCR is: 
-SEVERE: hero.card1: Card OCR Fail. raw OCR = 
-SEVERE: hero.card2: Card OCR Fail. raw OCR = 
-SEVERE: villan4.chips: Fail getting double value. The OCR is: 
-SEVERE: hero.card1: Card OCR Fail. raw OCR = 
-INFO: Action buyIn.cancel 1 click(s)  performed.
-INFO: Trooper lost the battle !!!!
-INFO: Tropper dismiss.
+INFO: Table values: Amunitions 6598.0 Pot 250.0 Call 50.0 Raise 200.0 Position 6
+INFO: Troper probability: 23%
+INFO: Trooper Current hand: HIGH_CARD:7d*,2s*
+INFO: Simulator values: Round hole_cards_dealt Players 3
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: Preflop hand not good.
+INFO: trooper.Action performedfold current cost 0.00
+INFO: Action fold 1 click(s)  performed.

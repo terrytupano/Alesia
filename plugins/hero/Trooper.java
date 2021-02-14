@@ -124,7 +124,6 @@ public class Trooper extends Task {
 	 * this method override the global variable {@link #availableActions} when the tropper detect an oportunity.
 	 * 
 	 * @return <code>true</code> if hero has an oportunity
-	 * @see PokerSimulator#isOportunity()
 	 * @see #setBluffActions()
 	 */
 	private boolean checkOportunities() {
@@ -133,8 +132,16 @@ public class Trooper extends Task {
 		if (pokerSimulator.getMyHandHelper().isTheNuts())
 			txt = "Is the Nuts";
 
+		// the card must in the currend distribution
+		String pfh = isGoodPreflopHand();
+
+		// trooper is set
+		boolean set = pokerSimulator.isSet();
+
+		// probability
 		double prob = pokerSimulator.getProbability();
-		if (pokerSimulator.getMyHandHelper().isHoleCardHand() && prob > 0.60) {
+
+		if (pfh != null && set && prob > 0.66) {
 			Card[] cards = pokerSimulator.getMyHandHelper().getSignificantCards();
 			txt = cards.length + " Significant card with " + twoDigitFormat.format(prob);
 		}
@@ -271,18 +278,24 @@ public class Trooper extends Task {
 	 **/
 	private double getAmmunitions() {
 		double pot = pokerSimulator.getPotValue();
-		double handStreng = pokerSimulator.getCurrentHandStreng(true);
 		int handPotential = pokerSimulator.getHandPotential();
 		int handOuts = pokerSimulator.getHandPotentialOuts();
-		int oppHand = pokerSimulator.getOppMostProbHand();
 		double bBlind = pokerSimulator.getBigBlind();
+
+		// PROBLEM: hero try to presuit hight hands. the relation handpotential / oppMostProbHand is to low, the result
+		// is invest part of the pot * 2 or 3 times
+		// solution: normailization of the result, or handpotential / oppMostProbHand
+		// TEST: the future hand potential is in relation whit oppTopHand. this avoid hero to prusuit hand whit many
+		// outs and hihgt
+		double handStreng = pokerSimulator.getCurrentHandStreng(false);
+		int oppTopHand = pokerSimulator.getOppTopHand();
 
 		// the current fraction of the pot ammount that until now, is already mine
 		double myPot = pot * handStreng;
 
 		// ammount of ammo that is worth to invest according to future outcome
 		double outAmmo = handOuts * bBlind;
-		double fhp = (handPotential * 1.0) / (oppHand * 1.0);
+		double fhp = (handPotential * 1.0) / (oppTopHand * 1.0);
 		double hsdiff = (pot - myPot) * fhp;
 		double invest = 0.0;
 		String investMsg = "";
@@ -635,13 +648,13 @@ public class Trooper extends Task {
 		double bBlind = pokerSimulator.getBigBlind();
 		double base = bBlind * pfBase;
 
-//		double chips = pokerSimulator.getHeroChips();
+		// double chips = pokerSimulator.getHeroChips();
 		// double pfHStreng = ((Number) parameters.get("preflopRekonAmmo.hand")).doubleValue();
 		// double ammo = pokerSimulator.getBigBlind() * pfHStreng;
-//		double streng = pokerSimulator.getPreFlopHandStreng();
+		// double streng = pokerSimulator.getPreFlopHandStreng();
 
 		int sRank = getSklanskyRank();
-//		the char is not in table
+		// the char is not in table
 		sRank = (sRank == -1) ? 0 : sRank;
 		double preflopStr = base + (bBlind * sRank);
 
@@ -650,10 +663,10 @@ public class Trooper extends Task {
 
 		// assign values from +EV list. this allow hero don.t throw good preflop so easily. preflop hand like AK cann
 		// suport more call form pot stillers
-//		double pfev = getPreflopEV();
-//		double pfsev = chips * pfev;
-//		if (pfev > 0 && preflopStr < pfsev)
-//			preflopStr = pfsev;
+		// double pfev = getPreflopEV();
+		// double pfsev = chips * pfev;
+		// if (pfev > 0 && preflopStr < pfsev)
+		// preflopStr = pfsev;
 
 		if (maxRekonAmmo == -1)
 			maxRekonAmmo = preflopStr;
@@ -819,7 +832,7 @@ public class Trooper extends Task {
 		if (cost != null)
 			currentHandCost += cost;
 		String key = "trooper.Action performed";
-		pokerSimulator.setVariable(key, ha + " current cost " + twoDigitFormat.format(currentHandCost));
+		setVariableAndLog(key, " " +ha + ". Current cost " + twoDigitFormat.format(currentHandCost));
 		// robot actuator perform the log
 		robotActuator.perform(ha);
 	}

@@ -74,6 +74,11 @@ public class ScreenSensor extends JPanel {
 		update();
 	}
 
+	@Override
+	public String toString() {
+		// overide method to only show vital info
+		return getName() + " isEnable=" + isEnabled() + " OCR=" + getOCR();
+	}
 	@Deprecated
 	public static String getOCRFromImage2(String sName, BufferedImage imagea, TreeMap<String, String> imageHashes) {
 		String s1 = TCVUtils.imagePHash(imagea, null);

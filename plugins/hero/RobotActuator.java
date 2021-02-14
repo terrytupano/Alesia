@@ -64,7 +64,7 @@ public class RobotActuator {
 			// perform double clicks
 			if (actValue.startsWith("dc")) {
 				doubleClick();
-				Hero.heroLogger.info("Action " + action + " double click performed.");
+				Hero.heroLogger.fine("Action " + action + " double click performed.");
 				continue;
 			}
 
@@ -74,7 +74,7 @@ public class RobotActuator {
 				for (int c = 0; c < clicks; c++) {
 					doClick();
 				}
-				Hero.heroLogger.info("Action " + action + " " + clicks + " click(s)  performed.");
+				Hero.heroLogger.fine("Action " + action + " " + clicks + " click(s)  performed.");
 				continue;
 			}
 
@@ -82,7 +82,7 @@ public class RobotActuator {
 			if (actValue.startsWith("k=")) {
 				String text = actValue.substring(2);
 				type(text);
-				Hero.heroLogger.info("Action " + action + " Text= " + text + " writed.");
+				Hero.heroLogger.fine("Action " + action + " Text= " + text + " writed.");
 				continue;
 			}
 		}
