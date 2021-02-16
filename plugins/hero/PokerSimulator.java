@@ -808,7 +808,6 @@ public class PokerSimulator {
 		variableList.put("simulator.Simulator values",
 				"Round " + getCurrentRoundName() + " Players " + getNumSimPlayers());
 
-		Hero.heroLogger.info("Table parameters: " + getTableParameters());
 		Hero.heroLogger.info("Table values: " + variableList.get("simulator.Table values"));
 		Hero.heroLogger.info("Troper probability: " + variableList.get("simulator.Troper probability"));
 		Hero.heroLogger.info("Trooper Current hand: " + variableList.get("simulator.Trooper Current hand"));

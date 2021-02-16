@@ -129,19 +129,27 @@ public class SensorsArray {
 	 * @return the boss or -1 in case of error or no boss detected at this time
 	 */
 	public double getBoss() {
-		ArrayList<Double> chips = new ArrayList<>();
-		for (int id = 1; id <= getVillans(); id++) {
-			if (isActive(id))
-				chips.add(getSensor("villan" + id + ".chips").getNumericOCR());
-		}
-		chips.removeIf(i -> i.doubleValue() < 0);
-		chips.sort(null);
-
-		if (chips.isEmpty())
-			return -1;
-
-		double wv = chips.get(chips.size() - 1);
-		return wv;
+		
+		
+		// TODO: get the infor from last assesment
+		//////////////////////////////////////////////////
+		
+		
+		
+		// ArrayList<Double> chips = new ArrayList<>();
+		// for (int id = 1; id <= getVillans(); id++) {
+		// if (isActive(id))
+		// chips.add(getSensor("villan" + id + ".chips").getNumericOCR());
+		// }
+		// chips.removeIf(i -> i.doubleValue() < 0);
+		// chips.sort(null);
+		//
+		// if (chips.isEmpty())
+		// return -1;
+		//
+		// double wv = chips.get(chips.size() - 1);
+		// return wv;
+		return 0;
 	}
 
 	/**
@@ -334,7 +342,7 @@ public class SensorsArray {
 
 			slist = allSensors.stream().filter(ss -> ss.isButtonArea()).collect(Collectors.toList());
 			readSensors(false, slist);
-			
+
 			pokerSimulator.setTablePosition(getDealerButtonPosition(), getActiveVillans());
 			pokerSimulator.setPotValue(getSensor("pot").getNumericOCR());
 			pokerSimulator.setCallValue(getSensor("hero.call").getNumericOCR());

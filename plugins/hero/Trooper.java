@@ -56,6 +56,7 @@ public class Trooper extends Task {
 	private Hashtable<String, Double> availableActions;
 	private Hashtable<String, Double> asociatedCost;
 	private int countdown = 5;
+	private int roundCounter = 0;
 	private long time1;
 	private DescriptiveStatistics outGameStats;
 	private boolean paused = false;
@@ -79,6 +80,7 @@ public class Trooper extends Task {
 		this.sensorsArray = Hero.sensorsArray;
 		this.outGameStats = new DescriptiveStatistics(10);
 		this.pokerSimulator = sensorsArray.getPokerSimulator();
+		this.roundCounter = 0;
 		instance = this;
 		this.sklanskyPreflop = getTabProperties("preflop.card");
 		this.bluffHands = getTabProperties("bluff.card");
@@ -610,18 +612,20 @@ public class Trooper extends Task {
 	private void setBluffActions() {
 		availableActions.clear();
 		subObtimalDist = "UniformReal";
-		double chips = pokerSimulator.getHeroChips();
-		double pot = pokerSimulator.getPotValue();
-		double raise = pokerSimulator.getRaiseValue();
-
-		if (pot >= 0 && sensorsArray.getSensor("raise.pot").isEnabled())
-			availableActions.put("raise.pot;raise", pot);
-
-		if (chips >= 0 && sensorsArray.getSensor("raise.allin").isEnabled())
-			availableActions.put("raise.allin;raise", chips);
+		loadPostFlopActions(pokerSimulator.getPotValue());
+		// double chips = pokerSimulator.getHeroChips();
+		// double pot = pokerSimulator.getPotValue();
+		// double raise = pokerSimulator.getRaiseValue();
+		//
+		// if (pot >= 0 && sensorsArray.getSensor("raise.pot").isEnabled())
+		// availableActions.put("raise.pot;raise", pot);
+		//
+		// if (chips >= 0 && sensorsArray.getSensor("raise.allin").isEnabled())
+		// availableActions.put("raise.allin;raise", chips);
 
 		// to this point, if availableactions are empty, means hero is responding a extreme hihgt raise. that mean meybe
 		// hero is weak. at this point reise mean all in. (call actions is not considerer because is not bluff)
+		double raise = pokerSimulator.getRaiseValue();
 		if (availableActions.size() == 0 && raise >= 0)
 			availableActions.put("raise", raise);
 
@@ -746,7 +750,6 @@ public class Trooper extends Task {
 			if (isCancelled())
 				return false;
 			sensorsArray.readPlayerStat();
-
 			sensorsArray.read(SensorsArray.TYPE_ACTIONS);
 
 			// NEW ROUND: if the hero current hand is diferent to the last measure, clear the enviorement.
@@ -756,19 +759,23 @@ public class Trooper extends Task {
 			hch += hc2 == null ? "" : hc2;
 			if (!("".equals(hch) || lastHoleCards.equals(hch))) {
 				lastHoleCards = hch;
-				setVariableAndLog(EXPLANATION, "new round ----------");
+				setVariableAndLog(EXPLANATION,
+						"--- new round " + roundCounter++ + "--- " + pokerSimulator.getTableParameters());
 
 				// play time or play sae parameter parameters. when the play time is reach, the action sit.out is
-				// clicked
-				// and hero return
-				// play time.
+				// clicked and hero return
+
+				// play time
 				double ptd = Double.parseDouble(parameters.get("play.time").toString());
 				long playtimeParm = (long) (ptd * 3600 * 1000);
 				playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
 
 				// play until parameter
 				double playUntilParm = Double.parseDouble(parameters.get("play.until").toString());
-				double chips = pokerSimulator.getHeroChips();
+				// read hero chips. this avoid false tropper dismist after all in or bluff (hero chips was very low at
+				// that point)
+				sensorsArray.readSensors(true, sensorsArray.getSensors("hero.chips"));
+				double chips = sensorsArray.getSensor("hero.chips").getNumericOCR();
 				// if chips are not available, show the last computed play safe value
 				if (chips > 0)
 					playUntil = pokerSimulator.getHeroChipsMax() - (playUntilParm * pokerSimulator.getBuyIn());
@@ -832,7 +839,7 @@ public class Trooper extends Task {
 		if (cost != null)
 			currentHandCost += cost;
 		String key = "trooper.Action performed";
-		setVariableAndLog(key, " " +ha + ". Current cost " + twoDigitFormat.format(currentHandCost));
+		setVariableAndLog(key, " " + ha + ". Current cost " + twoDigitFormat.format(currentHandCost));
 		// robot actuator perform the log
 		robotActuator.perform(ha);
 	}

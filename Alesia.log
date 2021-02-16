@@ -1,51 +1,391 @@
-INFO: Loggin level set to INFO
-INFO: new round ----------
-SEVERE: villan1.chips: Fail getting double value. The OCR is: 
-SEVERE: villan2.chips: Fail getting double value. The OCR is: 
-INFO: new round ----------
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 6420.0 Pot 150.0 Call 50.0 Raise 200.0 Position 1
-INFO: Troper probability: 63%
-INFO: Trooper Current hand: HIGH_CARD:Ah*,7h*
-INFO: Simulator values: Round hole_cards_dealt Players 2
-INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
-INFO: In Sklansky and Malmuth list. 150.00 + (100.00 * 5.00) = 650.00
-INFO: trooper.Action performedcall current cost 50.00
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 6370.0 Pot 189.0 Call 0.0 Raise 100.0 Position 2
+INFO: (661.00 * 0.57) + (6 BB) = 977.71
+INFO: trooper.Action performed raise. Current cost 200.00
+INFO: Table values: Amunitions 28186.0 Pot 1134.0 Call 0.0 Raise 100.0 Position 2
 INFO: Troper probability: 72%
-INFO: Trooper Current hand: HIGH_CARD:Ah*,9h,7h*,6h,5s
-INFO: Simulator values: Round flop Players 2
-INFO: Hand: flush with 9 outs three_of_a_kind 3% straight 1%
-INFO: (189.00 * 0.25) + (9 BB) = 947.25
-INFO: trooper.Action performedcall current cost 50.00
-INFO: Action call 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 6370.0 Pot 189.0 Call 0.0 Raise 100.0 Position 2
-INFO: Troper probability: 57%
-INFO: Trooper Current hand: HIGH_CARD:Ah*,Js,9h,7h*,6h
-INFO: Simulator values: Round turn Players 2
-INFO: Hand: flush with 9 outs three_of_a_kind 5% straight 1%
-INFO: (189.00 * 0.25) + (9 BB) = 947.25
-INFO: trooper.Action performedraise current cost 150.00
-INFO: Action raise 1 click(s)  performed.
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 6270.0 Pot 378.0 Call 0.0 Raise 100.0 Position 2
-INFO: Troper probability: 31%
-INFO: Trooper Current hand: HIGH_CARD:Ah*,Js,9h,7h*,6h
-INFO: Simulator values: Round river Players 2
-INFO: Hand: null with 0 outs three_of_a_kind 6% straight 3%
-INFO: (378.00 * 0.25) + (283.50 * 0.00) = 94.50
-INFO: trooper.Action performedcall current cost 150.00
-INFO: Action call 1 click(s)  performed.
-INFO: new round ----------
-INFO: Table parameters: 10000.0,100.0,50.0
-INFO: Table values: Amunitions 6598.0 Pot 250.0 Call 50.0 Raise 200.0 Position 6
-INFO: Troper probability: 23%
-INFO: Trooper Current hand: HIGH_CARD:7d*,2s*
-INFO: Simulator values: Round hole_cards_dealt Players 3
+INFO: Trooper Current hand: THREE_OF_A_KIND:6d*,6c,6s,7s*,4c
+INFO: Simulator values: Round turn Players 5
+INFO: Hand: full_house with 9 outs full_house 2% full_house 2%
+INFO: (1134.00 * 0.57) + (9 BB) = 1548.00
+INFO: trooper.Action performed call. Current cost 200.00
+INFO: Table values: Amunitions 28186.0 Pot 1134.0 Call 0.0 Raise 100.0 Position 2
+INFO: Troper probability: 64%
+INFO: Trooper Current hand: THREE_OF_A_KIND:6d*,6c,6s,9c,7s*
+INFO: Simulator values: Round river Players 5
+INFO: Hand: null with 0 outs flush 6% full_house 3%
+INFO: (1134.00 * 0.67) + (378.00 * 0.00) = 756.00
+INFO: trooper.Action performed raise. Current cost 300.00
+INFO: --- new round 64--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 29409.0 Pot 350.0 Call 100.0 Raise 200.0 Position 1
+INFO: Troper probability: 16%
+INFO: Trooper Current hand: HIGH_CARD:Js*,8s*
+INFO: Simulator values: Round hole_cards_dealt Players 9
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: In Sklansky and Malmuth list. 150.00 + (100.00 * 4.00) = 550.00
+INFO: trooper.Action performed call. Current cost 100.00
+INFO: Table values: Amunitions 29309.0 Pot 709.0 Call 0.0 Raise 100.0 Position 3
+INFO: Troper probability: 30%
+INFO: Trooper Current hand: PAIR:8s*,8h,Js*,3c,2s
+INFO: Simulator values: Round flop Players 7
+INFO: Hand: two_pairs with 3 outs three_of_a_kind 3% three_of_a_kind 3%
+INFO: (709.00 * 0.50) + (3 BB) = 654.50
+INFO: trooper.Action performed raise. Current cost 200.00
+INFO: Table values: Amunitions 29209.0 Pot 3427.0 Call 1109.0 Raise 2318.0 Position 3
+INFO: Troper probability: 42%
+INFO: Trooper Current hand: PAIR:8s*,8h,Js*,3c,2s
+INFO: Simulator values: Round flop Players 5
+INFO: Hand: two_pairs with 3 outs three_of_a_kind 3% three_of_a_kind 3%
+INFO: (3427.00 * 0.50) + (1713.50 * 0.75) = 2998.62
+INFO: trooper.Action performed call. Current cost 1309.00
+INFO: Table values: Amunitions 28100.0 Pot 4325.0 Call 0.0 Raise 100.0 Position 0
+INFO: Troper probability: 64%
+INFO: Trooper Current hand: PAIR:8s*,8h,Js*,9s,3c
+INFO: Simulator values: Round turn Players 3
+INFO: Hand: flush with 9 outs three_of_a_kind 4% three_of_a_kind 4%
+INFO: (4325.00 * 0.50) + (2162.50 * 1.50) = 5406.25
+INFO: trooper.Action performed raise. Current cost 1409.00
+INFO: Table values: Amunitions 28000.0 Pot 4609.0 Call 0.0 Raise 100.0 Position 1
+INFO: Troper probability: 72%
+INFO: Trooper Current hand: TWO_PAIRS:9s,9h,8s*,8h,Js*
+INFO: Simulator values: Round river Players 3
+INFO: Hand: null with 0 outs two_pairs 11% four_of_a_kind 0%
+INFO: (4609.00 * 1.00) + (0.00 * 0.00) = 4609.00
+INFO: trooper.Action performed raise. Current cost 1509.00
+INFO: --- new round 65--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 27900.0 Pot 250.0 Call 100.0 Raise 200.0 Position 3
+INFO: Troper probability: 18%
+INFO: Trooper Current hand: PAIR:9c*,9d*
+INFO: Simulator values: Round hole_cards_dealt Players 9
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: In Sklansky and Malmuth list. 150.00 + (100.00 * 7.00) = 850.00
+INFO: trooper.Action performed call. Current cost 100.00
+INFO: Table values: Amunitions 27800.0 Pot 803.0 Call 0.0 Raise 100.0 Position 4
+INFO: Troper probability: 8%
+INFO: Trooper Current hand: PAIR:9c*,9d*,Ah,Jh,8c
+INFO: Simulator values: Round flop Players 8
+INFO: Hand: three_of_a_kind with 2 outs two_pairs 4% three_of_a_kind 4%
+INFO: (803.00 * 0.67) + (267.67 * 1.00) = 803.00
+INFO: trooper.Action performed call. Current cost 100.00
+INFO: Table values: Amunitions 27800.0 Pot 1203.0 Call 100.0 Raise 200.0 Position 3
+INFO: Troper probability: 14%
+INFO: Trooper Current hand: PAIR:9c*,9d*,Ah,Jh,8c
+INFO: Simulator values: Round flop Players 6
+INFO: Hand: three_of_a_kind with 2 outs two_pairs 4% three_of_a_kind 4%
+INFO: (1203.00 * 0.67) + (401.00 * 1.00) = 1203.00
+INFO: trooper.Action performed call. Current cost 200.00
+INFO: Table values: Amunitions 27700.0 Pot 1276.0 Call 0.0 Raise 100.0 Position 1
+INFO: Troper probability: 26%
+INFO: Trooper Current hand: TWO_PAIRS:Jh,Js,9c*,9d*,Ah
+INFO: Simulator values: Round turn Players 5
+INFO: Hand: full_house with 4 outs two_pairs 35% four_of_a_kind 0%
+INFO: (1276.00 * 1.00) + (4 BB) = 1676.00
+INFO: trooper.Action performed raise. Current cost 300.00
+INFO: Table values: Amunitions 27600.0 Pot 1559.0 Call 0.0 Raise 100.0 Position 0
+INFO: Troper probability: 58%
+INFO: Trooper Current hand: TWO_PAIRS:Jh,Js,9c*,9d*,Ah
+INFO: Simulator values: Round river Players 3
+INFO: Hand: null with 0 outs two_pairs 35% four_of_a_kind 0%
+INFO: (1559.00 * 1.00) + (0.00 * 0.00) = 1559.00
+INFO: trooper.Action performed call. Current cost 300.00
+INFO: Table values: Amunitions 27600.0 Pot 1659.0 Call 100.0 Raise 200.0 Position 2
+INFO: Troper probability: 58%
+INFO: Trooper Current hand: TWO_PAIRS:Jh,Js,9c*,9d*,Ah
+INFO: Simulator values: Round river Players 3
+INFO: Hand: null with 0 outs two_pairs 35% four_of_a_kind 0%
+INFO: (1659.00 * 1.00) + (0.00 * 0.00) = 1659.00
+INFO: trooper.Action performed raise. Current cost 500.00
+INFO: --- new round 66--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 27400.0 Pot 150.0 Call 100.0 Raise 200.0 Position 4
+INFO: Troper probability: 9%
+INFO: Trooper Current hand: HIGH_CARD:Td*,4s*
+INFO: Simulator values: Round hole_cards_dealt Players 9
 INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
 INFO: Preflop hand not good.
-INFO: trooper.Action performedfold current cost 0.00
-INFO: Action fold 1 click(s)  performed.
+INFO: trooper.Action performed fold. Current cost 0.00
+INFO: --- new round 67--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 27350.0 Pot 550.0 Call 50.0 Raise 200.0 Position 2
+INFO: Troper probability: 18%
+INFO: Trooper Current hand: HIGH_CARD:Jd*,8c*
+INFO: Simulator values: Round hole_cards_dealt Players 6
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: In Sklansky and Malmuth list. 150.00 + (100.00 * 2.00) = 350.00
+INFO: trooper.Action performed call. Current cost 50.00
+INFO: Table values: Amunitions 27300.0 Pot 567.0 Call 0.0 Raise 100.0 Position 1
+INFO: Troper probability: 21%
+INFO: Trooper Current hand: PAIR:8c*,8s,Ac,Jd*,9h
+INFO: Simulator values: Round flop Players 6
+INFO: Hand: two_pairs with 3 outs two_pairs 5% three_of_a_kind 3%
+INFO: (567.00 * 0.67) + (3 BB) = 678.00
+INFO: trooper.Action performed raise. Current cost 150.00
+INFO: Table values: Amunitions 27200.0 Pot 945.0 Call 0.0 Raise 100.0 Position 2
+INFO: Troper probability: 31%
+INFO: Trooper Current hand: PAIR:8c*,8s,Ac,Jd*,9h
+INFO: Simulator values: Round turn Players 4
+INFO: Hand: two_pairs with 3 outs two_pairs 6% three_of_a_kind 4%
+INFO: (945.00 * 0.67) + (3 BB) = 930.00
+INFO: trooper.Action performed raise. Current cost 250.00
+INFO: Table values: Amunitions 27100.0 Pot 1228.0 Call 0.0 Raise 100.0 Position 4
+INFO: Troper probability: 41%
+INFO: Trooper Current hand: TWO_PAIRS:8c*,8s,3h,3c,Ac
+INFO: Simulator values: Round river Players 3
+INFO: Hand: null with 0 outs two_pairs 40% four_of_a_kind 0%
+INFO: (1228.00 * 1.00) + (0.00 * 0.00) = 1228.00
+INFO: trooper.Action performed raise. Current cost 350.00
+INFO: Table values: Amunitions 27000.0 Pot 2856.0 Call 1428.0 Raise 2956.0 Position 4
+INFO: Troper probability: 65%
+INFO: Trooper Current hand: TWO_PAIRS:8c*,8s,3h,3c,Ac
+INFO: Simulator values: Round river Players 2
+INFO: Hand: null with 0 outs two_pairs 40% four_of_a_kind 0%
+INFO: (2856.00 * 1.00) + (0.00 * 0.00) = 2856.00
+INFO: trooper.Action performed call. Current cost 1778.00
+INFO: --- new round 68--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 25572.0 Pot 600.0 Call 100.0 Raise 200.0 Position 8
+INFO: Troper probability: 13%
+INFO: Trooper Current hand: HIGH_CARD:Qs*,4h*
+INFO: Simulator values: Round hole_cards_dealt Players 7
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: Preflop hand not good.
+INFO: trooper.Action performed fold. Current cost 0.00
+INFO: --- new round 69--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 25572.0 Pot 450.0 Call 100.0 Raise 200.0 Position 6
+INFO: Troper probability: 12%
+INFO: Trooper Current hand: HIGH_CARD:8c*,5h*
+INFO: Simulator values: Round hole_cards_dealt Players 7
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: Preflop hand not good.
+INFO: trooper.Action performed fold. Current cost 0.00
+INFO: --- new round 70--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 25572.0 Pot 450.0 Call 100.0 Raise 200.0 Position 3
+INFO: Troper probability: 19%
+INFO: Trooper Current hand: HIGH_CARD:Ks*,Jc*
+INFO: Simulator values: Round hole_cards_dealt Players 8
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: In Sklansky and Malmuth list. 150.00 + (100.00 * 5.00) = 650.00
+INFO: trooper.Action performed call. Current cost 100.00
+INFO: Table values: Amunitions 25472.0 Pot 567.0 Call 0.0 Raise 100.0 Position 4
+INFO: Troper probability: 15%
+INFO: Trooper Current hand: HIGH_CARD:Ks*,Qs,Jc*,5d,2s
+INFO: Simulator values: Round flop Players 6
+INFO: Hand: pair with 6 outs three_of_a_kind 4% three_of_a_kind 4%
+INFO: (567.00 * 0.25) + (6 BB) = 741.75
+INFO: trooper.Action performed call. Current cost 100.00
+INFO: Table values: Amunitions 25472.0 Pot 567.0 Call 0.0 Raise 100.0 Position 4
+INFO: Troper probability: 48%
+INFO: Trooper Current hand: PAIR:Ks*,Kd,Qs,Jc*,5d
+INFO: Simulator values: Round turn Players 6
+INFO: Hand: two_pairs with 3 outs three_of_a_kind 4% three_of_a_kind 4%
+INFO: (567.00 * 0.50) + (3 BB) = 583.50
+INFO: trooper.Action performed call. Current cost 100.00
+INFO: Table values: Amunitions 25472.0 Pot 567.0 Call 0.0 Raise 100.0 Position 4
+INFO: Troper probability: 28%
+INFO: Trooper Current hand: PAIR:Ks*,Kd,Ac,Qs,Jc*
+INFO: Simulator values: Round river Players 6
+INFO: Hand: null with 0 outs two_pairs 12% straight 8%
+INFO: (567.00 * 0.67) + (189.00 * 0.00) = 378.00
+INFO: trooper.Action performed call. Current cost 100.00
+INFO: --- new round 71--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 25472.0 Pot 350.0 Call 100.0 Raise 200.0 Position 6
+INFO: Troper probability: 9%
+INFO: Trooper Current hand: HIGH_CARD:Tc*,2d*
+INFO: Simulator values: Round hole_cards_dealt Players 8
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: Preflop hand not good.
+INFO: trooper.Action performed fold. Current cost 0.00
+INFO: --- new round 72--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 25472.0 Pot 250.0 Call 100.0 Raise 200.0 Position 2
+INFO: Troper probability: 11%
+INFO: Trooper Current hand: HIGH_CARD:Kh*,2d*
+INFO: Simulator values: Round hole_cards_dealt Players 8
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: Preflop hand not good.
+INFO: trooper.Action performed fold. Current cost 0.00
+INFO: --- new round 73--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 25472.0 Pot 150.0 Call 100.0 Raise 200.0 Position 4
+INFO: Troper probability: 17%
+INFO: Trooper Current hand: PAIR:7c*,7d*
+INFO: Simulator values: Round hole_cards_dealt Players 8
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: In Sklansky and Malmuth list. 150.00 + (100.00 * 5.00) = 650.00
+INFO: trooper.Action performed call. Current cost 100.00
+INFO: Table values: Amunitions 25372.0 Pot 3250.0 Call 900.0 Raise 1900.0 Position 2
+INFO: Troper probability: 35%
+INFO: Trooper Current hand: PAIR:7c*,7d*
+INFO: Simulator values: Round hole_cards_dealt Players 4
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: In Sklansky and Malmuth list. but no more ammunition available.
+INFO: trooper.Action performed fold. Current cost 100.00
+INFO: --- new round 74--- 10000.0,100.0,50.0
+SEVERE: villan2.chips: Fail getting double value. The OCR is: 
+INFO: Table values: Amunitions 25272.0 Pot 700.0 Call 0.0 Raise 200.0 Position 1
+INFO: Troper probability: 17%
+INFO: Trooper Current hand: HIGH_CARD:Ad*,7h*
+INFO: Simulator values: Round hole_cards_dealt Players 7
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: Preflop hand not good.
+INFO: trooper.Action performed call. Current cost 0.00
+INFO: Table values: Amunitions 25272.0 Pot 761.0 Call 100.0 Raise 200.0 Position 1
+INFO: Troper probability: 18%
+INFO: Trooper Current hand: PAIR:7h*,7d,Ad*,Qc,8h
+INFO: Simulator values: Round flop Players 7
+INFO: Hand: two_pairs with 3 outs three_of_a_kind 3% three_of_a_kind 3%
+INFO: (761.00 * 0.50) + (3 BB) = 680.50
+INFO: trooper.Action performed call. Current cost 100.00
+INFO: Table values: Amunitions 25172.0 Pot 1328.0 Call 100.0 Raise 200.0 Position 0
+INFO: Troper probability: 18%
+INFO: Trooper Current hand: PAIR:7h*,7d,Ad*,Qc,8h
+INFO: Simulator values: Round turn Players 6
+INFO: Hand: two_pairs with 3 outs three_of_a_kind 4% three_of_a_kind 4%
+INFO: (1328.00 * 0.50) + (664.00 * 0.75) = 1162.00
+INFO: trooper.Action performed raise. Current cost 300.00
+INFO: Table values: Amunitions 24972.0 Pot 2173.0 Call 0.0 Raise 100.0 Position 1
+INFO: Troper probability: 11%
+INFO: Trooper Current hand: PAIR:7h*,7d,Ad*,Kd,Qc
+INFO: Simulator values: Round river Players 5
+INFO: Hand: null with 0 outs three_of_a_kind 6% three_of_a_kind 6%
+INFO: (2173.00 * 0.50) + (1086.50 * 0.00) = 1086.50
+INFO: trooper.Action performed raise. Current cost 400.00
+INFO: --- new round 75--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 24822.0 Pot 350.0 Call 50.0 Raise 200.0 Position 5
+INFO: Troper probability: 22%
+INFO: Trooper Current hand: HIGH_CARD:Jd*,4s*
+INFO: Simulator values: Round hole_cards_dealt Players 4
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: Preflop hand not good.
+INFO: trooper.Action performed fold. Current cost 0.00
+INFO: --- new round 76--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 24822.0 Pot 600.0 Call 100.0 Raise 200.0 Position 5
+INFO: Troper probability: 12%
+INFO: Trooper Current hand: HIGH_CARD:Jc*,4s*
+INFO: Simulator values: Round hole_cards_dealt Players 7
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: Preflop hand not good.
+INFO: trooper.Action performed fold. Current cost 0.00
+SEVERE: villan1.chips: Fail getting double value. The OCR is: 
+SEVERE: villan6.chips: Fail getting double value. The OCR is: 
+INFO: --- new round 77--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 24822.0 Pot 250.0 Call 100.0 Raise 200.0 Position 3
+INFO: Troper probability: 20%
+INFO: Trooper Current hand: HIGH_CARD:Qc*,6s*
+INFO: Simulator values: Round hole_cards_dealt Players 5
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: Preflop hand not good.
+INFO: trooper.Action performed fold. Current cost 0.00
+INFO: --- new round 78--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 24822.0 Pot 350.0 Call 100.0 Raise 200.0 Position 1
+INFO: Troper probability: 20%
+INFO: Trooper Current hand: HIGH_CARD:Qc*,8c*
+INFO: Simulator values: Round hole_cards_dealt Players 7
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: In Sklansky and Malmuth list. 150.00 + (100.00 * 3.00) = 450.00
+INFO: trooper.Action performed call. Current cost 100.00
+INFO: Table values: Amunitions 24722.0 Pot 714.0 Call 100.0 Raise 200.0 Position 3
+INFO: Troper probability: 36%
+INFO: Trooper Current hand: PAIR:Qc*,Qd,8c*,3h,2d
+INFO: Simulator values: Round flop Players 6
+INFO: Hand: two_pairs with 3 outs three_of_a_kind 3% three_of_a_kind 3%
+INFO: (714.00 * 0.50) + (3 BB) = 657.00
+INFO: trooper.Action performed raise. Current cost 300.00
+INFO: Table values: Amunitions 24522.0 Pot 1659.0 Call 100.0 Raise 200.0 Position 2
+INFO: Troper probability: 49%
+INFO: Trooper Current hand: PAIR:Qc*,Qd,9s,8c*,3h
+INFO: Simulator values: Round turn Players 5
+INFO: Hand: two_pairs with 3 outs three_of_a_kind 4% three_of_a_kind 4%
+INFO: (1659.00 * 0.50) + (829.50 * 0.75) = 1451.62
+INFO: trooper.Action performed raise. Current cost 500.00
+INFO: Table values: Amunitions 24322.0 Pot 2604.0 Call 100.0 Raise 200.0 Position 2
+INFO: Troper probability: 33%
+INFO: Trooper Current hand: PAIR:Qc*,Qd,Kh,9s,8c*
+INFO: Simulator values: Round river Players 5
+INFO: Hand: null with 0 outs straight 7% straight 7%
+INFO: (2604.00 * 0.40) + (1562.40 * 0.00) = 1041.60
+INFO: trooper.Action performed raise. Current cost 700.00
+INFO: Table values: Amunitions 24122.0 Pot 6008.0 Call 3004.0 Raise 6208.0 Position 2
+INFO: Troper probability: 77%
+INFO: Trooper Current hand: PAIR:Qc*,Qd,Kh,9s,8c*
+INFO: Simulator values: Round river Players 2
+INFO: Hand: null with 0 outs straight 7% straight 7%
+INFO: (6008.00 * 0.40) + (3604.80 * 0.00) = 2403.20
+INFO: trooper.Action performed fold. Current cost 700.00
+INFO: --- new round 79--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 24122.0 Pot 250.0 Call 100.0 Raise 200.0 Position 3
+INFO: Troper probability: 18%
+INFO: Trooper Current hand: HIGH_CARD:Tc*,9h*
+INFO: Simulator values: Round hole_cards_dealt Players 7
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: In Sklansky and Malmuth list. 150.00 + (100.00 * 3.00) = 450.00
+INFO: trooper.Action performed call. Current cost 100.00
+INFO: Table values: Amunitions 24022.0 Pot 567.0 Call 0.0 Raise 100.0 Position 1
+INFO: Troper probability: 10%
+INFO: Trooper Current hand: PAIR:Qs,Qh,Tc*,9h*,5s
+INFO: Simulator values: Round flop Players 6
+INFO: Hand: null with 0 outs two_pairs 28% four_of_a_kind 0%
+INFO: (567.00 * 0.67) + (189.00 * 0.00) = 378.00
+INFO: trooper.Action performed call. Current cost 100.00
+INFO: Table values: Amunitions 24022.0 Pot 567.0 Call 0.0 Raise 100.0 Position 1
+INFO: Troper probability: 14%
+INFO: Trooper Current hand: THREE_OF_A_KIND:Qs,Qh,Qc,Tc*,9h*
+INFO: Simulator values: Round turn Players 6
+INFO: Hand: full_house with 6 outs three_of_a_kind 53% four_of_a_kind 7%
+INFO: (567.00 * 1.00) + (6 BB) = 1167.00
+INFO: trooper.Action performed raise. Current cost 200.00
+INFO: Table values: Amunitions 23922.0 Pot 945.0 Call 0.0 Raise 100.0 Position 1
+INFO: Troper probability: 2%
+INFO: Trooper Current hand: THREE_OF_A_KIND:Qs,Qh,Qc,Tc*,9h*
+INFO: Simulator values: Round river Players 4
+INFO: Hand: null with 0 outs three_of_a_kind 52% four_of_a_kind 7%
+INFO: (945.00 * 1.00) + (0.00 * 0.00) = 945.00
+INFO: trooper.Action performed call. Current cost 200.00
+INFO: Table values: Amunitions 23922.0 Pot 2945.0 Call 1000.0 Raise 2000.0 Position 2
+INFO: Troper probability: 8%
+INFO: Trooper Current hand: THREE_OF_A_KIND:Qs,Qh,Qc,Tc*,9h*
+INFO: Simulator values: Round river Players 3
+INFO: Hand: null with 0 outs three_of_a_kind 52% four_of_a_kind 7%
+INFO: (2945.00 * 1.00) + (0.00 * 0.00) = 2945.00
+INFO: trooper.Action performed fold. Current cost 200.00
+INFO: --- new round 80--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 23922.0 Pot 350.0 Call 100.0 Raise 200.0 Position 4
+INFO: Troper probability: 8%
+INFO: Trooper Current hand: HIGH_CARD:4h*,2d*
+INFO: Simulator values: Round hole_cards_dealt Players 8
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: Preflop hand not good.
+INFO: trooper.Action performed fold. Current cost 0.00
+INFO: --- new round 81--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 23822.0 Pot 4700.0 Call 2000.0 Raise 4100.0 Position 0
+INFO: Troper probability: 14%
+INFO: Trooper Current hand: HIGH_CARD:9c*,2c*
+INFO: Simulator values: Round hole_cards_dealt Players 7
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: Preflop hand not good.
+INFO: trooper.Action performed fold. Current cost 0.00
+SEVERE: villan8.chips: Fail getting double value. The OCR is: 
+SEVERE: villan4.chips: Fail getting double value. The OCR is: 
+SEVERE: villan7.chips: Fail getting double value. The OCR is: 
+SEVERE: villan8.chips: Fail getting double value. The OCR is: 
+INFO: --- new round 82--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 23822.0 Pot 250.0 Call 100.0 Raise 200.0 Position 3
+INFO: Troper probability: 30%
+INFO: Trooper Current hand: HIGH_CARD:Ah*,5s*
+INFO: Simulator values: Round hole_cards_dealt Players 4
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: Preflop hand not good.
+INFO: trooper.Action performed fold. Current cost 0.00
+INFO: --- new round 83--- 10000.0,100.0,50.0
+INFO: Table values: Amunitions 23822.0 Pot 250.0 Call 100.0 Raise 200.0 Position 2
+INFO: Troper probability: 28%
+INFO: Trooper Current hand: HIGH_CARD:Ah*,5h*
+INFO: Simulator values: Round hole_cards_dealt Players 5
+INFO: Hand: null with 0 outs Manual setted to Hand.THREE_OF_A_KIND. 
+INFO: In Sklansky and Malmuth list. 150.00 + (100.00 * 5.00) = 650.00
+INFO: trooper.Action performed call. Current cost 100.00
+INFO: Table values: Amunitions 23722.0 Pot 678.0 Call 100.0 Raise 200.0 Position 3
+INFO: Troper probability: 19%
+INFO: Trooper Current hand: HIGH_CARD:Ah*,Td,6h,5h*,3d
+INFO: Simulator values: Round flop Players 4
+INFO: Hand: pair with 6 outs three_of_a_kind 4% three_of_a_kind 4%
+INFO: (678.00 * 0.25) + (6 BB) = 769.50
+INFO: trooper.Action performed call. Current cost 200.00
+SEVERE: null
+INFO: Error detected in simulator.
+INFO: trooper.Action performed fold. Current cost 200.00
+INFO: Can.t reach the main gametable.
+INFO: Tropper dismiss.
