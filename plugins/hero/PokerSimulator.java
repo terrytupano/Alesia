@@ -722,8 +722,8 @@ public class PokerSimulator {
 		Card[] cards = myHandHelper.getSignificantCards();
 		for (Card card : cards)
 			cnt = card.isHoleCard() ? cnt + 1 : cnt;
-		// return cnt == 2 && !myHandHelper.isPocketPair();
-		return cnt == 2;
+		return cnt == 2 && !myHandHelper.isPocketPair();
+		// return cnt == 2;
 	}
 
 	/**
@@ -768,25 +768,35 @@ public class PokerSimulator {
 		// nut). manual set to the standar Hand.THREE_OF_A_KIND
 		if (oppMostProbHand == -1 || currentRound < FLOP_CARDS_DEALT) {
 			oppMostProbHand = Hand.THREE_OF_A_KIND;
+			oppTopHand = Hand.THREE_OF_A_KIND;
 			mostprobMsg = "Manual setted to Hand.THREE_OF_A_KIND.";
 		}
 		setVariable("simulator.Hand streng villans", mostprobMsg + " " + tophandMsg);
 
-		// TEMP. select as potential, the hand whit more out.
+		// TEMP. select as potential, all hands that are EQUAL or BETTER than the most probable villan hand
 		String msg = "";
+		int prevOut = 0;
 		if (myOutsHelper != null) {
 			Card cards[][] = myOutsHelper.getAllOuts();
-			for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
-				int currOut = cards[i].length;
-				if (currOut > 0 && currOut > handPotentialOuts) {
-					handPotentialOuts = currOut;
-					handPotential = (Hand.STRAIGHT_FLUSH - i);
+			// for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
+			for (int i = 0; i < oppMostProbHand; i++) {
+				int outs = cards[i].length;
+				// if (currOut > 0 && currOut > handPotentialOuts) {
+				if (outs > 0) {
+					handPotentialOuts += outs;
+					// the most ount hand
+					if (outs > prevOut) {
+						handPotential = (Hand.STRAIGHT_FLUSH - i);
+						prevOut = outs;
+					}
+					msg += handPotentialOuts + " for " + handNames.get(Hand.STRAIGHT_FLUSH - i) + ", ";
 					// 210117: with this modification, hero supportet 3 hour of continuous battle in a table without
 					// oportunity and hold steady without loosing his chips. :D
 				}
 			}
 		}
-		msg += handNames.get(Hand.STRAIGHT_FLUSH - handPotential) + " with " + handPotentialOuts + " outs";
+		// msg += handNames.get(Hand.STRAIGHT_FLUSH - handPotential) + " with " + handPotentialOuts + " outs";
+		msg = msg.length() > 0 ? msg.substring(0, msg.length() - 2) : msg;
 		setVariable("simulator.Hand potential", msg);
 	}
 

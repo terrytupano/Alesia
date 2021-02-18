@@ -81,6 +81,7 @@ public class Trooper extends Task {
 		this.outGameStats = new DescriptiveStatistics(10);
 		this.pokerSimulator = sensorsArray.getPokerSimulator();
 		this.roundCounter = 0;
+		this.playUntil = 0;
 		instance = this;
 		this.sklanskyPreflop = getTabProperties("preflop.card");
 		this.bluffHands = getTabProperties("bluff.card");
@@ -150,7 +151,7 @@ public class Trooper extends Task {
 
 		if (txt != null) {
 			setBluffActions();
-			setVariableAndLog(EXPLANATION, "Oportunity detected " + txt);
+			setVariableAndLog(EXPLANATION, "--- Oportunity detected " + txt +" ---");
 		}
 		return txt != null;
 	}
@@ -760,7 +761,7 @@ public class Trooper extends Task {
 			if (!("".equals(hch) || lastHoleCards.equals(hch))) {
 				lastHoleCards = hch;
 				setVariableAndLog(EXPLANATION,
-						"--- new round " + roundCounter++ + "--- " + pokerSimulator.getTableParameters());
+						"--- Round " + (roundCounter++) + " " +pokerSimulator.getTableParameters() + " ---");
 
 				// play time or play sae parameter parameters. when the play time is reach, the action sit.out is
 				// clicked and hero return

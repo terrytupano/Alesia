@@ -4,7 +4,6 @@ import java.awt.*;
 import java.awt.image.*;
 import java.util.*;
 import java.util.List;
-import java.util.logging.*;
 
 import javax.swing.*;
 
@@ -225,7 +224,7 @@ public class ScreenSensor extends JPanel {
 				val = Double.parseDouble(ocr);
 			}
 		} catch (Exception e) {
-			Hero.heroLogger.severe(getName() + ": Fail getting double value. The OCR is: " + ocr);
+			Hero.heroLogger.fine(getName() + ": Fail getting double value. The OCR is: " + ocr);
 		}
 		return val;
 	}
@@ -316,7 +315,7 @@ public class ScreenSensor extends JPanel {
 				ocrResult = getTesseractOCR();
 
 		} catch (Exception e) {
-			Hero.heroLogger.severe(getName() + ": Fail trying doOCR " + e);
+			Hero.heroLogger.fine(getName() + ": Fail trying doOCR " + e);
 		}
 	}
 
@@ -339,7 +338,7 @@ public class ScreenSensor extends JPanel {
 		// report error and return empty string
 		String suit = "";
 		if ("".equals(rank)) {
-			Hero.heroLogger.severe(getName() + ": Card OCR Fail. raw OCR = " + rank);
+			Hero.heroLogger.fine(getName() + ": Card OCR Fail. raw OCR = " + rank);
 			return "";
 		} else {
 			String cn = TColorUtils.colorNames.get(backgroundColor);

@@ -61,7 +61,7 @@ public class GamePlayer {
 	 * @return String with statistic
 	 */
 	public String getStats() {
-		return getMean() + " (" + bettingPattern.getN() + ")";
+		return "N=" + bettingPattern.getN() + " M=" + getMean() + " Sd="+ getStandardDeviation();
 	}
 
 	/**
@@ -164,6 +164,13 @@ public class GamePlayer {
 	 */
 	public double getMean() {
 		return getMean(bettingPattern);
+	}
+	
+	public double getStandardDeviation() {
+		double var = bettingPattern.getStandardDeviation();
+		var = var / Hero.sensorsArray.getPokerSimulator().getBigBlind();
+		var = ((int) (var * 100)) / 100.0;
+		return var;
 	}
 
 	/**
