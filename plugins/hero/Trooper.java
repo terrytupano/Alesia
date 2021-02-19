@@ -151,7 +151,7 @@ public class Trooper extends Task {
 
 		if (txt != null) {
 			setBluffActions();
-			setVariableAndLog(EXPLANATION, "--- Oportunity detected " + txt +" ---");
+			setVariableAndLog(EXPLANATION, "--- Oportunity detected " + txt + " ---");
 		}
 		return txt != null;
 	}
@@ -290,25 +290,28 @@ public class Trooper extends Task {
 		// solution: normailization of the result, or handpotential / oppMostProbHand
 		// TEST: the future hand potential is in relation whit oppTopHand. this avoid hero to prusuit hand whit many
 		// outs and hihgt
-		double handStreng = pokerSimulator.getCurrentHandStreng(false);
+		double handStreng = pokerSimulator.getCurrentHandStreng(true);
 		int oppTopHand = pokerSimulator.getOppTopHand();
 
 		// the current fraction of the pot ammount that until now, is already mine
 		double myPot = pot * handStreng;
 
-		// ammount of ammo that is worth to invest according to future outcome
-		double outAmmo = handOuts * bBlind;
+		// ammount of ammo that is worth to invest according to future outcome		
+		int factor = 2;
+		double outAmmo = handOuts * bBlind * factor;
 		double fhp = (handPotential * 1.0) / (oppTopHand * 1.0);
 		double hsdiff = (pot - myPot) * fhp;
 		double invest = 0.0;
 		String investMsg = "";
-		if (outAmmo > hsdiff) {
-			invest = outAmmo;
-			investMsg = handOuts + " BB";
-		} else {
-			invest = hsdiff;
-			investMsg = twoDigitFormat.format((pot - myPot)) + " * " + twoDigitFormat.format(fhp);
-		}
+		// TEST: assign nur the value computed in outshand. this allow hero only go for really good hand instead of try
+		// whid hands that are por in outs
+		// if (outAmmo > hsdiff) {
+		invest = outAmmo;
+		investMsg = (handOuts *factor) + " BB";
+		// } else {
+		// invest = hsdiff;
+		// investMsg = twoDigitFormat.format((pot - myPot)) + " * " + twoDigitFormat.format(fhp);
+		// }
 
 		double ammunitions = myPot + invest;
 		String myPotMsg = twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng);
@@ -761,7 +764,7 @@ public class Trooper extends Task {
 			if (!("".equals(hch) || lastHoleCards.equals(hch))) {
 				lastHoleCards = hch;
 				setVariableAndLog(EXPLANATION,
-						"--- Round " + (roundCounter++) + " " +pokerSimulator.getTableParameters() + " ---");
+						"--- Round " + (roundCounter++) + " " + pokerSimulator.getTableParameters() + " ---");
 
 				// play time or play sae parameter parameters. when the play time is reach, the action sit.out is
 				// clicked and hero return

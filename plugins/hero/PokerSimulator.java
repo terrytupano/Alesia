@@ -779,7 +779,7 @@ public class PokerSimulator {
 		if (myOutsHelper != null) {
 			Card cards[][] = myOutsHelper.getAllOuts();
 			// for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
-			for (int i = 0; i < oppMostProbHand; i++) {
+			for (int i = 0; i <= (Hand.STRAIGHT_FLUSH - oppMostProbHand); i++) {
 				int outs = cards[i].length;
 				// if (currOut > 0 && currOut > handPotentialOuts) {
 				if (outs > 0) {
@@ -789,7 +789,7 @@ public class PokerSimulator {
 						handPotential = (Hand.STRAIGHT_FLUSH - i);
 						prevOut = outs;
 					}
-					msg += handPotentialOuts + " for " + handNames.get(Hand.STRAIGHT_FLUSH - i) + ", ";
+					msg += outs + " for " + handNames.get(i) + ", ";
 					// 210117: with this modification, hero supportet 3 hour of continuous battle in a table without
 					// oportunity and hold steady without loosing his chips. :D
 				}
