@@ -78,24 +78,6 @@ public class ScreenSensor extends JPanel {
 		// overide method to only show vital info
 		return getName() + " isEnable=" + isEnabled() + " OCR=" + getOCR();
 	}
-	@Deprecated
-	public static String getOCRFromImage2(String sName, BufferedImage imagea, TreeMap<String, String> imageHashes) {
-		String s1 = TCVUtils.imagePHash(imagea, null);
-		double minDist = 21;
-		String ocr = null;
-		int dist = Integer.MAX_VALUE;
-		Set<String> keys = imageHashes.keySet();
-		for (String key : keys) {
-			int d = TCVUtils.getHammingDistance(s1, imageHashes.get(key));
-			Hero.heroLogger.finer("file name: " + key + "Distance: " + d);
-			if (d < dist) {
-				dist = d;
-				ocr = key;
-			}
-		}
-		Hero.heroLogger.finer("getOCRFromImage for sensor" + sName + ": image " + ocr + " found. Distance: " + dist);
-		return ocr == null || dist > minDist ? null : ocr;
-	}
 
 	/**
 	 * Return a random {@link Point} selectd inside of the area (0,width) (0,height)
@@ -358,29 +340,6 @@ public class ScreenSensor extends JPanel {
 		return rank + suit;
 	}
 
-	private String getOCRFromImage(BufferedImage imagea, TreeMap<String, BufferedImage> images) {
-		String ocr = null;
-		double dif = 100.0;
-		double difThreshold = 30.0;
-
-		Set<String> names = images.keySet();
-		for (String name : names) {
-			BufferedImage imageb = images.get(name);
-			double s = TCVUtils.getImageDiferences(imagea, imageb, true);
-			Hero.heroLogger.finer("file name: " + name + " Diference: " + s);
-			if (s < dif) {
-				dif = s;
-				ocr = name;
-			}
-		}
-		if (dif > difThreshold)
-			Hero.heroLogger.finer("OCR not found for sensor " + getName() + ". min diference: " + dif);
-		else
-			Hero.heroLogger.finer("OCR for sensor " + getName() + ": " + ocr + " found. Diference: " + dif);
-
-		return ocr == null || dif > difThreshold ? null : ocr;
-	}
-
 	/**
 	 * Perform tesseract ocr operation for generic areas.
 	 * 
@@ -391,24 +350,23 @@ public class ScreenSensor extends JPanel {
 	private String getTesseractOCR() throws TesseractException {
 		String srcocr = iTesseract.doOCR(preparedImage);
 
-		if ("pot".equals(getName()))
-			// draw segmented regions (only on prepared image) and ONLY when the prepared image is request to be visible
-			if (showImage.equals(PREPARED) && preparedImage != null) {
-				int pageIteratorLevel = TessAPI.TessPageIteratorLevel.RIL_WORD;
-				// List<Word> wlst = Hero.iTesseract.getWords(preparedImage, pageIteratorLevel);
-				List<Rectangle> regions = iTesseract.getSegmentedRegions(preparedImage, pageIteratorLevel);
-				Graphics2D g2d = (Graphics2D) preparedImage.getGraphics();
-				g2d.setColor(Color.BLUE);
-				if (regions != null) {
-					for (int i = 0; i < regions.size(); i++) {
-						Rectangle region = regions.get(i);
-						g2d.drawRect(region.x, region.y, region.width, region.height);
-					}
+		// draw segmented regions (only on prepared image) and ONLY when the prepared image is request to be visible
+		if (showImage.equals(PREPARED) && preparedImage != null) {
+			int pageIteratorLevel = TessAPI.TessPageIteratorLevel.RIL_WORD;
+			// List<Word> wlst = Hero.iTesseract.getWords(preparedImage, pageIteratorLevel);
+			List<Rectangle> regions = iTesseract.getSegmentedRegions(preparedImage, pageIteratorLevel);
+			Graphics2D g2d = (Graphics2D) preparedImage.getGraphics();
+			g2d.setColor(Color.LIGHT_GRAY);
+			if (regions != null) {
+				for (int i = 0; i < regions.size(); i++) {
+					Rectangle region = regions.get(i);
+					g2d.drawRect(region.x, region.y, region.width, region.height);
 				}
-				// Hero.heroLogger.finer(getName() + ": list of words: " + wlst);
-				// Hero.heroLogger.finer(getName() + ": Tesseract OCR performed. Regions: " + regions.size() + " OCR=" +
-				// srcocr);
 			}
+			// Hero.heroLogger.finer(getName() + ": list of words: " + wlst);
+			// Hero.heroLogger.finer(getName() + ": Tesseract OCR performed. Regions: " + regions.size() + " OCR=" +
+			// srcocr);
+		}
 		Hero.heroLogger.finer(getName() + ": Tesseract OCR performed. Raw OCR whitout correction=" + srcocr);
 		return OCRCorrection(srcocr);
 	}
@@ -431,6 +389,10 @@ public class ScreenSensor extends JPanel {
 		// standar procedure: remove all blanks caracters
 		srcocd = srcocd.replaceAll("\\s", "");
 
+		// for chips numerical areas, and the value is empty string is probably because all-in action, assign 0
+		if (isNumericArea() && getName().contains(".chips") && "".equals(srcocd)) {
+			srcocd = "0";
+		}
 		// special treatmen for hero.call sensor
 		if ("hero.call".equals(getName()) && isEnabled() && srcocd.equals(""))
 			srcocd = "0";

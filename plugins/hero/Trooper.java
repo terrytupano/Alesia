@@ -290,7 +290,7 @@ public class Trooper extends Task {
 		// solution: normailization of the result, or handpotential / oppMostProbHand
 		// TEST: the future hand potential is in relation whit oppTopHand. this avoid hero to prusuit hand whit many
 		// outs and hihgt
-		double handStreng = pokerSimulator.getCurrentHandStreng(true);
+		double handStreng = pokerSimulator.getCurrentHandStreng(false);
 		int oppTopHand = pokerSimulator.getOppTopHand();
 
 		// the current fraction of the pot ammount that until now, is already mine
