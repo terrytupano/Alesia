@@ -35,24 +35,23 @@ public class GameRecorder {
 	 * 
 	 * @return
 	 */
-	public ArrayList<String> getAssesment() {
+	public ArrayList<GamePlayer> getAssesment() {
 		tempList.clear();
-		tempList2.clear();
 		for (int i = 0; i < players.size(); i++) {
 			GamePlayer gp = players.elementAt(i);
 			// active player only
 			if (gp.isActive())
-				tempList.add(new TEntry<>(gp, gp.getMean()));
+				tempList.add(gp);
 		}
-		tempList.sort(Comparator.reverseOrder());
-		if (tempList.size() > 0) {
-			for (int i = 0; i < Math.min(4, tempList.size()); i++) {
-				GamePlayer gp = tempList.get(i).getKey();
-//				tempList2.add(gp.getId() + " " + gp.getName() + " " + gp.getStats());
-				tempList2.add(gp.getDesignation() + " " + gp.getStats());
-			}
-		}
-		return tempList2;
+//		tempList.sort(Comparator.reverseOrder());
+//		if (tempList.size() > 0) {
+//			for (int i = 0; i < Math.min(4, tempList.size()); i++) {
+//				GamePlayer gp = tempList.get(i).getKey();
+////				tempList2.add(gp.getId() + " " + gp.getName() + " " + gp.getStats());
+//				tempList2.add(gp.getDesignation() + " " + gp.getStats());
+//			}
+//		}
+		return tempList;
 	}
 
 	/**
@@ -64,7 +63,7 @@ public class GameRecorder {
 		players.forEach(gr -> gr.updateDB());
 	}
 
-	private ArrayList<TEntry<GamePlayer, Double>> tempList = new ArrayList<>();
+	private ArrayList<GamePlayer> tempList = new ArrayList<>();
 	private ArrayList<String> tempList2 = new ArrayList<>();
 
 	public GamePlayer getGamePlayer(int index) {

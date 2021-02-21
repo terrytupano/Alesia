@@ -24,6 +24,7 @@ public class GamePlayer {
 	private int playerId;
 	private double prevValue;
 	private boolean isActive;
+	private boolean isBoss;
 
 	public GamePlayer(int playerId) {
 		this.playerId = playerId;
@@ -32,12 +33,19 @@ public class GamePlayer {
 	}
 
 	public String getDesignation() {
-		return playerId == 0 ? "Hero" : "Villan "+playerId;
+		return playerId == 0 ? "Hero" : "Villan " + playerId;
 	}
 	public int getId() {
 		return playerId;
 	}
 
+	/**
+	 * return <code>true</code> if this player is currently active.
+	 * <p>
+	 * this status is update during {@link #readSensors()} process
+	 * 
+	 * @return active player or not
+	 */
 	public boolean isActive() {
 		return isActive;
 	}
@@ -50,10 +58,6 @@ public class GamePlayer {
 	public String getName() {
 		return name;
 	}
-	// public String getPreviousStats() {
-	// return getMean(previousBettingPattern) + " (" + previousBettingPattern.getN() + ")";
-	//
-	// }
 
 	/**
 	 * Return a visual representation of the internal statistic.
@@ -61,7 +65,7 @@ public class GamePlayer {
 	 * @return String with statistic
 	 */
 	public String getStats() {
-		return "N=" + bettingPattern.getN() + " M=" + getMean() + " Sd="+ getStandardDeviation();
+		return "N=" + bettingPattern.getN() + " M=" + getMean() + " Sd=" + getStandardDeviation();
 	}
 
 	/**
@@ -163,26 +167,20 @@ public class GamePlayer {
 	 * @return means in BB format
 	 */
 	public double getMean() {
-		return getMean(bettingPattern);
+		double mean = bettingPattern.getMean();
+		mean = mean / Hero.sensorsArray.getPokerSimulator().getBigBlind();
+		mean = ((int) (mean * 100)) / 100.0;
+		return mean;
 	}
-	
+
+	public long getN() {
+		return bettingPattern.getN();
+	}
+
 	public double getStandardDeviation() {
 		double var = bettingPattern.getStandardDeviation();
 		var = var / Hero.sensorsArray.getPokerSimulator().getBigBlind();
 		var = ((int) (var * 100)) / 100.0;
 		return var;
-	}
-
-	/**
-	 * return the mean but expresed in BB
-	 * 
-	 * @param stats - {@link DescriptiveStatistics}
-	 * @return means in BB format
-	 */
-	private double getMean(DescriptiveStatistics stats) {
-		double mean = stats.getMean();
-		mean = mean / Hero.sensorsArray.getPokerSimulator().getBigBlind();
-		mean = ((int) (mean * 100)) / 100.0;
-		return mean;
 	}
 }

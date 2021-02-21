@@ -129,13 +129,10 @@ public class SensorsArray {
 	 * @return the boss or -1 in case of error or no boss detected at this time
 	 */
 	public double getBoss() {
-		
-		
+
 		// TODO: get the infor from last assesment
 		//////////////////////////////////////////////////
-		
-		
-		
+
 		// ArrayList<Double> chips = new ArrayList<>();
 		// for (int id = 1; id <= getVillans(); id++) {
 		// if (isActive(id))
@@ -388,13 +385,20 @@ public class SensorsArray {
 		// gamers information
 		gameRecorder.getGamePlayer(villansBeacon).readSensors();
 		villansBeacon++;
-		StringBuffer sb = new StringBuffer();
-		ArrayList<String> list = gameRecorder.getAssesment();
-		if (list.size() > 0)
-			gameRecorder.getAssesment().forEach(str -> sb.append(str + "<br>"));
-		else
-			sb.append("Unknow <br>");
-		pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
+		String asse = "<html><table cellspacing=0, border=0><assesment></table></html>";
+		String tmp = "";
+		ArrayList<GamePlayer> list = gameRecorder.getAssesment();
+		if (list.size() > 0) {
+			for (GamePlayer gp : list) {
+				String rowsty = gp.isActive() ? "" : "style=color:gray";
+				tmp += "<tr" + rowsty + "><td>" + gp.getId() + " " + gp.getName() + "</td><td>" + gp.getN()
+						+ "</td><td>" + gp.getMean() + "</td><td>" + gp.getStandardDeviation() + "</td></tr>";
+			}
+			asse = asse.replace("<assesment>", tmp);
+		} else
+			asse = "Unknow";
+		// pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
+		pokerSimulator.setVariable("trooper.Assesment", asse);
 
 		if (villansBeacon > getVillans()) {
 			villansBeacon = 0;
