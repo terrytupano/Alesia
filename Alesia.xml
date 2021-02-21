@@ -4,7 +4,7 @@
   <UserLogIn.rememberUser type="ButtonState" selected="true"/>
   <logging.level type="ComboBoxState" selectedIndex="3"/>
   <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
-  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="2"/>
+  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="0"/>
   <tDistributionRange type="ComboBoxState" selectedIndex="4"/>
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
   <SensorPanel.imageType type="ComboBoxState" selectedIndex="0"/>
@@ -25,7 +25,7 @@
   <PokerSimulator.HelperFilter type="ComboBoxState" selectedIndex="5"/>
   <oddCalculation type="ComboBoxState" selectedIndex="1"/>
   <postflopAmmoControl type="ComboBoxState" selectedIndex="0"/>
-  <SensorPanel.filter type="ComboBoxState" selectedIndex="0"/>
+  <SensorPanel.filter type="ComboBoxState" selectedIndex="8"/>
   <FlickaDockablePane type="DockablePaneState">
     <root class="DockableList" id="EL-EpOpr-I8QK0-8FIyF-i9P6o-ID" size="479,664" orientation="vertical">
       <DockableList id="EL-sJamJ-UrxRl-1UQ5v-EBIfK-ID" size="1037,530" orientation="horizontal">

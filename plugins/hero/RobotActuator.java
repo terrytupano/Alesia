@@ -2,9 +2,6 @@ package plugins.hero;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.logging.*;
-
-import core.*;
 
 /**
  * Base class to send programaticily events throw the mouse or the keyboard. each action recived by this class is the

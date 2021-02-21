@@ -385,7 +385,7 @@ public class SensorsArray {
 		// gamers information
 		gameRecorder.getGamePlayer(villansBeacon).readSensors();
 		villansBeacon++;
-		String asse = "<html><table cellspacing=0, border=0><assesment></table></html>";
+		String asse = "<html><table border=\"0\", cellspacing=\"0\"><assesment></table></html>";
 		String tmp = "";
 		ArrayList<GamePlayer> list = gameRecorder.getAssesment();
 		if (list.size() > 0) {

@@ -2,7 +2,9 @@ package plugins.hero;
 
 import java.util.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.stat.descriptive.*;
+import org.jfree.util.*;
 
 /**
  * encapsulate all player information. this class collect the necesary information to make a wild guess over the
@@ -18,7 +20,7 @@ import org.apache.commons.math3.stat.descriptive.*;
  *
  */
 public class GamePlayer {
-	private String name;
+	private String name = "";
 	private String oldName = "";
 	private DescriptiveStatistics bettingPattern;
 	private int playerId;
@@ -74,11 +76,14 @@ public class GamePlayer {
 	 */
 	public void readSensors() {
 		isActive = false;
-		String sensors = (playerId == 0) ? "hero" : "villan" + playerId;
-		List<ScreenSensor> list = Hero.sensorsArray.getSensors(sensors);
+		String ssPrefix = (playerId == 0) ? "hero" : "villan" + playerId;
+		List<ScreenSensor> list = Hero.sensorsArray.getSensors(ssPrefix);
 		Hero.sensorsArray.readSensors(true, list);
 
-		if (!Hero.sensorsArray.isActive(playerId))
+		// test: all sensor must be active
+		boolean disab = !(Hero.sensorsArray.getSensor(ssPrefix + ".name").isEnabled()
+				&& Hero.sensorsArray.getSensor(ssPrefix + ".chips").isEnabled());
+		if (!Hero.sensorsArray.isActive(playerId) || disab)
 			return;
 
 		// Active variable here to avoid blick in assesment. if in this moment can retrive all info, present the
@@ -87,11 +92,8 @@ public class GamePlayer {
 
 		// amunitions
 		double chips = 0.0;
-		if (playerId == 0) {
-			chips = Hero.sensorsArray.getSensor("hero.chips").getNumericOCR();
-		} else {
-			chips = Hero.sensorsArray.getSensor("villan" + playerId + ".chips").getNumericOCR();
-		}
+		String sName = (playerId == 0) ? "hero.chips" : "villan" + playerId + ".chips";
+		chips = Hero.sensorsArray.getSensor(sName).getNumericOCR();
 
 		// name
 		if (playerId == 0)
@@ -105,8 +107,13 @@ public class GamePlayer {
 
 		// new player ??
 		if (!oldName.equals(name)) {
-			bettingPattern.clear();
-			prevValue = -1;
+			int diff = (StringUtils.difference(oldName, name).length() / Math.max(oldName.length(), name.length()))
+					* 100;
+			// string difference must be more than 60%
+			if (diff > 60) {
+				bettingPattern.clear();
+				prevValue = -1;
+			}
 		}
 
 		// an the beginning of the record process, set the buyIN as basic anc compute the average winnigs/lose

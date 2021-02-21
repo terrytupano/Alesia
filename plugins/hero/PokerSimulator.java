@@ -708,7 +708,7 @@ public class PokerSimulator {
 				res += lin.replaceAll(": ", "</td><td>");
 			}
 		}
-		return "<table>" + res + "</table>";
+		return "<table border=\"0\", cellspacing=\"0\">" + res + "</table>";
 	}
 
 	/**
