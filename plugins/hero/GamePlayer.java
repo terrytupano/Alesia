@@ -27,16 +27,24 @@ public class GamePlayer {
 	private double prevValue;
 	private boolean isActive;
 	private boolean isBoss;
+	private double chips;
 
 	public GamePlayer(int playerId) {
 		this.playerId = playerId;
 		this.prevValue = -1;
 		this.bettingPattern = new DescriptiveStatistics(100);
+		this.chips = 0.0;
 	}
 
 	public String getDesignation() {
 		return playerId == 0 ? "Hero" : "Villan " + playerId;
 	}
+
+	/**
+	 * return the player recorder id or position. 0=Hero, 1=Villan 1 ...
+	 * 
+	 * @return {@link GamePlayer} id
+	 */
 	public int getId() {
 		return playerId;
 	}
@@ -91,7 +99,6 @@ public class GamePlayer {
 		isActive = true;
 
 		// amunitions
-		double chips = 0.0;
 		String sName = (playerId == 0) ? "hero.chips" : "villan" + playerId + ".chips";
 		chips = Hero.sensorsArray.getSensor(sName).getNumericOCR();
 
@@ -168,6 +175,14 @@ public class GamePlayer {
 		// }
 	}
 
+	/**
+	 * return the las amount of chips captured
+	 * 
+	 * @return chips
+	 */
+	public double getChips() {
+		return chips;
+	}
 	/**
 	 * return the mean but expresed in BB
 	 * 

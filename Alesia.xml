@@ -4,7 +4,7 @@
   <UserLogIn.rememberUser type="ButtonState" selected="true"/>
   <logging.level type="ComboBoxState" selectedIndex="3"/>
   <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
-  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="0"/>
+  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="3"/>
   <tDistributionRange type="ComboBoxState" selectedIndex="4"/>
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
   <SensorPanel.imageType type="ComboBoxState" selectedIndex="0"/>
@@ -18,7 +18,7 @@
   <bigBlid type="string"></bigBlid>
   <availableActions type="TextComponentState" text="*all" caretPosition="4"/>
   <table.bigBlid type="TextComponentState" text="2000" caretPosition="4"/>
-  <play.time type="TextComponentState" text="3" caretPosition="1"/>
+  <play.time type="TextComponentState" text="0" caretPosition="1"/>
   <play.until type="TextComponentState" text="0.6" caretPosition="3"/>
   <test type="TextComponentState" text="02+01 preflop" caretPosition="13"/>
   <table.parameters type="ComboBoxState" selectedIndex="0"/>

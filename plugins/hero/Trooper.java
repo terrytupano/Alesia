@@ -135,16 +135,14 @@ public class Trooper extends Task {
 		if (pokerSimulator.getMyHandHelper().isTheNuts())
 			txt = "Is the Nuts";
 
-		// the card must in the currend distribution
-		String pfh = isGoodPreflopHand();
-
 		// trooper is set
 		boolean set = pokerSimulator.isSet();
 
 		// probability
 		double prob = pokerSimulator.getProbability();
 
-		if (pfh != null && set && prob > 0.66) {
+		// is a T o better card. T o better are the 40% of all card. this mean, hero hat 60% chance of win in a bluff
+		if (pokerSimulator.getSignificantRank() > Card.NINE && set && prob > 0.66) {
 			Card[] cards = pokerSimulator.getMyHandHelper().getSignificantCards();
 			txt = cards.length + " Significant card with " + twoDigitFormat.format(prob);
 		}
@@ -242,8 +240,8 @@ public class Trooper extends Task {
 
 		// FLOP AND FUTHER
 		if (pokerSimulator.getCurrentRound() > PokerSimulator.HOLE_CARDS_DEALT) {
-			if (!checkOportunities())
-				performDecisionMethod();
+			// if (!checkOportunities())
+			performDecisionMethod();
 
 		}
 
@@ -281,62 +279,52 @@ public class Trooper extends Task {
 	 **/
 	private double getAmmunitions() {
 		double pot = pokerSimulator.getPotValue();
-		int handPotential = pokerSimulator.getHandPotential();
+		// int handPotential = pokerSimulator.getHandPotential();
 		int handOuts = pokerSimulator.getHandPotentialOuts();
 		double bBlind = pokerSimulator.getBigBlind();
+
+		double bluff = getBluffValue();
+		String bluffMsg = twoDigitFormat.format(bluff) + " bluff";
 
 		// PROBLEM: hero try to presuit hight hands. the relation handpotential / oppMostProbHand is to low, the result
 		// is invest part of the pot * 2 or 3 times
 		// solution: normailization of the result, or handpotential / oppMostProbHand
 		// TEST: the future hand potential is in relation whit oppTopHand. this avoid hero to prusuit hand whit many
 		// outs and hihgt
-		double handStreng = pokerSimulator.getCurrentHandStreng(false);
-		int oppTopHand = pokerSimulator.getOppTopHand();
+		double opt1 = pokerSimulator.getCurrentHandStreng(false);
+		double opt2 = pokerSimulator.getSignificantRank() / (Card.ACE * 1.0);
+		// when significat card is negative, haro has nothing. force selection to opt1
+		opt2 = opt2 < 0 ? Double.MAX_VALUE : opt2;
+		double handStreng = Math.min(opt1, opt2);
+		String sufix = handStreng == opt1 ? "Hs" : "Sc";
+		String myPotMsg = twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng) + sufix;
+
+		// int oppTopHand = pokerSimulator.getOppTopHand();
 
 		// the current fraction of the pot ammount that until now, is already mine
 		double myPot = pot * handStreng;
 
-		// ammount of ammo that is worth to invest according to future outcome		
+		// ammount of ammo that is worth to invest according to future outcome
 		int factor = 2;
 		double outAmmo = handOuts * bBlind * factor;
-		double fhp = (handPotential * 1.0) / (oppTopHand * 1.0);
-		double hsdiff = (pot - myPot) * fhp;
+		// double fhp = (handPotential * 1.0) / (oppTopHand * 1.0);
+		// double hsdiff = (pot - myPot) * fhp;
 		double invest = 0.0;
 		String investMsg = "";
 		// TEST: assign nur the value computed in outshand. this allow hero only go for really good hand instead of try
 		// whid hands that are por in outs
 		// if (outAmmo > hsdiff) {
 		invest = outAmmo;
-		investMsg = (handOuts *factor) + " BB";
+		investMsg = (handOuts * factor) + " BB";
 		// } else {
 		// invest = hsdiff;
 		// investMsg = twoDigitFormat.format((pot - myPot)) + " * " + twoDigitFormat.format(fhp);
 		// }
 
-		double ammunitions = myPot + invest;
-		String myPotMsg = twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng);
+		double ammunitions = myPot + invest + bluff;
 
-		// TEST: fail safe: when topOpphand and mostProbHand are equals, is because this is a real danger. set the pot =
-		// 0 to force fold
-		// boolean danger = pokerSimulator.getOppMostProbHand() == pokerSimulator.getOppTopHand();
-		// if (danger && pokerSimulator.getCurrentHandRank() < pokerSimulator.getOppTopHand()) {
-		// myPotMsg = "WARNING!!";
-		// ammunitions = 1;
-		// }
-
-		// TEST: in dangerous situations, check the lest significant cart. if my cards are < upper halft, force fold
-		// double actvlim = (pot - pokerSimulator.getPrevPotValue()) / sensorsArray.getActiveVillans();
-		// actvlim = actvlim / bBlind;
-		// if (actvlim > 20) {
-		// Card[] heroc = pokerSimulator.getMyHoleCards().getCards();
-		// if (heroc[0].getRank() < Card.NINE || heroc[1].getRank() < Card.NINE) {
-		// ammunitions = 1;
-		// myPotMsg = "WARNING!!";
-		// }
-		// }
-		///////////////
-
-		String txt1 = "(" + myPotMsg + ") + (" + investMsg + ") = " + twoDigitFormat.format(ammunitions);
+		String txt1 = "(" + myPotMsg + ") + (" + investMsg + ") + (" + bluffMsg + ") = "
+				+ twoDigitFormat.format(ammunitions);
 		setVariableAndLog(EXPLANATION, txt1);
 		return ammunitions;
 	}
@@ -468,29 +456,31 @@ public class Trooper extends Task {
 
 		// +EV list
 		if (strategy.equals("SKLANSKY") && getSklanskyRank() > 0) {
-			return "In Sklansky and Malmuth list.";
+			return "In Sklansky list.";
 		}
 
 		// naive prflop selection
 		if (strategy.equals("NAIVE")) {
+			Card[] heroCards = pokerSimulator.getMyHoleCards().getCards();
+
 			// pocket pair
 			if (pokerSimulator.getMyHandHelper().isPocketPair()) {
-				txt = "A pocket pair";
+				txt = "Pocket pair";
 			}
 
-			// suited
-			if (pokerSimulator.getMyHoleCards().isSuited())
-				txt = "preflop hand is suited";
+			// suited Ace
+			if (pokerSimulator.getMyHoleCards().isSuited()
+					&& (heroCards[0].getRank() == Card.ACE || heroCards[1].getRank() == Card.ACE))
+				txt = "Suited with Ace";
 
-			// connected: cernters cards separated only by 1 or 2 cards provides de best probabilities (>6%)
-			double sp = pokerSimulator.getMyHandStatsHelper().getStraightProb();
-			if (sp >= 0.060)
-				txt = "Posible straight";
+			// Suited connected:
+			int conn = Math.abs(heroCards[0].getRank() - heroCards[1].getRank());
+			if (pokerSimulator.getMyHoleCards().isSuited() && conn == 1)
+				txt = "Suited connected";
 
-			// J or higher
-			Card[] heroc = pokerSimulator.getMyHoleCards().getCards();
-			if (heroc[0].getRank() > Card.TEN && heroc[1].getRank() > Card.TEN)
-				txt = "J or higher";
+			// T or higher
+			if (heroCards[0].getRank() > Card.NINE && heroCards[1].getRank() > Card.NINE)
+				txt = "T or higher";
 
 			return txt;
 		}
@@ -606,6 +596,25 @@ public class Trooper extends Task {
 		}
 	}
 
+	/**
+	 * this methos compute the ammount of chips optimal for perform a bluff.
+	 * <p>
+	 * This method return -1 when no bluff is available
+	 * 
+	 * @return - bluff amount
+	 */
+	private double getBluffValue() {
+		double rval = 0.0;
+		if (checkOportunities()) {
+			GameRecorder gameRecorder = sensorsArray.getGameRecorder();
+			ArrayList<GamePlayer> list = gameRecorder.getAssesment();
+			for (GamePlayer gp : list) {
+				if (gp.isActive() && gp.getId() > 0)
+					rval += gp.getChips() / 10;
+			}
+		}
+		return rval;
+	}
 	/**
 	 * clear the global variable {@link #availableActions} and set only <code>raise.pot</code> and
 	 * <code>raise.allin</code> actions whit equal probability.
@@ -764,7 +773,7 @@ public class Trooper extends Task {
 			if (!("".equals(hch) || lastHoleCards.equals(hch))) {
 				lastHoleCards = hch;
 				setVariableAndLog(EXPLANATION,
-						"--- Round " + (roundCounter++) + " " + pokerSimulator.getTableParameters() + " ---");
+						"--- Round " + (++roundCounter) + " " + pokerSimulator.getTableParameters() + " ---");
 
 				// play time or play sae parameter parameters. when the play time is reach, the action sit.out is
 				// clicked and hero return

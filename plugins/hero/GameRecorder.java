@@ -40,7 +40,7 @@ public class GameRecorder {
 		for (int i = 0; i < players.size(); i++) {
 			GamePlayer gp = players.elementAt(i);
 			// active player only
-			if (gp.isActive())
+//			if (gp.isActive())
 				tempList.add(gp);
 		}
 //		tempList.sort(Comparator.reverseOrder());

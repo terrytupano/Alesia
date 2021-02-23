@@ -390,9 +390,10 @@ public class SensorsArray {
 		ArrayList<GamePlayer> list = gameRecorder.getAssesment();
 		if (list.size() > 0) {
 			for (GamePlayer gp : list) {
-				String rowsty = gp.isActive() ? "" : "style=color:gray";
-				tmp += "<tr" + rowsty + "><td>" + gp.getId() + " " + gp.getName() + "</td><td>" + gp.getN()
-						+ "</td><td>" + gp.getMean() + "</td><td>" + gp.getStandardDeviation() + "</td></tr>";
+				String rowsty = gp.isActive() ? "" : "style=\"color:#808080\"";
+				tmp += "<tr " + rowsty + "><td>" + gp.getId() + " " + gp.getName() + "</td><td>" + gp.getChips()
+						+ "</td><td>" + gp.getN() + "</td><td>" + gp.getMean() + "</td><td>" + gp.getStandardDeviation()
+						+ "</td></tr>";
 			}
 			asse = asse.replace("<assesment>", tmp);
 		} else

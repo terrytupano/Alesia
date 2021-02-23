@@ -711,6 +711,38 @@ public class PokerSimulator {
 		return "<table border=\"0\", cellspacing=\"0\">" + res + "</table>";
 	}
 
+	public int getDanger() {
+		String communitiC = communityCards.toString().replace(",", " ");
+		String myhand = myHandHelper.getHand().toString().split("[:]")[1].replace(",", " ");
+		myhand = myhand.replace("*", "");
+		UoAHandEvaluator evaluator = new UoAHandEvaluator();
+
+		// my hand.s rank
+		UoAHand uoahand = new UoAHand(myhand);
+		int myrank = UoAHandEvaluator.rankHand(uoahand);
+
+		// all 2-cards convinations
+		UoAHand board = new UoAHand(communitiC);
+		int[][] ranks = evaluator.getRanks(board);
+
+		// danger
+		ArrayList<UoAHand> cards = new ArrayList<>();
+		// int danger = 0;
+		int solved = 0;
+		for (int i = 0; i < UoADeck.NUM_CARDS; i++) {
+			for (int j = 0; j < UoADeck.NUM_CARDS; j++) {
+				solved += ranks[i][j] > 0 ? 1 : 0;
+				if (ranks[i][j] > myrank) {
+					UoACard c1 = new UoACard();
+					c1.setIndex(i);
+					UoACard c2 = new UoACard();
+					c2.setIndex(j);
+					cards.add(new UoAHand(c1.toString() + " " + c2.toString()));
+				}
+			}
+		}
+		return cards.size();
+	}
 	/**
 	 * check if trooper hat a set hand. a set Hand here is when both hole cards participaten in the hand AND is not a
 	 * pocker pair. the idea here is try to detect how hide is the ttrooper currend hand for the villans
@@ -724,6 +756,20 @@ public class PokerSimulator {
 			cnt = card.isHoleCard() ? cnt + 1 : cnt;
 		return cnt == 2 && !myHandHelper.isPocketPair();
 		// return cnt == 2;
+	}
+
+	/**
+	 * return hightes rank of the card that is in my Hole card and participate in the current hand. This method return
+	 * -1 when the Trooper hast nothig in the current hand.
+	 * 
+	 * @return the rank of my best card in my hands
+	 */
+	public int getSignificantRank() {
+		int rank = -1;
+		Card[] cards = myHandHelper.getSignificantCards();
+		for (Card card : cards)
+			rank = card.isHoleCard() && card.getRank() > rank ? card.getRank() : rank;
+		return rank;
 	}
 
 	/**
