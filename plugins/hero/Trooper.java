@@ -129,7 +129,7 @@ public class Trooper extends Task {
 	 * @return <code>true</code> if hero has an oportunity
 	 * @see #setBluffActions()
 	 */
-	private boolean checkOportunities() {
+	private boolean checkPosflopBluff() {
 		String txt = null;
 
 		if (pokerSimulator.getMyHandHelper().isTheNuts())
@@ -148,7 +148,6 @@ public class Trooper extends Task {
 		}
 
 		if (txt != null) {
-			setBluffActions();
 			setVariableAndLog(EXPLANATION, "--- Oportunity detected " + txt + " ---");
 		}
 		return txt != null;
@@ -185,7 +184,7 @@ public class Trooper extends Task {
 			// TEMP: only bluff whit super duper hands !!!
 			if (ev >= 1) {
 				setVariableAndLog(EXPLANATION, "Hero is able to bluff. EV = " + twoDigitFormat.format(ev));
-				setBluffActions();
+				setPreflopBluffActions();
 				bluff = true;
 			}
 		}
@@ -240,7 +239,6 @@ public class Trooper extends Task {
 
 		// FLOP AND FUTHER
 		if (pokerSimulator.getCurrentRound() > PokerSimulator.HOLE_CARDS_DEALT) {
-			// if (!checkOportunities())
 			performDecisionMethod();
 
 		}
@@ -283,8 +281,14 @@ public class Trooper extends Task {
 		int handOuts = pokerSimulator.getHandPotentialOuts();
 		double bBlind = pokerSimulator.getBigBlind();
 
-		double bluff = getBluffValue();
-		String bluffMsg = twoDigitFormat.format(bluff) + " bluff";
+		String bluffMsg = "No bluff";
+		double bluff = 0.0;
+		if (checkPosflopBluff()) {
+			double[] bv = getAvgBluffValue();
+			bluff = bv[0];
+			int vill = (int) bv[1];
+			bluffMsg = twoDigitFormat.format(bluff) + " bluff form " + vill + " villans";
+		}
 
 		// PROBLEM: hero try to presuit hight hands. the relation handpotential / oppMostProbHand is to low, the result
 		// is invest part of the pot * 2 or 3 times
@@ -493,33 +497,39 @@ public class Trooper extends Task {
 	}
 
 	/**
-	 * thie method build a list of all actions available for the troper to perform. this mean, all action at first are
-	 * consider alls posible. After the list ist build, this list is procesed acording to the selected method. those
-	 * method will analize all entryes and select the actions acordinly. the result is stored in the gobal valiabel
-	 * {@link #availableActions}
 	 * 
-	 * @param sourceName - the name of the source
-	 * @param sourceValue - the value
+	 * this method fill the global variable {@link #availableActions} whit all available actions according to the
+	 * parameter <code>maximum</code>. the expected actions are
+	 * <li>Check/Call
+	 * <li>Raise
+	 * <li>Pot
+	 * <li>All-in
+	 * <li>5 more actions that range from raise to the value close to All-in.
+	 * <p>
+	 * for a total of 9 posible actions
+	 * 
+	 * @param maximum - the upper bound to consider
 	 */
-	private void loadPostFlopActions(double maximum) {
+	private void loadActions(double maximum) {
 		availableActions.clear();
 		double call = pokerSimulator.getCallValue();
 		double raise = pokerSimulator.getRaiseValue();
 		double chips = pokerSimulator.getHeroChips();
 		double pot = pokerSimulator.getPotValue();
 
-		double imax = maximum == chips ? chips : pot;
+		// fail safe: the maximun can.t be greater as chips.
+		double imax = maximum > chips ? chips : maximum;
 
-		if (call >= 0)
+		if (call >= 0 && call <= imax)
 			availableActions.put("call", call);
 
-		if (raise >= 0)
+		if (raise >= 0 && raise <= imax)
 			availableActions.put("raise", raise);
 
-		if (pot >= 0 && sensorsArray.getSensor("raise.pot").isEnabled())
+		if (pot >= 0 && pot <= imax && sensorsArray.getSensor("raise.pot").isEnabled())
 			availableActions.put("raise.pot;raise", pot);
 
-		if (chips >= 0 && sensorsArray.getSensor("raise.allin").isEnabled())
+		if (chips >= 0 && chips <= imax && sensorsArray.getSensor("raise.allin").isEnabled())
 			availableActions.put("raise.allin;raise", chips);
 
 		double sb = pokerSimulator.getSmallBlind();
@@ -530,89 +540,40 @@ public class Trooper extends Task {
 			double tick = raise;
 			int step = 5;
 			double ammoinc = imax / (step * 1.0);
-			// if the differencie bettween raise and imax is less than 10bb is because the reise value extremly
-			// hight or hero hat low imax. in this case, ignore the reise text actions because are irrelevant. the
-			// relevant actions here are button actions (pot, call, reise, max)
-			// if (ammoinc > bb * 2) {
-			for (int c = 0; (c < step && (tick + ammoinc) < imax); c++) {
+			// TODO:
+			// when tha call to this method, the parameter maximum = chips is valid val < meximus because tha all in
+			// acction will take kare of maximum chip. but when maximum is another value, the comparation mus be <=
+			// TEMPORAL: try to incorporate the las element
+			double max2 = (imax == chips) ? imax : imax + 0.01;
+
+			for (int c = 0; (c < step && (tick + ammoinc) < max2); c++) {
 				tick += ammoinc;
 				// round value to look natural (dont write 12345. write 12340 or 12350)
 				if (isInt)
 					tick = ((int) (tick / 10)) * 10;
-
 				String txt = isInt ? "" + (int) tick : twoDigitFormat.format(tick);
 				availableActions.put("raise.text,dc;raise.text,k=" + txt + ";raise", tick);
 			}
-			// }
-		}
-
-		// ////////////////////////
-		// if (maximum == pot)
-		// availableActions.values().removeIf(dv -> dv > maximum);
-
-	}
-
-	private void loadPostFlopActionsOrg() {
-		availableActions.clear();
-
-		double call = pokerSimulator.getCallValue();
-		double raise = pokerSimulator.getRaiseValue();
-		double chips = pokerSimulator.getHeroChips();
-		double pot = pokerSimulator.getPotValue();
-
-		if (call >= 0)
-			availableActions.put("call", call);
-
-		if (raise >= 0)
-			availableActions.put("raise", raise);
-
-		if (pot >= 0 && sensorsArray.getSensor("raise.pot").isEnabled())
-			availableActions.put("raise.pot;raise", pot);
-
-		if (chips >= 0 && sensorsArray.getSensor("raise.allin").isEnabled())
-			availableActions.put("raise.allin;raise", chips);
-
-		double sb = pokerSimulator.getSmallBlind();
-		double bb = pokerSimulator.getBigBlind();
-		if (raise > 0 && sensorsArray.getSensor("raise.slider").isEnabled()) {
-			// check for int or double values for blinds
-			boolean isInt = (new Double(bb)).intValue() == bb && (new Double(sb)).intValue() == sb;
-			double tick = raise;
-			double ammoinc = chips / 10;
-			// if the differencie bettween raise and chips is less than 10bb is because the reise value extremly
-			// hight or hero hat low chips. in this case, ignore the reise text actions because are irrelevant. the
-			// relevant actions here are button actions (pot, call, reise, max)
-			// if (ammoinc > bb * 2) {
-			for (int c = 0; (c < 10 && (tick + ammoinc) < chips); c++) {
-				tick += ammoinc;
-				// round value to look natural (dont write 12345. write 12340 or 12350)
-				if (isInt)
-					tick = ((int) (tick / 10)) * 10;
-
-				String txt = isInt ? "" + (int) tick : twoDigitFormat.format(tick);
-				availableActions.put("raise.text,dc;raise.text,k=" + txt + ";raise", tick);
-			}
-			// }
 		}
 	}
 
 	/**
-	 * this methos compute the ammount of chips optimal for perform a bluff.
-	 * <p>
-	 * This method return -1 when no bluff is available
+	 * this method retrive the ammount of chips of all currentliy active villans. the 0 position is the amount of chips
+	 * computed and the index 1 is the number of active villans
 	 * 
-	 * @return - bluff amount
+	 * @return - [total chips, num of villans]
 	 */
-	private double getBluffValue() {
-		double rval = 0.0;
-		if (checkOportunities()) {
-			GameRecorder gameRecorder = sensorsArray.getGameRecorder();
-			ArrayList<GamePlayer> list = gameRecorder.getAssesment();
-			for (GamePlayer gp : list) {
-				if (gp.isActive() && gp.getId() > 0)
-					rval += gp.getChips() / 10;
+	private double[] getAvgBluffValue() {
+		double[] rval = new double[2];
+		GameRecorder gameRecorder = sensorsArray.getGameRecorder();
+		ArrayList<GamePlayer> list = gameRecorder.getAssesment();
+		for (GamePlayer gp : list) {
+			if (gp.isActive() && gp.getId() > 0) {
+				rval[0] += gp.getChips();
+				rval[1]++;
 			}
 		}
+		rval[0] = rval[0] /rval[1]; 
 		return rval;
 	}
 	/**
@@ -622,19 +583,12 @@ public class Trooper extends Task {
 	 * This method signal {@link #getSubOptimalAction()} to use UniformRealDistribution. this allow true random
 	 * selection of all posible bluff actions
 	 */
-	private void setBluffActions() {
+	private void setPreflopBluffActions() {
 		availableActions.clear();
 		subObtimalDist = "UniformReal";
-		loadPostFlopActions(pokerSimulator.getPotValue());
-		// double chips = pokerSimulator.getHeroChips();
-		// double pot = pokerSimulator.getPotValue();
-		// double raise = pokerSimulator.getRaiseValue();
-		//
-		// if (pot >= 0 && sensorsArray.getSensor("raise.pot").isEnabled())
-		// availableActions.put("raise.pot;raise", pot);
-		//
-		// if (chips >= 0 && sensorsArray.getSensor("raise.allin").isEnabled())
-		// availableActions.put("raise.allin;raise", chips);
+		double[] bv = getAvgBluffValue();
+		double bluff = bv[0];
+		loadActions(bluff);
 
 		// to this point, if availableactions are empty, means hero is responding a extreme hihgt raise. that mean meybe
 		// hero is weak. at this point reise mean all in. (call actions is not considerer because is not bluff)
@@ -956,10 +910,10 @@ public class Trooper extends Task {
 	protected void performDecisionMethod() {
 		String decisionM = parameters.get("decisionMethod").toString();
 		if ("potOdd".equals(decisionM)) {
-			loadPostFlopActions(pokerSimulator.getHeroChips());
+			loadActions(pokerSimulator.getHeroChips());
 			potOdd();
 		} else {
-			loadPostFlopActions(pokerSimulator.getHeroChips());
+			loadActions(pokerSimulator.getHeroChips());
 			// loadPostFlopActions(pokerSimulator.getPotValue());
 			handStrengFilter();
 		}
