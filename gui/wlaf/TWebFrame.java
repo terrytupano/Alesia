@@ -30,12 +30,12 @@ public class TWebFrame extends WebFrame {
 
 	public TWebFrame() {
 		super();
-		setBackground(Color.WHITE);
 		transitionPanel = new ComponentTransition();
 		transitionPanel.setTransitionEffect(new FadeTransitionEffect());
-		setSplashTitleText(Alesia.getResourceMap().getString("name"));
-		setSplashSubtitleText(Alesia.getResourceMap().getString("description"));
-		splashIncrementLabel = new JLabel(" ");
+		setSplashTitleText(Alesia.getInstance().getResourceMap().getString("name"));
+		setSplashSubtitleText(Alesia.getInstance().getResourceMap().getString("description"));
+		splashIncrementLabel = new JLabel("xxx");
+		
 		// waitComponent = new WaitPanel();
 		splashPanel = buildSplash();
 		transitionPanel.setContent(splashPanel);
@@ -157,6 +157,7 @@ public class TWebFrame extends WebFrame {
 		} else {
 			splashTitleLabel = null;
 		}
+		
 		JLabel splashSubtitleLabel = null;
 		if (this.splashSubtitleText != null) {
 			splashSubtitleLabel = new JLabel(this.splashSubtitleText);
@@ -177,7 +178,6 @@ public class TWebFrame extends WebFrame {
 	}
 	public void setSplashIncrementText(String text) {
 		splashIncrementLabel.setText(text);
-		Alesia.logger.info(text);
 	}
 
 	public void setSplashIcon(Icon splashIcon) {
@@ -201,7 +201,8 @@ public class TWebFrame extends WebFrame {
 	}
 
 	private Font getSplashTitleFont() {
-		return (this.splashTitleFont != null) ? this.splashTitleFont : getFont(Font.PLAIN, 72);
+//		return (this.splashTitleFont != null) ? this.splashTitleFont : getFont(Font.PLAIN, 72);
+		return (this.splashTitleFont != null) ? this.splashTitleFont : new Font("MagistralC",Font.PLAIN, 72);
 	}
 
 	private Font getSplashSubitleFont() {
@@ -221,7 +222,9 @@ public class TWebFrame extends WebFrame {
 	 * @return
 	 */
 	private boolean isDarkBackground() {
-		final Color bg = getBackground();
+		Color bg = getBackground();
+		if (bg == null)
+			bg = Color.WHITE;
 		final float[] hsbVals = new float[3];
 		Color.RGBtoHSB(bg.getRed(), bg.getGreen(), bg.getBlue(), hsbVals);
 		return hsbVals[2] < 0.8f;

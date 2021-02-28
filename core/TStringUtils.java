@@ -448,8 +448,11 @@ public class TStringUtils {
 	}
 
 	/**
+	 * find recursively all <code>.properties</code> files starting from the give directoy and merge all properties
+	 * files found whit the main property list
+	 * 
 	 * @since 2.3
-	 * @param properties
+	 * @param directory to look at
 	 */
 	public static void addProperties(String dir) {
 		try {

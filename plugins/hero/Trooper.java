@@ -816,8 +816,8 @@ public class Trooper extends Task {
 
 		// ensure db connection on the current thread.
 		try {
-			Alesia.openDB();
-			Alesia.openDB("hero");
+			Alesia.getInstance().openDB();
+			Alesia.getInstance().openDB("hero");
 		} catch (Exception e) {
 			// just a warning log because reiterated pause/stop/play can generate error re opening the connection
 			Hero.heroLogger.warning(e.getMessage());

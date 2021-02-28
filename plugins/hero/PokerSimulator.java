@@ -444,7 +444,7 @@ public class PokerSimulator {
 			// String c1 = cardsBuffer.get("hero.card1");
 			// String c2 = cardsBuffer.get("hero.card2");
 			// if (c1 == null || c2 == null) {
-			// JOptionPane.showMessageDialog(Alesia.mainFrame, "error");
+			// JOptionPane.showMessageDialog(Alesia.getInstance().getMainFrame(), "error");
 			// Trooper.getInstance().cancel(true);
 			// }
 			createHoleCards();

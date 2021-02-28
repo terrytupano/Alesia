@@ -50,7 +50,7 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 	private Component oldGlassPanel;
 
 	public TTaskMonitor(Task task, boolean allowBg) {
-		super(task, Task.BlockingScope.WINDOW, Alesia.getMainPanel());
+		super(task, Task.BlockingScope.WINDOW, Alesia.getInstance().getMainPanel());
 		webPopup = new WebPopup<>();
 		webPopup.setPadding(4);
 		webPopup.setResizable(false);
@@ -119,10 +119,10 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 
 	@Override
 	protected void block() {
-		oldGlassPanel = Alesia.mainFrame.getGlassPane();
-		Alesia.mainFrame.setGlassPane(busyPanel);
+		oldGlassPanel = Alesia.getInstance().getMainFrame().getGlassPane();
+		Alesia.getInstance().getMainFrame().setGlassPane(busyPanel);
 		busyPanel.setVisible(true);
-		Point c = TWebFrame.getCenter(Alesia.mainFrame, webPopup);
+		Point c = TWebFrame.getCenter(Alesia.getInstance().getMainFrame(), webPopup);
 		webPopup.showPopup(busyPanel, c);
 	}
 
@@ -130,7 +130,7 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 	protected void unblock() {
 		webPopup.hidePopup();
 		busyPanel.setVisible(false);
-		Alesia.mainFrame.setGlassPane(oldGlassPanel);
+		Alesia.getInstance().getMainFrame().setGlassPane(oldGlassPanel);
 	}
 
 	/**

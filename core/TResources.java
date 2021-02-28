@@ -11,6 +11,7 @@
 package core;
 
 import java.awt.*;
+import java.awt.image.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.jar.*;
 import java.util.zip.*;
 
+import javax.imageio.*;
 import javax.swing.*;
 
 import com.jgoodies.common.base.*;
@@ -28,7 +30,7 @@ public class TResources {
 	private static String TEMP_PATH = System.getProperty("java.io.tmpdir") + "Alesia/";
 	private static Vector<File> tempFileList = new Vector();
 	/**
-	 * contain all path for resources for fast access TODO: temporal
+	 * contain all path for resources for fast access TODO: temporal. this variable is deprecated
 	 */
 	public static Vector<String> resourcePath = new Vector<String>();
 	public static void init() {
@@ -42,6 +44,17 @@ public class TResources {
 		}
 	}
 
+	public static String getCoreResourcePath() {
+		return System.getProperty("user.dir") + "/core/resources/";
+	}
+
+	/**
+	 * perform a <b>cmdow.exe</b> command.
+	 * 
+	 * @param winId - window ID
+	 * @param cmdowParm - command to perform
+	 * @see #getActiveWindows(String)
+	 */
 	public static void performCMDOWCommand(String winId, String cmdowParm) {
 		try {
 			Runtime runtime = Runtime.getRuntime();
@@ -52,16 +65,23 @@ public class TResources {
 	}
 
 	/**
-	 * Consult the <code>cmdow.exe</code> program and look for the active windows who match the pattern parameter. The
+	 * Consult the <b>cmdow.exe</b> program and look for the active windows who match the partialName parameter. The
 	 * result is stored in a {@link List} of {@link TEntry} where the key is the window identificator and the value is
 	 * the window title bar.
 	 * 
-	 * @param pattern - wildcard patter matcher
+	 * <p>
+	 * This method use the name parameter and fill the resulting list whit a patter matchin obtained from concating
+	 * <code>*partialName*</code>
 	 * 
-	 * @return list of {@link TEntry} with the id and title bar text .
+	 * @param partialName - partial name of the window to look for
+	 * 
+	 * @return list of {@link TEntry} with the id and title bar text.
+	 * @see #performCMDOWCommand(String, String)
 	 */
-	public static ArrayList<TEntry<String, String>> getActiveWindows(String pattern) {
+	public static ArrayList<TEntry<String, String>> getActiveWindows(String partialName) {
+		Preconditions.checkState(partialName.length() > 2, "pattern parameter must be of length > 2");
 		ArrayList<TEntry<String, String>> resutl = new ArrayList<>();
+		String pattern = "*" + partialName + "*";
 		try {
 			Runtime runtime = Runtime.getRuntime();
 			Process process = runtime.exec("cmdow.exe /t /b /f");
@@ -81,7 +101,8 @@ public class TResources {
 			sc.close();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}		return resutl;
+		}
+		return resutl;
 	}
 
 	/**
@@ -495,6 +516,26 @@ public class TResources {
 			e.printStackTrace();
 		}
 		return o;
+	}
+
+	/**
+	 * utility to conver from {@link ImageIcon} to array of byte
+	 * 
+	 * @param ii - image icon
+	 * @return array of byte
+	 */
+	public static byte[] getBytearrayFromImage(ImageIcon ii) {
+		byte[] dta = null;
+		try {
+			BufferedImage bi = new BufferedImage(ii.getIconWidth(), ii.getIconHeight(), BufferedImage.TYPE_INT_RGB);
+			bi.getGraphics().drawImage(ii.getImage(), 0, 0, null);
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ImageIO.write(bi, "JPG", baos);
+			dta = baos.toByteArray();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return dta;
 	}
 
 	/**

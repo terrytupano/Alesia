@@ -36,7 +36,7 @@ public class Flicka extends TPlugin {
 
 	public Flicka() {
 		actionMap = Alesia.getInstance().getContext().getActionMap(this);
-		Alesia.openDB("flicka");
+		Alesia.getInstance().openDB("flicka");
 		TActionsFactory.insertActions(actionMap);
 	}
 
@@ -126,7 +126,7 @@ public class Flicka extends TPlugin {
 		dockablePane.registerSettings(
 				new com.alee.managers.settings.Configuration<DockablePaneState>("FlickaDockablePane"));
 
-		Alesia.getMainPanel().setContentPanel(dockablePane);
+		Alesia.getInstance().getMainPanel().setContentPanel(dockablePane);
 	}
 
 	/**

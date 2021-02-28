@@ -15,11 +15,9 @@ import java.awt.*;
 import java.awt.Dialog.*;
 import java.awt.event.*;
 import java.io.*;
-import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
-import javax.swing.*;
 import javax.swing.Action;
 
 import org.apache.commons.logging.impl.*;
@@ -62,34 +60,36 @@ import gui.wlaf.*;
  */
 public class Alesia extends Application {
 
-	public static TWebFrame mainFrame;
+	public TWebFrame mainFrame;
 	public static Logger logger;
 
-	public static ArrayList<Skin> skins;
-	private static AudioClip newMsg, errMsg;
+	public ArrayList<Skin> skins;
+	private AudioClip newMsg, errMsg;
 
 	public static TTaskManager manager;
 	public static Font title1;
 	public static Font title2;
 
-	public static final String IS_RUNNING = "Running";
-	public static final String REQUEST_MAXIMIZE = "RequestMaximize";
-
-	private static DockingContainer mainPanel;
-	private static DB alesiaDB;
+	private DockingContainer mainPanel;
+	private DB alesiaDB;
 
 	private TPluginManager pluginManager;
 
-	public static ActionMap getActionMap() {
-		return getInstance().getContext().getActionMap();
+	public static synchronized Alesia getInstance() {
+		Application a = Application.getInstance();
+		return (Alesia) a;
 	}
 
-	public static DockingContainer getMainPanel() {
+	public DockingContainer getMainPanel() {
 		return mainPanel;
 	}
 
-	public static ResourceMap getResourceMap() {
+	public ResourceMap getResourceMap() {
 		return getInstance().getContext().getResourceMap();
+	}
+
+	public TWebFrame getMainFrame() {
+		return mainFrame;
 	}
 
 	/**
@@ -99,8 +99,6 @@ public class Alesia extends Application {
 	 */
 	public static void main(String[] args) {
 		Locale.setDefault(Locale.US);
-
-
 		Application.launch(Alesia.class, args);
 	}
 
@@ -111,7 +109,7 @@ public class Alesia extends Application {
 	 * this method is intentet for javaLite imeplementation. this method relly in the javaLite internal storage that
 	 * determine if the connection name is aready opened. if is opened, just attach to the invoker thread
 	 */
-	public static void openDB() {
+	public void openDB() {
 		if (alesiaDB == null)
 			alesiaDB = new DB("AlesiaDatabase");
 		// alesiaDB = openDB("activejdbc");
@@ -129,7 +127,7 @@ public class Alesia extends Application {
 	 * @return instance of {@link DB}
 	 * @see #getDBProperties()
 	 */
-	public static DB openDB(String name) {
+	public DB openDB(String name) {
 		DB db = null;
 		try {
 			Properties orgPrp = getDBProperties();
@@ -164,13 +162,13 @@ public class Alesia extends Application {
 			popOvertext = content.getTitleText();
 			content.setTitleVisible(false);
 		}
-		final WebPopOver popOver = new WebPopOver(Alesia.mainFrame);
+		final WebPopOver popOver = new WebPopOver(Alesia.getInstance().getMainFrame());
 		popOver.setModalityType(ModalityType.TOOLKIT_MODAL);
 		popOver.setMovable(false);
 		popOver.setLayout(new VerticalFlowLayout());
-		final WebImage icon = new WebImage(TResources.getSmallIcon("alesia"));
+		final WebImage icon = new WebImage(TUIUtils.getSmallFontIcon('\uf00d'));
 		final WebLabel titleLabel = new WebLabel(popOvertext, WebLabel.CENTER);
-		final WebButton closeButton = new WebButton(TResources.getSmallIcon("close"), new ActionListener() {
+		final WebButton closeButton = new WebButton(TUIUtils.getSmallFontIcon('\uf00d'), new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				popOver.dispose();
@@ -182,26 +180,26 @@ public class Alesia extends Application {
 		popOver.add(tit);
 		popOver.add(content);
 
-		// popOver.setLocationRelativeTo(Alesia.mainFrame);
+		// popOver.setLocationRelativeTo(Alesia.getInstance().getMainFrame());
 		popOver.pack();
-		popOver.setLocationRelativeTo(Alesia.mainFrame);
+		popOver.setLocationRelativeTo(Alesia.getInstance().getMainFrame());
 		popOver.setVisible(true);
-		// popOver.show(Alesia.mainFrame);
+		// popOver.show(Alesia.getInstance().getMainFrame());
 
 		return content.getValues();
 	}
 
 	public static void showNotification(String mid, int lt, Object... dta) {
 		TError ae = new TError(mid, dta);
-		WebInnerNotification npop = NotificationManager.showInnerNotification(Alesia.mainFrame, ae.getMessage(),
-				ae.getExceptionIcon());
+		WebInnerNotification npop = NotificationManager.showInnerNotification(Alesia.getInstance().getMainFrame(),
+				ae.getMessage(), ae.getExceptionIcon());
 		// ae.getExceptionIcon(), NotificationOption.accept);
 		npop.setDisplayTime(lt);
 		if (mid.equals("notification.msg00")) {
-			errMsg.play();
+			Alesia.getInstance().errMsg.play();
 			// UIManager.getLookAndFeel().provideErrorFeedback(null);
 		} else {
-			newMsg.play();
+			Alesia.getInstance().newMsg.play();
 		}
 	}
 	/**
@@ -230,7 +228,7 @@ public class Alesia extends Application {
 	 * to signal active instance to display main frame and this execution ends
 	 * 
 	 */
-	private static void connectToLocalDB() {
+	private void connectToLocalDB() {
 		// System.getProperties().put("connectTimeout", 10 * 1000);
 		// System.getProperties().put("socketTimeout", 10 * 1000);
 		try {
@@ -245,42 +243,21 @@ public class Alesia extends Application {
 			System.setProperty("activejdbc.user", activeprp.getProperty(ae + ".username"));
 			System.setProperty("activejdbc.password", activeprp.getProperty(ae + ".password"));
 			System.setProperty("activejdbc.driver", activeprp.getProperty(ae + ".driver"));
-
 			openDB();
-			// ConnectionJdbcSpec spec = new ConnectionJdbcSpec(activeprp.getProperty("AlesiaDatabase.driver"),
-			// activeprp.getProperty("AlesiaDatabase.url"), activeprp.getProperty("AlesiaDatabase.username"),
-			// activeprp.getProperty("AlesiaDatabase.password"));
-			// alesiaDB = new DB("AlesiaDatabase");
-			// alesiaDB.open(spec);
-			// TODO: warm the activelitte enviorement for futer use by the trooper. i dont know way i need to do this
-			// but
-			// works.
-			// Base.open(activeprp.getProperty("AlesiaDatabase.driver"),
-			// activeprp.getProperty("AlesiaDatabase.url"), activeprp.getProperty("AlesiaDatabase.username"),
-			// activeprp.getProperty("AlesiaDatabase.password"));
-			// String jndi = activeprp.getProperty(ae + ".jndi");
-			// System.setProperty("activejdbc.jndi", jndi);
 		} catch (Exception e) {
-			if (e instanceof InitException) {
-				SQLException se = (SQLException) e.getCause();
-				if (se.getSQLState().equals("S1000")) {
-					Alesia.logger.warning("Another active instance found. Sending request maximize.");
-					SettingsManager.set(REQUEST_MAXIMIZE, true);
-					System.exit(0);
-				}
-			}
 			e.printStackTrace();
 			ExceptionDialog.showDialog(e);
 			System.exit(-1);
 		}
 	}
+
 	/**
 	 * Look in the Alesia.properties file, look for the property "Alesia.database.file.name" and load an return the list
 	 * of all prperties found in that file. This file contain all data base connection information.
 	 * 
 	 * @return all properties found in the database properties files
 	 */
-	private static Properties getDBProperties() throws Exception {
+	private Properties getDBProperties() throws Exception {
 		// active jdbc propertie files pointed form main alesia property file
 		Properties activeprp = new Properties();
 		// TODO: convert to urls to allow more access support ???
@@ -297,7 +274,7 @@ public class Alesia extends Application {
 	 * 
 	 * @return variable value
 	 */
-	private static String getWmicValue(String gid, String vn) {
+	private String getWmicValue(String gid, String vn) {
 		String rval = null;
 		try {
 			Runtime runtime = Runtime.getRuntime();
@@ -328,8 +305,8 @@ public class Alesia extends Application {
 	 * The framework will continue his normal execuion steps.
 	 * <li>If there is problem with autentication procedure, this method will finnish the app
 	 */
-	private static void requestAutentication() {
-		Alesia.mainFrame.setSplashIncrementText("Request autentication");
+	private void requestAutentication() {
+		Alesia.getInstance().getMainFrame().setSplashIncrementText("Request autentication");
 		Factory<org.apache.shiro.mgt.SecurityManager> factory = new IniSecurityManagerFactory("classpath:shiro.ini");
 		DefaultSecurityManager securityManager = (DefaultSecurityManager) factory.getInstance();
 		DefaultSessionManager sessionManager = (DefaultSessionManager) securityManager.getSessionManager();
@@ -418,6 +395,24 @@ public class Alesia extends Application {
 		}
 	}
 
+	/**
+	 * check for another active instance of Alesia looking the current active windows. if another instance is found,
+	 * this mehtod send cmd commands and end this currentexecution.
+	 * 
+	 * @see TResources#getActiveWindows(String)
+	 * @see TResources#performCMDOWCommand(String, String)
+	 */
+	private void checkActiveInstance() {
+		// active window method spect wildcard
+		String tit = getResourceMap().getString("title");
+		ArrayList<TEntry<String, String>> winds = TResources.getActiveWindows(tit);
+		if (!winds.isEmpty()) {
+			Alesia.logger.warning("Another active instance found. /act /res commands.");
+			TResources.performCMDOWCommand(winds.get(0).getKey(), "/ACT /RES");
+			System.exit(0);
+		}
+	}
+
 	@Override
 	protected void initialize(String[] args) {
 
@@ -455,56 +450,35 @@ public class Alesia extends Application {
 
 		System.out.println(getWmicValue("bios", "SerialNumber"));
 		System.out.println(getWmicValue("cpu", "SystemName"));
-
+		checkActiveInstance();
 		TResources.init();
-		TStringUtils.addProperties(TResources.USER_DIR + "/core/resources/");
-
-		// local storage configuration
-		// File lf = new File("LocalStorage.txt").getParentFile();
-		// getContext().getLocalStorage().setDirectory(lf.getParentFile());
-		//
-		// getContext().getLocalStorage().se
-
-		Font fo;
-		try {
-			fo = Font.createFont(Font.TRUETYPE_FONT, TResources.getFile("Dosis-Regular.ttf"));
-			GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(fo);
-			fo = Font.createFont(Font.TRUETYPE_FONT, TResources.getFile("TitilliumWeb-Regular.ttf"));
-			GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(fo);
-			title1 = fo.deriveFont(20f).deriveFont(Font.PLAIN);
-			title2 = fo.deriveFont(14f).deriveFont(Font.PLAIN);
-		} catch (Exception e) {
-			e.printStackTrace();
-			title1 = new Font("Arial", Font.PLAIN, 16);
-			title2 = new Font("Arial", Font.PLAIN, 14);
-		}
+		TUIUtils.init();
+		TStringUtils.addProperties(System.getProperty("user.dir") + "/core/resources/");
 
 		// load all actions into the application
 		new TActionsFactory();
 
-		connectToLocalDB();
+		// TODO: something happen whit the database connection. commented because until now i dont need it.
+		// connectToLocalDB();
 
 		newMsg = Applet.newAudioClip(TResources.getURL("newMsg.wav"));
 		errMsg = Applet.newAudioClip(TResources.getURL("errMsg.wav"));
 
 		// System.setProperty("org.apache.commons.logging.Log", Jdk14Logger.class.getName());
 
-		// TPreferences.init();
-		// TStringUtils.init();
-
 		// parse app argument parameters and append to tpreferences to futher uses
-		for (String arg : args) {
-			String[] kv = arg.split("=");
-			TPreferences.setProperty(kv[0], kv[1]);
-		}
+		// TODO: do something
+//		for (String arg : args) {
+//			String[] kv = arg.split("=");
+//		}
 	}
 	@Override
 	protected void ready() {
-		Alesia.mainFrame.setSplashIncrementText("Loading plugins ...");
+		mainFrame.setSplashIncrementText("Loading plugins ...");
 		pluginManager = new TPluginManager();
 		pluginManager.scanPluginsDirectory();
 
-		Alesia.mainFrame.setSplashIncrementText("Starting task manager ...");
+		mainFrame.setSplashIncrementText("Starting task manager ...");
 		Alesia.manager = new TTaskManager();
 		// requestAutentication();
 
@@ -518,19 +492,20 @@ public class Alesia extends Application {
 		}
 		leftPanel.appendActions((Action[]) alist.toArray(new Action[alist.size()]));
 
-		Alesia.mainFrame.setContentPane(mainPanel);
+		Alesia.getInstance().getMainFrame().setContentPane(mainPanel);
 	}
 
 	@Override
 	protected void shutdown() {
 		Alesia.logger.info("Preapering to leave the application ...");
-		SettingsManager.set(IS_RUNNING, false);
-		alesiaDB.close();
+		if (alesiaDB != null)
+			alesiaDB.close();
 		Alesia.logger.info("Bye !!!");
 	}
 
 	@Override
 	protected void startup() {
+		Alesia.logger.info("Starting Up ...");
 		// GenericStyle
 		// Configuring settings location
 		SettingsManager.setDefaultSettingsDir(FileUtils.getWorkingDirectoryPath());
@@ -541,7 +516,8 @@ public class Alesia extends Application {
 		// XmlUtils.processAnnotations ( FeatureStateBackground.class );
 
 		// Installing Look and Feel
-		WebLookAndFeel.setForceSingleEventsThread(true);
+		// WebLookAndFeel.setForceSingleEventsThread(true);
+
 		// alesia skin
 		// WebLookAndFeel.install(TSkin.class);
 		WebLookAndFeel.install();
@@ -549,13 +525,6 @@ public class Alesia extends Application {
 		// WebLookAndFeel.install();
 		// WebLookAndFeel.setDecorateFrames(true);
 		// WebLookAndFeel.setDecorateDialogs(true);
-
-		// try {
-		// UIManager.setLookAndFeel(new PlasticMetroLookAndFeel());
-		// } catch (UnsupportedLookAndFeelException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
 
 		// Saving skins for reference
 		skins = CollectionUtils.asList(StyleManager.getSkin(), new DarkSkin());

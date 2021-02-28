@@ -135,7 +135,7 @@ public class TUIPanel extends WebPanel {
 			// dialog.setTitle(" ");
 			return dialog;
 		}
-		dialog = new WebDialog(StyleId.dialogDecorated, Alesia.mainFrame);
+		dialog = new WebDialog(StyleId.dialogDecorated, Alesia.getInstance().getMainFrame());
 		// standar behavior: if the title of the tuipanel is visible, this method remove the string and put in as this
 		// dialog title
 		if (isTitleVisible()) {
@@ -152,7 +152,7 @@ public class TUIPanel extends WebPanel {
 			setDialogAspectRatio();
 		else
 			dialog.pack();
-		dialog.setLocationRelativeTo(Alesia.mainFrame);
+		dialog.setLocationRelativeTo(Alesia.getInstance().getMainFrame());
 		return dialog;
 	}
 	/**
@@ -260,7 +260,7 @@ public class TUIPanel extends WebPanel {
 	}
 
 	public void setDescription(String tId) {
-		additionalInfo.setText(Alesia.getResourceMap().getString(tId));
+		additionalInfo.setText(Alesia.getInstance().getResourceMap().getString(tId));
 	}
 
 	/**

@@ -4,7 +4,7 @@
   <UserLogIn.rememberUser type="ButtonState" selected="true"/>
   <logging.level type="ComboBoxState" selectedIndex="3"/>
   <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
-  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="3"/>
+  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="2"/>
   <tDistributionRange type="ComboBoxState" selectedIndex="4"/>
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
   <SensorPanel.imageType type="ComboBoxState" selectedIndex="0"/>
@@ -26,20 +26,6 @@
   <oddCalculation type="ComboBoxState" selectedIndex="1"/>
   <postflopAmmoControl type="ComboBoxState" selectedIndex="0"/>
   <SensorPanel.filter type="ComboBoxState" selectedIndex="8"/>
-  <FlickaDockablePane type="DockablePaneState">
-    <root class="DockableList" id="EL-EpOpr-I8QK0-8FIyF-i9P6o-ID" size="479,664" orientation="vertical">
-      <DockableList id="EL-sJamJ-UrxRl-1UQ5v-EBIfK-ID" size="1037,530" orientation="horizontal">
-        <DockableList id="EL-1I4JZ-0p2os-x7bFs-3Dz60-ID" size="673,80" orientation="vertical">
-          <DockableFrame id="plugins.flicka.DBExplorer" size="282,61" state="docked" restoreState="docked"/>
-          <DockableFrame id="plugins.flicka.PDistributionList" size="170,61" state="docked" restoreState="docked"/>
-        </DockableList>
-        <DockableList id="EL-gxccO-XO2f7-t8jmn-g0ito-ID" size="40,80" orientation="vertical">
-          <DockableFrame id="plugins.flicka.RaceList" size="144,227" state="docked" restoreState="docked"/>
-          <DockableContent id="dockablepane.content"/>
-        </DockableList>
-      </DockableList>
-    </root>
-  </FlickaDockablePane>
   <bigBlindFactor type="ComboBoxState" selectedIndex="5"/>
   <preflopStrategy type="ComboBoxState" selectedIndex="1"/>
   <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>

@@ -17,6 +17,7 @@ import java.awt.image.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.Action;
@@ -787,7 +788,7 @@ public class TUIUtils {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (directoryChooser == null) {
-					directoryChooser = new WebDirectoryChooser(Alesia.mainFrame);
+					directoryChooser = new WebDirectoryChooser(Alesia.getInstance().getMainFrame());
 				}
 				directoryChooser.setVisible(true);
 				if (directoryChooser.getResult() == DialogOptions.OK_OPTION) {
@@ -991,10 +992,63 @@ public class TUIUtils {
 	}
 
 	/**
+	 * Perform the initialization method p´for thise static class
+	 * 
+	 * @since 2.3
+	 */
+	public static void init() {
+		Alesia.title1 = new Font("Arial", Font.PLAIN, 16);
+		Alesia.title2 = new Font("Arial", Font.PLAIN, 14);
+		try {
+			List<File> fonts = FileUtils.findFilesRecursively(TResources.getCoreResourcePath(),
+					file -> file.getName().endsWith(".ttf") || file.getName().endsWith(".otf"));
+			for (File fontNam : fonts) {
+				Font fo = Font.createFont(Font.TRUETYPE_FONT, fontNam);
+				GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(fo);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static Image buildImage(char unicode, float size, Color color) {
+		Font font = new Font("Material-Design-Iconic-Font", Font.PLAIN, 1);
+		font = font.deriveFont(size);
+		String text = Character.toString(unicode);
+		return buildImage(text, font, color);
+	}
+
+	public static Icon getFontIcon(char unicode, float size, Color color) {
+		return new ImageIcon(buildImage(unicode, size, color));
+	}
+	public static Icon getSmallFontIcon(char unicode) {
+		return new ImageIcon(buildImage(unicode, 16, Color.BLACK));
+	}
+
+	private static BufferedImage buildImage(String text, Font font, Color color) {
+		JLabel label = new JLabel(text);
+		label.setForeground(color);
+		label.setFont(font);
+		Dimension dim = label.getPreferredSize();
+		int width = dim.width + 1;
+		int height = dim.height + 1;
+		label.setSize(width, height);
+		BufferedImage bufImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2d = bufImage.createGraphics();
+		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+		label.print(g2d);
+		g2d.dispose();
+		return bufImage;
+	}
+
+	/**
 	 * Utility method for override icons propertis setted in the {@link ApplicationAction} by bsf framework. This method
 	 * <ul>
-	 * <li>take the icon from the {@link Action#SMALL_ICON} and create an scaled instance using the size parameter.
-	 * <li>repaint the icon to the target color toColor argument
+	 * <li>check the atributte <code>[action name].Action.iconFont</code>. if this attribute is present, set the
+	 * {@link Action#SMALL_ICON} property for the action to this icon font
+	 * <li>if iconFont atributte is not present, take the icon from the {@link Action#SMALL_ICON} and create an scaled
+	 * instance using the size parameter. Repaint the icon to the target color toColor argument
 	 * </ul>
 	 * 
 	 * @param size - new icon siye
@@ -1005,14 +1059,21 @@ public class TUIUtils {
 	 */
 	public static void overRideIcons(int size, Color toColor, Action... actions) {
 		for (Action action : actions) {
-			ImageIcon ii = (ImageIcon) action.getValue(Action.SMALL_ICON);
-			// maybe the action has no icon
-			if (ii != null) {
-				if (toColor != null) {
-					ii = TColorUtils.changeColor(ii, toColor);
+			org.jdesktop.application.ApplicationAction aa = (org.jdesktop.application.ApplicationAction) action;
+			org.jdesktop.application.ResourceMap rm = aa.getResourceMap();
+			String ifon = rm.getString(aa.getName() + ".Action.iconFont");
+			if (ifon != null) {
+				action.putValue(Action.LARGE_ICON_KEY, TUIUtils.getFontIcon(ifon.toCharArray()[0], size, toColor));
+			} else {
+				ImageIcon ii = (ImageIcon) action.getValue(Action.SMALL_ICON);
+				// maybe the action has no icon
+				if (ii != null) {
+					if (toColor != null) {
+						ii = TColorUtils.changeColor(ii, toColor);
+					}
+					Image i = ii.getImage().getScaledInstance(size, size, Image.SCALE_SMOOTH);
+					action.putValue(Action.LARGE_ICON_KEY, new ImageIcon(i));
 				}
-				Image i = ii.getImage().getScaledInstance(size, size, Image.SCALE_SMOOTH);
-				action.putValue(Action.LARGE_ICON_KEY, new ImageIcon(i));
 			}
 		}
 	}

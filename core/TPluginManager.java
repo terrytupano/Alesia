@@ -98,20 +98,6 @@ public class TPluginManager extends PluginManager<TPlugin> {
 					Properties prps = new Properties();
 					fis = new FileInputStream(file);
 					prps.load(fis);
-
-					// append properties to main contant table (no plugin header)
-					Vector kls = new Vector(prps.keySet());
-					for (int i = 0; i < kls.size(); i++) {
-						String pk = (String) kls.elementAt(i);
-						String pv = prps.getProperty(pk);
-						// TODO: verify. maybe need tobe appended to the main resourcemap or a new resourcemap in the
-						// chain
-						// TStringUtils.constants.put(pk, pv);
-					}
-					// add resource path form plugins to main resource path
-					// TODO: verify. maybe need tobe appended to the main resourcemap or a new resourcemap in the
-					// chain
-					// TResources.addResourcePath(pip + pid + "/");
 				}
 			} catch (Exception e) {
 				Alesia.logger.log(Level.SEVERE, "", e);

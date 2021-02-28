@@ -21,7 +21,7 @@ public class TLeftPanel extends WebPanel {
 	ActionMap actionMap;
 	private DockingContainer container;
 	private ArrayList<WebButton> buttons;
-
+	
 	public TLeftPanel(DockingContainer container) {
 		super(StyleId.of("LeftPanel"));
 		this.container = container;
@@ -41,9 +41,6 @@ public class TLeftPanel extends WebPanel {
 		WebButton la = buttons.get(buttons.size() - 1);
 		buttons.clear();
 		removeAll();
-		// if (actions == null) {
-		// actions = new Action[]{actionMap.get("expand"), actionMap.get("settings")};
-		// }
 		buttons = getLeftPanelButtons(Color.WHITE, actions);
 		add(fa);
 		for (WebButton wb : buttons) {
@@ -55,10 +52,10 @@ public class TLeftPanel extends WebPanel {
 		buttons.add(la);
 	}
 	public static ArrayList<WebButton> getLeftPanelButtons(Color toColor, Action... actions) {
-		int size = 20;
 		ArrayList<WebButton> list = new ArrayList<>();
-		TUIUtils.overRideIcons(size, toColor, actions);
-		int gap = 2 + (colapsedDim.width / 4);
+		int is = colapsedDim.width/2;
+		int gap = (colapsedDim.width / 4);
+		TUIUtils.overRideIcons(is, toColor, actions);
 		for (Action action : actions) {
 			WebButton webButton = new WebButton(StyleId.of("LeftPanelButton"), action);
 			webButton.setHorizontalAlignment(SwingConstants.LEFT);

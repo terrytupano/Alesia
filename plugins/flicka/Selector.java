@@ -178,7 +178,7 @@ public class Selector {
 		sel.writeStatistics = false;
 		sel.clearTables();
 		sel.select();
-		Alesia.getMainPanel().signalFreshgen(PDistributionList.class);
+		Alesia.getInstance().getMainPanel().signalFreshgen(PDistributionList.class);
 	}
 
 	/**

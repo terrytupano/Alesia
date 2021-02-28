@@ -74,7 +74,7 @@ public class ExceptionDialog extends JDialog implements ActionListener {
 		// try to center to main frame
 		jd.pack();
 		dialogDim = jd.getSize();
-		jd.setLocationRelativeTo(Alesia.mainFrame);
+		jd.setLocationRelativeTo(Alesia.getInstance().getMainFrame());
 		jd.setVisible(true);
 	}
 

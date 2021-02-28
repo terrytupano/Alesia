@@ -68,7 +68,7 @@ public class DockingContainer extends JPanel {
 	public void signalFreshgen(Class clazz) {
 		SwingUtilities.invokeLater(() -> {
 			Object cnt = SwingUtils.getFirst(contentPanel, clazz);
-			Preconditions.checkArgument(cnt instanceof TUIListPanel, "the Class $s must be instance of $s",
+			Preconditions.checkArgument(cnt instanceof TUIListPanel, "the Class %s must be instance of TUIListPanel",
 					clazz.getName(), TUIListPanel.class.getName());
 			TUIListPanel tuilp = (TUIListPanel) cnt;
 			tuilp.freshen();

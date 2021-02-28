@@ -17,7 +17,7 @@ public class MultipleSimulationTask extends Task<Void, Void> {
 	}
 	@Override
 	protected Void doInBackground() throws Exception {
-		Alesia.openDB("flicka");
+		Alesia.getInstance().openDB("flicka");
 		selector.clearTables();
 		int max = models.length;
 		int step = 0;
@@ -29,7 +29,7 @@ public class MultipleSimulationTask extends Task<Void, Void> {
 			selector.select();
 		}
 		selector.printStats();
-		Alesia.getMainPanel().signalFreshgen(StatisticsList.class);
+		Alesia.getInstance().getMainPanel().signalFreshgen(StatisticsList.class);
 		return null;
 	}
 }

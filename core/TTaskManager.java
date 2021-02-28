@@ -81,25 +81,6 @@ public class TTaskManager implements PropertyChangeListener {
 }
 
 /**
- * read the comunication file seraching the {@link TPreferences#REQUEST_MAXIMIZE} messege send by another instance of
- * this aplication trying to running
- * 
- * @author terry
- * 
- */
-class RequestMaximized implements Runnable {
-
-	@Override
-	public void run() {
-		boolean rm = SettingsManager.get(Alesia.REQUEST_MAXIMIZE, false);
-		if (rm) {
-			Alesia.mainFrame.setState(JFrame.NORMAL);
-			SettingsManager.set(Alesia.REQUEST_MAXIMIZE, false);
-		}
-	}
-}
-
-/**
  * check the inactivity time. If this time es reach, display signin dialgog
  * 
  * @author terry
@@ -111,7 +92,7 @@ class CheckInactivity implements Runnable, MouseMotionListener {
 	CheckInactivity() {
 		// signOut = SystemVariables.getintVar("signout") * 60 * 1000;
 		// lastMouseMove = System.currentTimeMillis();
-		// Alesia.mainFrame.addMouseMotionListener(this);
+		// Alesia.getInstance().getMainFrame().addMouseMotionListener(this);
 
 	}
 	@Override

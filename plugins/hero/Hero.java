@@ -118,13 +118,13 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public void heroPanel(ActionEvent event) {
 		heroPanel = new HeroPanel();
-		Alesia.getMainPanel().setContentPanel(heroPanel);
+		Alesia.getInstance().getMainPanel().setContentPanel(heroPanel);
 		// temp: change the main frame using this coordenates: 0,40 547,735
 		// temporal: must be loaded from troperPanel
 		// tableFile = new File("plugins/hero/resources/ps-main table.ppt");
 		tableFile = new File("plugins/hero/resources/ps-10.ppt");
 		initGlovalVars();
-		Alesia.mainFrame.setBounds(0, 40, 547, 735);
+		Alesia.getInstance().getMainFrame().setBounds(0, 40, 547, 735);
 	}
 
 	@org.jdesktop.application.Action
@@ -133,7 +133,8 @@ public class Hero extends TPlugin {
 		if (t != null) {
 			boolean pause = !t.isPaused();
 			AbstractButton ab = (AbstractButton) event.getSource();
-			ab.setSelectedIcon(TResources.getSmallIcon("plugins/hero/resources/ResumeTrooper"));
+//			ab.setSelectedIcon(TResources.getSmallIcon("plugins/hero/resources/ResumeTrooper"));
+			ab.setSelectedIcon(TUIUtils.getSmallFontIcon('\uf01d'));
 			ab.setSelected(pause);
 			t.pause(pause);
 		}
@@ -142,10 +143,10 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public Task runTrooper(ActionEvent event) {
 		// retrive info from the porker window to resize
-		ArrayList<TEntry<String, String>> winds = TResources.getActiveWindows("*terry1013*");
+		ArrayList<TEntry<String, String>> winds = TResources.getActiveWindows("terry1013");
 		// TODO: temporal: set manualy the correct win pos and size
 		if (winds.isEmpty()) {
-			JOptionPane.showMessageDialog(Alesia.mainFrame, "No active window found", "Error",
+			JOptionPane.showMessageDialog(Alesia.getInstance().getMainFrame(), "No active window found", "Error",
 					JOptionPane.ERROR_MESSAGE);
 			return null;
 		}
