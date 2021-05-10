@@ -25,11 +25,21 @@
   <PokerSimulator.HelperFilter type="ComboBoxState" selectedIndex="5"/>
   <oddCalculation type="ComboBoxState" selectedIndex="1"/>
   <postflopAmmoControl type="ComboBoxState" selectedIndex="0"/>
-  <SensorPanel.filter type="ComboBoxState" selectedIndex="8"/>
+  <SensorPanel.filter type="ComboBoxState" selectedIndex="11"/>
   <bigBlindFactor type="ComboBoxState" selectedIndex="5"/>
+  <FlickaDockablePane type="DockablePaneState">
+    <root class="DockableList" id="EL-g2d81-dq29i-2TN45-B1pZJ-ID" size="970,567" orientation="horizontal">
+      <DockableFrame id="plugins.flicka.DBExplorer" size="447,61" state="docked" restoreState="docked"/>
+      <DockableList id="EL-E84hJ-6qIE8-72kRW-Krnp4-ID" size="80,120" orientation="vertical">
+        <DockableContent id="dockablepane.content"/>
+        <DockableFrame id="plugins.flicka.PDistributionList" size="266,241" state="docked" restoreState="docked"/>
+        <DockableFrame id="plugins.flicka.RaceList" size="144,214" state="docked" restoreState="docked"/>
+      </DockableList>
+    </root>
+  </FlickaDockablePane>
   <preflopStrategy type="ComboBoxState" selectedIndex="1"/>
   <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>
-  <TWebFrame type="WindowState" location="0,40" size="547,735" state="0"/>
+  <TWebFrame type="WindowState" location="0,40" size="642,735" state="0"/>
   <smallBlid type="string"></smallBlid>
   <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>
   <bluff type="TextComponentState" text="200" caretPosition="3"/>
