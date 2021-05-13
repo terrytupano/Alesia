@@ -5,6 +5,10 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.text.html.*;
 
+import com.alee.utils.*;
+
+import core.*;
+
 public class HTMLUtils {
 	private static Font cachedTextFont;
 	private static String cachedDefaultRule;
@@ -14,7 +18,7 @@ public class HTMLUtils {
 	}
 
 	public static void addDefaultStyleSheetRule(JEditorPane editorPane, Font textFont) {
-		addStyleSheetRule(editorPane, createDefaultRule(textFont));
+		addStyleSheetRule(editorPane, loadDefaultRule(textFont));
 	}
 
 	public static void addStyleSheetRule(JEditorPane editorPane, String rule) {
@@ -31,14 +35,18 @@ public class HTMLUtils {
 	private static String getDefaultRule() {
 		Font textFont = getDefaultTextFont();
 		if (textFont != cachedTextFont) {
-			cachedDefaultRule = createDefaultRule(textFont);
+			cachedDefaultRule = loadDefaultRule(textFont);
 			cachedTextFont = textFont;
 		}
 		return cachedDefaultRule;
 	}
 
-	private static String createDefaultRule(Font font) {
-		return "body, p, td, a, li { font-family: " + font.getName() + "; font-size: " + font.getSize()
-				+ "pt;  }a                  { color: #0066CC; }";
+	private static String loadDefaultRule(Font font) {
+		if (cachedDefaultRule == null) {
+			cachedDefaultRule = FileUtils.readToString(TResources.getFile("Default.css"));
+			cachedDefaultRule = cachedDefaultRule.replace("<default.font-family>", font.getFontName());
+			cachedDefaultRule = cachedDefaultRule.replace("<default.font-size>", "" + font.getSize());
+		}
+		return cachedDefaultRule;
 	}
 }

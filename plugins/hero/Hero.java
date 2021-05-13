@@ -29,6 +29,7 @@ import com.alee.laf.*;
 import core.*;
 import gui.console.*;
 import net.sourceforge.tess4j.*;
+import plugins.hero.UoAHandEval.*;
 
 public class Hero extends TPlugin {
 
@@ -112,6 +113,7 @@ public class Hero extends TPlugin {
 	public ArrayList<javax.swing.Action> getUI(String type) {
 		ArrayList<Action> alist = new ArrayList<>();
 		alist.add(actionMap.get("heroPanel"));
+		alist.add(actionMap.get("uoAEvaluator"));
 		return alist;
 	}
 
@@ -125,6 +127,12 @@ public class Hero extends TPlugin {
 		tableFile = new File("plugins/hero/resources/ps-10.ppt");
 		initGlovalVars();
 		Alesia.getInstance().getMainFrame().setBounds(0, 40, 547, 735);
+	}
+
+	@org.jdesktop.application.Action
+	public void uoAEvaluator(ActionEvent event) {
+		UoAPanel aPanel = new UoAPanel();
+		Alesia.getInstance().getMainPanel().setContentPanel(aPanel);
 	}
 
 	@org.jdesktop.application.Action

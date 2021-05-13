@@ -3,8 +3,11 @@ package plugins.hero.ICRReader;
 import java.io.*;
 import java.util.*;
 
+import org.apache.commons.math3.stat.descriptive.*;
+
 import com.alee.utils.*;
 
+import core.*;
 import plugins.hero.UoALoky.*;
 
 /**
@@ -17,8 +20,10 @@ public class ICRReader {
 	private String table;
 	private Hashtable<String, String> actionsDic;
 
-	public ICRReader(String table) {
+	public ICRReader(String table, int sb, int bb) {
 		this.table = table;
+		this.smallB = sb;
+		this.bigB = bb;
 		this.actionsDic = new Hashtable<>();
 		actionsDic.put("-", "no action; player is no longer contesting pot");
 		actionsDic.put("B", "blind bet");
@@ -45,7 +50,11 @@ public class ICRReader {
 		int numC = hand.getSize() - 2;
 		for (Game game : games) {
 			for (Player player : game.players) {
-				if (player.handCards.size() == 2 && game.boardCards.size() >= numC) {
+				// player muss habe a visible card,
+				// board is in the correct stage
+				// player cards muss be equals to holeCards
+				if (player.handCards.size() == 2 && game.boardCards.size() >= numC
+						&& ICRHand.isPresent(holeCards, player.handCards)) {
 					ArrayList<ICRCard> list2 = new ArrayList<>(player.handCards);
 					List<ICRCard> tl = game.boardCards.subList(0, numC);
 					player.boardCards = ICRHand.getStringOf(tl);
@@ -53,7 +62,7 @@ public class ICRReader {
 
 					ICRHand phand = new ICRHand(list2);
 					//
-					int delt = phand.getHandRank()-hand.getHandRank();
+					int delt = phand.getHandRank() - hand.getHandRank();
 					if (Math.abs(delt) <= distance) {
 						player.distance = delt;
 						player.handName = phand.handName();
@@ -66,9 +75,11 @@ public class ICRReader {
 	}
 
 	/**
-	 * perform the read operacion from the IRC database. this method update the gloval variable {@link #games}
+	 * read all de available data and build the game history. the golbal variable {@link #games} will contain a list of
+	 * all table games performed.
+	 * 
 	 */
-	public void performRead() {
+	public void loadGameHistory() {
 		List<File> dirs = FileUtils.findFilesRecursively("plugins/hero/resources/IRCData/" + table,
 				fn -> fn.getParent().endsWith(table));
 		for (File dir : dirs) {
@@ -146,7 +157,8 @@ public class ICRReader {
 	 * @param game - the game to print
 	 */
 	public void tabularFormat(Game game) {
-		System.out.println("Game information");
+		System.out.println("\nGame information");
+		System.out.println("------------------");
 		StringBuffer board = new StringBuffer();
 		game.boardCards.forEach(c -> board.append(c.toString() + " "));
 		String patt = "%9s %5s %10s %10s %10s %10s %-15s";
@@ -154,32 +166,62 @@ public class ICRReader {
 		System.out.println(String.format(patt, game.id, game.players.size(), game.potFlop, game.potTurn, game.potRiver,
 				game.potShowdown, board));
 
-		System.out.println();
-
-		patt = "%-10s %3s %-5s %-5s %-5s %-5s %7s %-5s";
-		System.out.println("Player information");
-		System.out.println(String.format(patt, "Player", "Pos", "preF", "flop", "turn", "river", "chips", "Cards"));
+		patt = "%-10s %3s %-5s %-5s %-5s %-5s %7s %7s %-5s";
+		System.out.println("\nPlayer information");
+		System.out.println("--------------------");
+		System.out.println(
+				String.format(patt, "Player", "Pos", "preF", "flop", "turn", "river", "chips", "Win", "Cards"));
 		for (Player player : game.players) {
 			StringBuffer cards = new StringBuffer();
 			player.handCards.forEach(c -> cards.append(c.toString() + " "));
 			System.out.println(String.format(patt, player.name, player.position, player.flopActions, player.turnActions,
-					player.riverActions, player.showdownActions, player.chipsCount, cards));
+					player.riverActions, player.showdownActions, player.chipsCount, player.chipsWins, cards));
 		}
 	}
 
-	public static void main(String[] args) throws Exception {
-		ICRReader reader = new ICRReader("holdemTest");
-		reader.performRead();
+	private int smallB, bigB;
 
+	public List<TEntry<String, Double>> getTopPlayers(int firstN) {
+		Hashtable<String, DescriptiveStatistics> statistics = new Hashtable<>();
+		for (Game game : games) {
+			for (Player player : game.players) {
+				DescriptiveStatistics sts = statistics.getOrDefault(player.name, new DescriptiveStatistics(1000));
+				sts.addValue(player.chipsCount);
+				statistics.put(player.name, sts);
+			}
+		}
+
+		ArrayList<TEntry<String, Double>> topPly = new ArrayList<>();
+		for (String key : statistics.keySet()) {
+			double exp = statistics.get(key).getMean() / (1000.0 * (double) bigB);
+			topPly.add(new TEntry<>(key, exp));
+		}
+		Collections.sort(topPly, Collections.reverseOrder());
+		return topPly.subList(0, firstN);
+	}
+	
+	public static void main(String[] args) throws Exception {
+		ICRReader reader = new ICRReader("holdemTest", 10, 20);
+
+		reader.loadGameHistory();
+		int firstN = 100;
+		List<TEntry<String, Double>> top100 = reader.getTopPlayers(firstN);
+		String patt3 = "%-10s %7.4f";
+		System.out.println("\nTop "+firstN+" Players ");
+		System.out.println("-------------------------");
+		for (TEntry<String, Double> tEntry : top100) {
+			System.out.println(String.format(patt3, tEntry.getKey(), tEntry.getValue()));
+		}
+		
 		Game sample = reader.games.get(1);
 		reader.tabularFormat(sample);
-
-		String holec = "Kd 7s";
-		String boardc = "2c 3d Ah Ks 6h";
-		int dis = 1;
+		
+		String holec = "Td Ac";
+		String boardc = "5c Tc Ah 5s";
+		int dis = 50;
 		long mills = System.currentTimeMillis();
-		System.out.println();
-		System.out.println("Find " + holec + " " + boardc + " distane=" + dis);
+		System.out.println("\nFind " + holec + " " + boardc + " distance = " + dis);
+		System.out.println("-----------------------------------------------------");
 
 		List<Player> plist = reader.getPlayers(holec, boardc, dis);
 		String patt = "%-10s %3s %-5s %-5s %-5s %-5s %7s %7s %5s %-21s %-20s";

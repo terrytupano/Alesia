@@ -253,3 +253,13 @@
 /PushFold$97.class
 /PushFold$98.class
 /PushFold$99.class
+/CardsDialog$CancelListener.class
+/CardsDialog$MainLabelListener.class
+/CardsDialog$OKListener.class
+/CardsDialog$SelectedLabelListener.class
+/CardsDialog.class
+/CardsDialog$CardMouseListener.class
+/CardsPanel$CardMouseListener.class
+/CardsPanel.class
+/CardsPanel$uiCards.class
+/CardsPanel$iconCard.class

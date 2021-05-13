@@ -43,8 +43,8 @@ public class TWebFrame extends WebFrame {
 
 		setTitle(TStringUtils.getString("title"));
 		Vector v = new Vector();
-		v.add(TResources.getIcon("appicon", 16).getImage());
-		v.add(TResources.getIcon("appicon", 32).getImage());
+		v.add(TResources.getIcon("Alesia", 16).getImage());
+		v.add(TResources.getIcon("Alesia", 32).getImage());
 		setIconImages(v);
 
 		// TODO: comented due ps problems. fix

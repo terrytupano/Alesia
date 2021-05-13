@@ -8,7 +8,6 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.Action;
 import javax.swing.border.*;
-import javax.swing.event.*;
 
 import org.jdesktop.application.*;
 
@@ -104,7 +103,7 @@ public class TUIPanel extends WebPanel {
 		titlePanel.add(toolBarPanel, BorderLayout.CENTER);
 		// titlePanel.add(treeDotButton, BorderLayout.EAST);
 
-		this.additionalInfo = createReadOnlyEditorPane(null, null);
+		this.additionalInfo = TUIUtils.getJEditorPane(null, null);
 		additionalInfo.setPreferredSize(new Dimension(0, 48));
 
 		// noListPanel are used to display a message when instances of this component show a list of elements and
@@ -155,27 +154,7 @@ public class TUIPanel extends WebPanel {
 		dialog.setLocationRelativeTo(Alesia.getInstance().getMainFrame());
 		return dialog;
 	}
-	/**
-	 * return and {@link JEditorPane} for information read only.
-	 * 
-	 * @param textId - text id. may be <code>null</code>
-	 * @param hyperlinkListener - may be <code>null</code>
-	 * 
-	 * @return eidtor pane for read only
-	 */
-	public JEditorPane createReadOnlyEditorPane(String textId, HyperlinkListener hyperlinkListener) {
-		String txt = textId == null ? null : TStringUtils.getString(textId);
-		JEditorPane editorPane = new JEditorPane("text/html", txt);
-		editorPane.setEditable(false);
-		editorPane.setOpaque(false);
-		editorPane.setFocusable(false);
-		HTMLUtils.addDefaultStyleSheetRule(editorPane);
-		if (hyperlinkListener != null) {
-			editorPane.addHyperlinkListener(hyperlinkListener);
-		}
-		return editorPane;
-	}
-
+	
 	@org.jdesktop.application.Action
 	public void filterList(ActionEvent event) {
 
@@ -276,7 +255,10 @@ public class TUIPanel extends WebPanel {
 		lst.add(new JLabel());
 		for (Action act : alist) {
 			allActions.add(act);
+			
+//			TODO: this value muss kommt from look and feel file
 			TUIUtils.overRideIcons(16, null, act);
+			
 			WebButton wb = new WebButton(act);
 			// ApplicationAction aa = (ApplicationAction) act;
 			// String sco = aa.getResourceMap().getString(aa.getName() + ".Action.scope");

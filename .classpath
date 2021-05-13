@@ -55,5 +55,6 @@
 	<classpathentry kind="lib" path="plugins/hero/lib/simulator.jar"/>
 	<classpathentry kind="lib" path="lib/commons-text-1.9.jar"/>
 	<classpathentry kind="lib" path="lib/commons-lang3-3.11.jar"/>
+	<classpathentry kind="lib" path="plugins/hero/pokerEnlighter/lib/simulator.v2.4.jar" sourcepath="C:/Users/terry/Documents/poker/engines/pokerenlighter/poker.enlighter.simulator.2.4.562.zip"/>
 	<classpathentry kind="output" path=""/>
 </classpath>

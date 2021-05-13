@@ -35,7 +35,7 @@ public class TResources {
 	public static Vector<String> resourcePath = new Vector<String>();
 	public static void init() {
 		resourcePath.add(USER_DIR + "/");
-		resourcePath.add(USER_DIR + "/core/resources/images/");
+		resourcePath.add(USER_DIR + "/core/resources/../resources/");
 		resourcePath.add(USER_DIR + "/core/resources/");
 		// I never delete temporal path just in case need look for something
 		File td = new File(TEMP_PATH);

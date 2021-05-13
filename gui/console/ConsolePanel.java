@@ -7,7 +7,6 @@ import java.util.*;
 import java.util.logging.*;
 
 import javax.swing.*;
-import javax.swing.text.*;
 
 import org.jdesktop.application.Action;
 
@@ -41,11 +40,7 @@ public class ConsolePanel extends WebPanel {
 		setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
 		this.logger = logger;
 		actionMap = Alesia.getInstance().getContext().getActionMap(this);
-		this.editorPane = new WebEditorPane();
-		editorPane.setEditable(false);
-		editorPane.setEditorKit(new StyledEditorKit());
-		Font f = new Font("courier new", Font.PLAIN, 12);
-		editorPane.setFont(f);
+		this.editorPane = TUIUtils.getConsoleEditorPane();
 
 		OutputStream os = new TextAreaOutputStream(editorPane);
 		handler = new TextAreaHandler(os);

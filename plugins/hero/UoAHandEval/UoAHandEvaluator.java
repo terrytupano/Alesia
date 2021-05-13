@@ -16,7 +16,7 @@ package plugins.hero.UoAHandEval;
 public class UoAHandEvaluator {
 
 	public static void main(String args[]) {
-		UoAHand board = new UoAHand("6s 8s 2h 3d 4c");
+		UoAHand board = new UoAHand("3c Ac Kc 2d 7c");
 		UoAHandEvaluator evaluator = new UoAHandEvaluator();
 		int[][] ranks = evaluator.getRanks(board);
 		

@@ -22,6 +22,7 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.Action;
 import javax.swing.border.*;
+import javax.swing.event.*;
 import javax.swing.table.*;
 import javax.swing.table.TableColumn;
 import javax.swing.text.*;
@@ -220,19 +221,6 @@ public class TUIUtils {
 	}
 
 	/**
-	 * Utilitiario que retorna un <code>JLabel</code> con los atributos comunes para el entorno de edicion de documentos
-	 * 
-	 * @param fn - nombre de campo
-	 * @return - JLabel
-	 */
-	public static JLabel getDocumentJLabel(String fn) {
-		JLabel jl = new JLabel(TStringUtils.getString(fn));
-		Font f = jl.getFont();
-		jl.setFont(f.deriveFont(Font.BOLD));
-		return jl;
-	}
-
-	/**
 	 * retorna un unico componente dentro de una Box alineado hacia la izquierda
 	 * 
 	 * @param jcomp - component
@@ -403,6 +391,18 @@ public class TUIUtils {
 		return jep;
 	}
 
+	/**
+	 * TODO: temp move to laf xml file
+	 * 
+	 * @param field
+	 * @param stlId
+	 * @return
+	 */
+	public static JLabel getStyledJLabel(String field, String stlId) {
+		JLabel jl = new JLabel("<html><" + stlId + " style='font-family:Segoe UI light; color:gray'>"
+				+ TStringUtils.getString(field) + "</" + stlId + "></html>");
+		return jl;
+	}
 	/**
 	 * construye y retorna una instancia de JLabel con los atributos establecidos segun los argumentos de entrada.
 	 * 
@@ -1183,11 +1183,46 @@ public class TUIUtils {
 		return b;
 	}
 
+	/**
+	 * return a console style {@link WebEditorPane}
+	 * 
+	 * @return compoent
+	 */
+	public static WebEditorPane getConsoleEditorPane() {
+		WebEditorPane editorPane = new WebEditorPane();
+		editorPane.setEditable(false);
+		editorPane.setEditorKit(new StyledEditorKit());
+		Font f = new Font("courier new", Font.PLAIN, 12);
+		editorPane.setFont(f);
+		return editorPane;
+	}
+
 	static int getStringPixelWidth(String str, Font font) {
 		FontMetrics metrics = new FontMetrics(font) {
 		};
 		Rectangle2D bounds = metrics.getStringBounds(str, null);
 		return (int) bounds.getWidth();
+	}
+
+	/**
+	 * return and {@link JEditorPane} for information read only.
+	 * 
+	 * @param textId - text id. may be <code>null</code>
+	 * @param hyperlinkListener - may be <code>null</code>
+	 * 
+	 * @return eidtor pane for read only
+	 */
+	public static JEditorPane getJEditorPane(String textId, HyperlinkListener hyperlinkListener) {
+		String txt = textId == null ? null : TStringUtils.getString(textId);
+		WebEditorPane editorPane = new WebEditorPane("text/html", txt);
+		editorPane.setEditable(false);
+		// editorPane.setOpaque(false);
+		editorPane.setFocusable(false);
+		HTMLUtils.addDefaultStyleSheetRule(editorPane);
+		if (hyperlinkListener != null) {
+			editorPane.addHyperlinkListener(hyperlinkListener);
+		}
+		return editorPane;
 	}
 
 }

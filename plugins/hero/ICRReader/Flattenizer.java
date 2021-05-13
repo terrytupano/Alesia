@@ -14,7 +14,6 @@ public class Flattenizer {
 	}
 
 	private void loadGameHistory(String directory) throws FileNotFoundException {
-
 		Scanner in = new Scanner(new File(directory, "hdb"));
 		int counter = 0;
 		long mills = System.currentTimeMillis();
@@ -133,6 +132,7 @@ public class Flattenizer {
 				Player action = playerToHandMap.get(playerName).get(ph.id);
 				if (action != null) {
 					ph.players.add(action);
+//					Collections.sort(ph.players, (o1,o2) -> o1.position.compareTo(o2.position));
 					Collections.sort(ph.players, new Comparator<Player>() {
 						@Override
 						public int compare(Player o1, Player o2) {
