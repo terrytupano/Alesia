@@ -4,7 +4,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.logging.*;
 
 import javax.swing.*;
 

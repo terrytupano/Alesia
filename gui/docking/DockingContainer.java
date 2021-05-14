@@ -36,78 +36,6 @@ public class DockingContainer extends JPanel {
 	private JComponent contentPanel;
 	private TLeftPanel leftPanel;
 
-	public void setContentPanel(JComponent cpanel) {
-		setVisible(false);
-		remove(contentPanel);
-		contentPanel = null;
-		contentPanel = cpanel;
-		add(contentPanel, BorderLayout.CENTER);
-
-		// auto select listener for model select property
-		List<Container> cnts = SwingUtils.collectAllContainers(contentPanel);
-		for (Container cnt : cnts) {
-			if (cnt instanceof TUIListPanel)
-				((TUIListPanel) cnt).init();
-
-			if (cnt instanceof PropertyChangeListener && cnt instanceof TUIListPanel) {
-				PropertyChangeListener pcl = (PropertyChangeListener) cnt;
-				addChangeListener(TUIListPanel.MODEL_SELECTED, pcl);
-			}
-		}
-		setVisible(true);
-	}
-
-	/**
-	 * Utility method to perform {@link UIListPanel#freshen()} in an active instance of the class pass as argument.
-	 * <p>
-	 * Use this class for example when an arbitrary action alter the internal content of another class and you want
-	 * those class uptade their internal content data .
-	 * 
-	 * @param clsn - active instance to refresh
-	 */
-	public void signalFreshgen(Class clazz) {
-		SwingUtilities.invokeLater(() -> {
-			Object cnt = SwingUtils.getFirst(contentPanel, clazz);
-			Preconditions.checkArgument(cnt instanceof TUIListPanel, "the Class %s must be instance of TUIListPanel",
-					clazz.getName(), TUIListPanel.class.getName());
-			TUIListPanel tuilp = (TUIListPanel) cnt;
-			tuilp.freshen();
-		});
-	}
-
-	/**
-	 * add the listener all containers instances of <code>soruceClazz</code> inside of this component content panel.
-	 * 
-	 * @param sourceClazz - the class source of the property
-	 * @param propertyName - the name
-	 * @param listener - the listener interested in recive notification
-	 */
-	public void addChangeListener(String propertyName, PropertyChangeListener listener) {
-		List<Container> cnts = SwingUtils.collectAllContainers(this);
-		// avoid to add listerner to the "listener" itselft and other class disticg to TUIListPanel
-		cnts.removeIf(cnt -> cnt == listener || !(cnt instanceof TUIListPanel));
-		for (Container source : cnts) {
-			// avoid mutiple propertyChange invocation on listener
-			source.removePropertyChangeListener(propertyName, listener);
-			source.addPropertyChangeListener(propertyName, listener);
-		}
-
-		// for (String cn : vs) {
-		// // check not addPropertyChangeListener to myself
-		// if (!dview.getName().equals(cn)) {
-		// addPropertyChangeListener(cn, TConstants.RECORD_SELECTED, lst);
-		// addPropertyChangeListener(cn, TConstants.FIND_TEXT, lst);
-		// addPropertyChangeListener(cn, TConstants.LOG_MESSAGE, lst);
-		// }
-		// }
-		// }
-
-	}
-
-	public TLeftPanel getLeftPanel() {
-		return leftPanel;
-	}
-
 	public DockingContainer() {
 		super(new BorderLayout());
 		leftPanel = new TLeftPanel(this);
@@ -161,6 +89,78 @@ public class DockingContainer extends JPanel {
 		jl.setHorizontalTextPosition(JLabel.CENTER);
 		jl.setBorder(new EmptyBorder(4, 4, 4, 4));
 		return jl;
+	}
+
+	/**
+	 * add the listener all containers instances of <code>soruceClazz</code> inside of this component content panel.
+	 * 
+	 * @param sourceClazz - the class source of the property
+	 * @param propertyName - the name
+	 * @param listener - the listener interested in recive notification
+	 */
+	public void addChangeListener(String propertyName, PropertyChangeListener listener) {
+		List<Container> cnts = SwingUtils.collectAllContainers(this);
+		// avoid to add listerner to the "listener" itselft and other class disticg to TUIListPanel
+		cnts.removeIf(cnt -> cnt == listener || !(cnt instanceof TUIListPanel));
+		for (Container source : cnts) {
+			// avoid mutiple propertyChange invocation on listener
+			source.removePropertyChangeListener(propertyName, listener);
+			source.addPropertyChangeListener(propertyName, listener);
+		}
+
+		// for (String cn : vs) {
+		// // check not addPropertyChangeListener to myself
+		// if (!dview.getName().equals(cn)) {
+		// addPropertyChangeListener(cn, TConstants.RECORD_SELECTED, lst);
+		// addPropertyChangeListener(cn, TConstants.FIND_TEXT, lst);
+		// addPropertyChangeListener(cn, TConstants.LOG_MESSAGE, lst);
+		// }
+		// }
+		// }
+
+	}
+
+	public TLeftPanel getLeftPanel() {
+		return leftPanel;
+	}
+
+	public void setContentPanel(JComponent cpanel) {
+		setVisible(false);
+		remove(contentPanel);
+		contentPanel = null;
+		contentPanel = cpanel;
+		add(contentPanel, BorderLayout.CENTER);
+
+		// auto select listener for model select property
+		List<Container> cnts = SwingUtils.collectAllContainers(contentPanel);
+		for (Container cnt : cnts) {
+			if (cnt instanceof TUIListPanel)
+				((TUIListPanel) cnt).init();
+
+			if (cnt instanceof PropertyChangeListener && cnt instanceof TUIListPanel) {
+				PropertyChangeListener pcl = (PropertyChangeListener) cnt;
+				addChangeListener(TUIListPanel.MODEL_SELECTED, pcl);
+			}
+		}
+		setVisible(true);
+	}
+
+	/**
+	 * Utility method to perform {@link UIListPanel#freshen()} in an active instance of the class pass as argument.
+	 * <p>
+	 * Use this class for example when an arbitrary action alter the internal content of another class and you want
+	 * those class uptade their internal content data .
+	 * 
+	 * @param clsn - active instance to refresh
+	 */
+	public void signalFreshgen(Class clazz) {
+		SwingUtilities.invokeLater(() -> {
+			Object cnt = SwingUtils.getFirst(contentPanel, clazz);
+			Preconditions.checkArgument(cnt instanceof TUIListPanel, "the Class %s must be instance of TUIListPanel",
+					clazz.getName(), TUIListPanel.class.getName());
+			TUIListPanel tuilp = (TUIListPanel) cnt;
+			tuilp.freshen();
+		});
 	}
 
 	/**

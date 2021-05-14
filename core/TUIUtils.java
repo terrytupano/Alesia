@@ -41,6 +41,7 @@ import com.alee.laf.*;
 import com.alee.laf.button.*;
 import com.alee.laf.checkbox.*;
 import com.alee.laf.combobox.*;
+import com.alee.laf.label.*;
 import com.alee.laf.text.*;
 import com.alee.laf.toolbar.*;
 import com.alee.managers.settings.Configuration;
@@ -107,7 +108,28 @@ public class TUIUtils {
 			}
 		}
 	}
+	
+	
+	/**
+	 * return a {@link WebLabel} title mes format
+	 * 
+	 * TODO: temp move to look and feel
+	 * 
+	 * @param title
+	 * @param message
+	 * @return
+	 */
+	public static WebLabel getTitleLabel(String title, String message) {
+		Font f = HTMLUtils.getDefaultTextFont();
+		String name = f.getFamily();
+		int siz = f.getSize();
 
+		String patt = "<html><p style='font-family: " + name + "; font-size: 15;'><title></p>"
+				+ "<p style='font-family: " + siz + ";'><message></html>";
+		String msg = patt.replace("<title>", title);
+		msg = msg.replace("<message>", message);
+		return new WebLabel(msg);
+	}
 	/**
 	 * este metodo da formato estandar a una instancia de <code>JLabel</code> segun los argumentos
 	 * 

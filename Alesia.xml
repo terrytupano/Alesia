@@ -17,6 +17,7 @@
   <topUpperHand type="ComboBoxState" selectedIndex="0"/>
   <bigBlid type="string"></bigBlid>
   <availableActions type="TextComponentState" text="*all" caretPosition="4"/>
+  <play.maxRaise type="TextComponentState" text="4" caretPosition="1"/>
   <table.bigBlid type="TextComponentState" text="2000" caretPosition="4"/>
   <play.time type="TextComponentState" text="0" caretPosition="1"/>
   <play.until type="TextComponentState" text="0.6" caretPosition="3"/>
@@ -39,7 +40,7 @@
   </FlickaDockablePane>
   <preflopStrategy type="ComboBoxState" selectedIndex="1"/>
   <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>
-  <TWebFrame type="WindowState" location="51,43" size="680,698" state="0"/>
+  <TWebFrame type="WindowState" location="4,65" size="626,604" state="0"/>
   <smallBlid type="string"></smallBlid>
   <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>
   <bluff type="TextComponentState" text="200" caretPosition="3"/>

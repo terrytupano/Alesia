@@ -10,6 +10,10 @@ Copyright (c) 2000:
 
 import java.lang.String;
 
+import javax.swing.*;
+
+import core.*;
+
 /**
 * Represents a playing card
 * from a set of cards {0..51} which map to cards having a suit 
@@ -249,6 +253,11 @@ public class UoACard {
       }
       return s;
    }
-
+   
+//   TERRY
+   public JLabel getUI(String dir) {
+	   JLabel jl = new JLabel(TResources.getIcon(dir + toString()));
+	   return jl;
+   }
 }
 

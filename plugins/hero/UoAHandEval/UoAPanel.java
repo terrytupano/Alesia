@@ -56,7 +56,6 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 		FormLayout layout = new FormLayout("pref:grow, 3dlu, pref:grow",
 				"p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, fill:pref:grow");
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DLU2);
-		// DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG);
 
 		builder.append(TUIUtils.getJEditorPane(
 				"<h3>UoA Hand evaluator</h3> <p>Select the hole card an the correct convination of comuniticard and press <b>evaluate hand</b>",
@@ -67,8 +66,7 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 		builder.append(getSelectedCardsPanel(selectedICards));
 		builder.append(evalHandButton);
 		builder.nextLine(2);
-		builder.append(new WebLabel("<html><p style='font-family: Verdana; font-size: 15;'>" + "Result" + "</p>"
-				+ "<p style='font-family: Tahoma; font-size: 11;'>Chechk de resutl"), 3);
+		builder.append(TUIUtils.getTitleLabel("titletest", "message text"), 3);
 		builder.nextLine(2);
 		builder.append(new JScrollPane(console), 3);
 
@@ -107,19 +105,6 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 		}
 	}
 
-	/**
-	 * return the string representation of a list of cards
-	 * 
-	 * @param cards cards
-	 * 
-	 * @return
-	 */
-	public static String getStringOf(List<UoACard> cards) {
-		StringBuffer sb = new StringBuffer();
-		cards.forEach(c -> sb.append(c.toString() + " "));
-		return sb.toString().trim();
-	}
-
 	private void evaluateHand() {
 		ArrayList<UoACard> selectedCopy = new ArrayList<>();
 		selectedICards.forEach(ic -> selectedCopy.add(ic.getUoACard()));
@@ -128,10 +113,11 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 		// check hole hand
 		if (selectedCopy.get(0).getIndex() * selectedCopy.get(1).getIndex() < 0) {
 			console.append(
-					"ERROR: Hole hand must contain 0 cards (for getRanks() method OR 2 cards for normal card evaluation.\n");
+					"ERROR: Hole hand must contain 0 cards (for board evaluation) OR/AND 2 cards for normal card evaluation.\n");
 			return;
 		}
 		String holeCards = selectedCopy.remove(0) + " " + selectedCopy.remove(0);
+		holeCards = holeCards.replace("1c", "").trim();
 		selectedCopy.removeIf(c -> c.getIndex() < 0);
 
 		// check comunity cards
@@ -139,30 +125,46 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 			console.append("ERROR: Comunity card must contain 3, 4 or 5 cards.\n");
 			return;
 		}
-		StringBuffer sb = new StringBuffer();
-		selectedCopy.forEach(ca -> sb.append(ca.toString() + " "));
-		String comunityCards = sb.toString().trim();
+		String comunityCards = Hero.parseCards(selectedCopy);
+		comunityCards = comunityCards.replace("1c", "").trim();
 
-		UoAHand hand = new UoAHand(holeCards + " " + comunityCards);
-		UoAHandEvaluator evaluator = new UoAHandEvaluator();
-		int handRank = UoAHandEvaluator.rankHand(hand);
-		// numbers of hand better that my hand
-		int count = 0;
-		int[][] rowcol = evaluator.getRanks(hand);
-		for (int i = 0; i < 52; i++) {
-			for (int j = 0; j < 52; j++) {
-				if (handRank < rowcol[i][j])
-					count++;
-			}
-		}
-		int total = 52 * 50;
 		console.append("Hole cards: " + holeCards + " Comunity cards: " + comunityCards + "\n");
-		console.append("\nHand evaluation resut\n");
-		console.append("Rank: " + handRank + "\n");
-		console.append("Name: " + UoAHandEvaluator.nameHand(hand) + "\n");
-		console.append("# of posible 2 cards conbinations better that my Hole cards: " + count + " of " + total + "\n");
-		double per = (count / (total * 1.0)) * 100;
-		console.append("% of posible 2 cards conbinations better that my Hole cards: " + per + "\n");
+
+		UoAHandEvaluator evaluator = new UoAHandEvaluator();
+		int handRank = UoAHandEvaluator.rankHand(new UoAHand(holeCards + " " + comunityCards));
+		UoAHand allCards = new UoAHand(holeCards + " " + comunityCards);
+
+		// my hand evaluation
+		if (!holeCards.equals("")) {
+			console.append("\nMy hand evaluation:\n");
+			console.append("Rank: " + handRank + "\n");
+			console.append("Name: " + UoAHandEvaluator.nameHand(allCards) + "\n");
+			console.append("Best: " + evaluator.getBest5CardHand(allCards) + "\n");
+		}
+
+		// board evaluation
+		if (!comunityCards.equals("")) {
+			int count = 0;
+			int total = 0;
+			ArrayList<UoAHand> top10 = new ArrayList<>();
+			int[][] rowcol = evaluator.getRanks(new UoAHand(comunityCards));
+			for (int i = 0; i < 52; i++) {
+				for (int j = 0; j < 52; j++) {
+					if (rowcol[i][j] > 0)
+						total++;
+					if (handRank < rowcol[i][j]) {
+						count++;
+						top10.add(new UoAHand((new UoACard(i)).toString() + " " + (new UoACard(j)).toString()));
+					}
+				}
+			}
+			double per = ((int) ((count / (total * 1.0)) * 10000)) / 100.0;
+			console.append("\nBoard evaluation:\n");
+			console.append("2 cards better that my Hole cards: " + count + " of " + total + " (" + per + "%)\n");
+			String examp = Hero.parseHands(top10.subList(0, Math.min(top10.size(), 10)));
+//			examp = Hero.parseToUnicode(examp);
+			console.append("examples: " + examp + "\n");
+		}
 	}
 
 	private JPanel getSelectedCardsPanel(List<IconCard> cards) {

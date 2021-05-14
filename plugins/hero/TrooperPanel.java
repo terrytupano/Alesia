@@ -64,12 +64,7 @@ public class TrooperPanel extends TUIFormPanel {
 	@Override
 	public Hashtable<String, Object> getValues() {
 		Hashtable vals = super.getValues();
-		String[] tparms = vals.get("table.parameters").toString().split("[,]");
-		vals.put("table.buyIn", new Double(tparms[0]));
-		vals.put("table.bigBlid", new Double(tparms[1]));
-		vals.put("table.smallBlid", new Double(tparms[2]));
-		// simbol if its present of "" if not
-		vals.put("table.currency", tparms.length > 3 ? tparms[3] : "");
+		Hero.parseTableParameters(vals);
 		return vals;
 	}
 }
