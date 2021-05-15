@@ -66,7 +66,7 @@ public class GameSimulatorPanel extends TUIFormPanel {
 		
 		String[] columnNames = {"Name", "Style", "Active"};
 		Object[][] data = {{"Kathy", "BasicBot", true}, {"John", "BasicBot", true},
-				{"Sue", "BasicBot", true}, {"Rat Ass", "DummyBot", true}};
+				{"Hero", "BasicBot", true}, {"Rick", "BasicBot", true}};
 
 		WebTable table = new WebTable(data, columnNames);
 

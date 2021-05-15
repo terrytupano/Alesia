@@ -19,6 +19,7 @@ package plugins.hero.ozsoft.texasholdem.bots;
 
 import java.util.*;
 
+import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.texasholdem.*;
 import plugins.hero.ozsoft.texasholdem.actions.*;
 
@@ -54,7 +55,7 @@ public class BasicBot extends Bot {
 	private TableType tableType;
 
 	/** The hole cards. */
-	private Card[] cards;
+	private UoAHand hand;
 
 	public BasicBot() {
 		this((int) Math.random() * 100, (int) Math.random() * 100);
@@ -91,7 +92,7 @@ public class BasicBot extends Bot {
 	/** {@inheritDoc} */
 	@Override
 	public void handStarted(Player dealer) {
-		cards = null;
+		hand = null;
 	}
 
 	/** {@inheritDoc} */
@@ -100,17 +101,16 @@ public class BasicBot extends Bot {
 		// Not implemented.
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void boardUpdated(List<Card> cards, int bet, int pot) {
-		// Not implemented.
+	public void boardUpdated(UoAHand hand, int bet, int pot) {
+		// TODO Auto-generated method stub
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public void playerUpdated(Player player) {
-		if (player.getCards().length == NO_OF_HOLE_CARDS) {
-			this.cards = player.getCards();
+		if (player.getHand().size() == NO_OF_HOLE_CARDS) {
+			this.hand = player.getHand();
 		}
 	}
 
@@ -128,7 +128,7 @@ public class BasicBot extends Bot {
 			// No choice, must check.
 			action = PlayerAction.CHECK;
 		} else {
-			double chenScore = BasicBot.getChenScore(cards);
+			double chenScore = BasicBot.getChenScore(hand);
 			double chenScoreToPlay = tightness * 0.2;
 			if ((chenScore < chenScoreToPlay)) {
 				if (allowedActions.contains(PlayerAction.CHECK)) {
@@ -200,83 +200,81 @@ public class BasicBot extends Bot {
 		}
 		return action;
 	}
-    /**
-     * Returns the value of the hole cards based on the Chen formula.
-     * 
-     * @param cards
-     *            The hole cards.
-     * 
-     * @return The score based on the Chen formula.
-     */
-    public static double getChenScore(Card[] cards) {
-        if (cards.length != 2) {
-            throw new IllegalArgumentException("Invalid number of cards: " + cards.length);
-        }
-        
-        // Analyze hole cards.
-        int rank1 = cards[0].getRank();
-        int suit1 = cards[0].getSuit();
-        int rank2 = cards[1].getRank();
-        int suit2 = cards[1].getSuit();
-        int highRank = Math.max(rank1, rank2);
-        int lowRank = Math.min(rank1, rank2);
-        int rankDiff = highRank - lowRank;
-        int gap = (rankDiff > 1) ? rankDiff - 1 : 0;  
-        boolean isPair = (rank1 == rank2);
-        boolean isSuited = (suit1 == suit2);
-        
-        double score = 0.0;
-        
-        // 1. Base score highest rank only
-        if (highRank == Card.ACE) {
-            score = 10.0;
-        } else if (highRank == Card.KING) {
-            score = 8.0;
-        } else if (highRank == Card.QUEEN) {
-            score = 7.0;
-        } else if (highRank == Card.JACK) {
-            score = 6.0;
-        } else {
-            score = (highRank + 2) / 2.0;
-        }
-        
-        // 2. If pair, double score, with minimum score of 5. 
-        if (isPair) {
-            score *= 2.0;
-            if (score < 5.0) {
-                score = 5.0;
-            }
-        }
-        
-        // 3. If suited, add 2 points.
-        if (isSuited) {
-            score += 2.0;
-        }
-        
-        // 4. Subtract points for gap.
-        if (gap == 1) {
-            score -= 1.0;
-        } else if (gap == 2) {
-            score -= 2.0;
-        } else if (gap == 3) {
-            score -= 4.0;
-        } else if (gap > 3) {
-            score -= 5.0;
-        }
-        
-        // 5. Add 1 point for a 0 or 1 gap and both cards lower than a Queen.
-        if (!isPair && gap < 2 && rank1 < Card.QUEEN && rank2 < Card.QUEEN) {
-            score += 1.0;
-        }
-        
-        // Minimum score is 0.
-        if (score < 0.0) {
-            score = 0.0;
-        }
-        
-        // 6. Round half point scores up.
-        return Math.round(score);        
-    }
+	/**
+	 * Returns the value of the hole cards based on the Chen formula.
+	 * 
+	 * @param cards The hole cards.
+	 * 
+	 * @return The score based on the Chen formula.
+	 */
+	public static double getChenScore(UoAHand hand) {
+		if (hand.size() != 2) {
+			throw new IllegalArgumentException("Invalid number of cards: " + hand.size());
+		}
 
+		// Analyze hole cards.
+		int rank1 = hand.getCard(1).getRank();
+		int suit1 = hand.getCard(2).getSuit();
+		int rank2 = hand.getCard(1).getRank();
+		int suit2 = hand.getCard(2).getSuit();
+		int highRank = Math.max(rank1, rank2);
+		int lowRank = Math.min(rank1, rank2);
+		int rankDiff = highRank - lowRank;
+		int gap = (rankDiff > 1) ? rankDiff - 1 : 0;
+		boolean isPair = (rank1 == rank2);
+		boolean isSuited = (suit1 == suit2);
+
+		double score = 0.0;
+
+		// 1. Base score highest rank only
+		if (highRank == UoACard.ACE) {
+			score = 10.0;
+		} else if (highRank == UoACard.KING) {
+			score = 8.0;
+		} else if (highRank == UoACard.QUEEN) {
+			score = 7.0;
+		} else if (highRank == UoACard.JACK) {
+			score = 6.0;
+		} else {
+			score = (highRank + 2) / 2.0;
+		}
+
+		// 2. If pair, double score, with minimum score of 5.
+		if (isPair) {
+			score *= 2.0;
+			if (score < 5.0) {
+				score = 5.0;
+			}
+		}
+
+		// 3. If suited, add 2 points.
+		if (isSuited) {
+			score += 2.0;
+		}
+
+		// 4. Subtract points for gap.
+		if (gap == 1) {
+			score -= 1.0;
+		} else if (gap == 2) {
+			score -= 2.0;
+		} else if (gap == 3) {
+			score -= 4.0;
+		} else if (gap > 3) {
+			score -= 5.0;
+		}
+
+		// 5. Add 1 point for a 0 or 1 gap and both cards lower than a Queen.
+		if (!isPair && gap < 2 && rank1 < UoACard.QUEEN && rank2 < UoACard.QUEEN) {
+			score += 1.0;
+		}
+
+		// Minimum score is 0.
+		if (score < 0.0) {
+			score = 0.0;
+		}
+
+		// 6. Round half point scores up.
+		return Math.round(score);
+	}
 
 }

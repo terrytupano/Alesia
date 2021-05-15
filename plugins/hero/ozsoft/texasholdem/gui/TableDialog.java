@@ -24,9 +24,9 @@ import java.util.List;
 import javax.swing.*;
 
 import core.*;
+import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.texasholdem.*;
 import plugins.hero.ozsoft.texasholdem.actions.*;
-import plugins.hero.ozsoft.texasholdem.bots.*;
 
 /**
  * The game's main frame.
@@ -40,17 +40,8 @@ public class TableDialog extends JDialog implements Client {
 	/** Table type (betting structure). */
 	private static final TableType TABLE_TYPE = TableType.NO_LIMIT;
 
-	/** The size of the big blind. */
-	private static final int BIG_BLIND = 10;
-
-	/** The starting cash per player. */
-	private static final int STARTING_CASH = 500;
-
-	/** The table. */
-	private final Table table;
-
 	/** The players at the table. */
-	private final Map<String, Player> players;
+	private final List<Player> players;
 
 	/** The GridBagConstraints. */
 	private final GridBagConstraints gc;
@@ -64,21 +55,20 @@ public class TableDialog extends JDialog implements Client {
 	/** The player panels. */
 	private final Map<String, PlayerPanel> playerPanels;
 
-	/** The human player. */
-	private final Player humanPlayer;
-
 	/** The current dealer's name. */
 	private String dealerName;
 
 	/** The current actor's name. */
 	private String actorName;
 
+	private Client proxyClient;
+
 	/**
 	 * Constructor.
 	 */
-	public TableDialog(Player humanPlayer) {
+	// public TableDialog(Map<String, Player> players) {
+	public TableDialog(Table game) {
 		super(Alesia.getInstance().mainFrame);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		getContentPane().setBackground(UIConstants.TABLE_COLOR);
 		setLayout(new GridBagLayout());
 
@@ -89,21 +79,10 @@ public class TableDialog extends JDialog implements Client {
 		boardPanel = new BoardPanel(controlPanel);
 		addComponent(boardPanel, 1, 1, 1, 1);
 
-		players = new LinkedHashMap<String, Player>();
-		humanPlayer = new Player("Player", STARTING_CASH, this);
-		players.put("Player", humanPlayer);
-		players.put("Joe", new Player("Joe", STARTING_CASH, new BasicBot(0, 75)));
-		players.put("Mike", new Player("Mike", STARTING_CASH, new BasicBot(25, 50)));
-		players.put("Eddie", new Player("Eddie", STARTING_CASH, new BasicBot(50, 25)));
-
-		table = new Table(TABLE_TYPE, BIG_BLIND);
-		for (Player player : players.values()) {
-			table.addPlayer(player);
-		}
-
+		this.players = game.getPlayers();
 		playerPanels = new HashMap<String, PlayerPanel>();
 		int i = 0;
-		for (Player player : players.values()) {
+		for (Player player : players) {
 			PlayerPanel panel = new PlayerPanel();
 			playerPanels.put(player.getName(), panel);
 			switch (i++) {
@@ -128,14 +107,16 @@ public class TableDialog extends JDialog implements Client {
 			}
 		}
 
+		// the player in the 3 position is allwais the test subject. this element is handled by this class but the
+		// desition is dispacht to proxiClient
+		Player test = players.get(2);
+		this.proxyClient = test.getClient();
+		test.setClient(this);
 		// Show the frame.
 		pack();
 		setResizable(false);
 		setLocationRelativeTo(null);
 		setVisible(true);
-
-		// Start the game.
-		table.run();
 	}
 
 	@Override
@@ -146,12 +127,14 @@ public class TableDialog extends JDialog implements Client {
 				playerPanel.update(player);
 			}
 		}
+		proxyClient.joinedTable(type, bigBlind, players);
 	}
 
 	@Override
 	public void messageReceived(String message) {
 		boardPanel.setMessage(message);
-		boardPanel.waitForUserInput();
+//		boardPanel.waitForUserInput();
+		proxyClient.messageReceived(message);
 	}
 
 	@Override
@@ -159,6 +142,7 @@ public class TableDialog extends JDialog implements Client {
 		setDealer(false);
 		dealerName = dealer.getName();
 		setDealer(true);
+		proxyClient.handStarted(dealer);
 	}
 
 	@Override
@@ -166,11 +150,13 @@ public class TableDialog extends JDialog implements Client {
 		setActorInTurn(false);
 		actorName = actor.getName();
 		setActorInTurn(true);
+		proxyClient.actorRotated(actor);
 	}
 
 	@Override
-	public void boardUpdated(List<Card> cards, int bet, int pot) {
-		boardPanel.update(cards, bet, pot);
+	public void boardUpdated(UoAHand hand, int bet, int pot) {
+		boardPanel.update(hand, bet, pot);
+		proxyClient.boardUpdated(hand, bet, pot);
 	}
 
 	@Override
@@ -179,6 +165,7 @@ public class TableDialog extends JDialog implements Client {
 		if (playerPanel != null) {
 			playerPanel.update(player);
 		}
+		proxyClient.playerUpdated(player);
 	}
 
 	@Override
@@ -191,7 +178,8 @@ public class TableDialog extends JDialog implements Client {
 			if (action != null) {
 				boardPanel.setMessage(String.format("%s %s.", name, action.getVerb()));
 				if (player.getClient() != this) {
-					boardPanel.waitForUserInput();
+					proxyClient.playerActed(player);
+//					boardPanel.waitForUserInput();
 				}
 			}
 		} else {
@@ -201,8 +189,9 @@ public class TableDialog extends JDialog implements Client {
 
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
-		boardPanel.setMessage("Please select an action:");
-		return controlPanel.getUserInput(minBet, humanPlayer.getCash(), allowedActions);
+		// boardPanel.setMessage("Please select an action:");
+		// return controlPanel.getUserInput(minBet, humanPlayer.getCash(), allowedActions);
+		return proxyClient.act(minBet, currentBet, allowedActions);
 	}
 
 	/**

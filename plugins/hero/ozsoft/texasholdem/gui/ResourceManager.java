@@ -21,6 +21,7 @@ import java.net.URL;
 
 import javax.swing.ImageIcon;
 
+import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.texasholdem.*;
 
 /**
@@ -40,7 +41,7 @@ public abstract class ResourceManager {
      * 
      * @return The image.
      */
-    public static ImageIcon getCardImage(Card card) {
+    public static ImageIcon getCardImage(UoACard card) {
         // Use image order, which is different from value order.
         int sequenceNr = card.getSuit() * Card.NO_OF_RANKS + card.getRank();
         String sequenceNrString = String.valueOf(sequenceNr);

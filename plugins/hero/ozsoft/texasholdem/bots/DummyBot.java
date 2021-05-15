@@ -19,6 +19,7 @@ package plugins.hero.ozsoft.texasholdem.bots;
 
 import java.util.*;
 
+import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.texasholdem.*;
 import plugins.hero.ozsoft.texasholdem.actions.*;
 
@@ -61,8 +62,8 @@ public class DummyBot extends Bot {
 	}
 
 	@Override
-	public void boardUpdated(List<Card> cards, int bet, int pot) {
-		// Not implemented.
+	public void boardUpdated(UoAHand hand, int bet, int pot) {
+		// TODO Auto-generated method stub
 	}
 
 	@Override

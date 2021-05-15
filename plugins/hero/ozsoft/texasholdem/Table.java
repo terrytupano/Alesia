@@ -39,6 +39,7 @@ import java.util.*;
 import org.jdesktop.application.*;
 
 import core.*;
+import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.texasholdem.actions.*;
 import plugins.hero.ozsoft.texasholdem.actions.PlayerAction;
 
@@ -71,10 +72,10 @@ public class Table extends Task {
 	private final List<Player> activePlayers;
 
 	/** The deck of cards. */
-	private final Deck deck;
+	private final UoADeck deck;
 
 	/** The community cards on the board. */
-	private final List<Card> board;
+	private final List<UoACard> board;
 
 	/** The current dealer position. */
 	private int dealerPosition;
@@ -103,8 +104,6 @@ public class Table extends Task {
 	/** Number of raises in the current betting round. */
 	private int raises;
 
-	private List<GameObserver> gameObservers;
-
 	/**
 	 * Constructor.
 	 * 
@@ -116,10 +115,9 @@ public class Table extends Task {
 		this.bigBlind = bigBlind;
 		players = new ArrayList<Player>();
 		activePlayers = new ArrayList<Player>();
-		deck = new Deck();
-		board = new ArrayList<Card>();
+		deck = new UoADeck();
+		board = new ArrayList<UoACard>();
 		pots = new ArrayList<Pot>();
-		gameObservers = new ArrayList<>();
 	}
 
 	/**
@@ -129,6 +127,10 @@ public class Table extends Task {
 	 */
 	public void addPlayer(Player player) {
 		players.add(player);
+	}
+
+	public List<Player> getPlayers() {
+		return players;
 	}
 
 	/**
@@ -259,7 +261,10 @@ public class Table extends Task {
 	 */
 	private void dealHoleCards() {
 		for (Player player : activePlayers) {
-			player.setCards(deck.deal(2));
+			ArrayList<UoACard> cs = new ArrayList<>();
+			cs.add(deck.deal());
+			cs.add(deck.deal());
+			player.setCards(cs);
 		}
 		System.out.println();
 		notifyPlayersUpdated(false);
@@ -306,6 +311,12 @@ public class Table extends Task {
 		notifyBoardUpdated();
 
 		while (playersToAct > 0) {
+			try {
+				Thread.sleep(500);
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+
 			rotateActor();
 			PlayerAction action = null;
 			if (actor.isAllIn()) {
@@ -511,9 +522,10 @@ public class Table extends Task {
 		// Players automatically show or fold in order.
 		boolean firstToShow = true;
 		int bestHandValue = -1;
+		UoAHandEvaluator evaluator = new UoAHandEvaluator();
 		for (Player playerToShow : showingPlayers) {
-			Hand hand = new Hand(board);
-			hand.addCards(playerToShow.getCards());
+UoAHand			hand = playerToShow.getHand();
+			UoAHandEvaluator.rankHand(hand)
 			HandValue handValue = new HandValue(hand);
 			boolean doShow = ALWAYS_CALL_SHOWDOWN;
 			if (!doShow) {

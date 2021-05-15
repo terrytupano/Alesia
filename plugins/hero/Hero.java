@@ -31,10 +31,9 @@ import core.*;
 import gui.console.*;
 import net.sourceforge.tess4j.*;
 import plugins.hero.UoAHandEval.*;
-import plugins.hero.cardgame.games.*;
-import plugins.hero.cardgame.interfaces.*;
 import plugins.hero.ozsoft.texasholdem.*;
 import plugins.hero.ozsoft.texasholdem.bots.*;
+import plugins.hero.ozsoft.texasholdem.gui.*;
 
 public class Hero extends TPlugin {
 
@@ -236,31 +235,31 @@ public class Hero extends TPlugin {
 			int bb = ((Double) values.get("table.bigBlid")).intValue();
 			int sb = ((Double) values.get("table.smallBlid")).intValue();
 			int maxR = ((Long) values.get("play.maxRaise")).intValue();
-//			TODO: add the iption for limit and no limit
-			Table game = new Table(TableType.NO_LIMIT, bb);
 
+			// TODO: add the iption for limit and no limit
+			// TODO: the test subject is the 3 element
+			Table game = new Table(TableType.NO_LIMIT, bb);
 			for (int i = 0; i < model.getRowCount(); i++) {
 				if ((Boolean) model.getValueAt(i, 2)) {
 					String name = model.getValueAt(i, 0).toString();
 					String bCls = model.getValueAt(i, 1).toString();
-					Class cls = Class.forName("plugins.hero.ozsoft.texasholdem." + bCls);
+					Class cls = Class.forName("plugins.hero.ozsoft.texasholdem.bots." + bCls);
 					Bot bot = (Bot) cls.newInstance();
 					Player p = new Player(name, buy, bot);
 					game.addPlayer(p);
 				}
 			}
-			
+			TableDialog dialog = new TableDialog(game);
 
-			GameWindow window = new GameWindow();
-			window.setTitle("HoldEm " + buy + " " + bb + "/" + sb);
-			window.addWindowListener(new WindowAdapter() {
+			dialog.setTitle("HoldEm " + buy + " " + bb + "/" + sb);
+			dialog.addWindowListener(new WindowAdapter() {
 				@Override
 				public void windowClosing(WindowEvent e) {
 					((JDialog) e.getSource()).dispose();
 					game.cancel(true);
 				}
 			});
-			window.setVisible(true);
+			dialog.setVisible(true);
 			return game;
 		} catch (Exception e) {
 			e.printStackTrace();
