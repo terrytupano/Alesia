@@ -7,6 +7,7 @@
 
 package plugins.hero.cardgame.games;
 
+import plugins.hero.UoAHandEval.*;
 import plugins.hero.cardgame.*;
 
 /**
@@ -16,14 +17,15 @@ import plugins.hero.cardgame.*;
  */
 public class TexasHoldEm extends AbstractGame {
 
-	protected final Deck community = new Deck();
-
+	protected UoAHand community = new UoAHand();
 	protected boolean doneFlop = false;
 	protected boolean doneTurn = false;
 	protected boolean doneRiver = false;
 
 	public TexasHoldEm(final int numplayers, final int bigblind, final int ante, final int raises) {
 		super(numplayers, bigblind, ante, raises);
+		setTitle("TexasHoldEm");
+		setDescription("Texas Holdem game simulation");
 	}
 
 	protected void dealPlayerCards() {
@@ -31,77 +33,68 @@ public class TexasHoldEm extends AbstractGame {
 		dealCard(players.get((dealer + 1) % numplayers), false);
 	}
 
-	protected void startGame() {
-		notifyNewGame();
-		discardCards();
-		shuffle();
-		community.clear();
-		doAntes();
-		doBlinds();
-		doneFlop = false;
-		doneTurn = false;
-		doneRiver = false;
-		dealPlayerCards();
-		for (int i = 0; i < 5; i++) {
-			community.add(deck.deal());
-		}
-
-		waitForBets();
-
-		if (countPlayers(true, true, false) > 1) {
-			doneFlop = true;
-
-			doBettingRound();
-		}
-
-		if (countPlayers(true, true, false) > 1) {
-			doneTurn = true;
-
-			doBettingRound();
-		}
-
-		if (countPlayers(true, true, false) > 1) {
-			doneRiver = true;
-
-			doBettingRound();
-		}
-
-		if (countPlayers(true, true, false) > 1) {
-			doShowDown();
-		} else {
-			doWinner();
-		}
-
-		for (Player player : players) {
-			if (player.getCash() <= 0) {
-				player.setOut();
-			}
-		}
-
-		notifyEndGame();
-
-		doDealerAdvance();
+	public UoAHand getCommunityCards() {
+		return community;
 	}
 
-	/** {@inheritDoc} */
-	public Deck getCommunityCards() {
-		if (!doneFlop || community.size() < 3) {
-			return new Deck();
-		} else if (!doneTurn || community.size() < 4) {
-			return new Deck(community.subList(0, 3));
-		} else if (!doneRiver || community.size() < 5) {
-			return new Deck(community.subList(0, 4));
-		} else {
-			return new Deck(community);
-		}
-	}
-
-	/** {@inheritDoc} */
 	public int holeCardCount() {
 		return 2;
 	}
 
 	protected boolean canDoBringIns() {
 		return true;
+	}
+
+	@Override
+	protected Object doInBackground() throws Exception {
+		while (countPlayers(true, false, false) > 1 && !isCancelled()) {
+			notifyGameStateChanged("newGame", null, null);
+			discardCards();
+			shuffle();
+			community = new UoAHand();
+			doAntes();
+			doBlinds();
+			doneFlop = false;
+			doneTurn = false;
+			doneRiver = false;
+			dealPlayerCards();
+			waitForBets();
+
+			if (countPlayers(true, true, false) > 1) {
+				community.addCard(deck.deal());
+				community.addCard(deck.deal());
+				community.addCard(deck.deal());
+				doBettingRound();
+				doneFlop = true;
+			}
+
+			if (countPlayers(true, true, false) > 1) {
+				community.addCard(deck.deal());
+				doneTurn = true;
+				doBettingRound();
+			}
+
+			if (countPlayers(true, true, false) > 1) {
+				community.addCard(deck.deal());
+				doneRiver = true;
+				doBettingRound();
+			}
+
+			if (countPlayers(true, true, false) > 1) {
+				doShowDown();
+			} else {
+				doWinner();
+			}
+
+			for (Player player : players) {
+				if (player.getCash() <= 0) {
+					player.setOut();
+				}
+			}
+
+			notifyGameStateChanged("endGame", null, null);
+			advanceDealerButton();
+		}
+		return null;
 	}
 }

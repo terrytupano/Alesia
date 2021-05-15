@@ -7,6 +7,8 @@
 
 package plugins.hero.cardgame.interfaces;
 
+import core.*;
+import plugins.hero.UoAHandEval.*;
 import plugins.hero.cardgame.*;
 
 /**
@@ -17,65 +19,22 @@ import plugins.hero.cardgame.*;
 public interface GameObserver {
 
 	/**
-	 * Called when the community cards have been updated.
-	 */
-	void communityCardsUpdated();
-
-	/**
-	 * Called when the players' hole cards have been updated.
+	 * main metho for game change notification. the state value are:
+	 * <li>newGame. Called at the start of a game. Value null
+	 * <li>cardDealt: Called when a card is dealt to the specified player. Value= {@link TEntry}<{@link Player},
+	 * {@link UoACard}>
+	 * <li>endGame: Called at the end of a game. Value null
+	 * <li>playerTurn: Notifies all observers that it is the specified player's turn.
+	 * <li>winnerinner: Notifies all observers that the specified player is a winner.
+	 * <li>communityCardsUpdated: Called when the community cards have been updated.
+	 * <li>action_<action>: represent the action that the player has performed
 	 * 
-	 * @deprecated Behaviour should be done in cardDealt instead
+	 * @param state
+	 * @param value
 	 */
-	@Deprecated
-	void playerCardsUpdated();
+	void gameStateChanged(final String state, Player player, Object value);
 
-	/**
-	 * Called when a card is dealt to the specified player.
-	 * 
-	 * @param player The player the card is being dealt to
-	 * @param card The card that was dealt
-	 */
-	void cardDealt(final Player player, final Card card);
-
-	/**
-	 * Called at the start of a player's turn.
-	 * 
-	 * @param player The player whose turn it is now
-	 */
-	void playersTurn(final Player player);
-
-	/**
-	 * Called when a new player enters the game.
-	 * 
-	 * @param player The player that has joined
-	 */
 	void newPlayer(final Player player);
-
-	/**
-	 * Called at the start of a game.
-	 */
-	void newGame();
-
-	/**
-	 * Called at the end of a game.
-	 */
-	void endGame();
-
-	void setDealer(final Player player);
-
-	void placeBlind(final Player player, final int blind, final String name);
-
-	void raise(final Player player, final int amount);
-
-	void fold(final Player player);
-
-	void call(final Player player);
-
-	void check(final Player player);
-
-	void open(final Player player, final int amount);
-
-	void winner(final Player players);
 
 	void discards(final Player player, final int number);
 

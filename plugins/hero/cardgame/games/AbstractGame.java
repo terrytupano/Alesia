@@ -9,8 +9,11 @@ package plugins.hero.cardgame.games;
 
 import java.util.*;
 
+import org.jdesktop.application.*;
+
+import core.*;
+import plugins.hero.UoAHandEval.*;
 import plugins.hero.cardgame.*;
-import plugins.hero.cardgame.hands.*;
 import plugins.hero.cardgame.interfaces.*;
 
 /**
@@ -18,62 +21,42 @@ import plugins.hero.cardgame.interfaces.*;
  *
  * @author Chris
  */
-public abstract class AbstractGame implements Game {
+public abstract class AbstractGame extends Task implements Game {
 
-	/** The maximum number of players this game will contain. */
 	protected int numplayers = 0;
-
-	/** Size of the big blind. */
 	protected int bigblind = 0;
-	/** Size of the ante. */
 	protected int ante = 0;
-	/** Maximum number of raises. */
 	protected int raises = 4;
-
 	protected int raisesLeft;
-
 	protected int dealer = 0;
 	protected int player = 0;
-
-	/** A list of players who're playing in this game. */
 	protected final List<Player> players = new ArrayList<Player>();
-
-	/** The deck used for this game. */
-	protected final Deck deck = new Deck();
-
-	/** A list of observers registered for this game. */
+	protected UoADeck deck = new UoADeck();
 	private final List<GameObserver> observers = new ArrayList<GameObserver>();
 
 	public AbstractGame(final int numplayers, final int bigblind, final int ante, final int raises) {
-
+		super(Alesia.getInstance());
 		this.numplayers = numplayers;
 		this.bigblind = bigblind;
 		this.ante = ante;
 		this.raises = raises;
-
 		dealer = (int) Math.round(Math.random() * (numplayers - 1));
 	}
 
-	/** {@inheritDoc} */
 	public void addPlayer(final String name, final int cash, final PlayerController controller) {
-
 		if (numplayers <= players.size()) {
 			return;
 		}
-
-		final Player myPlayer = new Player(this, name, cash, controller);
-
+		final Player myPlayer = new Player(name, cash, controller);
 		addPlayer(myPlayer);
 	}
 
-	/** {@inheritDoc} */
 	public void addPlayer(final Player player) {
 		players.add(player);
 
 		notifyNewPlayer(player);
 	}
 
-	/** {@inheritDoc} */
 	public Player getDealer() {
 		if (players.size() > dealer) {
 			return players.get(dealer);
@@ -82,36 +65,28 @@ public abstract class AbstractGame implements Game {
 		}
 	}
 
-	/** {@inheritDoc} */
 	public int getBigBlind() {
 		return bigblind;
 	}
 
-	/** {@inheritDoc} */
 	public int getCurrentPot() {
 		int pot = 0;
-
 		for (Player myPlayer : players) {
 			pot += myPlayer.getBet();
 		}
-
 		return pot;
 	}
 
-	/** {@inheritDoc} */
 	public int getMaxBet() {
 		int max = 0;
-
 		for (Player player : players) {
 			if (player.getBet() > max) {
 				max = player.getBet();
 			}
 		}
-
 		return max;
 	}
 
-	/** {@inheritDoc} */
 	public int getNumPlayers() {
 		return numplayers;
 	}
@@ -120,14 +95,8 @@ public abstract class AbstractGame implements Game {
 	 * Clears and rebuilds the deck used for this game.
 	 */
 	protected void shuffle() {
-		deck.clear();
-		for (Suit suit : Suit.values()) {
-			for (Rank rank : Rank.values()) {
-				deck.add(new Card(suit, rank));
-			}
-		}
-
-		Collections.shuffle(deck);
+		deck = new UoADeck();
+		deck.shuffle();
 	}
 
 	/**
@@ -150,34 +119,10 @@ public abstract class AbstractGame implements Game {
 		for (int x = 0; x < numplayers; x++) {
 			final Player player = players.get((i + x) % numplayers);
 
-			if (!player.isOut() && !player.hasFolded()) {
-				final Card card = deck.deal();
-				card.setPublic(isPublic);
+			if (!player.isOut() && !player.isFolded()) {
+				final UoACard card = deck.deal();
 				player.dealCard(card);
-				notifyCardDealt(player, card);
-				notifyPlayerCardsUpdated();
-			}
-		}
-	}
-
-	protected void doDrawRound(final Player start, final int min, final int max, boolean replace) {
-		int i = players.indexOf(start);
-		for (int x = 0; x < numplayers; x++) {
-			final Player player = players.get((i + x) % numplayers);
-
-			if (!player.isOut() && !player.hasFolded()) {
-				notifyPlayersTurn(player);
-
-				final Deck discarded = player.doCardDiscard(min, max);
-
-				for (Card card : discarded) {
-					player.removeCard(card);
-					if (replace) {
-						player.dealCard(deck.deal());
-					}
-				}
-
-				notifyDiscards(player, discarded.size());
+				notifyGameStateChanged("cardDeal", player, card);
 			}
 		}
 	}
@@ -192,41 +137,34 @@ public abstract class AbstractGame implements Game {
 	 */
 	public int countPlayers(final boolean mustBeIn, final boolean mustNotFolded, final boolean mustNotAllIn) {
 		int count = 0;
-
 		for (Player player : players) {
-			if ((!mustBeIn || !player.isOut()) && (!mustNotFolded || !player.hasFolded())
+			if ((!mustBeIn || !player.isOut()) && (!mustNotFolded || !player.isFolded())
 					&& (!mustNotAllIn || !player.isAllIn())) {
 				count++;
 			}
 		}
-
 		return count;
 	}
 
-	/** {@inheritDoc} */
 	public List<Player> getPlayers() {
 		return players;
 	}
-
-	public void startTournament() {
-		while (countPlayers(true, false, false) > 1) {
-			startGame();
-		}
-	}
-
-	protected abstract void startGame();
 
 	protected void doAntes() {
 		if (ante > 0) {
 			for (Player player : players) {
 				if (!player.isOut()) {
 					player.forceBet(ante);
-					notifyPlaceBlind(player, ante, "ante");
+					notifyGameStateChanged("action_Ante", player, ante);
 				}
 			}
 		}
 	}
 
+	/**
+	 * perform small and big blind operations
+	 * 
+	 */
 	protected void doBlinds() {
 		if (countPlayers(true, false, false) > 2) {
 			if (!players.get((dealer + 1) % numplayers).isOut()) {
@@ -258,18 +196,16 @@ public abstract class AbstractGame implements Game {
 	}
 
 	protected void doSmallBlind(final Player player) {
-		player.forceBet(bigblind / 2);
-
-		notifyPlaceBlind(player, bigblind / 2, "small blind");
+		int value = bigblind / 2;
+		player.forceBet(value);
+		notifyGameStateChanged("action_SB", player, value);
 	}
 
 	protected void doBigBlind(final Player player) {
 		player.forceBet(bigblind);
-
-		notifyPlaceBlind(player, bigblind, "big blind");
+		notifyGameStateChanged("action_BB", player, bigblind);
 	}
 
-	@SuppressWarnings("fallthrough")
 	protected void waitForBets() {
 		int maxbet = getMaxBet();
 		int endPlayer = player;
@@ -281,24 +217,21 @@ public abstract class AbstractGame implements Game {
 			player = (player + 1) % numplayers;
 			myPlayer = players.get(player);
 
-			if (!myPlayer.hasFolded() && !myPlayer.isAllIn() && !myPlayer.isOut()) {
-				notifyPlayersTurn(myPlayer);
+			if (!myPlayer.isFolded() && !myPlayer.isAllIn() && !myPlayer.isOut()) {
+				notifyGameStateChanged("playerTurn", myPlayer, null);
 
 				if (playersHaveBet(maxbet)) {
 					// He can check or open
 					switch (myPlayer.doOpenCheck()) {
 						case CHECK :
 							// Do nothing
-
-							notifyCheck(myPlayer);
+							notifyGameStateChanged("action_Check", myPlayer, null);
 							break;
 						case OPEN :
 							int raiseAmount = myPlayer.getRaiseAmount(bigblind);
-
 							myPlayer.forceBet(raiseAmount);
 							maxbet += raiseAmount;
-
-							notifyOpen(myPlayer, raiseAmount);
+							notifyGameStateChanged("action_Open", myPlayer, raiseAmount);
 							break;
 					}
 				} else {
@@ -309,26 +242,20 @@ public abstract class AbstractGame implements Game {
 						case RAISE :
 							if (canRaise) {
 								myPlayer.forceBet(maxbet - myPlayer.getBet());
-
 								int raiseAmount = myPlayer.getRaiseAmount(bigblind);
 								myPlayer.forceBet(raiseAmount);
 								maxbet += raiseAmount;
-
-								notifyRaise(myPlayer, raiseAmount);
-
+								notifyGameStateChanged("action_Raise", myPlayer, raiseAmount);
 								raisesLeft--;
-
 								break;
 							} // Fall through: call instead
 						case CALL :
-							myPlayer.forceBet(maxbet - myPlayer.getBet());
-
-							notifyCall(myPlayer);
+							int value = maxbet - myPlayer.getBet();
+							myPlayer.forceBet(value);
+							notifyGameStateChanged("action_Call", myPlayer, value);
 							break;
 						case FOLD :
-							myPlayer.setFold();
-
-							notifyFold(myPlayer);
+							notifyGameStateChanged("action_fold", myPlayer, null);
 							break;
 					}
 				}
@@ -341,7 +268,11 @@ public abstract class AbstractGame implements Game {
 		} while (!playersHaveBet(maxbet) || (!reachedEnd && countPlayers(true, true, true) > 1));
 	}
 
-	protected void doDealerAdvance() {
+	/**
+	 * move the dealer button to the next position
+	 * 
+	 */
+	protected void advanceDealerButton() {
 		if (countPlayers(true, false, false) > 2) {
 			do {
 				dealer = (dealer + 1) % numplayers;
@@ -354,15 +285,14 @@ public abstract class AbstractGame implements Game {
 	}
 
 	protected void doBettingRound() {
-		notifyCommunityCardsUpdated();
-
+		notifyGameStateChanged("communityCardsUpdated", null, null);
 		player = dealer;
 		waitForBets();
 	}
 
 	protected boolean playersHaveBet(final int bet) {
 		for (Player player : players) {
-			if (!player.isOut() && !player.hasFolded() && !player.isAllIn()) {
+			if (!player.isOut() && !player.isFolded() && !player.isAllIn()) {
 				if (player.getBet() < bet) {
 					return false;
 				}
@@ -375,14 +305,12 @@ public abstract class AbstractGame implements Game {
 	protected void doShowDown() {
 		for (Player player : players) {
 			if (!player.isOut()) {
-				player.calculateBestDeck();
+				// TODO: ???????????????
+				// player.calculateBestDeck();
 			}
 		}
-
 		notifyShowdown();
-
 		doWinner();
-
 		for (Player player : players) {
 			player.resetBet();
 		}
@@ -396,14 +324,11 @@ public abstract class AbstractGame implements Game {
 		if (countPlayers(true, true, false) == 1) {
 			int pot = 0;
 			Player winner = null;
-
 			for (Player player : players) {
 				if (!player.isOut()) {
-
-					if (!player.hasFolded()) {
+					if (!player.isFolded()) {
 						winner = player;
 					}
-
 					if (doHalf) {
 						pot += player.getBet() / 2;
 					} else {
@@ -411,10 +336,8 @@ public abstract class AbstractGame implements Game {
 					}
 				}
 			}
-
 			winner.addCash(pot);
-			notifyWinner(winner);
-
+			notifyGameStateChanged("winner", winner, null);
 			return;
 		}
 
@@ -457,7 +380,7 @@ public abstract class AbstractGame implements Game {
 			List<Player> possibleWinners = new ArrayList<Player>();
 
 			for (Player player : tempPlayers) {
-				if (!player.hasFolded() && !player.isOut()) {
+				if (!player.isFolded() && !player.isOut()) {
 					possibleWinners.add(player);
 				}
 			}
@@ -470,14 +393,11 @@ public abstract class AbstractGame implements Game {
 
 				for (Player player : theseWinners) {
 					player.addCash(potsize);
-
-					notifyWinner(player);
+					notifyGameStateChanged("winner", player, null);
 				}
-
 			}
 
 			tempPlayers.removeAll(minPlayers);
-
 			maxbet = 0;
 			for (Integer bet : playerBets.values()) {
 				if (bet > maxbet) {
@@ -485,43 +405,33 @@ public abstract class AbstractGame implements Game {
 				}
 			}
 		}
-
 	}
 
-	/** {@inheritDoc} */
-	public Deck getBestDeck(final Deck cards) {
-		final Deck res = new Deck();
-		res.addAll(cards);
-		res.addAll(getCommunityCards());
-
-		return res;
-	}
-
-	/** {@inheritDoc} */
 	public boolean hasActiveHuman() {
 		for (Player player : players) {
-			if (player.isLocalHuman() && !player.isOut() && !player.hasFolded()) {
+			if (player.isLocalHuman() && !player.isOut() && !player.isFolded()) {
 				return true;
 			}
 		}
-
 		return false;
 	}
 
-	/** {@inheritDoc} */
-	public Hand getHand(final Deck deck) {
-		return new StandardHand(deck);
+	public void notifyGameStateChanged(String state, Player player, Object value) {
+		for (GameObserver observer : observers) {
+			observer.gameStateChanged(state, player, value);
+		}
 	}
 
-	/** {@inheritDoc} */
+	/**
+	 * return the hand name for the player
+	 * 
+	 */
 	public String getHandText(final Player player) {
-		String[] parts = getHand(player.getBestDeck()).getFriendlyName().split(": ");
-
+		String[] parts = null;// getHand(player.getBestDeck()).getFriendlyName().split(": ");
 		String res = "";
 		for (String part : parts) {
 			res = res + "\n" + part;
 		}
-
 		return res.substring(1);
 	}
 
@@ -543,49 +453,12 @@ public abstract class AbstractGame implements Game {
 
 	protected abstract boolean canDoBringIns();
 
-	/** {@inheritDoc} */
 	public void registerObserver(final GameObserver observer) {
 		observers.add(observer);
 	}
 
-	/** {@inheritDoc} */
 	public void unregisterObserver(final GameObserver observer) {
 		observers.remove(observer);
-	}
-
-	/**
-	 * Notifies all observers that the community cards have been upated.
-	 */
-	protected void notifyCommunityCardsUpdated() {
-		for (GameObserver observer : observers) {
-			observer.communityCardsUpdated();
-		}
-	}
-
-	/**
-	 * Notifies all observers that the player cards have been updated.
-	 */
-	protected void notifyPlayerCardsUpdated() {
-		for (GameObserver observer : observers) {
-			observer.playerCardsUpdated();
-		}
-	}
-
-	protected void notifyCardDealt(final Player player, final Card card) {
-		for (GameObserver observer : observers) {
-			observer.cardDealt(player, card);
-		}
-	}
-
-	/**
-	 * Notifies all observers that it is the specified player's turn.
-	 *
-	 * @param player The player whose turn it is
-	 */
-	protected void notifyPlayersTurn(final Player player) {
-		for (GameObserver observer : observers) {
-			observer.playersTurn(player);
-		}
 	}
 
 	/**
@@ -599,119 +472,9 @@ public abstract class AbstractGame implements Game {
 		}
 	}
 
-	/**
-	 * Notifies all observers that a new game has started.
-	 */
-	protected void notifyNewGame() {
-		for (GameObserver observer : observers) {
-			observer.newGame();
-		}
-	}
-
-	/**
-	 * Notifies all observers that a game has ended.
-	 */
-	protected void notifyEndGame() {
-		for (GameObserver observer : observers) {
-			observer.endGame();
-		}
-	}
-
-	/**
-	 * Notifies all observers that the specified player is now the dealer.
-	 *
-	 * @param player The player who is now the dealer
-	 */
-	protected void notifySetDealer(final Player player) {
-		for (GameObserver observer : observers) {
-			observer.setDealer(player);
-		}
-	}
-
-	/**
-	 * Notifies all observers that the specified player has payed the specified blind.
-	 *
-	 * @param player The player who's paying the blind
-	 * @param blind The value of the blind
-	 * @param name The name of the blind (big blind, small blind, ante, etc)
-	 */
-	protected void notifyPlaceBlind(final Player player, final int blind, final String name) {
-		for (GameObserver observer : observers) {
-			observer.placeBlind(player, blind, name);
-		}
-	}
-
-	/**
-	 * Notifies all observers that the specified player has raised.
-	 *
-	 * @param player The player that has raised
-	 * @param amount The amount the player raised by
-	 */
-	protected void notifyRaise(final Player player, final int amount) {
-		for (GameObserver observer : observers) {
-			observer.raise(player, amount);
-		}
-	}
-
-	/**
-	 * Notifies all observers that the specified player has folded.
-	 *
-	 * @param player The player who has folded
-	 */
-	protected void notifyFold(final Player player) {
-		for (GameObserver observer : observers) {
-			observer.fold(player);
-		}
-	}
-
-	/**
-	 * Notifies all observers that the specified player has called.
-	 *
-	 * @param player The player who has called
-	 */
-	protected void notifyCall(final Player player) {
-		for (GameObserver observer : observers) {
-			observer.call(player);
-		}
-	}
-
-	/**
-	 * Notifies all observers that the specified player has checked.
-	 *
-	 * @param player The player who has checked
-	 */
-	protected void notifyCheck(final Player player) {
-		for (GameObserver observer : observers) {
-			observer.check(player);
-		}
-	}
-
-	/**
-	 * Notifies all observers that the specified player has opened.
-	 *
-	 * @param player The player who has opened
-	 * @param amount The amount they opened at
-	 */
-	protected void notifyOpen(final Player player, final int amount) {
-		for (GameObserver observer : observers) {
-			observer.open(player, amount);
-		}
-	}
-
 	protected void notifyDiscards(final Player player, final int amount) {
 		for (GameObserver observer : observers) {
 			observer.discards(player, amount);
-		}
-	}
-
-	/**
-	 * Notifies all observers that the specified player is a winner.
-	 *
-	 * @param player The player who has won
-	 */
-	protected void notifyWinner(final Player player) {
-		for (GameObserver observer : observers) {
-			observer.winner(player);
 		}
 	}
 

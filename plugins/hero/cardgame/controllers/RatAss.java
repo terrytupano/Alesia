@@ -21,8 +21,7 @@ public class RatAss implements PlayerController {
 	public RatAss() {
 
 	}
-	
-	/** {@inheritDoc} */
+
 	@Override
 	public CallRaiseFold doCallRaiseFold(final int callAmount, final boolean canRaise) {
 		if (Math.random() < 0.3) {
@@ -36,7 +35,6 @@ public class RatAss implements PlayerController {
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public OpenCheck doOpenCheck() {
 		if (Math.random() < 0.5 || player.getCash() < game.getBigBlind()) {
@@ -46,40 +44,28 @@ public class RatAss implements PlayerController {
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public boolean shouldShowCards() {
 		return false;
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public void setPlayer(final Player player) {
 		this.player = player;
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public void setGame(final Game game) {
 		this.game = game;
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public int getRaise(final int minimum) {
 		return minimum;
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public boolean isLocalHuman() {
 		return false;
 	}
-
-	/** {@inheritDoc} */
-	@Override
-	public Deck discardCards(final int minimum, final int maximum) {
-		return new Deck(player.getCards().subList(0, minimum));
-	}
-
 }

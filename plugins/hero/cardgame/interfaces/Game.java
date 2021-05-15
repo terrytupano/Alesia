@@ -9,6 +9,7 @@ package plugins.hero.cardgame.interfaces;
 
 import java.util.List;
 
+import plugins.hero.UoAHandEval.*;
 import plugins.hero.cardgame.*;
 
 /**
@@ -17,11 +18,6 @@ import plugins.hero.cardgame.*;
  * @author Chris
  */
 public interface Game {
-    
-    /**
-     * Starts a new tournament.
-     */
-    void startTournament();
     
     /**
      * Returns the current total size of the pot.
@@ -49,7 +45,7 @@ public interface Game {
      *
      * @return The community cards
      */
-    Deck getCommunityCards();
+    UoAHand getCommunityCards();
     
     /**
      * Retrieves the size of the big blind for this game.
@@ -102,7 +98,7 @@ public interface Game {
      * @param cards The hole cards to be used
      * @return The best possible deck made up of the hole and community cards
      */
-    Deck getBestDeck(final Deck cards);
+//    Deck getBestDeck(final Deck cards);
     
     /**
      * Determines if this game has an active, local, human player.
@@ -117,7 +113,7 @@ public interface Game {
      * @param deck The deck to be used for the hand
      * @return A hand containing the cards in the specified deck
      */
-    Hand getHand(final Deck deck);
+//    Hand getHand(final Deck deck);
     
     /**
      * Retrieve the text to display for the specified player's hand(s).

@@ -12,7 +12,6 @@ package plugins.hero;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.*;
 import java.beans.*;
 import java.io.*;
 import java.text.*;
@@ -22,6 +21,7 @@ import java.util.logging.*;
 
 import javax.swing.*;
 import javax.swing.Action;
+import javax.swing.table.*;
 
 import org.jdesktop.application.*;
 
@@ -31,7 +31,10 @@ import core.*;
 import gui.console.*;
 import net.sourceforge.tess4j.*;
 import plugins.hero.UoAHandEval.*;
-import plugins.hero.cardgame.config.*;
+import plugins.hero.cardgame.games.*;
+import plugins.hero.cardgame.interfaces.*;
+import plugins.hero.ozsoft.texasholdem.*;
+import plugins.hero.ozsoft.texasholdem.bots.*;
 
 public class Hero extends TPlugin {
 
@@ -46,20 +49,20 @@ public class Hero extends TPlugin {
 	protected static ShapeAreas shapeAreas;
 	protected static Hashtable<String, Object> trooperParameters;
 	protected static String CARDS_FOLDER = "plugins/hero/cards/";
-	protected static TreeMap<String, BufferedImage> preparedCards;
 	private static DateFormat dateFormat;
 	/**
 	 * update every time the action {@link #runTrooper(ActionEvent)} is performed
 	 */
 	private static Date startDate = null;
 
+	private GameSimulatorPanel simulatorPanel;
+
 	public Hero() {
 		// iTesseract.setLanguage("pok");
 		dateFormat = DateFormat.getDateTimeInstance();
 		actionMap = Alesia.getInstance().getContext().getActionMap(this);
 		heroLogger = Logger.getLogger("Hero");
-		 consolePanel = new ConsolePanel(heroLogger);
-//		 preparedCards = TCVUtils.loadCards(CARDS_FOLDER);
+		consolePanel = new ConsolePanel(heroLogger);
 		TActionsFactory.insertActions(actionMap);
 	}
 
@@ -72,7 +75,7 @@ public class Hero extends TPlugin {
 		});
 		return load;
 	}
-	
+
 	/**
 	 * This metod is separated because maybe in the future we will need diferents robot for diferent graphics
 	 * configurations
@@ -88,12 +91,10 @@ public class Hero extends TPlugin {
 		}
 		return r;
 	}
-	
+
 	public static Date getStartDate() {
 		return startDate;
 	}
-
-
 	public static Tesseract getTesseract() {
 		// TODO: no visible performance improve by setting every sensor with his own teseract instance
 		Tesseract iTesseract = new Tesseract(); // JNA Interface Mapping
@@ -108,6 +109,7 @@ public class Hero extends TPlugin {
 		// iTesseract.setOcrEngineMode(0); // Run Tesseract only - fastest
 		return iTesseract;
 	}
+
 	/**
 	 * return the string representation of a list of cards
 	 * 
@@ -120,19 +122,37 @@ public class Hero extends TPlugin {
 		cards.forEach(c -> sb.append(c.toString() + " "));
 		return sb.toString().trim();
 	}
-
 	public static String parseHands(List<UoAHand> hands) {
 		String hs = hands.toString();
 		hs = hs.replaceAll("[ ]", "");
 		hs = hs.replace(',', ' ');
-		return hs.substring(1, hs.length()-1);
+		return hs.substring(1, hs.length() - 1);
 	}
+
+	/**
+	 * parse the variable <code>table.parameters</code> inserting in the <code>values</code> hastable:
+	 * <li><code>table.buyIn</code>
+	 * <li><code>table.bigBlid</code>
+	 * <li><code>table.smallBlid</code>
+	 * <li><code>table.currency</code> (simbol if its present of "" if not)
+	 * 
+	 * @param values - values
+	 */
+	public static void parseTableParameters(Hashtable<String, Object> values) {
+		String[] tparms = values.get("table.parameters").toString().split("[,]");
+		values.put("table.buyIn", new Double(tparms[0]));
+		values.put("table.bigBlid", new Double(tparms[1]));
+		values.put("table.smallBlid", new Double(tparms[2]));
+		// simbol if its present of "" if not
+		values.put("table.currency", tparms.length > 3 ? tparms[3] : "");
+	}
+
 	public static String parseToUnicode(String hand) {
 		String uni = new String(hand);
-		uni = uni.replace('s', '\u2660');//u2660
-		uni = uni.replace('c', '\u2663');//u2663
-		uni = uni.replace('h', '\u2665');//u2665
-		uni = uni.replace('d', '\u2666');//u2666
+		uni = uni.replace('s', '\u2660');// u2660
+		uni = uni.replace('c', '\u2663');// u2663
+		uni = uni.replace('h', '\u2665');// u2665
+		uni = uni.replace('d', '\u2666');// u2666
 		return uni;
 	}
 
@@ -150,36 +170,11 @@ public class Hero extends TPlugin {
 		return dateFormat.format(startDate);
 	}
 
-	private GameSimulatorPanel simulatorPanel;
 	@org.jdesktop.application.Action
 	public void gameSimulator(ActionEvent event) {
 		this.simulatorPanel = new GameSimulatorPanel();
 		Alesia.getInstance().getMainPanel().setContentPanel(simulatorPanel);
 	}
-	
-	/**
-	 * parse the variable <code>table.parameters</code> inserting in the <code>values</code> hastable:
-	 * <li> <code>table.buyIn</code>
-	 * <li> <code>table.bigBlid</code>
-	 * <li> <code>table.smallBlid</code>
-	 * <li> <code>table.currency</code> (simbol if its present of "" if not)
-	 * 
-	 * @param values - values
-	 */
-	public static void parseTableParameters(Hashtable<String, Object> values) {
-		String[] tparms = values.get("table.parameters").toString().split("[,]");
-		values.put("table.buyIn", new Double(tparms[0]));
-		values.put("table.bigBlid", new Double(tparms[1]));
-		values.put("table.smallBlid", new Double(tparms[2]));
-		// simbol if its present of "" if not
-		values.put("table.currency", tparms.length > 3 ? tparms[3] : "");
-	}
-	
-	@org.jdesktop.application.Action
-	public void startSimulation(ActionEvent event) {
-		simulatorPanel.startGame();
-	}
-
 
 	@Override
 	public ArrayList<javax.swing.Action> getUI(String type) {
@@ -208,7 +203,7 @@ public class Hero extends TPlugin {
 		if (t != null) {
 			boolean pause = !t.isPaused();
 			AbstractButton ab = (AbstractButton) event.getSource();
-//			ab.setSelectedIcon(TResources.getSmallIcon("plugins/hero/resources/ResumeTrooper"));
+			// ab.setSelectedIcon(TResources.getSmallIcon("plugins/hero/resources/ResumeTrooper"));
 			ab.setSelectedIcon(TUIUtils.getSmallFontIcon('\uf01d'));
 			ab.setSelected(pause);
 			t.pause(pause);
@@ -229,6 +224,48 @@ public class Hero extends TPlugin {
 
 		isTestMode = false;
 		return start();
+	}
+
+	@org.jdesktop.application.Action
+	public Task startSimulation(ActionEvent event) {
+		try {
+			Hashtable<String, Object> values = simulatorPanel.getValues();
+			TableModel model = simulatorPanel.getPlayersTable().getModel();
+
+			int buy = ((Double) values.get("table.buyIn")).intValue();
+			int bb = ((Double) values.get("table.bigBlid")).intValue();
+			int sb = ((Double) values.get("table.smallBlid")).intValue();
+			int maxR = ((Long) values.get("play.maxRaise")).intValue();
+//			TODO: add the iption for limit and no limit
+			Table game = new Table(TableType.NO_LIMIT, bb);
+
+			for (int i = 0; i < model.getRowCount(); i++) {
+				if ((Boolean) model.getValueAt(i, 2)) {
+					String name = model.getValueAt(i, 0).toString();
+					String bCls = model.getValueAt(i, 1).toString();
+					Class cls = Class.forName("plugins.hero.ozsoft.texasholdem." + bCls);
+					Bot bot = (Bot) cls.newInstance();
+					Player p = new Player(name, buy, bot);
+					game.addPlayer(p);
+				}
+			}
+			
+
+			GameWindow window = new GameWindow();
+			window.setTitle("HoldEm " + buy + " " + bb + "/" + sb);
+			window.addWindowListener(new WindowAdapter() {
+				@Override
+				public void windowClosing(WindowEvent e) {
+					((JDialog) e.getSource()).dispose();
+					game.cancel(true);
+				}
+			});
+			window.setVisible(true);
+			return game;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	@org.jdesktop.application.Action
