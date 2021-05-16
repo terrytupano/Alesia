@@ -36,16 +36,6 @@ public class PlayerPanel extends JPanel {
 	/** The serial version UID. */
 	private static final long serialVersionUID = 5851738752943098606L;
 
-	/** Filled dealer button image when player is dealer. */
-	private static final Icon BUTTON_PRESENT_ICON = ResourceManager.getIcon("images/button_present.png");
-
-	/** Empty dealer button image when player is not dealer. */
-	private static final Icon BUTTON_ABSENT_ICON = ResourceManager.getIcon("images/button_absent.png");
-
-	private static final Icon CARD_PLACEHOLDER_ICON = ResourceManager.getIcon("images/card_placeholder.png");
-
-	private static final Icon CARD_BACK_ICON = ResourceManager.getIcon("images/card_back.png");
-
 	/** The border. */
 	private static final Border BORDER = new EmptyBorder(10, 10, 10, 10);
 
@@ -83,10 +73,14 @@ public class PlayerPanel extends JPanel {
 		cashLabel = new MyLabel();
 		actionLabel = new MyLabel();
 		betLabel = new MyLabel();
-		card1Label = new JLabel(CARD_PLACEHOLDER_ICON);
-		card2Label = new JLabel(CARD_PLACEHOLDER_ICON);
-		dealerButton = new JLabel(BUTTON_ABSENT_ICON);
-
+		// card1Label = new JLabel(CARD_PLACEHOLDER_ICON);
+		// card2Label = new JLabel(CARD_PLACEHOLDER_ICON);
+		card1Label = new JLabel();
+		card2Label = new JLabel();
+		// dealerButton = new JLabel(TableDialog.BUTTON_ABSENT_ICON);
+		dealerButton = new JLabel();
+		dealerButton.setMinimumSize(new Dimension(TableDialog.BUTTON_PRESENT_ICON.getIconWidth(),
+				TableDialog.BUTTON_PRESENT_ICON.getIconHeight()));
 		gc.gridx = 0;
 		gc.gridy = 0;
 		gc.gridwidth = 2;
@@ -180,17 +174,17 @@ public class PlayerPanel extends JPanel {
 			UoAHand hand = player.getHand();
 			if (hand.size() == 2) {
 				// Visible cards.
-				card1Label.setIcon(ResourceManager.getCardImage(hand.getCard(1)));
-				card2Label.setIcon(ResourceManager.getCardImage(hand.getCard(1)));
+				card1Label.setIcon(TableDialog.cardsBuffer.get(hand.getCard(1).toString()));
+				card2Label.setIcon(TableDialog.cardsBuffer.get(hand.getCard(2).toString()));
 			} else {
 				// Hidden cards (face-down).
-				card1Label.setIcon(CARD_BACK_ICON);
-				card2Label.setIcon(CARD_BACK_ICON);
+				card1Label.setIcon(TableDialog.CARD_BACK_ICON);
+				card2Label.setIcon(TableDialog.CARD_BACK_ICON);
 			}
 		} else {
 			// No cards.
-			card1Label.setIcon(CARD_PLACEHOLDER_ICON);
-			card2Label.setIcon(CARD_PLACEHOLDER_ICON);
+			card1Label.setIcon(null);
+			card2Label.setIcon(null);
 		}
 	}
 
@@ -201,9 +195,10 @@ public class PlayerPanel extends JPanel {
 	 */
 	public void setDealer(boolean isDealer) {
 		if (isDealer) {
-			dealerButton.setIcon(BUTTON_PRESENT_ICON);
+			dealerButton.setIcon(TableDialog.BUTTON_PRESENT_ICON);
 		} else {
-			dealerButton.setIcon(BUTTON_ABSENT_ICON);
+			dealerButton.setIcon(null);
+//			dealerButton.setIcon(TableDialog.BUTTON_ABSENT_ICON);
 		}
 	}
 

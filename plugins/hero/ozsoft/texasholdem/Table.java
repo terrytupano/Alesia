@@ -41,7 +41,6 @@ import org.jdesktop.application.*;
 import core.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.texasholdem.actions.*;
-import plugins.hero.ozsoft.texasholdem.actions.PlayerAction;
 
 /**
  * Limit Texas Hold'em poker table. <br />
@@ -75,7 +74,7 @@ public class Table extends Task {
 	private final UoADeck deck;
 
 	/** The community cards on the board. */
-	private final List<UoACard> board;
+	private final UoAHand board;
 
 	/** The current dealer position. */
 	private int dealerPosition;
@@ -104,6 +103,8 @@ public class Table extends Task {
 	/** Number of raises in the current betting round. */
 	private int raises;
 
+	private int speed = 500;
+
 	/**
 	 * Constructor.
 	 * 
@@ -112,14 +113,17 @@ public class Table extends Task {
 	public Table(TableType type, int bigBlind) {
 		super(Alesia.getInstance());
 		this.tableType = type;
-		this.bigBlind = bigBlind;
+		this.bigBlind = bigBlind; 
 		players = new ArrayList<Player>();
 		activePlayers = new ArrayList<Player>();
 		deck = new UoADeck();
-		board = new ArrayList<UoACard>();
 		pots = new ArrayList<Pot>();
+		board = new UoAHand();
 	}
 
+	public void setSpeed(int speed) {
+		this.speed = speed;
+	}
 	/**
 	 * Adds a player.
 	 * 
@@ -134,126 +138,47 @@ public class Table extends Task {
 	}
 
 	/**
-	 * Plays a single hand.
+	 * Contributes to the pot.
+	 * 
+	 * @param amount The amount to contribute.
 	 */
-	private void playHand() {
-		resetHand();
-
-		// Small blind.
-		if (activePlayers.size() > 2) {
-			rotateActor();
-		}
-		postSmallBlind();
-
-		// Big blind.
-		rotateActor();
-		postBigBlind();
-
-		// Pre-Flop.
-		dealHoleCards();
-		doBettingRound();
-
-		// Flop.
-		if (activePlayers.size() > 1) {
-			bet = 0;
-			dealCommunityCards("Flop", 3);
-			doBettingRound();
-
-			// Turn.
-			if (activePlayers.size() > 1) {
-				bet = 0;
-				dealCommunityCards("Turn", 1);
-				minBet = 2 * bigBlind;
-				doBettingRound();
-
-				// River.
-				if (activePlayers.size() > 1) {
-					bet = 0;
-					dealCommunityCards("River", 1);
-					doBettingRound();
-
-					// Showdown.
-					if (activePlayers.size() > 1) {
-						bet = 0;
-						doShowdown();
-					}
+	private void contributePot(int amount) {
+		for (Pot pot : pots) {
+			if (!pot.hasContributer(actor)) {
+				int potBet = pot.getBet();
+				if (amount >= potBet) {
+					// Regular call, bet or raise.
+					pot.addContributer(actor);
+					amount -= pot.getBet();
+				} else {
+					// Partial call (all-in); redistribute pots.
+					pots.add(pot.split(actor, amount));
+					amount = 0;
 				}
 			}
-		}
-	}
-
-	/**
-	 * Resets the game for a new hand.
-	 */
-	private void resetHand() {
-		// Clear the board.
-		board.clear();
-		pots.clear();
-		notifyBoardUpdated();
-
-		// Determine the active players.
-		activePlayers.clear();
-		for (Player player : players) {
-			player.resetHand();
-			// Player must be able to afford at least the big blind.
-			if (player.getCash() >= bigBlind) {
-				activePlayers.add(player);
+			if (amount <= 0) {
+				break;
 			}
 		}
+		if (amount > 0) {
+			Pot pot = new Pot(amount);
+			pot.addContributer(actor);
+			pots.add(pot);
+		}
+	}
 
-		// Rotate the dealer button.
-		dealerPosition = (dealerPosition + 1) % activePlayers.size();
-		dealer = activePlayers.get(dealerPosition);
-
-		// Shuffle the deck.
-		deck.shuffle();
-
-		// Determine the first player to act.
-		actorPosition = dealerPosition;
-		actor = activePlayers.get(actorPosition);
-
-		// Set the initial bet to the big blind.
-		minBet = bigBlind;
-		bet = minBet;
-
-		// Notify all clients a new hand has started.
-		for (Player player : players) {
-			player.getClient().handStarted(dealer);
+	/**
+	 * Deals a number of community cards.
+	 * 
+	 * @param phaseName The name of the phase.
+	 * @param noOfCards The number of cards to deal.
+	 */
+	private void dealCommunityCards(String phaseName, int noOfCards) {
+		for (int i = 0; i < noOfCards; i++) {
+			board.addCard(deck.deal());
 		}
 		notifyPlayersUpdated(false);
-		notifyMessage("New hand, %s is the dealer.", dealer);
-	}
-
-	/**
-	 * Rotates the position of the player in turn (the actor).
-	 */
-	private void rotateActor() {
-		actorPosition = (actorPosition + 1) % activePlayers.size();
-		actor = activePlayers.get(actorPosition);
-		for (Player player : players) {
-			player.getClient().actorRotated(actor);
-		}
-	}
-
-	/**
-	 * Posts the small blind.
-	 */
-	private void postSmallBlind() {
-		final int smallBlind = bigBlind / 2;
-		actor.postSmallBlind(smallBlind);
-		contributePot(smallBlind);
-		notifyBoardUpdated();
-		notifyPlayerActed();
-	}
-
-	/**
-	 * Posts the big blind.
-	 */
-	private void postBigBlind() {
-		actor.postBigBlind(bigBlind);
-		contributePot(bigBlind);
-		notifyBoardUpdated();
-		notifyPlayerActed();
+		notifyMessage("%s deals the %s.", dealer, phaseName);
 	}
 
 	/**
@@ -269,20 +194,6 @@ public class Table extends Task {
 		System.out.println();
 		notifyPlayersUpdated(false);
 		notifyMessage("%s deals the hole cards.", dealer);
-	}
-
-	/**
-	 * Deals a number of community cards.
-	 * 
-	 * @param phaseName The name of the phase.
-	 * @param noOfCards The number of cards to deal.
-	 */
-	private void dealCommunityCards(String phaseName, int noOfCards) {
-		for (int i = 0; i < noOfCards; i++) {
-			board.add(deck.deal());
-		}
-		notifyPlayersUpdated(false);
-		notifyMessage("%s deals the %s.", dealer, phaseName);
 	}
 
 	/**
@@ -312,7 +223,7 @@ public class Table extends Task {
 
 		while (playersToAct > 0) {
 			try {
-				Thread.sleep(500);
+				Thread.sleep(speed);
 			} catch (Exception e) {
 				// TODO: handle exception
 			}
@@ -419,72 +330,6 @@ public class Table extends Task {
 	}
 
 	/**
-	 * Returns the allowed actions of a specific player.
-	 * 
-	 * @param player The player.
-	 * 
-	 * @return The allowed actions.
-	 */
-	private Set<PlayerAction> getAllowedActions(Player player) {
-		Set<PlayerAction> actions = new HashSet<PlayerAction>();
-		if (player.isAllIn()) {
-			actions.add(PlayerAction.CHECK);
-		} else {
-			int actorBet = actor.getBet();
-			if (bet == 0) {
-				actions.add(PlayerAction.CHECK);
-				if (tableType == TableType.NO_LIMIT || raises < MAX_RAISES || activePlayers.size() == 2) {
-					actions.add(PlayerAction.BET);
-				}
-			} else {
-				if (actorBet < bet) {
-					actions.add(PlayerAction.CALL);
-					if (tableType == TableType.NO_LIMIT || raises < MAX_RAISES || activePlayers.size() == 2) {
-						actions.add(PlayerAction.RAISE);
-					}
-				} else {
-					actions.add(PlayerAction.CHECK);
-					if (tableType == TableType.NO_LIMIT || raises < MAX_RAISES || activePlayers.size() == 2) {
-						actions.add(PlayerAction.RAISE);
-					}
-				}
-			}
-			actions.add(PlayerAction.FOLD);
-		}
-		return actions;
-	}
-
-	/**
-	 * Contributes to the pot.
-	 * 
-	 * @param amount The amount to contribute.
-	 */
-	private void contributePot(int amount) {
-		for (Pot pot : pots) {
-			if (!pot.hasContributer(actor)) {
-				int potBet = pot.getBet();
-				if (amount >= potBet) {
-					// Regular call, bet or raise.
-					pot.addContributer(actor);
-					amount -= pot.getBet();
-				} else {
-					// Partial call (all-in); redistribute pots.
-					pots.add(pot.split(actor, amount));
-					amount = 0;
-				}
-			}
-			if (amount <= 0) {
-				break;
-			}
-		}
-		if (amount > 0) {
-			Pot pot = new Pot(amount);
-			pot.addContributer(actor);
-			pots.add(pot);
-		}
-	}
-
-	/**
 	 * Performs the showdown.
 	 */
 	private void doShowdown() {
@@ -522,11 +367,8 @@ public class Table extends Task {
 		// Players automatically show or fold in order.
 		boolean firstToShow = true;
 		int bestHandValue = -1;
-		UoAHandEvaluator evaluator = new UoAHandEvaluator();
 		for (Player playerToShow : showingPlayers) {
-UoAHand			hand = playerToShow.getHand();
-			UoAHandEvaluator.rankHand(hand)
-			HandValue handValue = new HandValue(hand);
+			UoAHand hand = new UoAHand(board + " " + playerToShow.getHand());
 			boolean doShow = ALWAYS_CALL_SHOWDOWN;
 			if (!doShow) {
 				if (playerToShow.isAllIn()) {
@@ -536,13 +378,13 @@ UoAHand			hand = playerToShow.getHand();
 				} else if (firstToShow) {
 					// First player must always show.
 					doShow = true;
-					bestHandValue = handValue.getValue();
+					bestHandValue = UoAHandEvaluator.rankHand(hand);;
 					firstToShow = false;
 				} else {
 					// Remaining players only show when having a chance to win.
-					if (handValue.getValue() >= bestHandValue) {
+					if (UoAHandEvaluator.rankHand(hand) >= bestHandValue) {
 						doShow = true;
-						bestHandValue = handValue.getValue();
+						bestHandValue = UoAHandEvaluator.rankHand(hand);;
 					}
 				}
 			}
@@ -551,7 +393,7 @@ UoAHand			hand = playerToShow.getHand();
 				for (Player player : players) {
 					player.getClient().playerUpdated(playerToShow);
 				}
-				notifyMessage("%s has %s.", playerToShow, handValue.getDescription());
+				notifyMessage("%s has %s.", playerToShow, UoAHandEvaluator.nameHand(hand));
 			} else {
 				// Fold.
 				playerToShow.setCards(null);
@@ -569,14 +411,14 @@ UoAHand			hand = playerToShow.getHand();
 		}
 
 		// Sort players by hand value (highest to lowest).
-		Map<HandValue, List<Player>> rankedPlayers = new TreeMap<HandValue, List<Player>>();
+		Map<Integer, List<Player>> rankedPlayers = new TreeMap<Integer, List<Player>>(Comparator.reverseOrder());
 		for (Player player : activePlayers) {
 			// Create a hand with the community cards and the player's hole cards.
-			Hand hand = new Hand(board);
-			hand.addCards(player.getCards());
+			UoAHand hand = new UoAHand(board + " " + player.getHand());
 			// Store the player together with other players with the same hand value.
-			HandValue handValue = new HandValue(hand);
+			// HandValue handValue = new HandValue(hand);
 			// System.out.format("[DEBUG] %s: %s\n", player, handValue);
+			int handValue = UoAHandEvaluator.rankHand(hand);
 			List<Player> playerList = rankedPlayers.get(handValue);
 			if (playerList == null) {
 				playerList = new ArrayList<Player>();
@@ -588,7 +430,7 @@ UoAHand			hand = playerToShow.getHand();
 		// Per rank (single or multiple winners), calculate pot distribution.
 		int totalPot = getTotalPot();
 		Map<Player, Integer> potDivision = new HashMap<Player, Integer>();
-		for (HandValue handValue : rankedPlayers.keySet()) {
+		for (Integer handValue : rankedPlayers.keySet()) {
 			List<Player> winners = rankedPlayers.get(handValue);
 			for (Pot pot : pots) {
 				// Determine how many winners share this pot.
@@ -657,26 +499,39 @@ UoAHand			hand = playerToShow.getHand();
 	}
 
 	/**
-	 * Notifies listeners with a custom game message.
+	 * Returns the allowed actions of a specific player.
 	 * 
-	 * @param message The formatted message.
-	 * @param args Any arguments.
+	 * @param player The player.
+	 * 
+	 * @return The allowed actions.
 	 */
-	private void notifyMessage(String message, Object... args) {
-		message = String.format(message, args);
-		for (Player player : players) {
-			player.getClient().messageReceived(message);
+	private Set<PlayerAction> getAllowedActions(Player player) {
+		Set<PlayerAction> actions = new HashSet<PlayerAction>();
+		if (player.isAllIn()) {
+			actions.add(PlayerAction.CHECK);
+		} else {
+			int actorBet = actor.getBet();
+			if (bet == 0) {
+				actions.add(PlayerAction.CHECK);
+				if (tableType == TableType.NO_LIMIT || raises < MAX_RAISES || activePlayers.size() == 2) {
+					actions.add(PlayerAction.BET);
+				}
+			} else {
+				if (actorBet < bet) {
+					actions.add(PlayerAction.CALL);
+					if (tableType == TableType.NO_LIMIT || raises < MAX_RAISES || activePlayers.size() == 2) {
+						actions.add(PlayerAction.RAISE);
+					}
+				} else {
+					actions.add(PlayerAction.CHECK);
+					if (tableType == TableType.NO_LIMIT || raises < MAX_RAISES || activePlayers.size() == 2) {
+						actions.add(PlayerAction.RAISE);
+					}
+				}
+			}
+			actions.add(PlayerAction.FOLD);
 		}
-	}
-
-	/**
-	 * Notifies clients that the board has been updated.
-	 */
-	private void notifyBoardUpdated() {
-		int pot = getTotalPot();
-		for (Player player : players) {
-			player.getClient().boardUpdated(board, bet, pot);
-		}
+		return actions;
 	}
 
 	/**
@@ -690,6 +545,44 @@ UoAHand			hand = playerToShow.getHand();
 			totalPot += pot.getValue();
 		}
 		return totalPot;
+	}
+
+	/**
+	 * Notifies clients that the board has been updated.
+	 */
+	private void notifyBoardUpdated() {
+		int pot = getTotalPot();
+		for (Player player : players) {
+			player.getClient().boardUpdated(board, bet, pot);
+		}
+	}
+
+	/**
+	 * Notifies listeners with a custom game message.
+	 * 
+	 * @param message The formatted message.
+	 * @param args Any arguments.
+	 */
+	private void notifyMessage(String message, Object... args) {
+		message = String.format(message, args);
+		for (Player player : players) {
+			player.getClient().messageReceived(message);
+		}
+		try {
+			Thread.sleep(speed);
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+
+	/**
+	 * Notifies clients that a player has acted.
+	 */
+	private void notifyPlayerActed() {
+		for (Player p : players) {
+			Player playerInfo = p.equals(actor) ? actor : actor.publicClone();
+			p.getClient().playerActed(playerInfo);
+		}
 	}
 
 	/**
@@ -711,14 +604,125 @@ UoAHand			hand = playerToShow.getHand();
 			}
 		}
 	}
+	/**
+	 * Plays a single hand.
+	 */
+	private void playHand() {
+		resetHand();
+
+		// Small blind.
+		if (activePlayers.size() > 2) {
+			rotateActor();
+		}
+		postSmallBlind();
+
+		// Big blind.
+		rotateActor();
+		postBigBlind();
+
+		// Pre-Flop.
+		dealHoleCards();
+		doBettingRound();
+
+		// Flop.
+		if (activePlayers.size() > 1) {
+			bet = 0;
+			dealCommunityCards("Flop", 3);
+			doBettingRound();
+
+			// Turn.
+			if (activePlayers.size() > 1) {
+				bet = 0;
+				dealCommunityCards("Turn", 1);
+				minBet = 2 * bigBlind;
+				doBettingRound();
+
+				// River.
+				if (activePlayers.size() > 1) {
+					bet = 0;
+					dealCommunityCards("River", 1);
+					doBettingRound();
+
+					// Showdown.
+					if (activePlayers.size() > 1) {
+						bet = 0;
+						doShowdown();
+					}
+				}
+			}
+		}
+	}
+	/**
+	 * Posts the big blind.
+	 */
+	private void postBigBlind() {
+		actor.postBigBlind(bigBlind);
+		contributePot(bigBlind);
+		notifyBoardUpdated();
+		notifyPlayerActed();
+	}
 
 	/**
-	 * Notifies clients that a player has acted.
+	 * Posts the small blind.
 	 */
-	private void notifyPlayerActed() {
-		for (Player p : players) {
-			Player playerInfo = p.equals(actor) ? actor : actor.publicClone();
-			p.getClient().playerActed(playerInfo);
+	private void postSmallBlind() {
+		final int smallBlind = bigBlind / 2;
+		actor.postSmallBlind(smallBlind);
+		contributePot(smallBlind);
+		notifyBoardUpdated();
+		notifyPlayerActed();
+	}
+
+	/**
+	 * Resets the game for a new hand.
+	 */
+	private void resetHand() {
+		// Clear the board.
+		board.makeEmpty();
+		pots.clear();
+		notifyBoardUpdated();
+
+		// Determine the active players.
+		activePlayers.clear();
+		for (Player player : players) {
+			player.resetHand();
+			// Player must be able to afford at least the big blind.
+			if (player.getCash() >= bigBlind) {
+				activePlayers.add(player);
+			}
+		}
+
+		// Rotate the dealer button.
+		dealerPosition = (dealerPosition + 1) % activePlayers.size();
+		dealer = activePlayers.get(dealerPosition);
+
+		// Shuffle the deck.
+		deck.shuffle();
+
+		// Determine the first player to act.
+		actorPosition = dealerPosition;
+		actor = activePlayers.get(actorPosition);
+
+		// Set the initial bet to the big blind.
+		minBet = bigBlind;
+		bet = minBet;
+
+		// Notify all clients a new hand has started.
+		for (Player player : players) {
+			player.getClient().handStarted(dealer);
+		}
+		notifyPlayersUpdated(false);
+		notifyMessage("New hand, %s is the dealer.", dealer);
+	}
+
+	/**
+	 * Rotates the position of the player in turn (the actor).
+	 */
+	private void rotateActor() {
+		actorPosition = (actorPosition + 1) % activePlayers.size();
+		actor = activePlayers.get(actorPosition);
+		for (Player player : players) {
+			player.getClient().actorRotated(actor);
 		}
 	}
 
@@ -744,7 +748,7 @@ UoAHand			hand = playerToShow.getHand();
 		}
 
 		// Game over.
-		board.clear();
+		board.makeEmpty();
 		pots.clear();
 		bet = 0;
 		notifyBoardUpdated();

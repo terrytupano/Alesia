@@ -18,10 +18,10 @@
 package plugins.hero.ozsoft.texasholdem.gui;
 
 import java.awt.*;
-import java.util.List;
 
 import javax.swing.*;
 
+import core.*;
 import plugins.hero.UoAHandEval.*;
 
 /**
@@ -124,7 +124,11 @@ public class BoardPanel extends JPanel {
 		// The five card positions.
 		cardLabels = new JLabel[NO_OF_CARDS];
 		for (int i = 0; i < 5; i++) {
-			cardLabels[i] = new JLabel(ResourceManager.getIcon("images/card_placeholder.png"));
+			// cardLabels[i] = new JLabel(ResourceManager.getIcon("images/card_placeholder.png"));
+			// cardLabels[i] = new JLabel(ResourceManager.getIcon("images/card_placeholder.png"));
+			cardLabels[i] = new JLabel();
+			cardLabels[i].setPreferredSize(new Dimension(TableDialog.CARD_WIDTH, TableDialog.CARD_HEIGHT));
+			cardLabels[i].setMinimumSize(new Dimension(TableDialog.CARD_WIDTH, TableDialog.CARD_HEIGHT));
 			gc.gridx = i;
 			gc.gridy = 2;
 			gc.gridwidth = 1;
@@ -175,7 +179,7 @@ public class BoardPanel extends JPanel {
 	 * @param bet The bet.
 	 * @param pot The pot.
 	 */
-	public void update(UoAHand hand , int bet, int pot) {
+	public void update(UoAHand hand, int bet, int pot) {
 		if (bet == 0) {
 			betLabel.setText(" ");
 		} else {
@@ -189,9 +193,10 @@ public class BoardPanel extends JPanel {
 		int noOfCards = (hand == null) ? 0 : hand.size();
 		for (int i = 0; i < NO_OF_CARDS; i++) {
 			if (i < noOfCards) {
-				cardLabels[i].setIcon(ResourceManager.getCardImage(cards.get(i)));
+				cardLabels[i].setIcon(TResources.getIcon("playCards/" + hand.getCard(i + 1)));
 			} else {
-				cardLabels[i].setIcon(ResourceManager.getIcon("images/card_placeholder.png"));
+				// cardLabels[i].setIcon(ResourceManager.getIcon("images/card_placeholder.png"));
+				cardLabels[i].setIcon(null);
 			}
 		}
 	}
@@ -206,6 +211,7 @@ public class BoardPanel extends JPanel {
 			messageLabel.setText(" ");
 		} else {
 			messageLabel.setText(message);
+			System.out.println(message);
 		}
 	}
 

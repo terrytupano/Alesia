@@ -18,10 +18,13 @@
 package plugins.hero.ozsoft.texasholdem.gui;
 
 import java.awt.*;
+import java.io.*;
 import java.util.*;
 import java.util.List;
 
 import javax.swing.*;
+
+import com.alee.utils.*;
 
 import core.*;
 import plugins.hero.UoAHandEval.*;
@@ -62,6 +65,16 @@ public class TableDialog extends JDialog implements Client {
 	private String actorName;
 
 	private Client proxyClient;
+	
+	/** table Related images. */
+	public static final Icon BUTTON_PRESENT_ICON = TResources.getIcon("button_dealer");
+//	public  static final Icon BUTTON_ABSENT_ICON = new ImageIcon();
+	public static final Icon CARD_PLACEHOLDER_ICON = new ImageIcon();
+	public static final Icon CARD_BACK_ICON = TResources.getIcon("playCards/cardback");
+	public static final Map<String, ImageIcon> cardsBuffer = new HashMap<String, ImageIcon>();
+	public static final int CARD_WIDTH = CARD_BACK_ICON.getIconWidth();
+	public static final int CARD_HEIGHT = CARD_BACK_ICON.getIconHeight();
+
 
 	/**
 	 * Constructor.
@@ -69,6 +82,12 @@ public class TableDialog extends JDialog implements Client {
 	// public TableDialog(Map<String, Player> players) {
 	public TableDialog(Table game) {
 		super(Alesia.getInstance().mainFrame);
+		// cache all cards
+		List<File> files = FileUtils.findFilesRecursively("plugins/hero/resources/playCards", f -> true);
+		for (File file : files) {
+			cardsBuffer.put(file.getName().substring(0, file.getName().length() - 4), ImageUtils.getImageIcon(file));
+		}
+
 		getContentPane().setBackground(UIConstants.TABLE_COLOR);
 		setLayout(new GridBagLayout());
 

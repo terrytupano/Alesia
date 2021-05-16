@@ -113,7 +113,7 @@ public class Player {
 				hand.addCard(cards.get(0));
 				hand.addCard(cards.get(1));
 				hasCards = true;
-				System.out.format("[CHEAT] %s's cards:\t%s\n", name, hand);
+//				System.out.format("[CHEAT] %s's cards:\t%s\n", name, hand);
 			} else {
 				throw new IllegalArgumentException("Invalid number of cards");
 			}
