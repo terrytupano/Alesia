@@ -31,9 +31,9 @@ import core.*;
 import gui.console.*;
 import net.sourceforge.tess4j.*;
 import plugins.hero.UoAHandEval.*;
-import plugins.hero.ozsoft.texasholdem.*;
-import plugins.hero.ozsoft.texasholdem.bots.*;
-import plugins.hero.ozsoft.texasholdem.gui.*;
+import plugins.hero.ozsoft.*;
+import plugins.hero.ozsoft.bots.*;
+import plugins.hero.ozsoft.gui.*;
 
 public class Hero extends TPlugin {
 
@@ -44,11 +44,11 @@ public class Hero extends TPlugin {
 	protected static HeroPanel heroPanel;
 	protected static File tableFile;
 	protected static boolean isTestMode;
-	protected static SensorsArray sensorsArray;
 	protected static ShapeAreas shapeAreas;
 	protected static Hashtable<String, Object> trooperParameters;
 	protected static String CARDS_FOLDER = "plugins/hero/cards/";
 	private static DateFormat dateFormat;
+	protected static SensorsArray sensorsArray;
 	/**
 	 * update every time the action {@link #runTrooper(ActionEvent)} is performed
 	 */
@@ -259,7 +259,6 @@ public class Hero extends TPlugin {
 					game.cancel(true);
 				}
 			});
-			dialog.setVisible(true);
 			return game;
 		} catch (Exception e) {
 			e.printStackTrace();

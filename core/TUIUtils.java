@@ -42,6 +42,7 @@ import com.alee.laf.button.*;
 import com.alee.laf.checkbox.*;
 import com.alee.laf.combobox.*;
 import com.alee.laf.label.*;
+import com.alee.laf.scroll.*;
 import com.alee.laf.text.*;
 import com.alee.laf.toolbar.*;
 import com.alee.managers.settings.Configuration;
@@ -108,8 +109,7 @@ public class TUIUtils {
 			}
 		}
 	}
-	
-	
+
 	/**
 	 * return a {@link WebLabel} title mes format
 	 * 
@@ -1217,6 +1217,42 @@ public class TUIUtils {
 		Font f = new Font("courier new", Font.PLAIN, 12);
 		editorPane.setFont(f);
 		return editorPane;
+	}
+
+	/**
+	 * return a console stily {@link WebTextArea}.
+	 * <p>
+	 * NOTE: to conrrect control the scrolling, this method DONT set the preferedSize
+	 * 
+	 * @see #getSmartScroller(JComponent)
+	 * 
+	 * @return conole stile {@link WebTextArea}
+	 */
+	public static WebTextArea getConsoleTextArea() {
+		WebTextArea console = new WebTextArea();
+		Font f = new Font("courier new", Font.PLAIN, 12);
+		console.setFont(f);
+		console.setLineWrap(false);
+		console.setEditable(false);
+		// int h = getStringPixelHeight("X", f);
+		// console.setPreferredSize(new Dimension(-1, h * 10));
+		// console.setMinimumSize(new Dimension(-1, h * 10));
+		return console;
+	}
+
+	/**
+	 * create and return a {@link JScrollPane} setted with an instace of {@link SmartScroller}. this is intendet for
+	 * console style componentes
+	 * 
+	 * @see SmartScroller
+	 * @param component - component to scroll
+	 * @return {@link JScrollPane} with standar {@link SmartScroller}
+	 */
+	public static JScrollPane getSmartScroller(JComponent component) {
+		WebScrollPane pane = new WebScrollPane(component, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		new SmartScroller(pane);
+		return pane;
 	}
 
 	static int getStringPixelWidth(String str, Font font) {

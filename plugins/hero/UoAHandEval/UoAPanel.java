@@ -36,10 +36,7 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 	private WebTextArea console;
 
 	public UoAPanel() {
-		this.console = new WebTextArea();
-		Font f = new Font("courier new", Font.PLAIN, 12);
-		console.setFont(f);
-		console.setLineWrap(false);
+		this.console = TUIUtils.getConsoleTextArea();
 		this.selectedICards = new ArrayList<>();
 		for (int i = 0; i < 7; i++) {
 			selectedICards.add(new IconCard(new UoACard()));
