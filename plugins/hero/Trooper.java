@@ -72,21 +72,27 @@ public class Trooper extends Task {
 	private double playUntil;
 	private long playTime;
 
-	public Trooper() {
+	private String subObtimalDist;
+
+	public Trooper(SensorsArray array, PokerSimulator pokerSimulator) {
 		super(Alesia.getInstance());
 		this.robotActuator = new RobotActuator();
 		this.availableActions = new Hashtable();
 		this.asociatedCost = new Hashtable();
-		this.sensorsArray = Hero.sensorsArray;
+		// this.sensorsArray = Hero.sensorsArray;
+		this.sensorsArray = array;
 		this.outGameStats = new DescriptiveStatistics(10);
-		this.pokerSimulator = sensorsArray.getPokerSimulator();
+		// this.pokerSimulator = sensorsArray.getPokerSimulator();
+		this.pokerSimulator = pokerSimulator;
 		this.roundCounter = 0;
 		this.playUntil = 0;
 		instance = this;
 		this.sklanskyPreflop = getTabProperties("preflop.card");
 		this.bluffHands = getTabProperties("bluff.card");
 	}
-
+	public static Trooper getInstance() {
+		return instance;
+	}
 	/**
 	 * return an <code>ArrayList<ArrayList<String>></code> contain the list of element described in the propertifile
 	 * under the group parameter. the array of array contain ilve the values tabulator separated. the result is similar
@@ -106,9 +112,7 @@ public class Trooper extends Task {
 		}
 		return rtnList;
 	}
-	public static Trooper getInstance() {
-		return instance;
-	}
+
 	public void cancelTrooper(boolean interrupt) {
 		setVariableAndLog(STATUS, "Trooper Canceled.");
 		super.cancel(interrupt);
@@ -152,7 +156,6 @@ public class Trooper extends Task {
 		}
 		return txt != null;
 	}
-
 	/**
 	 * this method check the bluff parameter and act accordinly. the bluff parameter is expresed in porcentage of when
 	 * hero is allow to bluff. E.G: bluff=300, buyIn=10000, Nro. of elements in blufflist=10. With this parameteres,
@@ -190,6 +193,7 @@ public class Trooper extends Task {
 		}
 		return bluff;
 	}
+
 	/**
 	 * clear the enviorement for a new round.
 	 * 
@@ -208,7 +212,6 @@ public class Trooper extends Task {
 		this.parameters = Hero.heroPanel.getTrooperPanel().getValues();
 		Hero.heroLogger.fine("Game play time average=" + TStringUtils.formatSpeed((long) outGameStats.getMean()));
 	}
-
 	/**
 	 * decide de action(s) to perform. This method is called when the {@link Trooper} detect that is my turn to play. At
 	 * this point, the game enviorement is waiting for an accion.
@@ -247,7 +250,7 @@ public class Trooper extends Task {
 		// in concordance whit rule1: if i can keep checking until i get a luck card. i will do. this behabior also
 		// allow for example getpreflop action continue because some times, the enviorement is too fast and the trooper
 		// is unable to retribe all information
-		if (availableActions.size() == 0 && sensorsArray.getSensor("call").isEnabled()
+		if (availableActions.size() == 0 && pokerSimulator.isSensorEnabled("call")
 				&& pokerSimulator.getCallValue() <= 0) {
 			setVariableAndLog(STATUS, "Empty list. Checking");
 			availableActions.put("call", 1.0);
@@ -261,6 +264,7 @@ public class Trooper extends Task {
 			asociatedCost.put("fold", 0.0);
 		}
 	}
+
 	/**
 	 * compute and return the amount of chips available for actions. The number of amount are directe related to the
 	 * currnet hand rank. More the rank, more chips to invest. This allow the troper invest ammunitons acording to a
@@ -333,18 +337,24 @@ public class Trooper extends Task {
 		return ammunitions;
 	}
 
-	private double getImpliedOdd() {
-		double call = pokerSimulator.getCallValue();
-		double raise = pokerSimulator.getRaiseValue();
-		double pot = pokerSimulator.getPotValue();
-
-		if (call >= 0)
-			availableActions.put("call", call);
-
-		// if (raise >= 0)
-		// availableActions.put("raise", raise);
-
-		return 0.0;
+	/**
+	 * this method retrive the ammount of chips of all currentliy active villans. the 0 position is the amount of chips
+	 * computed and the index 1 is the number of active villans
+	 * 
+	 * @return - [total chips, num of villans]
+	 */
+	private double[] getAvgBluffValue() {
+		double[] rval = new double[2];
+		GameRecorder gameRecorder = sensorsArray.getGameRecorder();
+		ArrayList<GamePlayer> list = gameRecorder.getAssesment();
+		for (GamePlayer gp : list) {
+			if (gp.isActive() && gp.getId() > 0) {
+				rval[0] += gp.getChips();
+				rval[1]++;
+			}
+		}
+		rval[0] = rval[0] / rval[1];
+		return rval;
 	}
 
 	/**
@@ -367,8 +377,28 @@ public class Trooper extends Task {
 			ev = Double.parseDouble(evvalues.get(tablep + 2));
 		return ev;
 	}
-	private String subObtimalDist;
 
+	/**
+	 * return the ranck from preflop hand according to <b>Sklansky hand groups</b> this list is inverse and proportional
+	 * to ne number of amunitions that hero will be willing to invest in any hand.
+	 * <p>
+	 * e.g: if this metod return 8 this mean rank 2 in Sklansky hand groups. hero is able to bet until 8 BB in preflop.
+	 * 
+	 * @return the rank or numer of BB to bet
+	 */
+	private int getSklanskyRank() {
+		int rnk = -1;
+		HoleCards hc = pokerSimulator.getMyHoleCards();
+		String s = hc.isSuited() ? "s" : "";
+		String c1 = hc.getFirstCard().toString().substring(0, 1) + hc.getSecondCard().toString().substring(0, 1);
+		String c2 = hc.getSecondCard().toString().substring(0, 1) + hc.getFirstCard().toString().substring(0, 1);
+		ArrayList<String> list1 = sklanskyPreflop.stream().filter(lst -> lst.contains(c1 + s)).findFirst().orElse(null);
+		ArrayList<String> list2 = sklanskyPreflop.stream().filter(lst -> lst.contains(c2 + s)).findFirst().orElse(null);
+		ArrayList<String> prank = list1 == null ? list2 : list1;
+		if (prank != null)
+			rnk = Integer.parseInt(prank.get(0));
+		return rnk;
+	}
 	private String getSubOptimalAction() {
 		Vector<TEntry<String, Double>> actProb = new Vector<>();
 		availableActions.forEach((key, val) -> actProb.add(new TEntry(key, val)));
@@ -400,27 +430,25 @@ public class Trooper extends Task {
 		return selact;
 	}
 
-	/**
-	 * return the ranck from preflop hand according to <b>Sklansky hand groups</b> this list is inverse and proportional
-	 * to ne number of amunitions that hero will be willing to invest in any hand.
-	 * <p>
-	 * e.g: if this metod return 8 this mean rank 2 in Sklansky hand groups. hero is able to bet until 8 BB in preflop.
-	 * 
-	 * @return the rank or numer of BB to bet
-	 */
-	private int getSklanskyRank() {
-		int rnk = -1;
-		HoleCards hc = pokerSimulator.getMyHoleCards();
-		String s = hc.isSuited() ? "s" : "";
-		String c1 = hc.getFirstCard().toString().substring(0, 1) + hc.getSecondCard().toString().substring(0, 1);
-		String c2 = hc.getSecondCard().toString().substring(0, 1) + hc.getFirstCard().toString().substring(0, 1);
-		ArrayList<String> list1 = sklanskyPreflop.stream().filter(lst -> lst.contains(c1 + s)).findFirst().orElse(null);
-		ArrayList<String> list2 = sklanskyPreflop.stream().filter(lst -> lst.contains(c2 + s)).findFirst().orElse(null);
-		ArrayList<String> prank = list1 == null ? list2 : list1;
-		if (prank != null)
-			rnk = Integer.parseInt(prank.get(0));
-		return rnk;
+	private void handStrengFilter() {
+		// fail safe.
+		if (availableActions.isEmpty()) {
+			Hero.heroLogger.info("handStrengFilter() has no actions to filter");
+			return;
+		}
+		int orgActNum = availableActions.size();
+		double handS = pokerSimulator.getCurrentHandStreng();
+		double max = availableActions.values().stream().mapToDouble(val -> val).max().getAsDouble();
+		double upperB = max * handS;
+		availableActions.values().removeIf(val -> val > upperB);
+		updateAsociatedCost();
+		// invert sing so, suboptimal mehtod can order in the right way
+		availableActions.replaceAll((key, val) -> val * -1.0);
+		String fila = availableActions.size() == 0 ? "all" : "" + (orgActNum - availableActions.size());
+		setVariableAndLog(EXPLANATION,
+				"Hero hand streng ratio = " + twoDigitFormat.format(handS) + " " + fila + " actions removed");
 	}
+
 	/**
 	 * Check acordig to the <code>preflopStrategy</code> parameter, if this hand is a good preflop hand. if this metod
 	 * return <code>null</code>, it is because this hand is not a good preflopa hand
@@ -495,7 +523,6 @@ public class Trooper extends Task {
 		return sensorsArray.isSensorEnabled("fold") || sensorsArray.isSensorEnabled("call")
 				|| sensorsArray.isSensorEnabled("raise");
 	}
-
 	/**
 	 * 
 	 * this method fill the global variable {@link #availableActions} whit all available actions according to the
@@ -526,15 +553,15 @@ public class Trooper extends Task {
 		if (raise >= 0 && raise <= imax)
 			availableActions.put("raise", raise);
 
-		if (pot >= 0 && pot <= imax && sensorsArray.getSensor("raise.pot").isEnabled())
+		if (pot >= 0 && pot <= imax && pokerSimulator.isSensorEnabled("raise.pot"))
 			availableActions.put("raise.pot;raise", pot);
 
-		if (chips >= 0 && chips <= imax && sensorsArray.getSensor("raise.allin").isEnabled())
+		if (chips >= 0 && chips <= imax && pokerSimulator.isSensorEnabled("raise.allin"))
 			availableActions.put("raise.allin;raise", chips);
 
 		double sb = pokerSimulator.getSmallBlind();
 		double bb = pokerSimulator.getBigBlind();
-		if (raise > 0 && sensorsArray.getSensor("raise.slider").isEnabled()) {
+		if (raise > 0 && pokerSimulator.isSensorEnabled("raise.slider")) {
 			// check for int or double values for blinds
 			boolean isInt = (new Double(bb)).intValue() == bb && (new Double(sb)).intValue() == sb;
 			double tick = raise;
@@ -558,45 +585,39 @@ public class Trooper extends Task {
 	}
 
 	/**
-	 * this method retrive the ammount of chips of all currentliy active villans. the 0 position is the amount of chips
-	 * computed and the index 1 is the number of active villans
-	 * 
-	 * @return - [total chips, num of villans]
-	 */
-	private double[] getAvgBluffValue() {
-		double[] rval = new double[2];
-		GameRecorder gameRecorder = sensorsArray.getGameRecorder();
-		ArrayList<GamePlayer> list = gameRecorder.getAssesment();
-		for (GamePlayer gp : list) {
-			if (gp.isActive() && gp.getId() > 0) {
-				rval[0] += gp.getChips();
-				rval[1]++;
-			}
-		}
-		rval[0] = rval[0] /rval[1]; 
-		return rval;
-	}
-	/**
-	 * clear the global variable {@link #availableActions} and set only <code>raise.pot</code> and
-	 * <code>raise.allin</code> actions whit equal probability.
+	 * Compute the EV for all actions inside of the global variable {@link #availableActions}. after this method, the
+	 * list contain only the actions with +EV. *
 	 * <p>
-	 * This method signal {@link #getSubOptimalAction()} to use UniformRealDistribution. this allow true random
-	 * selection of all posible bluff actions
+	 * to comply with rule 1, this method retrive his probability from {@link PokerSimulator#getProbability()
+	 * 
+	 * <h5>MoP page 54</h5>
+	 * 
 	 */
-	private void setPreflopBluffActions() {
-		availableActions.clear();
-		subObtimalDist = "UniformReal";
-		double[] bv = getAvgBluffValue();
-		double bluff = bv[0];
-		loadActions(bluff);
+	private void potOdd() {
+		double prob = pokerSimulator.getProbability();
+		double ammunitions = getAmmunitions();
 
-		// to this point, if availableactions are empty, means hero is responding a extreme hihgt raise. that mean meybe
-		// hero is weak. at this point reise mean all in. (call actions is not considerer because is not bluff)
-		double raise = pokerSimulator.getRaiseValue();
-		if (availableActions.size() == 0 && raise >= 0)
-			availableActions.put("raise", raise);
-
+		// no calculation for 0 values
+		if (ammunitions == 0 || prob == 0) {
+			availableActions.clear();
+			Hero.heroLogger.info("No posible decision for values prob = " + twoDigitFormat.format(prob)
+					+ " or ammuntion = " + twoDigitFormat.format(ammunitions));
+			return;
+		}
 		updateAsociatedCost();
+		for (String act : availableActions.keySet()) {
+			double cost = availableActions.get(act);
+			double ev = (prob * ammunitions) - cost;
+			availableActions.put(act, ev);
+		}
+		// remove all negative values
+		availableActions.values().removeIf(dv -> dv < 0);
+
+		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
+		String val = availableActions.keySet().stream().map(k -> k + "=" + twoDigitFormat.format(asociatedCost.get(k)))
+				.collect(Collectors.joining(", "));
+		val = val.trim().isEmpty() ? "No positive EV" : val;
+		// TODO: log availa actions??
 	}
 
 	/**
@@ -668,6 +689,28 @@ public class Trooper extends Task {
 				+ twoDigitFormat.format(sRank) + ") = " + twoDigitFormat.format(maxRekonAmmo);
 		setVariableAndLog(EXPLANATION, txt1);
 	}
+	/**
+	 * clear the global variable {@link #availableActions} and set only <code>raise.pot</code> and
+	 * <code>raise.allin</code> actions whit equal probability.
+	 * <p>
+	 * This method signal {@link #getSubOptimalAction()} to use UniformRealDistribution. this allow true random
+	 * selection of all posible bluff actions
+	 */
+	private void setPreflopBluffActions() {
+		availableActions.clear();
+		subObtimalDist = "UniformReal";
+		double[] bv = getAvgBluffValue();
+		double bluff = bv[0];
+		loadActions(bluff);
+
+		// to this point, if availableactions are empty, means hero is responding a extreme hihgt raise. that mean meybe
+		// hero is weak. at this point reise mean all in. (call actions is not considerer because is not bluff)
+		double raise = pokerSimulator.getRaiseValue();
+		if (availableActions.size() == 0 && raise >= 0)
+			availableActions.put("raise", raise);
+
+		updateAsociatedCost();
+	}
 
 	private void setVariableAndLog(String key, Object value) {
 		String value1 = value.toString();
@@ -686,6 +729,7 @@ public class Trooper extends Task {
 			Hero.heroLogger.info(key1 + value1);
 		}
 	}
+
 	/**
 	 * This metod check all the sensor areas and perform the corrections to get the troper into the fight. The
 	 * conbination of enabled/disabled status of the sensor determine the action to perform. If the enviorement request
@@ -851,61 +895,6 @@ public class Trooper extends Task {
 			act();
 		}
 		return null;
-	}
-
-	private void handStrengFilter() {
-		// fail safe.
-		if (availableActions.isEmpty()) {
-			Hero.heroLogger.info("handStrengFilter() has no actions to filter");
-			return;
-		}
-		int orgActNum = availableActions.size();
-		double handS = pokerSimulator.getCurrentHandStreng();
-		double max = availableActions.values().stream().mapToDouble(val -> val).max().getAsDouble();
-		double upperB = max * handS;
-		availableActions.values().removeIf(val -> val > upperB);
-		updateAsociatedCost();
-		// invert sing so, suboptimal mehtod can order in the right way
-		availableActions.replaceAll((key, val) -> val * -1.0);
-		String fila = availableActions.size() == 0 ? "all" : "" + (orgActNum - availableActions.size());
-		setVariableAndLog(EXPLANATION,
-				"Hero hand streng ratio = " + twoDigitFormat.format(handS) + " " + fila + " actions removed");
-	}
-
-	/**
-	 * Compute the EV for all actions inside of the global variable {@link #availableActions}. after this method, the
-	 * list contain only the actions with +EV. *
-	 * <p>
-	 * to comply with rule 1, this method retrive his probability from {@link PokerSimulator#getProbability()
-	 * 
-	 * <h5>MoP page 54</h5>
-	 * 
-	 */
-	private void potOdd() {
-		double prob = pokerSimulator.getProbability();
-		double ammunitions = getAmmunitions();
-
-		// no calculation for 0 values
-		if (ammunitions == 0 || prob == 0) {
-			availableActions.clear();
-			Hero.heroLogger.info("No posible decision for values prob = " + twoDigitFormat.format(prob)
-					+ " or ammuntion = " + twoDigitFormat.format(ammunitions));
-			return;
-		}
-		updateAsociatedCost();
-		for (String act : availableActions.keySet()) {
-			double cost = availableActions.get(act);
-			double ev = (prob * ammunitions) - cost;
-			availableActions.put(act, ev);
-		}
-		// remove all negative values
-		availableActions.values().removeIf(dv -> dv < 0);
-
-		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
-		String val = availableActions.keySet().stream().map(k -> k + "=" + twoDigitFormat.format(asociatedCost.get(k)))
-				.collect(Collectors.joining(", "));
-		val = val.trim().isEmpty() ? "No positive EV" : val;
-		// TODO: log availa actions??
 	}
 	protected void performDecisionMethod() {
 		String decisionM = parameters.get("decisionMethod").toString();
