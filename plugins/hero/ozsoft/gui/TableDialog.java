@@ -240,4 +240,8 @@ public class TableDialog extends JDialog implements Client {
 		}
 	}
 
+	@Override
+	public void setTable(Table table) {
+		// the table is setted in constructor
+	}
 }

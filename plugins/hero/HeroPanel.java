@@ -26,7 +26,7 @@ public class HeroPanel extends WebPanel {
 	public HeroPanel() {
 		super(new BorderLayout());
 		this.sensorArrayPanel = new SensorArrayPanel();
-		this.trooperPanel = new TrooperPanel();
+		this.trooperPanel = new TrooperPanel(true);
 		this.pockerSimulatorPanel = new WebPanel(new BorderLayout());
 		// pockerSimulatorPanel.setMessage("hero.msg01");
 		wtp = new WebTabbedPane();
@@ -34,7 +34,7 @@ public class HeroPanel extends WebPanel {
 		wtp.add(sensorArrayPanel, "Sensor Array");
 		wtp.add(pockerSimulatorPanel, "Pocker Simulator");
 		wtp.add(Hero.consolePanel, "Log console");
-//		wtp.add(TCVUtils.createImagesPanel(Hero.preparedCards), "Cards");
+		// wtp.add(TCVUtils.createImagesPanel(Hero.preparedCards), "Cards");
 
 		wtp.registerSettings(new Configuration<TabbedPaneState>("HeroPanel.tabbedPanel"));
 
@@ -45,11 +45,17 @@ public class HeroPanel extends WebPanel {
 		return trooperPanel;
 	}
 
-	public void updateGlovalParameters() {
+	/**
+	 * shortcut that enable update all the UI components from (posible) new {@link SensorsArray} and/or
+	 * {@link PokerSimulator}
+	 * 
+	 * @param sensorsArray - the array to update
+	 */
+	public void updateGlovalParameters(SensorsArray sensorsArray) {
 		setVisible(false);
 		pockerSimulatorPanel.removeAll();
-		pockerSimulatorPanel.add(Hero.sensorsArray.getPokerSimulator().getReportPanel(), BorderLayout.CENTER);
-		sensorArrayPanel.updateArray();
+		pockerSimulatorPanel.add(sensorsArray.getPokerSimulator().getReportPanel(), BorderLayout.CENTER);
+		sensorArrayPanel.updateArray(sensorsArray);
 		setVisible(true);
 	}
 }

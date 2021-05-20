@@ -44,11 +44,12 @@ public class ScreenSensor extends JPanel {
 	private String ocrResult;
 	private Tesseract iTesseract;
 	private int ocrTime = -1;
-
+	private SensorsArray sensorsArray;
 	private String currencySymbol;
 
-	public ScreenSensor(Shape sha) {
+	public ScreenSensor(SensorsArray sensorsArray, Shape sha) {
 		super(new BorderLayout());
+		this.sensorsArray = sensorsArray;
 		this.images = new Hashtable<>();
 		this.shape = sha;
 		this.imageLabel = new JLabel();
@@ -135,12 +136,12 @@ public class ScreenSensor extends JPanel {
 		// capture the image
 		if (Hero.isTestMode) {
 			// from the ppt file background
-			ImageIcon ii = Hero.sensorsArray.getSensorDisposition().getBackgroundImage();
+			ImageIcon ii = sensorsArray.getSensorDisposition().getBackgroundImage();
 			BufferedImage bgimage = ImageUtils.getBufferedImage(ii);
 			capturedImage = bgimage.getSubimage(bou.x, bou.y, bou.width, bou.height);
 		} else {
 			// from the screen
-			capturedImage = Hero.sensorsArray.getRobot().createScreenCapture(bou);
+			capturedImage = sensorsArray.getRobot().createScreenCapture(bou);
 		}
 
 		/*
@@ -469,7 +470,7 @@ public class ScreenSensor extends JPanel {
 		capturedImage = null;
 		lastOcrImage = null;
 		setEnabled(false);
-		Hashtable<String, Object> vals = Hero.heroPanel.getTrooperPanel().getValues();
+		Hashtable<String, Object> vals = Hero.trooperPanel.getValues();
 		this.currencySymbol = vals.get("table.currency").toString();
 		repaint();
 	}

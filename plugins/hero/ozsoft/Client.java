@@ -33,6 +33,10 @@ import plugins.hero.ozsoft.actions.*;
 public interface Client {
 
 	/**
+	 * set the table instance were this bot operate
+	 */
+	void setTable(Table table);
+	/**
 	 * Handles a game message.
 	 * 
 	 * @param message The message.
@@ -63,9 +67,9 @@ public interface Client {
 	void actorRotated(Player actor);
 
 	/**
-	 * Handles an update of this player.
+	 * called when a player perform an action.
 	 * 
-	 * @param player The player.
+	 * @param player The player that perform the action
 	 */
 	void playerUpdated(Player player);
 

@@ -41,20 +41,22 @@ public class Hero extends TPlugin {
 	protected static ActionMap actionMap;
 	protected static Logger heroLogger;
 	protected static ConsolePanel consolePanel;
-	protected static HeroPanel heroPanel;
 	protected static File tableFile;
 	protected static boolean isTestMode;
 	protected static ShapeAreas shapeAreas;
-	protected static Hashtable<String, Object> trooperParameters;
+//	protected static Hashtable<String, Object> trooperParameters;
 	protected static String CARDS_FOLDER = "plugins/hero/cards/";
 	private static DateFormat dateFormat;
-	protected static SensorsArray sensorsArray;
 	/**
 	 * update every time the action {@link #runTrooper(ActionEvent)} is performed
 	 */
 	private static Date startDate = null;
 
+	private HeroPanel heroPanel;
 	private GameSimulatorPanel simulatorPanel;
+
+	public static TrooperPanel trooperPanel;
+	private SensorsArray sensorsArray;
 
 	public Hero() {
 		// iTesseract.setLanguage("pok");
@@ -155,14 +157,14 @@ public class Hero extends TPlugin {
 		return uni;
 	}
 
-	private static void initGlovalVars() {
+	private void initGlovalVars() {
 		// dont put isTestMode = false; HERE !!!!!!!!!!!!!!!!!
 		startDate = new Date();
 		shapeAreas = new ShapeAreas(Hero.tableFile);
 		shapeAreas.read();
 		sensorsArray = new SensorsArray();
 		sensorsArray.setShapeAreas(shapeAreas);
-		heroPanel.updateGlovalParameters();
+		heroPanel.updateGlovalParameters(sensorsArray);
 	}
 
 	protected static String getSesionID() {
@@ -172,6 +174,7 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public void gameSimulator(ActionEvent event) {
 		this.simulatorPanel = new GameSimulatorPanel();
+		trooperPanel = simulatorPanel.getTrooperPanel();
 		Alesia.getInstance().getMainPanel().setContentPanel(simulatorPanel);
 	}
 
@@ -187,6 +190,7 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public void heroPanel(ActionEvent event) {
 		heroPanel = new HeroPanel();
+		trooperPanel = heroPanel.getTrooperPanel();
 		Alesia.getInstance().getMainPanel().setContentPanel(heroPanel);
 		// temp: change the main frame using this coordenates: 0,40 547,735
 		// temporal: must be loaded from troperPanel
@@ -228,38 +232,37 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public Task startSimulation(ActionEvent event) {
 		try {
-			Hashtable<String, Object> values = simulatorPanel.getValues();
+			Hashtable<String, Object> values = trooperPanel.getValues();
 			TableModel model = simulatorPanel.getPlayersTable().getModel();
 
 			int buy = ((Double) values.get("table.buyIn")).intValue();
 			int bb = ((Double) values.get("table.bigBlid")).intValue();
 			int sb = ((Double) values.get("table.smallBlid")).intValue();
-			int maxR = ((Long) values.get("play.maxRaise")).intValue();
 
 			// TODO: add the iption for limit and no limit
-			// TODO: the test subject is the 3 element
-			Table game = new Table(TableType.NO_LIMIT, bb);
+			Table table = new Table(TableType.NO_LIMIT, bb);
 			for (int i = 0; i < model.getRowCount(); i++) {
 				if ((Boolean) model.getValueAt(i, 2)) {
 					String name = model.getValueAt(i, 0).toString();
 					String bCls = model.getValueAt(i, 1).toString();
-					Class cls = Class.forName("plugins.hero.ozsoft.texasholdem.bots." + bCls);
+					Class cls = Class.forName("plugins.hero.ozsoft.bots." + bCls);
 					Bot bot = (Bot) cls.newInstance();
+					bot.setTable(table);
 					Player p = new Player(name, buy, bot);
-					game.addPlayer(p);
+					table.addPlayer(p);
 				}
 			}
-			TableDialog dialog = new TableDialog(game);
+			TableDialog dialog = new TableDialog(table);
 
 			dialog.setTitle("HoldEm " + buy + " " + bb + "/" + sb);
 			dialog.addWindowListener(new WindowAdapter() {
 				@Override
 				public void windowClosing(WindowEvent e) {
 					((JDialog) e.getSource()).dispose();
-					game.cancel(true);
+					table.cancel(true);
 				}
 			});
-			return game;
+			return table;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -295,7 +298,7 @@ public class Hero extends TPlugin {
 	private Task start() {
 		WebLookAndFeel.setForceSingleEventsThread(false);
 		initGlovalVars();
-		Trooper t = new Trooper();
+		Trooper t = new Trooper(sensorsArray, sensorsArray.getPokerSimulator());
 		PropertyChangeListener tl = new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (Trooper.PROP_DONE.equals(evt.getPropertyName())) {

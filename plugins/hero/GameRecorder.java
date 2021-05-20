@@ -74,7 +74,7 @@ public class GameRecorder {
 	 * is called one step before the tropper perform his action.
 	 * 
 	 */
-	public void takeSnapShot() {
-		players.stream().forEach(v -> v.readSensors());
+	public void takeSnapShot(SensorsArray sensorsArray) {
+		players.stream().forEach(v -> v.readSensors(sensorsArray));
 	}
 }

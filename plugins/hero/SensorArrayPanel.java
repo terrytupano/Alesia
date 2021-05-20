@@ -54,8 +54,13 @@ public class SensorArrayPanel extends TUIPanel {
 		setBodyComponent(ajsp);
 	}
 
-	public void updateArray() {
-		this.sensorsArray = Hero.sensorsArray;
+	/**
+	 * update the visual componentes in this palen to the (posible) new instance of {@link SensorsArray}
+	 * 
+	 * @param sensorsArray - the array
+	 */
+	public void updateArray(SensorsArray sensorsArray) {
+		this.sensorsArray = sensorsArray;
 		sensorsPanel.removeAll();
 		List<ScreenSensor> ssl = sensorsArray.getSensors(null);
 		for (ScreenSensor ss : ssl) {

@@ -12,9 +12,6 @@ import org.apache.commons.math3.stat.descriptive.*;
 
 import com.jgoodies.common.base.*;
 
-import plugins.hero.ozsoft.*;
-import plugins.hero.ozsoft.bots.*;
-
 /**
  * This class control the array of sensor inside of the screen. This class is responsable for reading all the sensor
  * configurated in the {@link DrawingPanel} passsed as argument in the {@link #createSensorsArray(DrawingPanel)} method.
@@ -64,7 +61,6 @@ public class SensorsArray {
 	private GameRecorder gameRecorder;
 	private int villansBeacon = 0;
 
-
 	public SensorsArray() {
 		this.pokerSimulator = new PokerSimulator();
 		this.robot = Hero.getNewRobot();
@@ -92,12 +88,9 @@ public class SensorsArray {
 	 * <li>Battle: all the values are read from the screen.
 	 * <li>Simulation: all values are setted by {@link HeroBot}
 	 * 
-	 * @param mode - the mode
-	private String arrayMode;
-	public void setSimulationMode(String mode) {
-		Preconditions.checkArgument(mode.equals("Battle") || mode.equals("Simulation"), "Illegal Array mode " + mode);
-		this.arrayMode = mode;
-	}
+	 * @param mode - the mode private String arrayMode; public void setSimulationMode(String mode) {
+	 *        Preconditions.checkArgument(mode.equals("Battle") || mode.equals("Simulation"), "Illegal Array mode " +
+	 *        mode); this.arrayMode = mode; }
 	 */
 	/**
 	 * initialize this sensor array. clearing all sensor and all variables
@@ -369,7 +362,7 @@ public class SensorsArray {
 
 		// cards areas sensor will perform a simulation
 		if (TYPE_CARDS.equals(type)) {
-			pokerSimulator.getCardsBuffer().clear();
+			pokerSimulator.cardsBuffer.clear();
 
 			// 1 step update enable/disable area
 			slist = allSensors.stream().filter(ss -> ss.isCardArea()).collect(Collectors.toList());
@@ -382,7 +375,7 @@ public class SensorsArray {
 			for (ScreenSensor ss : slist) {
 				String ocr = ss.getOCR();
 				if (ocr != null)
-					pokerSimulator.getCardsBuffer().put(ss.getName(), ocr);
+					pokerSimulator.cardsBuffer.put(ss.getName(), ocr);
 			}
 
 			pokerSimulator.setNunOfPlayers(getActiveVillans() + 1);
@@ -400,7 +393,7 @@ public class SensorsArray {
 	 */
 	public void readPlayerStat() {
 		// gamers information
-		gameRecorder.getGamePlayer(villansBeacon).readSensors();
+		gameRecorder.getGamePlayer(villansBeacon).readSensors(this);
 		villansBeacon++;
 		String asse = "<html><table border=\"0\", cellspacing=\"0\"><assesment></table></html>";
 		String tmp = "";
@@ -468,6 +461,8 @@ public class SensorsArray {
 		for (ScreenSensor ss : list) {
 			ss.setBorder(read ? readingBorder : lookingBorder);
 			ss.capture(read);
+			// update the enable/disable status.
+			pokerSimulator.sensorStatus.put(ss.getName(), ss.isEnabled());
 			// mesure only efective lecture
 			if (ss.isEnabled() && ss.getOCRPerformanceTime() > 0) {
 				tesseractTime.addValue(ss.getOCRPerformanceTime());
@@ -508,7 +503,7 @@ public class SensorsArray {
 		this.screenAreas = areas;
 		this.screenSensors.clear();
 		for (Shape shape : screenAreas.getShapes().values()) {
-			ScreenSensor ss = new ScreenSensor(shape);
+			ScreenSensor ss = new ScreenSensor(this, shape);
 			screenSensors.put(ss.getName(), ss);
 		}
 		setStandByBorder();

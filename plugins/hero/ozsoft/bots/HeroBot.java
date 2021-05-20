@@ -18,7 +18,8 @@
 package plugins.hero.ozsoft.bots;
 
 import java.util.*;
-import java.util.stream.*;
+
+import com.jgoodies.common.base.*;
 
 import plugins.hero.*;
 import plugins.hero.UoAHandEval.*;
@@ -33,38 +34,94 @@ public class HeroBot extends Bot {
 
 	private Trooper trooper;
 	private PokerSimulator pokerSimulator;;
-
-	/** Table type. */
 	private TableType tableType;
-
-	/** The hole cards. */
-	private UoAHand hand;
+	private List<Player> villans;
+	private Player heroPlayer;
+	private int bigBlind;
+	private int dealer;
+	private int pot;
 
 	public HeroBot() {
-		this((int) Math.random() * 100, (int) Math.random() * 100);
 		this.pokerSimulator = new PokerSimulator();
-		this.trooper = new Trooper();
-	}
-	/**
-	 * Constructor.
-	 * 
-	 * @param tightness The bot's tightness (0 = loose, 100 = tight).
-	 * @param aggression The bot's aggressiveness in betting (0 = careful, 100 = aggressive).
-	 */
-	public HeroBot(int tightness, int aggression) {
-		if (tightness < 0 || tightness > 100) {
-			throw new IllegalArgumentException("Invalid tightness setting");
-		}
-		if (aggression < 0 || aggression > 100) {
-			throw new IllegalArgumentException("Invalid aggression setting");
-		}
-		this.tightness = tightness;
-		this.aggression = aggression;
+		this.trooper = new Trooper(null, pokerSimulator);
 	}
 
 	@Override
+	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
+		for (PlayerAction act : allowedActions) {
+			String sensor = act.getName().toLowerCase();
+			if (act instanceof AllInAction)
+				sensor = "raise.allin";
+
+			pokerSimulator.sensorStatus.put(sensor, true);
+		}
+		// pokerSimulator.setHeroChips(players.in);
+		pokerSimulator.setCallValue(currentBet);
+		if (allowedActions.contains(PlayerAction.CHECK))
+			pokerSimulator.setCallValue(0);
+		
+		pokerSimulator.setPotValue(pot);
+		pokerSimulator.setHeroChips(heroPlayer.getCash());
+		// FIXME: temporal
+		pokerSimulator.setRaiseValue(minBet * 2);
+		// long foldV = villans.stream().filter(p -> p.getAction().getName().equals("Fold")).count();
+		int foldV = 0;
+		for (Player p : villans) {
+			if (p.getHand().size() == 0)
+				foldV++;
+		}
+		int actV = villans.size() - ((int) foldV);
+		pokerSimulator.setNunOfPlayers(actV + 1);
+		pokerSimulator.setTablePosition(dealer, actV);
+
+		pokerSimulator.runSimulation();
+		TrooperAction act = trooper.getSimulationAction();
+
+		if (act.equals(TrooperAction.CHECK))
+			return PlayerAction.CHECK;
+		if (act.name.equals("call"))
+			return new BetAction((int) act.amount);
+		if (act.name.equals("raise"))
+			return new BetAction((int) act.amount);
+		return PlayerAction.FOLD;
+	}
+
+	@Override
+	public void actorRotated(Player actor) {
+		// Not implemented.
+	}
+	@Override
+	public void boardUpdated(UoAHand hand, int bet, int pot) {
+		if (hand.getCard(1) != null)
+			pokerSimulator.cardsBuffer.put("flop1", hand.getCard(1).toString());
+		if (hand.getCard(2) != null)
+			pokerSimulator.cardsBuffer.put("flop2", hand.getCard(2).toString());
+		if (hand.getCard(3) != null)
+			pokerSimulator.cardsBuffer.put("flop3", hand.getCard(3).toString());
+		if (hand.getCard(4) != null)
+			pokerSimulator.cardsBuffer.put("turn", hand.getCard(4).toString());
+		if (hand.getCard(5) != null)
+			pokerSimulator.cardsBuffer.put("river", hand.getCard(5).toString());
+		this.pot = pot + bet;
+	}
+
+	@Override
+	public void handStarted(Player dealer) {
+		this.dealer = villans.indexOf(dealer) + 1;
+		pokerSimulator.bigBlind = bigBlind;
+		pokerSimulator.smallBlind = bigBlind / 2;
+		pokerSimulator.buyIn = buyIn;
+		pokerSimulator.clearEnviorement();
+	}
+	private int buyIn;
+	@Override
 	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
 		this.tableType = type;
+		this.villans = new ArrayList(players);
+		this.heroPlayer = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
+		villans.remove(heroPlayer);
+		this.bigBlind = bigBlind;
+		this.buyIn = heroPlayer.getCash();
 	}
 
 	@Override
@@ -73,45 +130,16 @@ public class HeroBot extends Bot {
 	}
 
 	@Override
-	public void handStarted(Player dealer) {
-		hand = null;
-	}
+	public void playerActed(Player player) {
 
-	@Override
-	public void actorRotated(Player actor) {
-		// Not implemented.
-	}
-
-	@Override
-	public void boardUpdated(UoAHand hand, int bet, int pot) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void playerUpdated(Player player) {
 		if (player.getHand().size() == NO_OF_HOLE_CARDS) {
-			this.hand = player.getHand();
+			UoAHand hand = player.getHand();
+			pokerSimulator.cardsBuffer.put("hero.card1", hand.getCard(1).toString());
+			pokerSimulator.cardsBuffer.put("hero.card2", hand.getCard(2).toString());
 		}
-	}
-
-	@Override
-	public void playerActed(Player player) {
-		// Not implemented.
-	}
-
-	@Override
-	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
-		PlayerAction action = null;
-
-		pokerSimulator.setTablePosition(getDealerButtonPosition(), getActiveVillans());
-		pokerSimulator.setPotValue(getSensor("pot").getNumericOCR());
-		pokerSimulator.setCallValue(getSensor("hero.call").getNumericOCR());
-		pokerSimulator.setHeroChips(getSensor("hero.chips").getNumericOCR());
-		pokerSimulator.setRaiseValue(getSensor("hero.raise").getNumericOCR());
-
-		pokerSimulator.setNunOfPlayers(getActiveVillans() + 1);
-		pokerSimulator.runSimulation();
-
-		return action;
 	}
 }

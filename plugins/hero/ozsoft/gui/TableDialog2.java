@@ -262,4 +262,10 @@ public class TableDialog2 extends JDialog implements Client {
 		}
 	}
 
+	@Override
+	public void setTable(Table table) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

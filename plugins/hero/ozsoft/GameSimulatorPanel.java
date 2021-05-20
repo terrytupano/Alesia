@@ -22,25 +22,19 @@ import plugins.hero.*;
 public class GameSimulatorPanel extends TUIFormPanel {
 
 	private WebTable playersTable;
+	private TrooperPanel trooperPanel;
+
 	public GameSimulatorPanel() {
+		trooperPanel = new TrooperPanel(false);
 		playersTable = createPlayersTable();
 
-		addInputComponent(TUIUtils.getTWebComboBox("table.parameters", "table.parameters0"));
-		addInputComponent(TUIUtils.getNumericTextField("play.time", null, 5, null), false, true);
-		addInputComponent(TUIUtils.getNumericTextField("play.maxRaise", null, 4, null), false, true);
-
 		FormLayout layout = new FormLayout("pref, 3dlu, pref, 3dlu, pref:grow",
-				"p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, p, 3dlu, fill:pref:grow");
+				"p, 3dlu, p, 3dlu, p, 3dlu, fill:pref:grow");
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DLU2);
 
-		builder.append(TUIUtils.getTitleLabel("Table Parameters", "table parameters configuration"), 5);
+		builder.append(TUIUtils.getTitleLabel("Trooper panel", "trooper configuration parameters"), 5);
 		builder.nextLine(2);
-		builder.append(getLabel("table.parameters"), getInputComponent("table.parameters"));
-		builder.nextLine(2);
-
-		builder.append(getLabel("play.maxRaise"), getInputComponent("play.maxRaise"));
-		builder.nextLine(2);
-		builder.append(getLabel("play.time"), getInputComponent("play.time"));
+		builder.append(trooperPanel, 5);
 		builder.nextLine(2);
 		builder.append(TUIUtils.getTitleLabel("Players", "Select the number and type of players"), 5);
 		builder.nextLine(2);
@@ -50,23 +44,20 @@ public class GameSimulatorPanel extends TUIFormPanel {
 		setFooterActions("startSimulation");
 		registreSettings();
 	}
+	
 	public WebTable getPlayersTable() {
-	 return playersTable;
- }
-
-	@Override
-	public Hashtable<String, Object> getValues() {
-		Hashtable vals = super.getValues();
-		Hero.parseTableParameters(vals);
-		return vals;
+		return playersTable;
 	}
 
+	public TrooperPanel getTrooperPanel() {
+		return trooperPanel;
+	}
+	
 	private WebTable createPlayersTable() {
-		
-		
+
 		String[] columnNames = {"Name", "Style", "Active"};
-		Object[][] data = {{"Kathy", "BasicBot", true}, {"John", "BasicBot", true},
-				{"Hero", "BasicBot", true}, {"Rick", "BasicBot", true}};
+		Object[][] data = {{"Kathy", "BasicBot", true}, {"John", "BasicBot", true}, {"Hero", "HeroBot", true},
+				{"Rick", "BasicBot", true}};
 
 		WebTable table = new WebTable(data, columnNames);
 

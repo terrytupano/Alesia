@@ -2,9 +2,8 @@ package plugins.hero;
 
 import java.util.*;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.*;
 import org.apache.commons.math3.stat.descriptive.*;
-import org.jfree.util.*;
 
 /**
  * encapsulate all player information. this class collect the necesary information to make a wild guess over the
@@ -28,6 +27,7 @@ public class GamePlayer {
 	private boolean isActive;
 	private boolean isBoss;
 	private double chips;
+	private double bigBlind;
 
 	public GamePlayer(int playerId) {
 		this.playerId = playerId;
@@ -82,16 +82,17 @@ public class GamePlayer {
 	 * Read the sensor form the {@link SensorsArray} asociated whit this recorder
 	 * 
 	 */
-	public void readSensors() {
+	public void readSensors(SensorsArray sensorsArray) {
 		isActive = false;
+		bigBlind = sensorsArray.getPokerSimulator().bigBlind;
 		String ssPrefix = (playerId == 0) ? "hero" : "villan" + playerId;
-		List<ScreenSensor> list = Hero.sensorsArray.getSensors(ssPrefix);
-		Hero.sensorsArray.readSensors(true, list);
+		List<ScreenSensor> list = sensorsArray.getSensors(ssPrefix);
+		sensorsArray.readSensors(true, list);
 
 		// test: all sensor must be active
-		boolean disab = !(Hero.sensorsArray.getSensor(ssPrefix + ".name").isEnabled()
-				&& Hero.sensorsArray.getSensor(ssPrefix + ".chips").isEnabled());
-		if (!Hero.sensorsArray.isActive(playerId) || disab)
+		boolean disab = !(sensorsArray.getSensor(ssPrefix + ".name").isEnabled()
+				&& sensorsArray.getSensor(ssPrefix + ".chips").isEnabled());
+		if (!sensorsArray.isActive(playerId) || disab)
 			return;
 
 		// Active variable here to avoid blick in assesment. if in this moment can retrive all info, present the
@@ -100,13 +101,13 @@ public class GamePlayer {
 
 		// amunitions
 		String sName = (playerId == 0) ? "hero.chips" : "villan" + playerId + ".chips";
-		chips = Hero.sensorsArray.getSensor(sName).getNumericOCR();
+		chips = sensorsArray.getSensor(sName).getNumericOCR();
 
 		// name
 		if (playerId == 0)
 			name = "Hero";
 		else
-			name = Hero.sensorsArray.getSensor("villan" + playerId + ".name").getOCR();
+			name = sensorsArray.getSensor("villan" + playerId + ".name").getOCR();
 
 		// both values must be available to continue the process
 		if (chips == -1 || name == null)
@@ -125,8 +126,8 @@ public class GamePlayer {
 
 		// an the beginning of the record process, set the buyIN as basic anc compute the average winnigs/lose
 		if (prevValue == -1) {
-			double buyIn = Hero.sensorsArray.getPokerSimulator().getBuyIn();
-			double bb = Hero.sensorsArray.getPokerSimulator().getBigBlind();
+			double buyIn = sensorsArray.getPokerSimulator().buyIn;
+			double bb = sensorsArray.getPokerSimulator().bigBlind;
 
 			// +/-10 BB mean the player is a new player
 			double win = bb * 10;
@@ -152,7 +153,7 @@ public class GamePlayer {
 		// bettingPattern.clear();
 		// prevValue = -1;
 		// Game gh = Game.findFirst("NAME = ? AND TABLEPARAMS = ?", name,
-		// Hero.sensorsArray.getPokerSimulator().getTableParameters());
+		// Hero.pokerSimulator.getTableParameters());
 		// if (gh != null) {
 		// bettingPattern = (DescriptiveStatistics) TResources
 		// .getObjectFromByteArray(gh.getBytes("BEATTIN_PATTERN"));
@@ -167,7 +168,7 @@ public class GamePlayer {
 
 	public void updateDB() {
 		// if (!name.equals(prefix)) {
-		// Game gh = Game.findOrInit("tableparams", Hero.sensorsArray.getPokerSimulator().getTableParameters(), "name",
+		// Game gh = Game.findOrInit("tableparams", Hero.pokerSimulator.getTableParameters(), "name",
 		// name);
 		// gh.set("ASSESMENT", getStats());
 		// gh.set("BEATTIN_PATTERN", TResources.getByteArrayFromObject(bettingPattern));
@@ -190,7 +191,7 @@ public class GamePlayer {
 	 */
 	public double getMean() {
 		double mean = bettingPattern.getMean();
-		mean = mean / Hero.sensorsArray.getPokerSimulator().getBigBlind();
+		mean = mean / bigBlind;
 		mean = ((int) (mean * 100)) / 100.0;
 		return mean;
 	}
@@ -201,7 +202,7 @@ public class GamePlayer {
 
 	public double getStandardDeviation() {
 		double var = bettingPattern.getStandardDeviation();
-		var = var / Hero.sensorsArray.getPokerSimulator().getBigBlind();
+		var = var / bigBlind;
 		var = ((int) (var * 100)) / 100.0;
 		return var;
 	}

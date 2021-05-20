@@ -31,19 +31,24 @@ public class RobotActuator {
 	}
 
 	/**
-	 * Perform the secuence of command passsed as argument. The command structure is in the class documentation. This
-	 * method dont dont verify the command format. it will try of fullfill the action. check the logger entry to verify
-	 * if the secuence was complete.
-	 * <p>
-	 * TODO: write operation not tested.
-	 * <p>
-	 * TODO: check if the 2clik operation select the text inside of text component. if not, thek=text command must be
-	 * transformed in anoter secuence of actions
+	 * Perform the secuence of command asociated with the {@link TrooperAction} passsed as argument.
+	 * 
+	 * @see #perform(String)
+	 * @param trooperAction - the action
+	 */
+	public void perform(TrooperAction trooperAction) {
+		perform(trooperAction.robotCommand);
+	}
+
+	/**
+	 * Perform the secuence of commands passed as argument as argument. The command structure is in the class
+	 * documentation. This method dont dont verify the command format. it will try of fullfill the action. check the
+	 * logger entry to verify if the secuence was complete.
 	 * 
 	 * @param commands - the commands to perform
 	 */
-	public void perform(String commands) {
-		String[] commandss = commands.split(";");
+	public void perform(String command) {
+		String[] commandss = command.split(";");
 		for (String cmd : commandss) {
 			String temp[] = cmd.split("[,]");
 			String action = temp[0];

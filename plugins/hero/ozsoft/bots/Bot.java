@@ -21,12 +21,18 @@ import plugins.hero.ozsoft.*;
 
 /**
  * Base class for all Texas Hold'em poker bot implementations.
- *  
+ * 
  * @author Oscar Stigter
  */
 public abstract class Bot implements Client {
-    
-    /** Number of hole cards. */
-    protected static final int NO_OF_HOLE_CARDS = 2;
-    
+
+	/** Number of hole cards. */
+	protected static final int NO_OF_HOLE_CARDS = 2;
+
+	protected Table table;
+
+	@Override
+	public void setTable(Table table) {
+		this.table = table;
+	}
 }

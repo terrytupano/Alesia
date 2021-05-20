@@ -4,7 +4,7 @@
   <UserLogIn.rememberUser type="ButtonState" selected="true"/>
   <logging.level type="ComboBoxState" selectedIndex="3"/>
   <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
-  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="3"/>
+  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="2"/>
   <tDistributionRange type="ComboBoxState" selectedIndex="4"/>
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
   <SensorPanel.imageType type="ComboBoxState" selectedIndex="0"/>
@@ -38,9 +38,9 @@
       </DockableList>
     </root>
   </FlickaDockablePane>
-  <preflopStrategy type="ComboBoxState" selectedIndex="1"/>
+  <preflopStrategy type="ComboBoxState" selectedIndex="0"/>
   <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>
-  <TWebFrame type="WindowState" location="0,40" size="553,735" state="0"/>
+  <TWebFrame type="WindowState" location="36,60" size="707,701" state="0"/>
   <smallBlid type="string"></smallBlid>
   <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>
   <bluff type="TextComponentState" text="200" caretPosition="3"/>

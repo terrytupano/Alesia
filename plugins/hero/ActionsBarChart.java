@@ -57,18 +57,12 @@ public class ActionsBarChart {
 		return chartPanel;
 	}
 
-	private String removePrefix(String action) {
-		String rs = action.replace("raise.", "");
-//		rs = rs.replace("raise.text,dc;raise.text,", "");
-		rs = rs.replace("text,dc;text,", "");
-		return rs;
-	}
-	public void setCategoryMarker(String category) {
+	public void setCategoryMarker(TrooperAction action) {
 		CategoryPlot categoryPlot = (CategoryPlot) chart.getPlot();
 		categoryPlot.clearDomainMarkers();
-		if (category == null)
+		if (action == null)
 			return;
-		String cat = removePrefix(category);
+		String cat = action.toString();
 		CategoryMarker categoryMarker = new CategoryMarker(cat);
 		categoryMarker.setPaint(Color.BLUE);
 		categoryMarker.setAlpha(0.3F);
@@ -79,14 +73,20 @@ public class ActionsBarChart {
 		chart.getTitle().setText(title);
 	}
 
-	public void setDataSet(Vector<TEntry<String, Double>> example) {
+	/**
+	 * set the columns of actions
+	 * 
+	 * @see PokerSimulator#setActionsData(TrooperAction, Vector)
+	 * @param example - list of {@link TEntry}
+	 */
+	public void setDataSet(Vector<TEntry<TrooperAction, Double>> example) {
 		dataset.clear();
 
 		// fill the dataset with empty slots to keep the shape of the graphics
 		if (example == null)
 			example = new Vector<>();
 
-		example.forEach(te -> dataset.addValue(te.getValue(), "", removePrefix(te.getKey())));
+		example.forEach(te -> dataset.addValue(te.getValue(), "", te.getKey().toString()));
 		int morec = maxSlot - dataset.getColumnCount();
 		if (morec < 1)
 			return;

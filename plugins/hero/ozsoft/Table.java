@@ -660,7 +660,7 @@ public class Table extends Task {
 		notifyBoardUpdated();
 		notifyPlayerActed();
 	}
-
+	
 	/**
 	 * Posts the small blind.
 	 */

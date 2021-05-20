@@ -27,7 +27,7 @@ public class CallAction extends PlayerAction {
     /**
      * Constructor.
      */
-    /* package */ CallAction() {
+    CallAction() {
         super("Call", "calls");
     }
     
