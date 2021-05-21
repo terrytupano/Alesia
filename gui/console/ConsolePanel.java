@@ -37,7 +37,7 @@ public class ConsolePanel extends WebPanel {
 	private String blanck = "                                                                                                    ";
 
 	public ConsolePanel(Logger logger) {
-		setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
+		setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP, true, true));
 		this.logger = logger;
 		actionMap = Alesia.getInstance().getContext().getActionMap(this);
 		this.editorPane = TUIUtils.getConsoleEditorPane();
@@ -83,10 +83,6 @@ public class ConsolePanel extends WebPanel {
 		JScrollPane jsp = new JScrollPane(editorPane);
 		add(toolbar);
 		add(jsp);
-
-		Dimension prefd = editorPane.getPreferredSize();
-		jsp.getViewport().setPreferredSize(new Dimension(prefd.width, 350));
-		jsp.getViewport().setMinimumSize(new Dimension(prefd.width, 350));
 		// editorPane.setText("");
 
 	}

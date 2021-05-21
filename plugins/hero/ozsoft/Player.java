@@ -104,10 +104,13 @@ public class Player {
 	}
 
 	/**
-	 * Sets the hole cards.
+	 * Sets the hole cards. calling this metod with null argument remove the cards (fold)
+	 * 
+	 * @param cards - cards or <code>null</code>
 	 */
 	public void setCards(List<UoACard> cards) {
 		hand.makeEmpty();
+		hasCards = false;
 		if (cards != null) {
 			if (cards.size() == 2) {
 				hand.addCard(cards.get(0));

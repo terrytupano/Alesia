@@ -19,8 +19,6 @@ package plugins.hero.ozsoft.bots;
 
 import java.util.*;
 
-import com.jgoodies.common.base.*;
-
 import plugins.hero.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
@@ -33,7 +31,6 @@ import plugins.hero.ozsoft.actions.*;
 public class HeroBot extends Bot {
 
 	private Trooper trooper;
-	private PokerSimulator pokerSimulator;;
 	private TableType tableType;
 	private List<Player> villans;
 	private Player heroPlayer;
@@ -42,10 +39,13 @@ public class HeroBot extends Bot {
 	private int pot;
 
 	public HeroBot() {
-		this.pokerSimulator = new PokerSimulator();
+
+	}
+	@Override
+	public void setObject(Object object) {
+		super.setObject(object);
 		this.trooper = new Trooper(null, pokerSimulator);
 	}
-
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		for (PlayerAction act : allowedActions) {
@@ -59,31 +59,39 @@ public class HeroBot extends Bot {
 		pokerSimulator.setCallValue(currentBet);
 		if (allowedActions.contains(PlayerAction.CHECK))
 			pokerSimulator.setCallValue(0);
-		
+
 		pokerSimulator.setPotValue(pot);
 		pokerSimulator.setHeroChips(heroPlayer.getCash());
 		// FIXME: temporal
 		pokerSimulator.setRaiseValue(minBet * 2);
-		// long foldV = villans.stream().filter(p -> p.getAction().getName().equals("Fold")).count();
-		int foldV = 0;
-		for (Player p : villans) {
-			if (p.getHand().size() == 0)
-				foldV++;
-		}
-		int actV = villans.size() - ((int) foldV);
+		int actV = (int) villans.stream().filter(p -> p.hasCards()).count();
+		// int actV = villans.size() - ((int) foldV);
 		pokerSimulator.setNunOfPlayers(actV + 1);
 		pokerSimulator.setTablePosition(dealer, actV);
 
 		pokerSimulator.runSimulation();
 		TrooperAction act = trooper.getSimulationAction();
 
+		PlayerAction action = null;
+		if (act.equals(TrooperAction.FOLD))
+			action = PlayerAction.FOLD;
 		if (act.equals(TrooperAction.CHECK))
-			return PlayerAction.CHECK;
-		if (act.name.equals("call"))
-			return new BetAction((int) act.amount);
-		if (act.name.equals("raise"))
-			return new BetAction((int) act.amount);
-		return PlayerAction.FOLD;
+			action = PlayerAction.CHECK;
+		if (act.name.equals("call") && act.amount > 0) {
+			if (allowedActions.contains(PlayerAction.CALL))
+				action = new CallAction((int) act.amount);
+			if (allowedActions.contains(PlayerAction.BET))
+				action = new BetAction((int) act.amount);
+		}
+		if (act.name.equals("raise") || act.name.equals("pot") || act.name.equals("allIn")) {
+			if (allowedActions.contains(PlayerAction.RAISE))
+				action = new RaiseAction((int) act.amount);
+			if (allowedActions.contains(PlayerAction.BET))
+				action = new BetAction((int) act.amount);
+		}
+		if(action == null)
+			throw new IllegalArgumentException("Hero bot has no correct action selected. Trooper action was" + act);
+		return action;
 	}
 
 	@Override

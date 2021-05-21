@@ -17,6 +17,7 @@
 
 package plugins.hero.ozsoft.bots;
 
+import plugins.hero.*;
 import plugins.hero.ozsoft.*;
 
 /**
@@ -28,11 +29,11 @@ public abstract class Bot implements Client {
 
 	/** Number of hole cards. */
 	protected static final int NO_OF_HOLE_CARDS = 2;
-
-	protected Table table;
+	protected PokerSimulator pokerSimulator;
 
 	@Override
-	public void setTable(Table table) {
-		this.table = table;
+	public void setObject(Object object) {
+		if(object  instanceof PokerSimulator)
+		this.pokerSimulator = (PokerSimulator) object;
 	}
 }

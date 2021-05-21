@@ -336,6 +336,12 @@ public class Trooper extends Task {
 	 */
 	private double[] getAvgBluffValue() {
 		double[] rval = new double[2];
+		// FIXME: for simulation purpose, return my chips
+		if (sensorsArray == null) {
+			rval[0] = pokerSimulator.getHeroChips();
+			rval[1] = 3;
+			return rval;
+		}
 		GameRecorder gameRecorder = sensorsArray.getGameRecorder();
 		ArrayList<GamePlayer> list = gameRecorder.getAssesment();
 		for (GamePlayer gp : list) {
@@ -900,11 +906,12 @@ public class Trooper extends Task {
 	 * @return the action to execute
 	 */
 	public TrooperAction getSimulationAction() {
+		playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
 		clearEnviorement();
 		decide();
 		return act();
 	}
-	
+
 	protected void performDecisionMethod() {
 		String decisionM = parameters.get("decisionMethod").toString();
 		if ("potOdd".equals(decisionM)) {

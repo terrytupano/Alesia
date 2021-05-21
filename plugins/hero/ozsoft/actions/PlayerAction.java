@@ -34,7 +34,7 @@ public abstract class PlayerAction {
     public static final PlayerAction BIG_BLIND = new BigBlindAction();
     
     /** Call. */
-    public static final PlayerAction CALL = new CallAction();
+    public static final PlayerAction CALL = new CallAction(0);
     
     /** Check. */
     public static final PlayerAction CHECK = new CheckAction();

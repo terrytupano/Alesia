@@ -24,11 +24,13 @@ import java.util.List;
 
 import javax.swing.*;
 
+import com.alee.extended.layout.*;
+import com.alee.laf.button.*;
 import com.alee.laf.text.*;
 import com.alee.utils.*;
 import com.jgoodies.forms.builder.*;
 import com.jgoodies.forms.factories.*;
-import com.jgoodies.forms.layout.*;
+import com.jgoodies.forms.layout.FormLayout;
 
 import core.*;
 import plugins.hero.UoAHandEval.*;
@@ -93,10 +95,6 @@ public class TableDialog extends JDialog implements Client {
 		controlPanel = new ControlPanel(TABLE_TYPE);
 		boardPanel = new BoardPanel();
 
-		FormLayout layout = new FormLayout("center:pref, 3dlu, center:pref, 3dlu, center:pref",
-				"center:pref, 3dlu, center:pref, 3dlu, center:pref, 3dlu, fill:100dlu");
-		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DLU2);
-
 		this.players = game.getPlayers();
 		playerPanels = new HashMap<String, PlayerPanel>();
 		for (Player player : players) {
@@ -110,8 +108,34 @@ public class TableDialog extends JDialog implements Client {
 		this.proxyClient = test.getClient();
 		test.setClient(this);
 
+		// ActionListener al = new ActionListener() {
+		// public void actionPerformed(ActionEvent e) {
+		// WebButton btn = (WebButton) e.getSource();
+		//
+		// }
+		// };
+
+		// control panel
 		outConsole = TUIUtils.getConsoleTextArea();
+		WebToggleButton pauseButton = new WebToggleButton(ap -> game.pause(!game.isPaused()));
+		pauseButton.setIcon(TUIUtils.getSmallFontIcon('\ue034'));
+		pauseButton.setSelectedIcon(TUIUtils.getSmallFontIcon('\ue037'));
+		WebButton endGame = new WebButton(ap -> dispose());
+		endGame.setIcon(TUIUtils.getSmallFontIcon('\ue047'));
+
+		JPanel controlPanel = new JPanel(new BorderLayout(5, 5));
+		controlPanel.setOpaque(false);
+		controlPanel.add(TUIUtils.getSmartScroller(outConsole), BorderLayout.CENTER);
+		JPanel jp = new JPanel(new VerticalFlowLayout());
+		jp.setOpaque(false);
+		jp.add(pauseButton);
+		jp.add(endGame);
+		controlPanel.add(jp, BorderLayout.EAST);
+
 		// set ui components
+		FormLayout layout = new FormLayout("center:pref, 3dlu, center:pref, 3dlu, center:pref",
+				"center:pref, 3dlu, center:pref, 3dlu, center:pref, 3dlu, fill:100dlu");
+		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DLU2);
 		ArrayList<PlayerPanel> playerP = new ArrayList<>(playerPanels.values());
 		builder.nextColumn(2);
 		builder.append(playerP.get(0));
@@ -123,7 +147,7 @@ public class TableDialog extends JDialog implements Client {
 		builder.nextColumn(2);
 		builder.append(playerP.get(2));
 		builder.nextLine(2);
-		builder.append(TUIUtils.getSmartScroller(outConsole), 5);
+		builder.append(controlPanel, 5);
 
 		JPanel contentPane = builder.build();
 		contentPane.setOpaque(true);
@@ -133,7 +157,8 @@ public class TableDialog extends JDialog implements Client {
 		// Show the frame.
 		setResizable(false);
 		pack();
-		setLocationRelativeTo(null);
+		setLocation(660, 95);
+//		setLocationRelativeTo(null);
 		setVisible(true);
 	}
 
@@ -239,9 +264,8 @@ public class TableDialog extends JDialog implements Client {
 			}
 		}
 	}
-
 	@Override
-	public void setTable(Table table) {
-		// the table is setted in constructor
+	public void setObject(Object object) {
+
 	}
 }

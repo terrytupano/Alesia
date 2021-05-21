@@ -244,16 +244,13 @@ public class TUIPanel extends WebPanel {
 
 	/**
 	 * set an standar footer area for components intendet to input data.
-	 * <p>
-	 * NOTE: the actions bust be located in {@link TActionsFactory} class
-	 * 
-	 * @param actions list of actions
+
+	 * @param actions Actions to add
 	 */
-	public void setFooterActions(String... actions) {
-		List<Action> alist = TActionsFactory.getActions(actions);
+	public void setFooterActions(Action... actions) {
 		Vector<JComponent> lst = new Vector<>();
 		lst.add(new JLabel());
-		for (Action act : alist) {
+		for (Action act : actions) {
 			allActions.add(act);
 			
 //			TODO: this value muss kommt from look and feel file
@@ -275,6 +272,19 @@ public class TUIPanel extends WebPanel {
 
 		setFooterComponent(groupPane);
 	}
+
+	/**
+	 * set an standar footer area for components intendet to input data.
+	 * <p>
+	 * NOTE: the actions bust be located in {@link TActionsFactory} class
+	 * 
+	 * @param actions list of actions
+	 */
+	public void setFooterActions(String... actions) {
+		List<Action> alist = TActionsFactory.getActions(actions);
+		setFooterActions( alist.toArray(new Action[0]));
+	}
+	
 	public void setFooterComponent(JComponent footer) {
 		if (footerJComponent != null) {
 			remove(footerJComponent);

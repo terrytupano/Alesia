@@ -33,9 +33,9 @@ import plugins.hero.ozsoft.actions.*;
 public interface Client {
 
 	/**
-	 * set the table instance were this bot operate
+	 * set an arbitrary object form the outside of the simulation
 	 */
-	void setTable(Table table);
+	void setObject(Object object);
 	/**
 	 * Handles a game message.
 	 * 
@@ -99,5 +99,4 @@ public interface Client {
 	 * @return The selected action.
 	 */
 	PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions);
-
 }

@@ -27,7 +27,7 @@ public class AllInAction extends PlayerAction {
     /**
      * Constructor.
      */
-    /* package */ AllInAction() {
+    public AllInAction() {
         super("All-in", "goes all-in");
     }
 

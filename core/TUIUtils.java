@@ -1034,7 +1034,9 @@ public class TUIUtils {
 	}
 
 	public static Image buildImage(char unicode, float size, Color color) {
-		Font font = new Font("Material-Design-Iconic-Font", Font.PLAIN, 1);
+		Font font = new Font("Material Icons", Font.PLAIN, 1);
+//		ajust for Font Awesome 5 Free Regular
+//		size += 1f;
 		font = font.deriveFont(size);
 		String text = Character.toString(unicode);
 		return buildImage(text, font, color);
@@ -1052,8 +1054,10 @@ public class TUIUtils {
 		label.setForeground(color);
 		label.setFont(font);
 		Dimension dim = label.getPreferredSize();
-		int width = dim.width + 1;
-		int height = dim.height + 1;
+		int width = dim.width;
+		int height = dim.height;
+//		int width = dim.width + 1;
+//		int height = dim.height + 1;
 		label.setSize(width, height);
 		BufferedImage bufImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2d = bufImage.createGraphics();

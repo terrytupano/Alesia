@@ -113,7 +113,7 @@ public class Table extends Task {
 	public Table(TableType type, int bigBlind) {
 		super(Alesia.getInstance());
 		this.tableType = type;
-		this.bigBlind = bigBlind; 
+		this.bigBlind = bigBlind;
 		players = new ArrayList<Player>();
 		activePlayers = new ArrayList<Player>();
 		deck = new UoADeck();
@@ -178,7 +178,7 @@ public class Table extends Task {
 			board.addCard(deck.deal());
 		}
 		notifyPlayersUpdated(false);
-		notifyMessage("%s deals the %s.", dealer, phaseName);
+//		notifyMessage("%s deals the %s.", dealer, phaseName);
 	}
 
 	/**
@@ -192,7 +192,7 @@ public class Table extends Task {
 			player.setCards(cs);
 		}
 		notifyPlayersUpdated(false);
-		notifyMessage("%s deals the hole cards.", dealer);
+//		notifyMessage("%s deals the hole cards.", dealer);
 	}
 
 	/**
@@ -223,8 +223,12 @@ public class Table extends Task {
 		while (playersToAct > 0) {
 			try {
 				Thread.sleep(speed);
+				// pause ?
+				if (paused) {
+					continue;
+				}
 			} catch (Exception e) {
-				// TODO: handle exception
+
 			}
 
 			rotateActor();
@@ -234,23 +238,23 @@ public class Table extends Task {
 				action = PlayerAction.CHECK;
 				playersToAct--;
 			} else {
-				// Otherwise allow client to act.
+				// // Otherwise allow client to act.
 				Set<PlayerAction> allowedActions = getAllowedActions(actor);
 				action = actor.getClient().act(minBet, bet, allowedActions);
-				// Verify chosen action to guard against broken clients (accidental or on purpose).
-				if (!allowedActions.contains(action)) {
-					if (action instanceof BetAction && !allowedActions.contains(PlayerAction.BET)) {
-						throw new IllegalStateException(
-								String.format("Player '%s' acted with illegal Bet action", actor));
-					} else if (action instanceof RaiseAction && !allowedActions.contains(PlayerAction.RAISE)) {
-						throw new IllegalStateException(
-								String.format("Player '%s' acted with illegal Raise action", actor));
-					}
-				}
+				// // Verify chosen action to guard against broken clients (accidental or on purpose).
+				// if (!allowedActions.contains(action)) {
+				// if (action instanceof BetAction && !allowedActions.contains(PlayerAction.BET)) {
+				// throw new IllegalStateException(
+				// String.format("Player '%s' acted with illegal Bet action", actor));
+				// } else if (action instanceof RaiseAction && !allowedActions.contains(PlayerAction.RAISE)) {
+				// throw new IllegalStateException(
+				// String.format("Player '%s' acted with illegal Raise action", actor));
+				// }
+				// }
 				playersToAct--;
-				if (action == PlayerAction.CHECK) {
+				if (action instanceof CheckAction) {
 					// Do nothing.
-				} else if (action == PlayerAction.CALL) {
+				} else if (action instanceof CallAction) {
 					int betIncrement = bet - actor.getBet();
 					if (betIncrement > actor.getCash()) {
 						betIncrement = actor.getCash();
@@ -293,7 +297,7 @@ public class Table extends Task {
 						// Max. number of raises reached; other players get one more turn.
 						playersToAct = activePlayers.size() - 1;
 					}
-				} else if (action == PlayerAction.FOLD) {
+				} else if (action instanceof FoldAction) {
 					actor.setCards(null);
 					activePlayers.remove(actor);
 					actorPosition--;
@@ -660,7 +664,7 @@ public class Table extends Task {
 		notifyBoardUpdated();
 		notifyPlayerActed();
 	}
-	
+
 	/**
 	 * Posts the small blind.
 	 */
@@ -724,39 +728,55 @@ public class Table extends Task {
 			player.getClient().actorRotated(actor);
 		}
 	}
+	private boolean paused;
 
+	public boolean isPaused() {
+		return paused;
+	}
+	public void pause(boolean pause) {
+		this.paused = pause;
+	}
 	@Override
 	protected Object doInBackground() throws Exception {
-		for (Player player : players) {
-			player.getClient().joinedTable(tableType, bigBlind, players);
-		}
-		dealerPosition = -1;
-		actorPosition = -1;
-		while (!isCancelled()) {
-			int noOfActivePlayers = 0;
+		try {
 			for (Player player : players) {
-				if (player.getCash() >= bigBlind) {
-					noOfActivePlayers++;
+				player.getClient().joinedTable(tableType, bigBlind, players);
+			}
+			dealerPosition = -1;
+			actorPosition = -1;
+			while (!isCancelled()) {
+				// pause ?
+				if (paused) {
+					Thread.sleep(100);
+					continue;
+				}
+
+				int noOfActivePlayers = 0;
+				for (Player player : players) {
+					if (player.getCash() >= bigBlind) {
+						noOfActivePlayers++;
+					}
+				}
+				if (noOfActivePlayers > 1) {
+					playHand();
+				} else {
+					break;
 				}
 			}
-			if (noOfActivePlayers > 1) {
-				playHand();
-			} else {
-				break;
-			}
-		}
 
-		// Game over.
-		board.makeEmpty();
-		pots.clear();
-		bet = 0;
-		notifyBoardUpdated();
-		for (Player player : players) {
-			player.resetHand();
+			// Game over.
+			board.makeEmpty();
+			pots.clear();
+			bet = 0;
+			notifyBoardUpdated();
+			for (Player player : players) {
+				player.resetHand();
+			}
+			notifyPlayersUpdated(false);
+			notifyMessage("Game over.");
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		notifyPlayersUpdated(false);
-		notifyMessage("Game over.");
 		return null;
 	}
-
 }

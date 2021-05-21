@@ -58,7 +58,7 @@ public class BasicBot extends Bot {
 	private UoAHand hand;
 
 	public BasicBot() {
-		this((int) Math.random() * 100, (int) Math.random() * 100);
+		this((int) (Math.random() * 100d), (int) (Math.random() * 100d));
 	}
 	/**
 	 * Constructor.
@@ -73,8 +73,9 @@ public class BasicBot extends Bot {
 		if (aggression < 0 || aggression > 100) {
 			throw new IllegalArgumentException("Invalid aggression setting");
 		}
-		this.tightness = tightness;
-		this.aggression = aggression;
+		
+		this.tightness = tightness; // 8
+		this.aggression = aggression; // 36
 	}
 
 	/** {@inheritDoc} */

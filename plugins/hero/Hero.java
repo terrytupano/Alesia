@@ -40,11 +40,10 @@ public class Hero extends TPlugin {
 	// protected static Tesseract iTesseract;
 	protected static ActionMap actionMap;
 	protected static Logger heroLogger;
-	protected static ConsolePanel consolePanel;
 	protected static File tableFile;
 	protected static boolean isTestMode;
 	protected static ShapeAreas shapeAreas;
-//	protected static Hashtable<String, Object> trooperParameters;
+	// protected static Hashtable<String, Object> trooperParameters;
 	protected static String CARDS_FOLDER = "plugins/hero/cards/";
 	private static DateFormat dateFormat;
 	/**
@@ -52,10 +51,10 @@ public class Hero extends TPlugin {
 	 */
 	private static Date startDate = null;
 
-	private HeroPanel heroPanel;
-	private GameSimulatorPanel simulatorPanel;
-
 	public static TrooperPanel trooperPanel;
+	private HeroPanel heroPanel;
+
+	private GameSimulatorPanel simulatorPanel;
 	private SensorsArray sensorsArray;
 
 	public Hero() {
@@ -63,7 +62,6 @@ public class Hero extends TPlugin {
 		dateFormat = DateFormat.getDateTimeInstance();
 		actionMap = Alesia.getInstance().getContext().getActionMap(this);
 		heroLogger = Logger.getLogger("Hero");
-		consolePanel = new ConsolePanel(heroLogger);
 		TActionsFactory.insertActions(actionMap);
 	}
 
@@ -96,6 +94,7 @@ public class Hero extends TPlugin {
 	public static Date getStartDate() {
 		return startDate;
 	}
+
 	public static Tesseract getTesseract() {
 		// TODO: no visible performance improve by setting every sensor with his own teseract instance
 		Tesseract iTesseract = new Tesseract(); // JNA Interface Mapping
@@ -110,7 +109,6 @@ public class Hero extends TPlugin {
 		// iTesseract.setOcrEngineMode(0); // Run Tesseract only - fastest
 		return iTesseract;
 	}
-
 	/**
 	 * return the string representation of a list of cards
 	 * 
@@ -123,13 +121,13 @@ public class Hero extends TPlugin {
 		cards.forEach(c -> sb.append(c.toString() + " "));
 		return sb.toString().trim();
 	}
+
 	public static String parseHands(List<UoAHand> hands) {
 		String hs = hands.toString();
 		hs = hs.replaceAll("[ ]", "");
 		hs = hs.replace(',', ' ');
 		return hs.substring(1, hs.length() - 1);
 	}
-
 	/**
 	 * parse the variable <code>table.parameters</code> inserting in the <code>values</code> hastable:
 	 * <li><code>table.buyIn</code>
@@ -155,16 +153,6 @@ public class Hero extends TPlugin {
 		uni = uni.replace('h', '\u2665');// u2665
 		uni = uni.replace('d', '\u2666');// u2666
 		return uni;
-	}
-
-	private void initGlovalVars() {
-		// dont put isTestMode = false; HERE !!!!!!!!!!!!!!!!!
-		startDate = new Date();
-		shapeAreas = new ShapeAreas(Hero.tableFile);
-		shapeAreas.read();
-		sensorsArray = new SensorsArray();
-		sensorsArray.setShapeAreas(shapeAreas);
-		heroPanel.updateGlovalParameters(sensorsArray);
 	}
 
 	protected static String getSesionID() {
@@ -234,12 +222,14 @@ public class Hero extends TPlugin {
 		try {
 			Hashtable<String, Object> values = trooperPanel.getValues();
 			TableModel model = simulatorPanel.getPlayersTable().getModel();
+			startDate = new Date();
 
 			int buy = ((Double) values.get("table.buyIn")).intValue();
 			int bb = ((Double) values.get("table.bigBlid")).intValue();
 			int sb = ((Double) values.get("table.smallBlid")).intValue();
-
-			// TODO: add the iption for limit and no limit
+			PokerSimulator simulator = new PokerSimulator();
+			simulatorPanel.updatePokerSimulator(simulator);
+			
 			Table table = new Table(TableType.NO_LIMIT, bb);
 			for (int i = 0; i < model.getRowCount(); i++) {
 				if ((Boolean) model.getValueAt(i, 2)) {
@@ -247,7 +237,7 @@ public class Hero extends TPlugin {
 					String bCls = model.getValueAt(i, 1).toString();
 					Class cls = Class.forName("plugins.hero.ozsoft.bots." + bCls);
 					Bot bot = (Bot) cls.newInstance();
-					bot.setTable(table);
+					bot.setObject(simulator);
 					Player p = new Player(name, buy, bot);
 					table.addPlayer(p);
 				}
@@ -293,6 +283,16 @@ public class Hero extends TPlugin {
 	public void uoAEvaluator(ActionEvent event) {
 		UoAPanel aPanel = new UoAPanel();
 		Alesia.getInstance().getMainPanel().setContentPanel(aPanel);
+	}
+
+	private void initGlovalVars() {
+		// dont put isTestMode = false; HERE !!!!!!!!!!!!!!!!!
+		startDate = new Date();
+		shapeAreas = new ShapeAreas(Hero.tableFile);
+		shapeAreas.read();
+		sensorsArray = new SensorsArray();
+		sensorsArray.setShapeAreas(shapeAreas);
+		heroPanel.updateSensorsArray(sensorsArray);
 	}
 
 	private Task start() {

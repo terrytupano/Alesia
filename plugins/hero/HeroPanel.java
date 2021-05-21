@@ -16,6 +16,8 @@ import com.alee.laf.panel.*;
 import com.alee.laf.tabbedpane.*;
 import com.alee.managers.settings.*;
 
+import gui.console.*;
+
 public class HeroPanel extends WebPanel {
 
 	private TrooperPanel trooperPanel;
@@ -33,7 +35,7 @@ public class HeroPanel extends WebPanel {
 		wtp.add(trooperPanel, "Trooper parameters");
 		wtp.add(sensorArrayPanel, "Sensor Array");
 		wtp.add(pockerSimulatorPanel, "Pocker Simulator");
-		wtp.add(Hero.consolePanel, "Log console");
+		wtp.add(new ConsolePanel(Hero.heroLogger), "Log console");
 		// wtp.add(TCVUtils.createImagesPanel(Hero.preparedCards), "Cards");
 
 		wtp.registerSettings(new Configuration<TabbedPaneState>("HeroPanel.tabbedPanel"));
@@ -51,7 +53,7 @@ public class HeroPanel extends WebPanel {
 	 * 
 	 * @param sensorsArray - the array to update
 	 */
-	public void updateGlovalParameters(SensorsArray sensorsArray) {
+	public void updateSensorsArray(SensorsArray sensorsArray) {
 		setVisible(false);
 		pockerSimulatorPanel.removeAll();
 		pockerSimulatorPanel.add(sensorsArray.getPokerSimulator().getReportPanel(), BorderLayout.CENTER);

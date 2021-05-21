@@ -27,8 +27,8 @@ public class CallAction extends PlayerAction {
     /**
      * Constructor.
      */
-    CallAction() {
-        super("Call", "calls");
+    public CallAction(int amount) {
+        super("Call", "calls", amount);
     }
     
 }
