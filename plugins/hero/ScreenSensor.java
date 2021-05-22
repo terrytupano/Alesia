@@ -12,6 +12,7 @@ import com.alee.utils.*;
 import core.*;
 import net.sourceforge.tess4j.*;
 import net.sourceforge.tess4j.util.*;
+import plugins.hero.utils.*;
 
 /**
  * This class is a visual representation of the aread read from the screen. Group of this class are used and controled

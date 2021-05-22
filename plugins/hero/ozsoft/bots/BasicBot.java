@@ -277,5 +277,4 @@ public class BasicBot extends Bot {
 		// 6. Round half point scores up.
 		return Math.round(score);
 	}
-
 }

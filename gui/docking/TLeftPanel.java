@@ -21,7 +21,7 @@ public class TLeftPanel extends WebPanel {
 	ActionMap actionMap;
 	private DockingContainer container;
 	private ArrayList<WebButton> buttons;
-	
+
 	public TLeftPanel(DockingContainer container) {
 		super(StyleId.of("LeftPanel"));
 		this.container = container;
@@ -51,15 +51,16 @@ public class TLeftPanel extends WebPanel {
 		buttons.add(fa);
 		buttons.add(la);
 	}
-	public static ArrayList<WebButton> getLeftPanelButtons(Color toColor, Action... actions) {
+
+	private static ArrayList<WebButton> getLeftPanelButtons(Color toColor, Action... actions) {
 		ArrayList<WebButton> list = new ArrayList<>();
-		int is = colapsedDim.width/2;
+		int is = colapsedDim.width / 2;
 		int gap = (colapsedDim.width / 4);
 		TUIUtils.overRideIcons(is, toColor, actions);
 		for (Action action : actions) {
 			WebButton webButton = new WebButton(StyleId.of("LeftPanelButton"), action);
 			webButton.setHorizontalAlignment(SwingConstants.LEFT);
-			webButton.setFont(Alesia.title1);
+			webButton.setFont(TUIUtils.H2_Font);
 			webButton.setForeground(Color.WHITE);
 			webButton.setBorder(null);
 			webButton.setIconTextGap(gap);
@@ -74,7 +75,6 @@ public class TLeftPanel extends WebPanel {
 	@org.jdesktop.application.Action
 	public void settings(ActionEvent event) {
 		TSettingsPanel ts = new TSettingsPanel();
-		ts.setActions(actionMap.get("settings"), TActionsFactory.getAction("about"));
 		container.setContentPanel(ts);
 	}
 

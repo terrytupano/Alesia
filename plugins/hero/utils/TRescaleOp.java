@@ -1,4 +1,4 @@
-package plugins.hero;
+package plugins.hero.utils;
 
 import java.awt.*;
 import java.awt.event.*;

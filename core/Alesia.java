@@ -67,8 +67,6 @@ public class Alesia extends Application {
 	private AudioClip newMsg, errMsg;
 
 	public static TTaskManager manager;
-	public static Font title1;
-	public static Font title2;
 
 	private DockingContainer mainPanel;
 	private DB alesiaDB;

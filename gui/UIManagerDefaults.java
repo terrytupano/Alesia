@@ -8,12 +8,7 @@
  * Contributors:
  *     terry - initial API and implementation
  ******************************************************************************/
-package dev.utils;
-
-/*
- *	This programs uses the information found in the UIManager
- *  to create a table of key/value pairs for each Swing component.
- */
+package gui;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -27,6 +22,10 @@ import javax.swing.table.*;
 
 import com.alee.laf.*;
 
+/**
+ * This programs uses the information found in the UIManager to create a table of key/value pairs for each Swing
+ * component.
+ */
 public class UIManagerDefaults implements ActionListener, ItemListener {
 	private final static String[] COLUMN_NAMES = {"Key", "Value", "Sample"};
 	private static String selectedItem;
@@ -653,12 +652,12 @@ public class UIManagerDefaults implements ActionListener, ItemListener {
 	 */
 	public static void main(String[] args) {
 		WebLookAndFeel.install();
-//		try {
-//			UIManager.setLookAndFeel(new PlasticMetroLookAndFeel());
-//		} catch (UnsupportedLookAndFeelException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		// try {
+		// UIManager.setLookAndFeel(new PlasticMetroLookAndFeel());
+		// } catch (UnsupportedLookAndFeelException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				createAndShowGUI();

@@ -40,7 +40,7 @@ public class TRightPanel extends WebPanel implements FocusListener {
 	}
 	public void setActions(Action invoker, Action... actions) {
 		titleLable.setText((String) invoker.getValue(Action.NAME));
-		ArrayList<WebButton> lst = DockingContainer.createNavButtons(null, "RightPanelButton", Alesia.title2, actions);
+		ArrayList<WebButton> lst = DockingContainer.createNavButtons(null, "RightPanelButton", TUIUtils.H2_Font, actions);
 		WebPanel jp = new WebPanel(StyleId.of("RightPanel"));
 		jp.setLayout(new VerticalFlowLayout());
 		JComponent gf = null;
@@ -77,7 +77,7 @@ public class TRightPanel extends WebPanel implements FocusListener {
 	private JPanel createNavPanel() {
 		ActionMap amap = Alesia.getInstance().getContext().getActionMap(this);
 		backButton = new WebButton(StyleId.of("RightPanelButton"), amap.get("goBack"));
-		TUIUtils.overRideIcons(Alesia.title1.getSize(), null, backButton.getAction());
+		TUIUtils.overRideIcons(TUIUtils.H1_Font.getSize(), null, backButton.getAction());
 		backButton.setText(null);
 		this.titleLable = new JLabel(" ");
 		WebPanel p = new WebPanel(StyleId.panelTransparent);

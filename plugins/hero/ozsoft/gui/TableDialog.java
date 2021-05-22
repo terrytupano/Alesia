@@ -46,17 +46,11 @@ import plugins.hero.ozsoft.actions.*;
  */
 public class TableDialog extends JDialog implements Client {
 
-	/** Table type (betting structure). */
-	private static final TableType TABLE_TYPE = TableType.NO_LIMIT;
-
 	/** The players at the table. */
 	private final List<Player> players;
 
 	/** The board panel. */
 	private final BoardPanel boardPanel;
-
-	/** The control panel. */
-	private final ControlPanel controlPanel;
 
 	/** The player panels. */
 	private final Map<String, PlayerPanel> playerPanels;
@@ -92,7 +86,6 @@ public class TableDialog extends JDialog implements Client {
 		for (File file : files) {
 			cardsBuffer.put(file.getName().substring(0, file.getName().length() - 4), ImageUtils.getImageIcon(file));
 		}
-		controlPanel = new ControlPanel(TABLE_TYPE);
 		boardPanel = new BoardPanel();
 
 		this.players = game.getPlayers();
@@ -158,7 +151,7 @@ public class TableDialog extends JDialog implements Client {
 		setResizable(false);
 		pack();
 		setLocation(660, 95);
-//		setLocationRelativeTo(null);
+		// setLocationRelativeTo(null);
 		setVisible(true);
 	}
 

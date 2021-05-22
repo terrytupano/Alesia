@@ -40,7 +40,7 @@
   </FlickaDockablePane>
   <preflopStrategy type="ComboBoxState" selectedIndex="0"/>
   <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>
-  <TWebFrame type="WindowState" location="0,40" size="547,735" state="0"/>
+  <TWebFrame type="WindowState" location="19,58" size="501,703" state="0"/>
   <smallBlid type="string"></smallBlid>
   <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>
   <bluff type="TextComponentState" text="200" caretPosition="3"/>

@@ -15,14 +15,13 @@ import java.util.*;
 
 import javax.swing.*;
 
-import com.alee.extended.layout.*;
 import com.alee.extended.link.*;
 import com.alee.laf.panel.*;
 import com.alee.laf.scroll.*;
 import com.alee.managers.style.*;
 import com.jgoodies.forms.builder.*;
 import com.jgoodies.forms.factories.*;
-import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.*;
 
 import core.*;
 import gui.jgoodies.*;
@@ -41,25 +40,23 @@ public class AboutPanel extends WebPanel {
 
 	private JPanel getaboutPanel() {
 		JLabel jl = new JLabel(TStringUtils.getString("name"));
-		jl.setFont(Alesia.title1);
+		jl.setFont(TUIUtils.H1_Font);
 		UrlLinkAction ua = new UrlLinkAction(TStringUtils.getString("homepage"));
 
-		// FormLayout lay = new FormLayout("left:pref, 3dlu, left:pref, max(200dlu;pref)",
+		FormLayout layout = new FormLayout("fill:100dlu:grow",
+				"pref, pref, 6dlu, pref, 6dlu, pref, 6dlu, pref, fill:100dlu:grow");
+		WebPanel jp = new WebPanel();
+		DefaultFormBuilder builder = new DefaultFormBuilder(layout, jp).border(Borders.DLU2);
 
-		FormLayout layout = new FormLayout("left:pref, 3dlu, max(200dlu;pref)", ""); // add rows dynamically
-		WebPanel jp = new WebPanel(StyleId.panelTransparent);
-		DefaultFormBuilder builder = new DefaultFormBuilder(layout, jp).border(Borders.DIALOG);
 		builder.append(jl);
-		builder.nextLine();
-		builder.append(new JLabel(TStringUtils.getString("title")), 3);
-		builder.nextLine();
-		builder.append(new WebLink(ua), 3);
-		builder.nextLine();
-		builder.append(TStringUtils.getString("about.version"), new JLabel(TStringUtils.getString("version")));
-		builder.nextLine();
-		builder.append(new JLabel(TStringUtils.getString("about.msg2")), 3);
-		builder.nextLine();
-		builder.append(getOpenSourcePanel(), 3);
+		builder.append(new JLabel(TStringUtils.getString("title")));
+		builder.nextLine(2);
+		builder.append(new WebLink(ua));
+		builder.nextLine(2);
+		builder.append(TStringUtils.getString("about.version")+ TStringUtils.getString("version"));
+		builder.nextLine(2);
+		builder.append(new JLabel(TStringUtils.getString("about.msg2")));
+		builder.append(getOpenSourcePanel());
 
 		return builder.getPanel();
 	}
@@ -67,7 +64,8 @@ public class AboutPanel extends WebPanel {
 	private WebScrollPane getOpenSourcePanel() {
 		// componentes
 		Vector<String> lines = createLines();
-		WebPanel jp = new WebPanel(StyleId.panelTransparent, new VerticalFlowLayout());
+//		WebPanel jp = new WebPanel(new VerticalFlowLayout());
+		WebPanel jp = new WebPanel(new GridLayout(0,1));
 		for (String string : lines) {
 			String[] lins = string.split(";");
 			ListItemView i = new ListItemView(ListItemView.TRIPLE_LINE);
@@ -77,9 +75,10 @@ public class AboutPanel extends WebPanel {
 			i.buildView();
 			jp.add(i);
 		}
-		WebScrollPane sp = new WebScrollPane(StyleId.scrollpaneHovering);
-		sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-		sp.setViewportView(jp);
+		// WebScrollPane sp = new WebScrollPane(StyleId.scrollpaneHovering);
+		WebScrollPane sp = new WebScrollPane(jp);
+		 sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		// sp.setViewportView(jp);
 		return sp;
 	}
 

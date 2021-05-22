@@ -34,6 +34,7 @@ import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.bots.*;
 import plugins.hero.ozsoft.gui.*;
+import plugins.hero.utils.*;
 
 public class Hero extends TPlugin {
 
@@ -171,6 +172,7 @@ public class Hero extends TPlugin {
 		ArrayList<Action> alist = new ArrayList<>();
 		alist.add(actionMap.get("heroPanel"));
 		alist.add(actionMap.get("uoAEvaluator"));
+		alist.add(actionMap.get("preFlopCardsRange"));		
 		alist.add(actionMap.get("gameSimulator"));
 		return alist;
 	}
@@ -187,7 +189,13 @@ public class Hero extends TPlugin {
 		initGlovalVars();
 		Alesia.getInstance().getMainFrame().setBounds(0, 40, 547, 735);
 	}
-
+	
+	@org.jdesktop.application.Action
+	public void preFlopCardsRange(ActionEvent event) {
+		PreFlopCardsRangePanel panel = new PreFlopCardsRangePanel(null);
+		Alesia.getInstance().getMainPanel().setContentPanel(panel);
+	}
+	
 	@org.jdesktop.application.Action
 	public void pauseTrooper(ActionEvent event) {
 		Trooper t = Trooper.getInstance();

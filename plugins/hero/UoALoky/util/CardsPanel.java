@@ -1,4 +1,4 @@
-package plugins.hero;
+package plugins.hero.UoALoky.util;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -7,20 +7,21 @@ import java.util.*;
 import javax.swing.*;
 
 import plugins.hero.UoAHandEval.*;
+import plugins.hero.utils.*;
 
 /**
  * panel with cart to select.
  * 
  */
 public class CardsPanel extends JPanel {
-	private ArrayList<IconCard> iconCards;
+	private ArrayList<UoAIconCard> iconCards;
 	private ActionListener actionListener;
 
 	public CardsPanel() {
 		super(new GridLayout(4, 13, 5, 5));
 		iconCards = new ArrayList<>();
 		for (int j = 0; j < 52; j++) {
-			IconCard card = new IconCard(new UoACard(j));
+			UoAIconCard card = new UoAIconCard(new UoACard(j));
 			card.addMouseListener(new CardMouseListener());
 			add(card);
 			iconCards.add(card);
@@ -50,7 +51,7 @@ public class CardsPanel extends JPanel {
 
 		@Override
 		public void mousePressed(MouseEvent e) {
-			IconCard card = (IconCard) e.getSource();
+			UoAIconCard card = (UoAIconCard) e.getSource();
 			boolean isEnable = card.isEnabled();
 			card.setEnabled(true);
 			// if action is selection and all 7 card has ben selected, do nothng

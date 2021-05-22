@@ -266,3 +266,8 @@
 /Hero$2.class
 /TroperAction.class
 /TrooperAction.class
+/RangeDialog$CancelButtonListener.class
+/RangeDialog$CardFlipperMouseListener.class
+/RangeDialog$OKListener.class
+/RangeDialog$SliderChangeListener.class
+/RangeDialog.class

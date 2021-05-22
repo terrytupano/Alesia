@@ -1,4 +1,4 @@
-package plugins.hero;
+package plugins.hero.utils;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -10,6 +10,9 @@ import java.awt.Color;
 import javax.swing.JSeparator;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
+
+import plugins.hero.*;
+
 import javax.swing.JCheckBox;
 import javax.swing.ButtonGroup;
 import java.awt.event.MouseAdapter;

@@ -1,4 +1,4 @@
-package plugins.hero;
+package plugins.hero.utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;

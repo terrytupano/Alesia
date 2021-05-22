@@ -10,11 +10,13 @@
  ******************************************************************************/
 package core;
 
+import java.awt.*;
 import java.io.*;
 import java.math.*;
 import java.security.*;
 import java.text.*;
 import java.util.*;
+import java.util.List;
 
 import javax.crypto.*;
 import javax.crypto.spec.*;
@@ -22,6 +24,8 @@ import javax.crypto.spec.*;
 import org.javalite.activejdbc.*;
 
 import com.alee.utils.*;
+
+import gui.*;
 
 /**
  * Utils class for String and {@link TEntry} Manipulations
@@ -68,15 +72,15 @@ public class TStringUtils {
 	 * <p>
 	 * NOTE: the list is sort accordint to the key argument from the property file.
 	 * 
-	 * @param group - prefix of the property to look.
+	 * @param prefix - prefix of the property to look.
 	 * 
 	 * @return list for property values
 	 */
-	public static TreeMap<String, String> getProperties(String group) {
+	public static TreeMap<String, String> getProperties(String prefix) {
 		ArrayList<String> keys = new ArrayList(allProperties.keySet());
 		TreeMap<String, String> list = new TreeMap<>();
 		for (String key : keys) {
-			if (key.startsWith(group)) {
+			if (key.startsWith(prefix)) {
 				list.put(key, allProperties.getProperty(key));
 			}
 		}
@@ -465,5 +469,22 @@ public class TStringUtils {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	/**
+	 * create and return a html formated title/mesage pair.
+	 * 
+	 * @param title
+	 * @param message
+	 * @return the html string
+	 */
+	public static String getTitleText(String title, String message) {
+		Font f = HTMLUtils.getDefaultTextFont();
+		String name = f.getFamily();
+		int siz = f.getSize();
+		String patt = "<html><p style='font-family: " + name + "; font-size: 15;'><title></p>"
+				+ "<p style='font-family: " + name + "; font-size: " + siz + ";'><message></html>";
+		String msg = patt.replace("<title>", title);
+		msg = msg.replace("<message>", message);
+		return msg;
 	}
 }

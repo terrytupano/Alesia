@@ -1,4 +1,4 @@
-package plugins.hero.ozsoft;
+package plugins.hero.utils;
 
 import java.awt.*;
 

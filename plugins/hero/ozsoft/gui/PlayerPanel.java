@@ -20,7 +20,6 @@ package plugins.hero.ozsoft.gui;
 import java.awt.*;
 
 import javax.swing.*;
-import javax.swing.border.*;
 
 import com.alee.extended.layout.*;
 
@@ -37,9 +36,6 @@ public class PlayerPanel extends JPanel {
 
 	/** The serial version UID. */
 	private static final long serialVersionUID = 5851738752943098606L;
-
-	/** The border. */
-	private static final Border BORDER = new EmptyBorder(10, 10, 10, 10);
 
 	/** The label with the player's name. */
 	private JLabel nameLabel;

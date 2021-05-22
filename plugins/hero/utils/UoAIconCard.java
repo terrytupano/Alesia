@@ -1,15 +1,22 @@
-package plugins.hero.UoAHandEval;
+package plugins.hero.utils;
 
 import java.awt.*;
 
 import javax.swing.*;
 
 import core.*;
+import plugins.hero.UoAHandEval.*;
 
-public class IconCard extends JLabel {
+/**
+ * simple UI component wraper for a {@link UoACard}.
+ * 
+ * @author terry
+ *
+ */
+public class UoAIconCard extends JLabel {
 	private UoACard uoACard;
 
-	public IconCard(UoACard card) {
+	public UoAIconCard(UoACard card) {
 		this.uoACard = card;
 		setOpaque(true);
 		setBackground(Color.gray);
@@ -21,6 +28,7 @@ public class IconCard extends JLabel {
 	public UoACard getUoACard() {
 		return uoACard;
 	}
+
 	public void setUoACard(UoACard card) {
 		this.uoACard = card;
 		if (card.getIndex() > -1) {

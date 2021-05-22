@@ -1,4 +1,13 @@
-package gui;
+/*******************************************************************************
+ * Copyright (C) 2017 terry.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *     terry - initial API and implementation
+ ******************************************************************************/package gui;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -88,7 +97,7 @@ public class TUIPanel extends WebPanel {
 		super(new BorderLayout());
 		this.allActions = new Vector<>();
 		this.titleLabel = new WebLabel(" ");
-		titleLabel.setFont(Alesia.title1);
+		titleLabel.setFont(TUIUtils.H1_Font);
 		actionMap = Alesia.getInstance().getContext().getActionMap((TUIPanel) this);
 		this.treeDotButton = getTreeDotButton();
 

@@ -64,8 +64,11 @@ import javafx.scene.control.*;
  */
 public class TUIUtils {
 
-	public static int H_GAP = 4;
-	public static int V_GAP = 4;
+	public static final int H_GAP = 4;
+	public static final int V_GAP = 4;
+	public static final Font H1_Font = UIManager.getFont("Label.font").deriveFont(20l);
+	public static final Font H2_Font = UIManager.getFont("Label.font").deriveFont(16l);
+
 
 	/**
 	 * copiado de <code>Color.brighter()</code> pero con el factor modificado para obtener un mejor degradado
@@ -94,6 +97,22 @@ public class TUIUtils {
 	}
 
 	/**
+	 * draw a image icon form the icon from <code>Material Icons</code> font.
+	 * 
+	 * @param unicode - the unicode caracter for the icont
+	 * @param size - target size
+	 * @param color - foreground color
+	 * 
+	 * @return image
+	 */
+	public static Image buildImage(char unicode, float size, Color color) {
+		Font font = new Font("Material Icons", Font.PLAIN, 1);
+		font = font.deriveFont(size);
+		String text = Character.toString(unicode);
+		return buildImage(text, font, color);
+	}
+
+	/**
 	 * establece el ancho de las columnas de la tabla pasada como primer argumento al valor especificado en el segundo.
 	 * 
 	 * @param jt - tabla
@@ -108,27 +127,6 @@ public class TUIUtils {
 				tc.setPreferredWidth(w[i]);
 			}
 		}
-	}
-
-	/**
-	 * return a {@link WebLabel} title mes format
-	 * 
-	 * TODO: temp move to look and feel
-	 * 
-	 * @param title
-	 * @param message
-	 * @return
-	 */
-	public static WebLabel getTitleLabel(String title, String message) {
-		Font f = HTMLUtils.getDefaultTextFont();
-		String name = f.getFamily();
-		int siz = f.getSize();
-
-		String patt = "<html><p style='font-family: " + name + "; font-size: 15;'><title></p>"
-				+ "<p style='font-family: " + siz + ";'><message></html>";
-		String msg = patt.replace("<title>", title);
-		msg = msg.replace("<message>", message);
-		return new WebLabel(msg);
 	}
 	/**
 	 * este metodo da formato estandar a una instancia de <code>JLabel</code> segun los argumentos
@@ -240,6 +238,45 @@ public class TUIUtils {
 		ColorComboBox jcbox = new ColorComboBox(col);
 		setToolTip(tid, jcbox);
 		return jcbox;
+	}
+
+	/**
+	 * return a console style {@link WebEditorPane}
+	 * 
+	 * @return compoent
+	 */
+	public static WebEditorPane getConsoleEditorPane() {
+		WebEditorPane editorPane = new WebEditorPane();
+		editorPane.setEditable(false);
+		editorPane.setEditorKit(new StyledEditorKit());
+		Font f = new Font("courier new", Font.PLAIN, 12);
+		editorPane.setFont(f);
+		return editorPane;
+	}
+
+	/**
+	 * return a console stily {@link WebTextArea}.
+	 * <p>
+	 * NOTE: to conrrect control the scrolling, this method DONT set the preferedSize
+	 * 
+	 * @see #getSmartScroller(JComponent)
+	 * 
+	 * @return conole stile {@link WebTextArea}
+	 */
+	public static WebTextArea getConsoleTextArea() {
+		WebTextArea console = new WebTextArea();
+		Font f = new Font("courier new", Font.PLAIN, 12);
+		console.setFont(f);
+		console.setLineWrap(false);
+		console.setEditable(false);
+		// int h = getStringPixelHeight("X", f);
+		// console.setPreferredSize(new Dimension(-1, h * 10));
+		// console.setMinimumSize(new Dimension(-1, h * 10));
+		return console;
+	}
+
+	public static Icon getFontIcon(char unicode, float size, Color color) {
+		return new ImageIcon(buildImage(unicode, size, color));
 	}
 
 	/**
@@ -374,7 +411,6 @@ public class TUIUtils {
 		// jcb.setName(fld);
 		return jcb;
 	}
-
 	/**
 	 * retorna un <code>JCheckBox</code> con valores standar
 	 * 
@@ -414,17 +450,26 @@ public class TUIUtils {
 	}
 
 	/**
-	 * TODO: temp move to laf xml file
+	 * return and {@link JEditorPane} for information read only.
 	 * 
-	 * @param field
-	 * @param stlId
-	 * @return
+	 * @param textId - text id. may be <code>null</code>
+	 * @param hyperlinkListener - may be <code>null</code>
+	 * 
+	 * @return eidtor pane for read only
 	 */
-	public static JLabel getStyledJLabel(String field, String stlId) {
-		JLabel jl = new JLabel("<html><" + stlId + " style='font-family:Segoe UI light; color:gray'>"
-				+ TStringUtils.getString(field) + "</" + stlId + "></html>");
-		return jl;
+	public static JEditorPane getJEditorPane(String textId, HyperlinkListener hyperlinkListener) {
+		String txt = textId == null ? null : TStringUtils.getString(textId);
+		WebEditorPane editorPane = new WebEditorPane("text/html", txt);
+		editorPane.setEditable(false);
+		// editorPane.setOpaque(false);
+		editorPane.setFocusable(false);
+		HTMLUtils.addDefaultStyleSheetRule(editorPane);
+		if (hyperlinkListener != null) {
+			editorPane.addHyperlinkListener(hyperlinkListener);
+		}
+		return editorPane;
 	}
+
 	/**
 	 * construye y retorna una instancia de JLabel con los atributos establecidos segun los argumentos de entrada.
 	 * 
@@ -454,7 +499,6 @@ public class TUIUtils {
 		// jpf.setName(fld);
 		return jpf;
 	}
-
 	/**
 	 * <code>Jt_uspasswordField</code> con formato estandar
 	 * 
@@ -501,6 +545,7 @@ public class TUIUtils {
 		// jsp.setName(f);
 		return jsp;
 	}
+
 	/**
 	 * JtextArea estadar para datos de registros
 	 * 
@@ -516,7 +561,6 @@ public class TUIUtils {
 		// jsp.setName(f);
 		return jsp;
 	}
-
 	/**
 	 * retorna <code>JTextArea</code> con formato estandar
 	 * 
@@ -555,7 +599,6 @@ public class TUIUtils {
 		setToolTip(ttn, jtf);
 		return jtf;
 	}
-
 	/**
 	 * barra de herramientas con formatos estandar
 	 * 
@@ -571,6 +614,7 @@ public class TUIUtils {
 		return toolBar;
 
 	}
+
 	/**
 	 * return the ImageIcon <code>src</code> with a mark which is a scaled instance of the icon file name
 	 * <code>mfn</code> draw over the source image.
@@ -610,6 +654,41 @@ public class TUIUtils {
 		ImageIcon ii = TResources.getIcon(fi, (int) (size * 0.6));
 		return ImageUtils.mergeIcons(ii2, ii);
 	}
+
+	public static NumericTextField getNumericTextField(String name, String text, int cols, String mask) {
+		NumericTextField ntf = new NumericTextField(text, cols);
+		if (mask != null) {
+			DecimalFormat fmt = new DecimalFormat(mask);
+			fmt.setGroupingUsed(true);
+			fmt.setGroupingSize(3);
+			fmt.setParseIntegerOnly(false);
+			ntf = new NumericTextField(text, cols, fmt);
+		}
+
+		ntf.setName(name);
+		ntf.putClientProperty("settingsProcessor", new Configuration<TextComponentState>(name));
+		setToolTip(name, ntf);
+		return ntf;
+	}
+
+	public static Icon getSmallFontIcon(char unicode) {
+		return new ImageIcon(buildImage(unicode, 16, Color.BLACK));
+	}
+
+	/**
+	 * create and return a {@link JScrollPane} setted with an instace of {@link SmartScroller}. this is intendet for
+	 * console style componentes
+	 * 
+	 * @see SmartScroller
+	 * @param component - component to scroll
+	 * @return {@link JScrollPane} with standar {@link SmartScroller}
+	 */
+	public static JScrollPane getSmartScroller(JComponent component) {
+		WebScrollPane pane = new WebScrollPane(component, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		new SmartScroller(pane);
+		return pane;
+	}
 	/**
 	 * crea y retorna un componente informativo con formato estandar
 	 * 
@@ -645,6 +724,19 @@ public class TUIUtils {
 	}
 
 	/**
+	 * TODO: temp move to laf xml file
+	 * 
+	 * @param field
+	 * @param stlId
+	 * @return
+	 */
+	public static JLabel getStyledJLabel(String field, String stlId) {
+		JLabel jl = new JLabel("<html><" + stlId + " style='font-family:Segoe UI light; color:gray'>"
+				+ TStringUtils.getString(field) + "</" + stlId + "></html>");
+		return jl;
+	}
+
+	/**
 	 * crea y retorna un separador horizontal con un texto colocado hacia la izquierda
 	 * 
 	 * 20161123.04:25 NAAAA GUEBONAAA DE VIEJOOOOO !!! ESTE METODO DEBE TENER +10 AÑOS !!!! FUE DE LOS PRIMEROS PARA
@@ -664,6 +756,20 @@ public class TUIUtils {
 		tb.add(Box.createHorizontalStrut(H_GAP));
 		tb.add(tb1);
 		return tb;
+	}
+
+	/**
+	 * return a {@link WebLabel} whit html formated title/message elements
+	 * 
+	 * @see TStringUtils#getTitleText(String, String) TODO: temp move to look and feel
+	 * 
+	 * @param title
+	 * @param message
+	 * @return
+	 */
+	public static WebLabel getTitleLabel(String title, String message) {
+		String msg = TStringUtils.getTitleText(title, message);
+		return new WebLabel(msg);
 	}
 
 	/**
@@ -698,6 +804,7 @@ public class TUIUtils {
 		TWebComboBox jcbox = getTWebComboBox(name, entries, model.get(name));
 		return jcbox;
 	}
+
 	/**
 	 * Return a {@link TWebComboBox} with the standar configuration parameters
 	 * 
@@ -748,6 +855,14 @@ public class TUIUtils {
 		return jb;
 	}
 
+	public static WebCheckBox getWebCheckBox(String name) {
+		WebCheckBox jcb = new WebCheckBox(TStringUtils.getString(name));
+		jcb.setName(name);
+		setToolTip(name, jcb);
+		jcb.putClientProperty("settingsProcessor", new Configuration<ButtonState>(name));
+		return jcb;
+	}
+
 	public static WebCheckBoxList<TEntry> getWebCheckBox(String name, String group) {
 		TEntry[] entries = TStringUtils.getTEntryGroup(group);
 		CheckBoxListModel<TEntry> model = new CheckBoxListModel<>();
@@ -760,14 +875,6 @@ public class TUIUtils {
 		// boxList.putClientProperty("settingsProcessor", new Configuration<list>(name));
 		return boxList;
 
-	}
-
-	public static WebCheckBox getWebCheckBox(String name) {
-		WebCheckBox jcb = new WebCheckBox(TStringUtils.getString(name));
-		jcb.setName(name);
-		setToolTip(name, jcb);
-		jcb.putClientProperty("settingsProcessor", new Configuration<ButtonState>(name));
-		return jcb;
 	}
 
 	/**
@@ -895,22 +1002,6 @@ public class TUIUtils {
 		return jftf;
 	}
 
-	public static NumericTextField getNumericTextField(String name, String text, int cols, String mask) {
-		NumericTextField ntf = new NumericTextField(text, cols);
-		if (mask != null) {
-			DecimalFormat fmt = new DecimalFormat(mask);
-			fmt.setGroupingUsed(true);
-			fmt.setGroupingSize(3);
-			fmt.setParseIntegerOnly(false);
-			ntf = new NumericTextField(text, cols, fmt);
-		}
-
-		ntf.setName(name);
-		ntf.putClientProperty("settingsProcessor", new Configuration<TextComponentState>(name));
-		setToolTip(name, ntf);
-		return ntf;
-	}
-
 	public static WebFormattedTextField getWebFormattedTextField(String name, Object val, int cols) {
 		return getWebFormattedTextField(name, val, cols, null);
 	}
@@ -963,7 +1054,6 @@ public class TUIUtils {
 		wpf.setName(field);
 		return wpf;
 	}
-
 	public static WebTextField getWebTextField(Model model, ColumnMetadata column) {
 		int len = column.getColumnSize();
 		String fn = column.getColumnName();
@@ -1002,25 +1092,11 @@ public class TUIUtils {
 	}
 
 	/**
-	 * utilitario que modifica atributos del panel: fondo mas claro con borde gris
-	 * 
-	 * @param jp - panel a modificar
-	 */
-	public static void modify(JComponent jp) {
-		jp.setBorder(new CompoundBorder(new LineBorder(Color.GRAY), new EmptyBorder(4, 4, 4, 4)));
-		jp.setOpaque(true);
-		Color bg = jp.getBackground();
-		jp.setBackground(brighter(bg));
-	}
-
-	/**
 	 * Perform the initialization method p´for thise static class
 	 * 
 	 * @since 2.3
 	 */
 	public static void init() {
-		Alesia.title1 = new Font("Arial", Font.PLAIN, 16);
-		Alesia.title2 = new Font("Arial", Font.PLAIN, 14);
 		try {
 			List<File> fonts = FileUtils.findFilesRecursively(TResources.getCoreResourcePath(),
 					file -> file.getName().endsWith(".ttf") || file.getName().endsWith(".otf"));
@@ -1033,41 +1109,6 @@ public class TUIUtils {
 		}
 	}
 
-	public static Image buildImage(char unicode, float size, Color color) {
-		Font font = new Font("Material Icons", Font.PLAIN, 1);
-//		ajust for Font Awesome 5 Free Regular
-//		size += 1f;
-		font = font.deriveFont(size);
-		String text = Character.toString(unicode);
-		return buildImage(text, font, color);
-	}
-
-	public static Icon getFontIcon(char unicode, float size, Color color) {
-		return new ImageIcon(buildImage(unicode, size, color));
-	}
-	public static Icon getSmallFontIcon(char unicode) {
-		return new ImageIcon(buildImage(unicode, 16, Color.BLACK));
-	}
-
-	private static BufferedImage buildImage(String text, Font font, Color color) {
-		JLabel label = new JLabel(text);
-		label.setForeground(color);
-		label.setFont(font);
-		Dimension dim = label.getPreferredSize();
-		int width = dim.width;
-		int height = dim.height;
-//		int width = dim.width + 1;
-//		int height = dim.height + 1;
-		label.setSize(width, height);
-		BufferedImage bufImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g2d = bufImage.createGraphics();
-		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-		label.print(g2d);
-		g2d.dispose();
-		return bufImage;
-	}
-
 	/**
 	 * Utility method for override icons propertis setted in the {@link ApplicationAction} by bsf framework. This method
 	 * <ul>
@@ -1077,7 +1118,7 @@ public class TUIUtils {
 	 * instance using the size parameter. Repaint the icon to the target color toColor argument
 	 * </ul>
 	 * 
-	 * @param size - new icon siye
+	 * @param size - new icon size
 	 * @param toColor - new icon color
 	 * @param actions - list of actions to override
 	 * 
@@ -1182,6 +1223,34 @@ public class TUIUtils {
 	}
 
 	/**
+	 * build an Icon based on the unicode caracter.
+	 * 
+	 * @param text - the icon caracter
+	 * @param font - source font where the icon font is.
+	 * @param color - foreground color for the image
+	 * 
+	 * @return image
+	 */
+	private static BufferedImage buildImage(String text, Font font, Color color) {
+		JLabel label = new JLabel(text);
+		label.setForeground(color);
+		label.setFont(font);
+		Dimension dim = label.getPreferredSize();
+		int width = dim.width;
+		int height = dim.height;
+		// int width = dim.width + 1;
+		// int height = dim.height + 1;
+		label.setSize(width, height);
+		BufferedImage bufImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2d = bufImage.createGraphics();
+		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+		label.print(g2d);
+		g2d.dispose();
+		return bufImage;
+	}
+
+	/**
 	 * Construye y retorna <code>Box</code> con el par <code>JLabel(lab) JComponent</code> alineados segun los
 	 * argumentos de entrada
 	 * 
@@ -1209,82 +1278,11 @@ public class TUIUtils {
 		return b;
 	}
 
-	/**
-	 * return a console style {@link WebEditorPane}
-	 * 
-	 * @return compoent
-	 */
-	public static WebEditorPane getConsoleEditorPane() {
-		WebEditorPane editorPane = new WebEditorPane();
-		editorPane.setEditable(false);
-		editorPane.setEditorKit(new StyledEditorKit());
-		Font f = new Font("courier new", Font.PLAIN, 12);
-		editorPane.setFont(f);
-		return editorPane;
-	}
-
-	/**
-	 * return a console stily {@link WebTextArea}.
-	 * <p>
-	 * NOTE: to conrrect control the scrolling, this method DONT set the preferedSize
-	 * 
-	 * @see #getSmartScroller(JComponent)
-	 * 
-	 * @return conole stile {@link WebTextArea}
-	 */
-	public static WebTextArea getConsoleTextArea() {
-		WebTextArea console = new WebTextArea();
-		Font f = new Font("courier new", Font.PLAIN, 12);
-		console.setFont(f);
-		console.setLineWrap(false);
-		console.setEditable(false);
-		// int h = getStringPixelHeight("X", f);
-		// console.setPreferredSize(new Dimension(-1, h * 10));
-		// console.setMinimumSize(new Dimension(-1, h * 10));
-		return console;
-	}
-
-	/**
-	 * create and return a {@link JScrollPane} setted with an instace of {@link SmartScroller}. this is intendet for
-	 * console style componentes
-	 * 
-	 * @see SmartScroller
-	 * @param component - component to scroll
-	 * @return {@link JScrollPane} with standar {@link SmartScroller}
-	 */
-	public static JScrollPane getSmartScroller(JComponent component) {
-		WebScrollPane pane = new WebScrollPane(component, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		new SmartScroller(pane);
-		return pane;
-	}
-
 	static int getStringPixelWidth(String str, Font font) {
 		FontMetrics metrics = new FontMetrics(font) {
 		};
 		Rectangle2D bounds = metrics.getStringBounds(str, null);
 		return (int) bounds.getWidth();
-	}
-
-	/**
-	 * return and {@link JEditorPane} for information read only.
-	 * 
-	 * @param textId - text id. may be <code>null</code>
-	 * @param hyperlinkListener - may be <code>null</code>
-	 * 
-	 * @return eidtor pane for read only
-	 */
-	public static JEditorPane getJEditorPane(String textId, HyperlinkListener hyperlinkListener) {
-		String txt = textId == null ? null : TStringUtils.getString(textId);
-		WebEditorPane editorPane = new WebEditorPane("text/html", txt);
-		editorPane.setEditable(false);
-		// editorPane.setOpaque(false);
-		editorPane.setFocusable(false);
-		HTMLUtils.addDefaultStyleSheetRule(editorPane);
-		if (hyperlinkListener != null) {
-			editorPane.addHyperlinkListener(hyperlinkListener);
-		}
-		return editorPane;
 	}
 
 }

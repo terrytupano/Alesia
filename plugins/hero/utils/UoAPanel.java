@@ -8,7 +8,7 @@
  * Contributors:
  *     terry - initial API and implementation
  ******************************************************************************/
-package plugins.hero.UoAHandEval;
+package plugins.hero.utils;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -27,11 +27,20 @@ import com.jgoodies.forms.layout.*;
 import core.*;
 import gui.*;
 import plugins.hero.*;
+import plugins.hero.UoAHandEval.*;
+import plugins.hero.UoALoky.util.*;
+import plugins.hero.ozsoft.bots.*;
 
+/**
+ * panel with UI components to test {@link UoAHandEvaluator} capabilities
+ * 
+ * @author terry
+ *
+ */
 public class UoAPanel extends TUIFormPanel implements ActionListener {
 
 	// private List<UoACard> cards;
-	private ArrayList<IconCard> selectedICards;
+	private ArrayList<UoAIconCard> selectedICards;
 	private WebButton evalHandButton;
 	private WebTextArea console;
 
@@ -39,7 +48,7 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 		this.console = TUIUtils.getConsoleTextArea();
 		this.selectedICards = new ArrayList<>();
 		for (int i = 0; i < 7; i++) {
-			selectedICards.add(new IconCard(new UoACard()));
+			selectedICards.add(new UoAIconCard(new UoACard()));
 		}
 
 		CardsPanel cardsPanel = new CardsPanel();
@@ -65,7 +74,7 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 		builder.nextLine(2);
 		builder.append(TUIUtils.getTitleLabel("titletest", "message text"), 3);
 		builder.nextLine(2);
-		builder.append(new JScrollPane(console), 3);
+		builder.append(TUIUtils.getSmartScroller(console), 3);
 
 		setBodyComponent(builder.getPanel());
 		// registreSettings();
@@ -81,12 +90,12 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 		}
 
 		// card selected form cardsPanel
-		if (src instanceof IconCard) {
-			UoACard uoacard = ((IconCard) src).getUoACard();
+		if (src instanceof UoAIconCard) {
+			UoACard uoacard = ((UoAIconCard) src).getUoACard();
 			// command: add or remove
 			boolean found = false;
 			for (int i = 0; i < 7 && !found; i++) {
-				IconCard select = selectedICards.get(i);
+				UoAIconCard select = selectedICards.get(i);
 				// add
 				if (e.getActionCommand().equals("add") && select.getUoACard().getIndex() < 0) {
 					found = true;
@@ -139,6 +148,11 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 			console.append("Best: " + evaluator.getBest5CardHand(allCards) + "\n");
 		}
 
+		// Chen score
+		if (!holeCards.equals("")) {
+			console.append("\nChen score: " + BasicBot.getChenScore(new UoAHand(holeCards)) + "\n");
+		}
+
 		// board evaluation
 		if (!comunityCards.equals("")) {
 			int count = 0;
@@ -159,12 +173,12 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 			console.append("\nBoard evaluation:\n");
 			console.append("2 cards better that my Hole cards: " + count + " of " + total + " (" + per + "%)\n");
 			String examp = Hero.parseHands(top10.subList(0, Math.min(top10.size(), 10)));
-//			examp = Hero.parseToUnicode(examp);
+			// examp = Hero.parseToUnicode(examp);
 			console.append("examples: " + examp + "\n");
 		}
 	}
 
-	private JPanel getSelectedCardsPanel(List<IconCard> cards) {
+	private JPanel getSelectedCardsPanel(List<UoAIconCard> cards) {
 		FormLayout layout = new FormLayout(
 				"pref, 3dlu, pref, 20dlu, pref, 3dlu, pref, 3dlu, pref, 3dlu, pref, 3dlu, pref", "");
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
@@ -172,7 +186,7 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 		builder.append(new WebLabel("My Hole cards"), 3);
 		builder.append(new WebLabel("Comunity cards"), 9);
 		builder.nextLine();
-		for (IconCard icon : cards) {
+		for (UoAIconCard icon : cards) {
 			builder.append(icon);
 		}
 		return builder.build();

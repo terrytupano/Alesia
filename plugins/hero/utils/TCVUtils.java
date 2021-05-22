@@ -1,4 +1,4 @@
-package plugins.hero;
+package plugins.hero.utils;
 
 import static marvin.MarvinPluginCollection.*;
 
@@ -24,14 +24,12 @@ import marvin.image.*;
 import marvin.plugin.*;
 import marvin.util.*;
 import net.sourceforge.tess4j.util.*;
+import plugins.hero.*;
 
 public class TCVUtils {
 
 	private static Hashtable<String, JLabel> labels;
-	private JFrame frame;
 	static public Properties parameteres;
-	private TreeMap<String, BufferedImage> images;
-	private Hashtable<String, String> images2;
 	private static String parametersFile = "plugins/hero/marvinproperties.properties";
 	static {
 		parameteres = new Properties();
@@ -41,6 +39,14 @@ public class TCVUtils {
 			e1.printStackTrace();
 		}
 	}
+	/**
+	 * source of the image cards to analize
+	 */
+	private static String CARDS_FOLDER = "";
+	private JFrame frame;
+	private TreeMap<String, BufferedImage> images;
+
+	private Hashtable<String, String> images2;
 
 	public TCVUtils() {
 		this.frame = new JFrame();
@@ -69,7 +75,6 @@ public class TCVUtils {
 		clone.update();
 		return clone;
 	}
-
 	public static JPanel createImagesPanel(TreeMap<String, BufferedImage> images) {
 		JPanel panel = new JPanel(new GridLayout(0, 4, 2, 2));
 		labels = new Hashtable<>();
@@ -91,6 +96,7 @@ public class TCVUtils {
 		}
 		return panel;
 	}
+
 	/**
 	 * test method: draw the segments in the image
 	 * 
@@ -102,11 +108,11 @@ public class TCVUtils {
 			image.drawRect(segment.x1, segment.y1, segment.width, segment.height, Color.BLUE);
 		image.update();
 	}
-
 	public static MarvinImage findText(MarvinImage image) {
 		return findText(image, 15, 8, 30, 150);
 
 	}
+
 	public static MarvinImage findText(MarvinImage image, int maxWhiteSpace, int maxFontLineWidth, int minTextWidth,
 			int grayScaleThreshold) {
 		List<MarvinSegment> segments = findTextRegions(image, maxWhiteSpace, maxFontLineWidth, minTextWidth,
@@ -226,7 +232,6 @@ public class TCVUtils {
 		double percent = avg_diff * 100;
 		return percent;
 	}
-
 	public static List<MarvinSegment> getImageSegments(MarvinImage mImage, boolean drawSegments) {
 		int rgbToBinaryThreshold = Integer.parseInt(parameteres.getProperty("rgbToBinaryThreshold", "200"));
 		int removeSegmentsWindowSize = Integer.parseInt(parameteres.getProperty("removeSegmentsWindowSize", "1"));
@@ -238,6 +243,7 @@ public class TCVUtils {
 		}
 		return segments;
 	}
+
 	public static Rectangle getJoinSegments(List<MarvinSegment> segments) {
 		int topY = Integer.MAX_VALUE, topX = Integer.MAX_VALUE;
 		int bottomY = -1, bottomX = -1;
@@ -377,11 +383,11 @@ public class TCVUtils {
 		}
 		return images;
 	}
-
 	public static void main(String[] args) {
 		TCVUtils demo = new TCVUtils();
 		demo.showFrame();
 	}
+
 	public static BufferedImage MoravecCorners(BufferedImage image, boolean drawCorners, Properties parms) {
 		if (parms == null) {
 			parms = new Properties();
@@ -491,7 +497,6 @@ public class TCVUtils {
 			list.add(ms);
 		return list;
 	}
-
 	public static MarvinImage uperLeftAutoCrop(List<MarvinSegment> segments, MarvinImage image) {
 		// no segments? retrun the same image
 		if (segments.size() == 0)
@@ -516,6 +521,7 @@ public class TCVUtils {
 		clone.update();
 		return clone;
 	}
+
 	private static MarvinImage showCorners(MarvinImage image, MarvinAttributes attr, int rectSize) {
 		MarvinImage ret = image.clone();
 		int[][] cornernessMap = (int[][]) attr.get("cornernessMap");
@@ -583,7 +589,7 @@ public class TCVUtils {
 
 	private void processImages() {
 		// start from the source
-		images = loadImages(Hero.CARDS_FOLDER);
+		images = loadImages(CARDS_FOLDER);
 
 		Set<String> keys = images.keySet();
 		for (String key : keys) {
@@ -608,7 +614,7 @@ public class TCVUtils {
 			Set<String> keys = images.keySet();
 			for (String key : keys) {
 				BufferedImage image = images.get(key);
-				File f = new File(Hero.CARDS_FOLDER + key + "." + ext);
+				File f = new File(CARDS_FOLDER + key + "." + ext);
 				f.delete();
 				f.createNewFile();
 				ImageIO.write(image, ext, f);
@@ -617,10 +623,9 @@ public class TCVUtils {
 			e.printStackTrace();
 		}
 	}
-
 	private void saveSegments() {
 		try {
-			images = loadImages(Hero.CARDS_FOLDER);
+			images = loadImages(CARDS_FOLDER);
 			String ext = "png";
 			Set<String> keys = images.keySet();
 			for (String key : keys) {
@@ -645,7 +650,7 @@ public class TCVUtils {
 
 	private void showFrame() {
 		// image panel
-		images = loadImages(Hero.CARDS_FOLDER);
+		images = loadImages(CARDS_FOLDER);
 		JPanel imagesPanel = createImagesPanel(images);
 
 		// controls
@@ -676,7 +681,7 @@ public class TCVUtils {
 	}
 
 	private void testImagePhash() {
-		images = loadImages(Hero.CARDS_FOLDER);
+		images = loadImages(CARDS_FOLDER);
 		images2 = new Hashtable<>();
 
 		Set<String> keys = images.keySet();

@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (C) 2017 terry.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *     terry - initial API and implementation
+ ******************************************************************************/
 package core;
 
 import java.awt.*;
@@ -96,11 +106,6 @@ public class TActionsFactory {
 		return (ApplicationAction) src.getAction();
 	}
 
-	@Action
-	public void about(ActionEvent event) {
-		DockingContainer dc = SwingUtils.getFirstParent((JComponent) event.getSource(), DockingContainer.class);
-		dc.setContentPanel(new AboutPanel());
-	}
 	@Action
 	public void fileChooserOpen(ActionEvent event) {
 		ApplicationAction me = getMe(event);

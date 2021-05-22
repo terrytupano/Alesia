@@ -387,7 +387,7 @@ public class Table extends Task {
 					// Remaining players only show when having a chance to win.
 					if (UoAHandEvaluator.rankHand(hand) >= bestHandValue) {
 						doShow = true;
-						bestHandValue = UoAHandEvaluator.rankHand(hand);;
+						bestHandValue = UoAHandEvaluator.rankHand(hand);
 					}
 				}
 			}
@@ -409,7 +409,7 @@ public class Table extends Task {
 						player.getClient().playerUpdated(playerToShow.publicClone());
 					}
 				}
-				notifyMessage("%s folds.", playerToShow);
+				notifyMessage("%s muck.", playerToShow);
 			}
 		}
 
