@@ -69,7 +69,6 @@ public class TUIUtils {
 	public static final Font H1_Font = UIManager.getFont("Label.font").deriveFont(20l);
 	public static final Font H2_Font = UIManager.getFont("Label.font").deriveFont(16l);
 
-
 	/**
 	 * copiado de <code>Color.brighter()</code> pero con el factor modificado para obtener un mejor degradado
 	 * 
@@ -470,6 +469,23 @@ public class TUIUtils {
 		return editorPane;
 	}
 
+	public static WebToggleButton getStartPauseToggleButton(Action action, ActionListener listener) {
+		WebToggleButton startPause = new WebToggleButton();
+		startPause.setSelectedIcon(TUIUtils.getSmallFontIcon('\ue034'));
+		if (action != null) {
+			startPause.setAction(action);
+		} else {
+			startPause.setIcon(TUIUtils.getSmallFontIcon('\ue037'));
+		}
+		if (listener != null)
+			startPause.addActionListener(listener);
+		return (WebToggleButton) overRideWebButton(startPause);
+
+	}
+
+	public static WebToggleButton getStartPauseToggleButton(ActionListener actionListener) {
+		return getStartPauseToggleButton(null, actionListener);
+	}
 	/**
 	 * construye y retorna una instancia de JLabel con los atributos establecidos segun los argumentos de entrada.
 	 * 
@@ -808,30 +824,39 @@ public class TUIUtils {
 	/**
 	 * Return a {@link TWebComboBox} with the standar configuration parameters
 	 * 
-	 * @param name - name of the compoment
+	 * @param componentName - name of the compoment
 	 * @param listId - prefix of the list elements stored in the app or plugins {@link ResourceBundle}
 	 * 
 	 * @return {@link TWebComboBox}
 	 */
-	public static TWebComboBox getTWebComboBox(String name, String listId) {
+	public static TWebComboBox getTWebComboBox(String componentName, String listId) {
 		TEntry[] entries = TStringUtils.getTEntryGroup(listId);
-		return getTWebComboBox(name, entries, null);
+		return getTWebComboBox(componentName, entries, null);
 	}
 
-	public static TWebComboBox getTWebComboBox(String name, TEntry[] entries, Object sel) {
+	/**
+	 * build and return a {@link TWebComboBox} filled with the array of elements and selected element (if apply)
+	 * 
+	 * @param componentName - tha name for this component
+	 * @param entries - array of elements
+	 * @param selected - selected element. or <code>null</code>
+	 * 
+	 * @return ready to use {@link TWebComboBox}
+	 */
+	public static TWebComboBox getTWebComboBox(String componentName, TEntry[] entries, Object selected) {
 		// si no hay datos, no selecciono nada
 		int row = entries.length > 0 ? 0 : -1;
 
 		for (int l = 0; l < entries.length; l++) {
-			if (entries[l].getKey().equals(sel)) {
+			if (entries[l].getKey().equals(selected)) {
 				row = l;
 			}
 		}
 		TWebComboBox twcb = new TWebComboBox(entries);
 		twcb.setSelectedIndex(row);
-		twcb.setName(name);
-		twcb.putClientProperty("settingsProcessor", new Configuration<ComboBoxState>(name));
-		setToolTip(name, twcb);
+		twcb.setName(componentName);
+		twcb.putClientProperty("settingsProcessor", new Configuration<ComboBoxState>(componentName));
+		setToolTip(componentName, twcb);
 		return twcb;
 	}
 
@@ -843,16 +868,17 @@ public class TUIUtils {
 	 * @since 2.3
 	 */
 	public static WebButton getWebButtonForToolBar(Action action) {
-		overRideIcons(16, null, action);
-		WebButton jb = new WebButton(action);
-		jb.setRequestFocusEnabled(false);
+		WebButton button = new WebButton(action);
+		return (WebButton) overRideWebButton(button);
+	}
 
+	public static AbstractButton overRideWebButton(AbstractButton button) {
+		overRideIcons(16, null, button.getAction());
+		button.setRequestFocusEnabled(false);
 		// TooltipManager.setTooltip(jb, (String) taa.getValue(TAbstractAction.SHORT_DESCRIPTION), TooltipWay.down);
-		// jb.setDrawFocus(false);
-		// jb.setShadeWidth(0);
-		jb.setText(null);
-		jb.setPreferredWidth(46);
-		return jb;
+		button.setText(null);
+		button.setPreferredSize(new Dimension(46,26));
+		return button;
 	}
 
 	public static WebCheckBox getWebCheckBox(String name) {

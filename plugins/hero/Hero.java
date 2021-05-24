@@ -26,9 +26,12 @@ import javax.swing.table.*;
 import org.jdesktop.application.*;
 
 import com.alee.laf.*;
+import com.alee.laf.button.*;
+import com.alee.utils.*;
+import com.javaflair.pokerprophesier.api.card.*;
 
 import core.*;
-import gui.console.*;
+import core.datasource.model.*;
 import net.sourceforge.tess4j.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
@@ -39,31 +42,29 @@ import plugins.hero.utils.*;
 public class Hero extends TPlugin {
 
 	// protected static Tesseract iTesseract;
-	protected static ActionMap actionMap;
 	protected static Logger heroLogger;
 	protected static File tableFile;
 	protected static boolean isTestMode;
 	protected static ShapeAreas shapeAreas;
 	// protected static Hashtable<String, Object> trooperParameters;
-	protected static String CARDS_FOLDER = "plugins/hero/cards/";
 	private static DateFormat dateFormat;
 	/**
 	 * update every time the action {@link #runTrooper(ActionEvent)} is performed
 	 */
 	private static Date startDate = null;
-
 	public static TrooperPanel trooperPanel;
 	private HeroPanel heroPanel;
-
+	private static Trooper activeTrooper;
 	private GameSimulatorPanel simulatorPanel;
 	private SensorsArray sensorsArray;
 
 	public Hero() {
-		// iTesseract.setLanguage("pok");
 		dateFormat = DateFormat.getDateTimeInstance();
-		actionMap = Alesia.getInstance().getContext().getActionMap(this);
 		heroLogger = Logger.getLogger("Hero");
-		TActionsFactory.insertActions(actionMap);
+		TActionsFactory.insertActions(this);
+
+		Alesia.getInstance().openDB("hero");
+
 	}
 
 	public static Action getLoadAction() {
@@ -170,10 +171,10 @@ public class Hero extends TPlugin {
 	@Override
 	public ArrayList<javax.swing.Action> getUI(String type) {
 		ArrayList<Action> alist = new ArrayList<>();
-		alist.add(actionMap.get("heroPanel"));
-		alist.add(actionMap.get("uoAEvaluator"));
-		alist.add(actionMap.get("preFlopCardsRange"));		
-		alist.add(actionMap.get("gameSimulator"));
+		alist.add(TActionsFactory.getAction("heroPanel"));
+		alist.add(TActionsFactory.getAction("uoAEvaluator"));
+		alist.add(TActionsFactory.getAction("preFlopCardsRange"));
+		alist.add(TActionsFactory.getAction("gameSimulator"));
 		return alist;
 	}
 
@@ -186,26 +187,23 @@ public class Hero extends TPlugin {
 		// temporal: must be loaded from troperPanel
 		// tableFile = new File("plugins/hero/resources/ps-main table.ppt");
 		tableFile = new File("plugins/hero/resources/ps-10.ppt");
-		initGlovalVars();
+		initTrooperEnviorement();
 		Alesia.getInstance().getMainFrame().setBounds(0, 40, 547, 735);
 	}
-	
+
 	@org.jdesktop.application.Action
 	public void preFlopCardsRange(ActionEvent event) {
-		PreFlopCardsRangePanel panel = new PreFlopCardsRangePanel(null);
+		PreFlopCardsRangePanel panel = new PreFlopCardsRangePanel();
 		Alesia.getInstance().getMainPanel().setContentPanel(panel);
 	}
-	
+
 	@org.jdesktop.application.Action
 	public void pauseTrooper(ActionEvent event) {
-		Trooper t = Trooper.getInstance();
-		if (t != null) {
-			boolean pause = !t.isPaused();
+		if (activeTrooper != null) {
+			boolean pause = !activeTrooper.isPaused();
 			AbstractButton ab = (AbstractButton) event.getSource();
-			// ab.setSelectedIcon(TResources.getSmallIcon("plugins/hero/resources/ResumeTrooper"));
-			ab.setSelectedIcon(TUIUtils.getSmallFontIcon('\uf01d'));
-			ab.setSelected(pause);
-			t.pause(pause);
+			ab.setIcon(TUIUtils.getSmallFontIcon(pause ? '\ue037' : '\ue034'));
+			activeTrooper.pause(pause);
 		}
 	}
 
@@ -217,12 +215,14 @@ public class Hero extends TPlugin {
 		if (winds.isEmpty()) {
 			JOptionPane.showMessageDialog(Alesia.getInstance().getMainFrame(), "No active window found", "Error",
 					JOptionPane.ERROR_MESSAGE);
+			WebToggleButton tb = (WebToggleButton) TActionsFactory.getAbstractButton(event);
+			tb.setSelected(false);
 			return null;
+
 		}
 		TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 840 600 /mov 532 41");
-
 		isTestMode = false;
-		return start();
+		return start(event);
 	}
 
 	@org.jdesktop.application.Action
@@ -237,7 +237,7 @@ public class Hero extends TPlugin {
 			int sb = ((Double) values.get("table.smallBlid")).intValue();
 			PokerSimulator simulator = new PokerSimulator();
 			simulatorPanel.updatePokerSimulator(simulator);
-			
+
 			Table table = new Table(TableType.NO_LIMIT, bb);
 			for (int i = 0; i < model.getRowCount(); i++) {
 				if ((Boolean) model.getValueAt(i, 2)) {
@@ -269,22 +269,24 @@ public class Hero extends TPlugin {
 
 	@org.jdesktop.application.Action
 	public void stopTrooper(ActionEvent event) {
-		actionMap.get("testTrooper").setEnabled(true);
-		actionMap.get("runTrooper").setEnabled(true);
-		actionMap.get("pauseTrooper").setEnabled(true);
-		if (Trooper.getInstance() != null)
-			Trooper.getInstance().cancelTrooper(true);
+		if (activeTrooper != null) {
+			activeTrooper.cancelTrooper(true);
+			trooperPanel.setAllEnabledBut(true, new String[0]);
+			TActionsFactory.getAction("pauseTrooper").putValue(Action.SMALL_ICON, TUIUtils.getSmallFontIcon('\ue037'));// :
+			activeTrooper = null; // '\ue034'));
+		}
 	}
 
 	@org.jdesktop.application.Action
 	public void testAreas(ActionEvent event) {
-		sensorsArray.testAreas();
+		if (activeTrooper == null)
+			sensorsArray.testAreas();
 	}
 
 	@org.jdesktop.application.Action
 	public Task testTrooper(ActionEvent event) {
 		isTestMode = true;
-		return start();
+		return start(event);
 	}
 
 	@org.jdesktop.application.Action
@@ -293,7 +295,7 @@ public class Hero extends TPlugin {
 		Alesia.getInstance().getMainPanel().setContentPanel(aPanel);
 	}
 
-	private void initGlovalVars() {
+	private void initTrooperEnviorement() {
 		// dont put isTestMode = false; HERE !!!!!!!!!!!!!!!!!
 		startDate = new Date();
 		shapeAreas = new ShapeAreas(Hero.tableFile);
@@ -301,12 +303,13 @@ public class Hero extends TPlugin {
 		sensorsArray = new SensorsArray();
 		sensorsArray.setShapeAreas(shapeAreas);
 		heroPanel.updateSensorsArray(sensorsArray);
+		trooperPanel = heroPanel.getTrooperPanel();
 	}
 
-	private Task start() {
+	private Task start(ActionEvent event) {
 		WebLookAndFeel.setForceSingleEventsThread(false);
-		initGlovalVars();
-		Trooper t = new Trooper(sensorsArray, sensorsArray.getPokerSimulator());
+		initTrooperEnviorement();
+		activeTrooper = new Trooper(sensorsArray, sensorsArray.getPokerSimulator());
 		PropertyChangeListener tl = new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (Trooper.PROP_DONE.equals(evt.getPropertyName())) {
@@ -315,10 +318,127 @@ public class Hero extends TPlugin {
 			}
 		};
 		// t.getPokerSimulator().setParameter();
-		t.addPropertyChangeListener(tl);
-		actionMap.get("testTrooper").setEnabled(false);
-		actionMap.get("runTrooper").setEnabled(false);
-		actionMap.get("pauseTrooper").setEnabled(true);
-		return t;
+		activeTrooper.addPropertyChangeListener(tl);
+		trooperPanel.setAllEnabledBut(false, "pauseTrooper", "stopTrooper");
+		return activeTrooper;
 	}
+
+	/**
+	 * Returns the value of the hole cards based on the Chen formula.
+	 * 
+	 * @param cards The hole cards.
+	 * 
+	 * @return The score based on the Chen formula.
+	 */
+	public static double getChenScore(HoleCards holeCards) {
+		return getChenScore(
+				new UoAHand(holeCards.getFirstCard().toString() + " " + holeCards.getSecondCard().toString()));
+	}
+
+	/**
+	 * Returns the value of the hole cards based on the Chen formula.
+	 * 
+	 * @param cards The hole cards.
+	 * 
+	 * @return The score based on the Chen formula.
+	 */
+	public static double getChenScore(UoAHand hand) {
+		if (hand.size() != 2) {
+			throw new IllegalArgumentException("Invalid number of cards: " + hand.size());
+		}
+
+		// Analyze hole cards.
+		int rank1 = hand.getCard(1).getRank();
+		int suit1 = hand.getCard(2).getSuit();
+		int rank2 = hand.getCard(1).getRank();
+		int suit2 = hand.getCard(2).getSuit();
+		int highRank = Math.max(rank1, rank2);
+		int lowRank = Math.min(rank1, rank2);
+		int rankDiff = highRank - lowRank;
+		int gap = (rankDiff > 1) ? rankDiff - 1 : 0;
+		boolean isPair = (rank1 == rank2);
+		boolean isSuited = (suit1 == suit2);
+
+		double score = 0.0;
+
+		// 1. Base score highest rank only
+		if (highRank == UoACard.ACE) {
+			score = 10.0;
+		} else if (highRank == UoACard.KING) {
+			score = 8.0;
+		} else if (highRank == UoACard.QUEEN) {
+			score = 7.0;
+		} else if (highRank == UoACard.JACK) {
+			score = 6.0;
+		} else {
+			score = (highRank + 2) / 2.0;
+		}
+
+		// 2. If pair, double score, with minimum score of 5.
+		if (isPair) {
+			score *= 2.0;
+			if (score < 5.0) {
+				score = 5.0;
+			}
+		}
+
+		// 3. If suited, add 2 points.
+		if (isSuited) {
+			score += 2.0;
+		}
+
+		// 4. Subtract points for gap.
+		if (gap == 1) {
+			score -= 1.0;
+		} else if (gap == 2) {
+			score -= 2.0;
+		} else if (gap == 3) {
+			score -= 4.0;
+		} else if (gap > 3) {
+			score -= 5.0;
+		}
+
+		// 5. Add 1 point for a 0 or 1 gap and both cards lower than a Queen.
+		if (!isPair && gap < 2 && rank1 < UoACard.QUEEN && rank2 < UoACard.QUEEN) {
+			score += 1.0;
+		}
+
+		// Minimum score is 0.
+		if (score < 0.0) {
+			score = 0.0;
+		}
+
+		// 6. Round half point scores up.
+		return Math.round(score);
+	}
+
+	@org.jdesktop.application.Action
+	public void savePreflopRange(ActionEvent event) {
+		AbstractButton ab = (AbstractButton) event.getSource();
+		PreFlopCardsRangePanel rangePanel = SwingUtils.getFirstParent(ab, PreFlopCardsRangePanel.class);
+		String savn = (String) JOptionPane.showInputDialog(Alesia.getInstance().getMainFrame(),
+				"Write the name and a shor description for this range. \nThe name an description muss be coma separated.",
+				"Save", JOptionPane.PLAIN_MESSAGE, null, null, null);
+		// save
+		if (savn == null)
+			return;
+
+		PreflopRange tmp = PreflopRange.findFirst("rangeName = ? ", savn);
+		if (tmp != null) {
+			Object[] options = {"OK", "CANCEL"};
+			int opt = JOptionPane.showOptionDialog(rangePanel, "the preflop range " + savn + " exist. Override?",
+					"Warning", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
+			if (opt != 0)
+				return;
+		}
+
+		// store the data
+		String[] nam_desc = savn.split("[,]");
+		if (nam_desc.length == 1) {
+			nam_desc[1] = nam_desc[0];
+			nam_desc[0] = TStringUtils.getUniqueID();
+		}
+		rangePanel.getPreflopCardsRange().saveInDB(nam_desc[0], nam_desc[1]);
+	}
+
 }

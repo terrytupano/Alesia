@@ -7,26 +7,51 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 
+import org.jdesktop.application.*;
+
 import com.alee.extended.layout.*;
+import com.alee.laf.combobox.*;
 import com.alee.laf.panel.*;
-/**
- *
- * @author Radu Murzea
- */
-public class PreFlopCardsRangePanel extends WebPanel {
+import com.alee.managers.settings.*;
+
+import core.*;
+import gui.*;
+
+public class PreFlopCardsRangePanel extends TUIPanel {
 	private static final int DEFAULT_PERCENTAGE = 15;
 	private JLabel[][] cardButtons;
 	private JSlider slider;
-	private PreflopCardsRange range;
+	private PreflopCardsRange preflopCardsRange;
+	private WebComboBox rangeComboBox;
 
-	public PreFlopCardsRangePanel(PreflopCardsRange range) {
-		super(new VerticalFlowLayout());
-		this.range = (range == null) ? new PreflopCardsRange(DEFAULT_PERCENTAGE) : range;
-		add(createRangePanel());
+	public PreflopCardsRange getPreflopCardsRange() {
+		return preflopCardsRange;
 	}
 
-	public PreflopCardsRange getRange() {
-		return range;
+	public PreFlopCardsRangePanel() {
+		super();
+		this.rangeComboBox = new WebComboBox(PreflopCardsRange.getSavedCardsRanges());
+		TUIUtils.setDimensionForTextComponent(rangeComboBox, 40);
+		rangeComboBox.addActionListener(evt -> updateRange());
+		ResourceMap r = Alesia.getInstance().getContext().getResourceManager().getResourceMap();
+		r.injectComponent(this);
+		preflopCardsRange = new PreflopCardsRange(DEFAULT_PERCENTAGE);
+		WebPanel panel = new WebPanel(new VerticalFlowLayout());
+		panel.add(createRangePanel());
+		rangeComboBox.registerSettings(new Configuration<ComboBoxState>(getClass().getName() + ".rangeComboBox"));
+		addToolBarActions("savePreflopRange");
+		getToolBarPanel().add(rangeComboBox);
+		setBodyComponent(panel);
+	}
+
+	private void updateRange() {
+		TEntry<String, String> te = (TEntry<String, String>) rangeComboBox.getSelectedItem();
+		preflopCardsRange = PreflopCardsRange.loadFromDB(te.getKey());
+		if (preflopCardsRange == null) {
+			preflopCardsRange = new PreflopCardsRange(DEFAULT_PERCENTAGE);
+		}
+		slider.setValue(preflopCardsRange.getPercentage());
+		updateCardsButtons();
 	}
 
 	/**
@@ -45,13 +70,13 @@ public class PreFlopCardsRangePanel extends WebPanel {
 			public void mousePressed(MouseEvent e) {
 				JLabel src = (JLabel) e.getSource();
 				Point coord = (Point) src.getClientProperty("Coordinate");
-				range.flipValue(coord.x, coord.y);
+				preflopCardsRange.flipValue(coord.x, coord.y);
 				updateCardsButtons();
 			}
 		};
 		for (int i = 0; i < 13; i++) {
 			for (int j = 0; j < 13; j++) {
-				cardButtons[i][j] = new JLabel(PreflopCardsRange.rangeNames[i][j]);
+				cardButtons[i][j] = new JLabel(preflopCardsRange.getCardAt(i, j));
 				cardButtons[i][j].setHorizontalAlignment(JLabel.CENTER);
 				cardButtons[i][j].putClientProperty("Coordinate", new Point(i, j));
 				cardButtons[i][j].setOpaque(true);
@@ -64,7 +89,7 @@ public class PreFlopCardsRangePanel extends WebPanel {
 		updateCardsButtons();
 		panel.add(cardTypesPanel, BorderLayout.CENTER);
 
-		slider = new JSlider(JSlider.HORIZONTAL, 0, 100, range.getPercentage());
+		slider = new JSlider(JSlider.HORIZONTAL, 0, 100, preflopCardsRange.getPercentage());
 		slider.setMinorTickSpacing(5);
 		slider.setMajorTickSpacing(20);
 		slider.setPaintLabels(true);
@@ -89,19 +114,19 @@ public class PreFlopCardsRangePanel extends WebPanel {
 	private void updateCardsButtons() {
 		for (int i = 0; i < 13; i++) {
 			for (int j = 0; j < 13; j++) {
-				cardButtons[i][j].setBorder(new LineBorder(range.getValue(i, j) ? SELECTED_BORDER : UNSELECTED_BORDER));
-				cardButtons[i][j].setBackground(range.getValue(i, j) ? SELECTED_COLOR : UNSELECTED_COLOR);
+				cardButtons[i][j].setBorder(
+						new LineBorder(preflopCardsRange.getValue(i, j) ? SELECTED_BORDER : UNSELECTED_BORDER));
+				cardButtons[i][j].setBackground(preflopCardsRange.getValue(i, j) ? SELECTED_COLOR : UNSELECTED_COLOR);
 			}
 		}
 	}
-
 
 	private class SliderChangeListener implements ChangeListener {
 		@Override
 		public void stateChanged(ChangeEvent e) {
 			if (!slider.getValueIsAdjusting()) {
-				range.setNewPercentage(slider.getValue());
-				slider.setToolTipText(""+slider.getValue());
+				preflopCardsRange.setNewPercentage(slider.getValue());
+				slider.setToolTipText("" + slider.getValue());
 				updateCardsButtons();
 			}
 		}

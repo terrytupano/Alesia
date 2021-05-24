@@ -1,7 +1,14 @@
 package plugins.hero.utils;
 
 import java.awt.*;
+import java.util.*;
 
+import org.javalite.activejdbc.*;
+
+import com.javaflair.pokerprophesier.api.card.*;
+
+import core.*;
+import core.datasource.model.*;
 import plugins.hero.UoAHandEval.*;
 
 /**
@@ -20,7 +27,7 @@ public class PreflopCardsRange {
 	 * easier, there are some patterns to their arrangements. For example: the pocket pairs run along the main diagonal.
 	 * Also, all suited types are above this diagonal while the offsuit types are found below.
 	 */
-	public static final String[][] rangeNames = {
+	private static final String[][] rangeNames = {
 			{"AA", "AKs", "AQs", "AJs", "ATs", "A9s", "A8s", "A7s", "A6s", "A5s", "A4s", "A3s", "A2s"},
 			{"AKo", "KK", "KQs", "KJs", "KTs", "K9s", "K8s", "K7s", "K6s", "K5s", "K4s", "K3s", "K2s"},
 			{"AQo", "AKo", "QQ", "QJs", "QTs", "Q9s", "Q8s", "Q7s", "Q6s", "Q5s", "Q4s", "Q3s", "Q2s"},
@@ -130,6 +137,18 @@ public class PreflopCardsRange {
 	}
 
 	/**
+	 * return the card name at this coorditates
+	 * 
+	 * @param row - x coordinates
+	 * @param column - y coordinate
+	 * 
+	 * @return the string representation
+	 */
+	public String getCardAt(int row, int column) {
+		return rangeNames[row][column];
+	}
+
+	/**
 	 * Tells you if a card type is selected in this range or not
 	 * 
 	 * @param row the row where the card type is found
@@ -176,11 +195,82 @@ public class PreflopCardsRange {
 	}
 
 	/**
+	 * create and return an instance with all data stored in the database.
+	 * 
+	 * @param rangeName - name of the stored range
+	 * 
+	 * @return a ready to use {@link PreflopCardsRange}
+	 */
+	public static PreflopCardsRange loadFromDB(String rangeName) {
+		PreflopCardsRange cardsRange = new PreflopCardsRange();
+		LazyList<PreflopRange> ranges = PreflopRange.find("rangeName = ?", rangeName);
+		for (PreflopRange range : ranges) {
+			// set the percentage only once
+			if (cardsRange.getPercentage() == 0)
+				cardsRange.setNewPercentage(range.getInteger("percentage"));
+			cardsRange.rangeSelections[range.getInteger("x")][range.getInteger("y")] = range.getBoolean("selected");
+		}
+		return cardsRange;
+	}
+
+	/**
+	 * load from the DB the list of saved preflop cards selections
+	 * 
+	 * @return list whit the names
+	 */
+	public static TEntry<String, String>[] getSavedCardsRanges() {
+		ArrayList<TEntry<String, String>> names = new ArrayList<>();
+		LazyList<PreflopRange> ranges = PreflopRange.findAll();
+		for (PreflopRange range : ranges) {
+			TEntry<String, String> te = new TEntry<>(range.getString("rangeName"), range.getString("description"));
+			if (!names.contains(te))
+				names.add(te);
+		}
+		return names.toArray(new TEntry[0]);
+	}
+	/**
+	 * save the current preflop card selection in the database
+	 * 
+	 * @param rangeName - the name for this range
+	 */
+	public void saveInDB(String rangeName, String description) {
+		PreflopRange.delete("rangename = ?", rangeName);
+		for (int i = 0; i < 13; i++) {
+			for (int j = 0; j < 13; j++) {
+				// PreflopRange range = PreflopRange.create("rangename", rangeName);
+				PreflopRange range = new PreflopRange();
+				range.set("rangeName", rangeName);
+				range.set("description", description);
+				range.set("percentage", getPercentage());
+				range.set("card", getCardAt(i, j));
+				range.set("x", i);
+				range.set("y", j);
+				range.set("selected", getValue(i, j));
+				range.insert();
+			}
+		}
+
+	}
+
+	/**
+	 * peform {@link #containsHand(UoACard, UoACard)} wrapping first, the incomint arguments
+	 * 
+	 * @param holeCards - the hero hole cards
+	 * 
+	 * @return true if the specified hand is selected in this range, false otherwise.
+	 */
+	public boolean containsHand(HoleCards holeCards) {
+		return containsHand(new UoACard(holeCards.getFirstCard().toString()),
+				new UoACard(holeCards.getFirstCard().toString()));
+	}
+
+	/**
 	 * Tells if the hand composed of the two specified cards is selected in this range. The order in which you specify
 	 * the cards is not relevant.
 	 * 
 	 * @param c1 the first card
 	 * @param c2 the second card
+	 * 
 	 * @return true if the specified hand is selected in this range, false otherwise.
 	 */
 	public boolean containsHand(UoACard c1, UoACard c2) {

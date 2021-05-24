@@ -25,7 +25,7 @@ public class SensorArrayPanel extends TUIPanel {
 		sensorTypeComboBox = new WebComboBox();
 		sensorTypeComboBox.addItem(new TEntry("*", "All"));
 		sensorTypeComboBox.addItem(new TEntry("villan*", "Only villans"));
-		// temporal: just 5 villans
+		// temporal: just 8 villans
 		for (int i = 1; i <= 8; i++) {
 			sensorTypeComboBox.addItem(new TEntry("villan" + i + "*", "only villan" + i));
 		}
@@ -45,7 +45,7 @@ public class SensorArrayPanel extends TUIPanel {
 		imageTypeComboBox.registerSettings(new Configuration<ComboBoxState>("SensorPanel.imageType"));
 		sensorTypeComboBox.registerSettings(new Configuration<ComboBoxState>("SensorPanel.filter"));
 
-		setToolBar("testAreas");
+		addToolBarActions("testAreas");
 		getToolBarPanel().add(sensorTypeComboBox, imageTypeComboBox);
 
 		this.sensorsPanel = new WebPanel(new GridLayout(0, 2));

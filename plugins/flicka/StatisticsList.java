@@ -23,7 +23,7 @@ import gui.*;
 public class StatisticsList extends TUIListPanel {
 
 	public StatisticsList() {
-		setToolBar(TActionsFactory.getActions("runSimulation", "deleteModel"));
+		addToolBarActions(TActionsFactory.getActions("runSimulation", "deleteModel"));
 		setColumns("stdate;strace;stfield;stsignature;stdecision;stevent;stdistance;ststdev;stmean");
 	}
 

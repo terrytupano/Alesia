@@ -2,13 +2,21 @@ package plugins.hero;
 
 import java.util.*;
 
+import com.alee.laf.combobox.*;
 import com.jgoodies.forms.builder.*;
 import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.*;
 
 import core.*;
 import gui.*;
+import plugins.hero.utils.*;
 
+/**
+ * Pannel with all configuration parameters for the trooper.
+ * 
+ * @author terry
+ *
+ */
 public class TrooperPanel extends TUIFormPanel {
 
 	public TrooperPanel(boolean toolbar) {
@@ -16,14 +24,16 @@ public class TrooperPanel extends TUIFormPanel {
 		addInputComponent(TUIUtils.getNumericTextField("play.time", null, 5, null), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("play.until", null, 5, null), false, true);
 
-		addInputComponent(TUIUtils.getTWebComboBox("preflopStrategy", "table.strategy"));
+		WebComboBox webc = TUIUtils.getTWebComboBox("preflopCards", PreflopCardsRange.getSavedCardsRanges(), null);
+		addInputComponent(webc);
+
 		addInputComponent(TUIUtils.getTWebComboBox("decisionMethod", "decisionMet0"));
 
 		addInputComponent(TUIUtils.getTWebComboBox("tDistributionRange", "tdisrange"));
 
 		addInputComponent(TUIUtils.getWebTextField("availableActions", null, 50));
 		addInputComponent(TUIUtils.getWebCheckBox("takeOportunity"));
-		addInputComponent(TUIUtils.getNumericTextField("bluff", null, 5, null), false, true);
+		addInputComponent(TUIUtils.getNumericTextField("upperBoundBluff", null, 5, null), false, true);
 
 		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.base", null, 5, null), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.hand", null, 5, null), false, true);
@@ -37,11 +47,11 @@ public class TrooperPanel extends TUIFormPanel {
 		builder.append(TStringUtils.getString("table.parameters"), getInputComponent("table.parameters"), 5);
 		builder.nextLine();
 
-		builder.append(TStringUtils.getString("preflopStrategy"), getInputComponent("preflopStrategy"), 5);
+		builder.append(TStringUtils.getString("preflopCards"), getInputComponent("preflopCards"), 5);
 		builder.nextLine();
-		builder.append(getInputComponent("takeOportunity"),7);
+		builder.append(getInputComponent("takeOportunity"), 7);
 		builder.nextLine();
-		builder.append(TStringUtils.getString("bluff"), getInputComponent("bluff"));
+		builder.append(TStringUtils.getString("upperBoundBluff"), getInputComponent("upperBoundBluff"));
 		builder.nextLine();
 		builder.append(TStringUtils.getString("decisionMethod"), getInputComponent("decisionMethod"), 5);
 		builder.append(TStringUtils.getString("tDistributionRange"), getInputComponent("tDistributionRange"), 5);
@@ -52,9 +62,11 @@ public class TrooperPanel extends TUIFormPanel {
 		builder.append(" + ");
 		builder.append(getInputComponent("preflopRekonAmmo.hand"));
 
-		if (toolbar)
-			setToolBar("runTrooper", "testTrooper", "stopTrooper", "pauseTrooper");
-		
+		if (toolbar) {
+			getToolBarPanel().add(TUIUtils.getStartPauseToggleButton(TActionsFactory.getAction("runTrooper"), null));
+			addToolBarActions("testTrooper", "stopTrooper", "pauseTrooper");
+		}
+
 		setBodyComponent(builder.getPanel());
 		registreSettings();
 	}

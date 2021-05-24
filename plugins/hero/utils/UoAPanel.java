@@ -150,7 +150,7 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 
 		// Chen score
 		if (!holeCards.equals("")) {
-			console.append("\nChen score: " + BasicBot.getChenScore(new UoAHand(holeCards)) + "\n");
+			console.append("\nChen score: " + Hero.getChenScore(new UoAHand(holeCards)) + "\n");
 		}
 
 		// board evaluation

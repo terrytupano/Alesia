@@ -7,7 +7,8 @@
  * 
  * Contributors:
  *     terry - initial API and implementation
- ******************************************************************************/package gui;
+ ******************************************************************************/
+package gui;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -45,6 +46,53 @@ import core.*;
  */
 public class TUIPanel extends WebPanel {
 
+	/**
+	 * clase que presenta la instancia de <code>JPopupMenu</code> creada para la table que presenta los datos dentro de
+	 * esta clase
+	 * 
+	 */
+	public class ListMouseProcessor extends MouseAdapter {
+
+		private JComponent invoker;
+
+		public ListMouseProcessor(JComponent in) {
+			this.invoker = in;
+		}
+
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			if (e.getClickCount() == 2) {
+				if (doubleClickAction != null && doubleClickAction.isEnabled()) {
+					doubleClickAction.actionPerformed(null);
+				}
+			}
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			showPopup(e);
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			showPopup(e);
+		}
+
+		/**
+		 * presetna menu
+		 * 
+		 * @param e - evento
+		 */
+		private void showPopup(MouseEvent e) {
+			if (e.isPopupTrigger()) {
+				// verifica null porque x autorizciones, pueden no haber elementos
+				if (popupMenu != null) {
+					popupMenu.show(invoker, e.getX(), e.getY());
+					// dynamicMenu.showMenu(invoker, e.getX(), e.getY());
+				}
+			}
+		}
+	}
 	public static double ASPECT_RATION_NONE = 0.0;
 	public static double ASPECT_RATION_NARROW = 1.3333;
 	public static double ASPECT_RATION_DEFAULT = 1.6666;
@@ -55,43 +103,18 @@ public class TUIPanel extends WebPanel {
 	private ActionMap actionMap;
 	private WebButton treeDotButton;
 	private Box bodyMessageJComponent;
+
 	private JLabel blkinfoLabel;
 
 	private JEditorPane additionalInfo;
-
 	private JPanel titlePanel;
 	private WebDialog dialog;
-	double aspectRatio = ASPECT_RATION_DEFAULT;
 
+	double aspectRatio = ASPECT_RATION_DEFAULT;
 	private JPopupMenu popupMenu;
 	private Action doubleClickAction;
+
 	private WebPanel toolBarPanel;
-
-	public WebPanel getToolBarPanel() {
-		return toolBarPanel;
-	}
-
-	/**
-	 * Enable/Disable all the actions present in this component acordint to parametars pass as arguments.
-	 * <p>
-	 * For example. the class {@link TUIFormPanel} has the <code>Acept </code> action. this action has a paremeter
-	 * <code>acept.Action.isCommint = true</code> that mark this action as an action for commit changes to the sistem.
-	 * <p>
-	 * call this metodo <code>enableInternalActions("isCommint", "true", false)</code> means that all actions whit
-	 * property <code>.isCommit = true</code> will be disabled
-	 * 
-	 * @param property - indicate the property of the action to look for
-	 * @param value - the value of the param property must be equal tho this value
-	 * @param enable - boolean value to enable or disable de action.
-	 */
-	protected void setEnableActions(String property, String value, boolean enable) {
-		for (Action a : allActions) {
-			ApplicationAction aa = (ApplicationAction) a;
-			String isc = aa.getResourceMap().getString(aa.getName() + ".Action." + property);
-			if (isc != null && isc.equals(value))
-				aa.setEnabled(enable);
-		}
-	}
 
 	public TUIPanel() {
 		super(new BorderLayout());
@@ -135,6 +158,97 @@ public class TUIPanel extends WebPanel {
 		add(north, BorderLayout.NORTH);
 	}
 
+	public void setAllEnabledBut(boolean enabled, String... names) {
+		Component[] cmps = toolBarPanel.getComponents();
+		List<String> listNames = Arrays.asList(names);
+		for (Component cmp : cmps) {
+			if (cmp instanceof AbstractButton) {
+				ApplicationAction act = (ApplicationAction) ((AbstractButton) cmp).getAction();
+				if (!listNames.contains(act.getName()))
+					act.setEnabled(enabled);
+			} else {
+				if (!listNames.contains(cmp.getName()))
+					cmp.setEnabled(enabled);
+			}
+		}
+	}
+	/**
+	 * add a new action at the end of the toolbar panel
+	 * 
+	 * @param action - the action
+	 */
+	public void addToolBarAction(Action action) {
+		allActions.add(action);
+		WebButton wb = TUIUtils.getWebButtonForToolBar(action);
+		ApplicationAction aa = (ApplicationAction) action;
+		String sco = aa.getResourceMap().getString(aa.getName() + ".Action.scope");
+
+		// auto add the property TActionsFactory.TUILISTPANEL
+		// if (sco != null && (sco.equals("element") || sco.equals("list"))) {
+		// aa.putValue(TActionsFactory.TUILISTPANEL, this);
+		// }
+
+		// action for popup menu
+		if (sco != null && sco.equals("element")) {
+			JMenuItem jmi = new JMenuItem(action);
+			jmi.setIcon(null);
+			// temp: doble click for editModel
+			if (aa.getName().equals("editModel")) {
+				this.doubleClickAction = action;
+				jmi.setFont(jmi.getFont().deriveFont(Font.BOLD));
+			}
+			popupMenu.add(jmi);
+		}
+		toolBarPanel.add(wb);
+
+	}
+
+	public void addToolBarActions(Action... actions) {
+		addToolBarActions(Arrays.asList(actions));
+	}
+
+	/**
+	 * perform {@link #addToolBarActions(List)} whit all the actions inside map argument
+	 * 
+	 * @param map - instance of actionMap
+	 */
+	public void addToolBarActions(ActionMap map) {
+		ArrayList<javax.swing.Action> actions = new ArrayList<>();
+		for (Object key : map.keys()) {
+			actions.add(map.get(key));
+		}
+		addToolBarActions(actions);
+	}
+
+	/**
+	 * set the toolbar for this component. This toolbar will replace the title label of this component. Use thid method
+	 * when you need a full toolbar available for component that requirer many actions (like editors). other whise, use
+	 * the 3dot bar.
+	 * 
+	 * @param actions actions to set inside the bar.
+	 */
+	public void addToolBarActions(List<Action> actions) {
+		// toolBarPanel.removeAll();
+		popupMenu = new JPopupMenu();
+		// ArrayList<JComponent> componets = new ArrayList<>();
+		for (Action act : actions) {
+			addToolBarAction(act);
+		}
+
+		// 171231: append some standar actions for list sublcases
+		// toolBarPanel.add(TUIUtils.getWebButtonForToolBar(actionMap.get("filterList")), LineLayout.END);
+		// toolBarPanel.add(TUIUtils.getWebButtonForToolBar(actionMap.get("refreshList")), LineLayout.END);
+	}
+
+	/**
+	 * perform {@link #addToolBarActions(List)} with the actions name found in {@link TActionsFactory}
+	 * 
+	 * @param actions - action name array
+	 */
+	public void addToolBarActions(String... actions) {
+		addToolBarActions(TActionsFactory.getActions(actions));
+	}
+
 	public final WebDialog createDialog(boolean setAspectRatio) {
 		// Preconditions.checkState(EventQueue.isDispatchThread(), "You must create and show dialogs from the
 		// Event-Dispatch-Thread (EDT).");
@@ -163,7 +277,7 @@ public class TUIPanel extends WebPanel {
 		dialog.setLocationRelativeTo(Alesia.getInstance().getMainFrame());
 		return dialog;
 	}
-	
+
 	@org.jdesktop.application.Action
 	public void filterList(ActionEvent event) {
 
@@ -177,6 +291,9 @@ public class TUIPanel extends WebPanel {
 		return titleLabel.getText();
 	}
 
+	public WebPanel getToolBarPanel() {
+		return toolBarPanel;
+	}
 	public boolean isTitleVisible() {
 		return titleLabel.isVisible();
 	}
@@ -190,15 +307,12 @@ public class TUIPanel extends WebPanel {
 
 	}
 
-	public void showAditionalInformation(boolean aFlag) {
-		this.additionalInfo.setVisible(aFlag);
-	}
-
 	public final void setAspectRatio(double customValue) {
 		Preconditions.checkArgument((customValue >= 0.0D),
 				"The aspect ratio must positive, or ASPECT_RATION_NONE to disable the feature.");
 		this.aspectRatio = customValue;
 	}
+
 	public void setBodyComponent(JComponent body) {
 		if (bodyJComponent != null) {
 			remove(bodyJComponent);
@@ -207,6 +321,61 @@ public class TUIPanel extends WebPanel {
 		add(body, BorderLayout.CENTER);
 	}
 
+	public void setDescription(String tId) {
+		additionalInfo.setText(Alesia.getInstance().getResourceMap().getString(tId));
+	}
+
+	/**
+	 * set an standar footer area for components intendet to input data.
+	 * 
+	 * @param actions Actions to add
+	 */
+	public void setFooterActions(Action... actions) {
+		Vector<JComponent> lst = new Vector<>();
+		lst.add(new JLabel());
+		for (Action act : actions) {
+			allActions.add(act);
+
+			// TODO: this value muss kommt from look and feel file
+			TUIUtils.overRideIcons(16, null, act);
+
+			WebButton wb = new WebButton(act);
+			// ApplicationAction aa = (ApplicationAction) act;
+			// String sco = aa.getResourceMap().getString(aa.getName() + ".Action.scope");
+			lst.add(wb);
+		}
+
+		GroupPanel groupPane = new GroupPanel(GroupingType.fillFirst, true,
+				(JComponent[]) lst.toArray(new JComponent[lst.size()]));
+
+		// GroupPanel groupPane = new GroupPane(StyleId.grouppane, (WebButton[]) lst.toArray(new
+		// WebButton[lst.size()]));
+		// groupPane.setOrientation(SwingConstants.LEADING);
+		// SwingUtils.equalizeComponentsWidth(groupPane.getComponents());
+
+		setFooterComponent(groupPane);
+	}
+
+	/**
+	 * set an standar footer area for components intendet to input data.
+	 * <p>
+	 * NOTE: the actions bust be located in {@link TActionsFactory} class
+	 * 
+	 * @param actions list of actions
+	 */
+	public void setFooterActions(String... actions) {
+		List<Action> alist = TActionsFactory.getActions(actions);
+		setFooterActions(alist.toArray(new Action[0]));
+	}
+	public void setFooterComponent(JComponent footer) {
+		if (footerJComponent != null) {
+			remove(footerJComponent);
+		}
+		this.footerJComponent = footer;
+		// add decoration
+		footerJComponent.setBorder(Borders.DIALOG);
+		add(footerJComponent, BorderLayout.SOUTH);
+	}
 	/**
 	 * replace the {@link JComponent} set using the metod {@link #setBodyComponent(JComponent)} and present a new
 	 * componet to display the selected mensaje. If the msgId parameter is <code>null</code>, hide the message componet
@@ -247,125 +416,20 @@ public class TUIPanel extends WebPanel {
 		setMessage(msgId, false, msgData);
 	}
 
-	public void setDescription(String tId) {
-		additionalInfo.setText(Alesia.getInstance().getResourceMap().getString(tId));
-	}
-
-	/**
-	 * set an standar footer area for components intendet to input data.
-
-	 * @param actions Actions to add
-	 */
-	public void setFooterActions(Action... actions) {
-		Vector<JComponent> lst = new Vector<>();
-		lst.add(new JLabel());
-		for (Action act : actions) {
-			allActions.add(act);
-			
-//			TODO: this value muss kommt from look and feel file
-			TUIUtils.overRideIcons(16, null, act);
-			
-			WebButton wb = new WebButton(act);
-			// ApplicationAction aa = (ApplicationAction) act;
-			// String sco = aa.getResourceMap().getString(aa.getName() + ".Action.scope");
-			lst.add(wb);
-		}
-
-		GroupPanel groupPane = new GroupPanel(GroupingType.fillFirst, true,
-				(JComponent[]) lst.toArray(new JComponent[lst.size()]));
-
-		// GroupPanel groupPane = new GroupPane(StyleId.grouppane, (WebButton[]) lst.toArray(new
-		// WebButton[lst.size()]));
-		// groupPane.setOrientation(SwingConstants.LEADING);
-		// SwingUtils.equalizeComponentsWidth(groupPane.getComponents());
-
-		setFooterComponent(groupPane);
-	}
-
-	/**
-	 * set an standar footer area for components intendet to input data.
-	 * <p>
-	 * NOTE: the actions bust be located in {@link TActionsFactory} class
-	 * 
-	 * @param actions list of actions
-	 */
-	public void setFooterActions(String... actions) {
-		List<Action> alist = TActionsFactory.getActions(actions);
-		setFooterActions( alist.toArray(new Action[0]));
-	}
-	
-	public void setFooterComponent(JComponent footer) {
-		if (footerJComponent != null) {
-			remove(footerJComponent);
-		}
-		this.footerJComponent = footer;
-		// add decoration
-		footerJComponent.setBorder(Borders.DIALOG);
-		add(footerJComponent, BorderLayout.SOUTH);
-	}
-
 	public void setTitle(String txtId) {
 		titleLabel.setText(TStringUtils.getString(txtId));
 	}
+
 	public void setTitleComponent(JComponent title) {
 		add(title, BorderLayout.NORTH);
 	}
+
 	public void setTitleVisible(boolean aFlag) {
 		this.titlePanel.setVisible(aFlag);
 	}
 
-	public void setToolBar(String... actions) {
-		setToolBar(TActionsFactory.getActions(actions));
-	}
-
-	public void setToolBar(Action... actions) {
-		setToolBar(Arrays.asList(actions));
-	}
-
-	public void addToolBarAction(Action action) {
-		allActions.add(action);
-		WebButton wb = TUIUtils.getWebButtonForToolBar(action);
-		ApplicationAction aa = (ApplicationAction) action;
-		String sco = aa.getResourceMap().getString(aa.getName() + ".Action.scope");
-
-		// auto add the property TActionsFactory.TUILISTPANEL
-		// if (sco != null && (sco.equals("element") || sco.equals("list"))) {
-		// aa.putValue(TActionsFactory.TUILISTPANEL, this);
-		// }
-
-		// action for popup menu
-		if (sco != null && sco.equals("element")) {
-			JMenuItem jmi = new JMenuItem(action);
-			jmi.setIcon(null);
-			// temp: doble click for editModel
-			if (aa.getName().equals("editModel")) {
-				this.doubleClickAction = action;
-				jmi.setFont(jmi.getFont().deriveFont(Font.BOLD));
-			}
-			popupMenu.add(jmi);
-		}
-		toolBarPanel.add(wb);
-
-	}
-
-	/**
-	 * set the toolbar for this component. This toolbar will replace the title label of this component. Use thid method
-	 * when you need a full toolbar available for component that requirer many actions (like editors). other whise, use
-	 * the 3dot bar.
-	 * 
-	 * @param actions actions to set inside the bar.
-	 */
-	public void setToolBar(List<Action> actions) {
-		toolBarPanel.removeAll();
-		popupMenu = new JPopupMenu();
-		// ArrayList<JComponent> componets = new ArrayList<>();
-		for (Action act : actions) {
-			addToolBarAction(act);
-		}
-
-		// 171231: append some standar actions for list sublcases
-		// toolBarPanel.add(TUIUtils.getWebButtonForToolBar(actionMap.get("filterList")), LineLayout.END);
-		// toolBarPanel.add(TUIUtils.getWebButtonForToolBar(actionMap.get("refreshList")), LineLayout.END);
+	public void showAditionalInformation(boolean aFlag) {
+		this.additionalInfo.setVisible(aFlag);
 	}
 
 	@org.jdesktop.application.Action
@@ -431,50 +495,24 @@ public class TUIPanel extends WebPanel {
 	}
 
 	/**
-	 * clase que presenta la instancia de <code>JPopupMenu</code> creada para la table que presenta los datos dentro de
-	 * esta clase
+	 * Enable/Disable all the actions present in this component acordint to parametars pass as arguments.
+	 * <p>
+	 * For example. the class {@link TUIFormPanel} has the <code>Acept </code> action. this action has a paremeter
+	 * <code>acept.Action.isCommint = true</code> that mark this action as an action for commit changes to the sistem.
+	 * <p>
+	 * call this metodo <code>enableInternalActions("isCommint", "true", false)</code> means that all actions whit
+	 * property <code>.isCommit = true</code> will be disabled
 	 * 
+	 * @param property - indicate the property of the action to look for
+	 * @param value - the value of the param property must be equal tho this value
+	 * @param enable - boolean value to enable or disable de action.
 	 */
-	public class ListMouseProcessor extends MouseAdapter {
-
-		private JComponent invoker;
-
-		public ListMouseProcessor(JComponent in) {
-			this.invoker = in;
-		}
-
-		/**
-		 * presetna menu
-		 * 
-		 * @param e - evento
-		 */
-		private void showPopup(MouseEvent e) {
-			if (e.isPopupTrigger()) {
-				// verifica null porque x autorizciones, pueden no haber elementos
-				if (popupMenu != null) {
-					popupMenu.show(invoker, e.getX(), e.getY());
-					// dynamicMenu.showMenu(invoker, e.getX(), e.getY());
-				}
-			}
-		}
-
-		@Override
-		public void mousePressed(MouseEvent e) {
-			showPopup(e);
-		}
-
-		@Override
-		public void mouseReleased(MouseEvent e) {
-			showPopup(e);
-		}
-
-		@Override
-		public void mouseClicked(MouseEvent e) {
-			if (e.getClickCount() == 2) {
-				if (doubleClickAction != null && doubleClickAction.isEnabled()) {
-					doubleClickAction.actionPerformed(null);
-				}
-			}
+	protected void setEnableActions(String property, String value, boolean enable) {
+		for (Action a : allActions) {
+			ApplicationAction aa = (ApplicationAction) a;
+			String isc = aa.getResourceMap().getString(aa.getName() + ".Action." + property);
+			if (isc != null && isc.equals(value))
+				aa.setEnabled(enable);
 		}
 	}
 

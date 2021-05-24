@@ -109,10 +109,7 @@ public class TableDialog extends JDialog implements Client {
 		// };
 
 		// control panel
-		outConsole = TUIUtils.getConsoleTextArea();
-		WebToggleButton pauseButton = new WebToggleButton(ap -> game.pause(!game.isPaused()));
-		pauseButton.setIcon(TUIUtils.getSmallFontIcon('\ue034'));
-		pauseButton.setSelectedIcon(TUIUtils.getSmallFontIcon('\ue037'));
+		outConsole = TUIUtils.getConsoleTextArea();	
 		WebButton endGame = new WebButton(ap -> dispose());
 		endGame.setIcon(TUIUtils.getSmallFontIcon('\ue047'));
 
@@ -121,7 +118,7 @@ public class TableDialog extends JDialog implements Client {
 		controlPanel.add(TUIUtils.getSmartScroller(outConsole), BorderLayout.CENTER);
 		JPanel jp = new JPanel(new VerticalFlowLayout());
 		jp.setOpaque(false);
-		jp.add(pauseButton);
+		jp.add(TUIUtils.getStartPauseToggleButton(ap -> game.pause(!game.isPaused())));
 		jp.add(endGame);
 		controlPanel.add(jp, BorderLayout.EAST);
 

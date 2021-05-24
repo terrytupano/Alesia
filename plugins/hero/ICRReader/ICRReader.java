@@ -8,7 +8,6 @@ import org.apache.commons.math3.stat.descriptive.*;
 import com.alee.utils.*;
 
 import core.*;
-import plugins.hero.UoALoky.*;
 
 /**
  * @author Zack Tillotson

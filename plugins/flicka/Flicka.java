@@ -32,18 +32,15 @@ import gui.*;
 
 public class Flicka extends TPlugin {
 
-	protected static ActionMap actionMap;
-
 	public Flicka() {
-		actionMap = Alesia.getInstance().getContext().getActionMap(this);
 		Alesia.getInstance().openDB("flicka");
-		TActionsFactory.insertActions(actionMap);
+		TActionsFactory.insertActions(this);
 	}
 
 	@Override
 	public ArrayList<javax.swing.Action> getUI(String type) {
 		ArrayList<Action> alist = new ArrayList<>();
-		alist.add(actionMap.get("flicka"));
+		alist.add(TActionsFactory.getAction("flicka"));
 		return alist;
 	}
 

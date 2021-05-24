@@ -31,7 +31,6 @@ import com.jgoodies.common.base.*;
 
 import core.datasource.model.*;
 import gui.*;
-import gui.docking.*;
 
 public class TActionsFactory {
 
@@ -61,12 +60,16 @@ public class TActionsFactory {
 	 * Insert the given {@link ActionMap} to the main application {@link ActionMap}. this allow use this class to find
 	 * aditional actions inserted during plugin initializacion.
 	 * 
-	 * @param actionMap - tha map to append 
+	 * FIXME: i.m not schure that is the correct implementation. the correct way is: every class muss define his own
+	 * actions and ...
+	 * 
+	 * @param actionMap - tha map to append
 	 */
-	public static void insertActions(ActionMap actionMap) {
-		Object[] keys = actionMap.allKeys();
+	public static void insertActions(Object object) {
+		ActionMap map = Alesia.getInstance().getContext().getActionMap(object);
+		Object[] keys = map.allKeys();
 		for (Object key : keys) {
-			instance.actionMap.put(key, actionMap.get(key));
+			instance.actionMap.put(key, map.get(key));
 		}
 	}
 
@@ -99,13 +102,17 @@ public class TActionsFactory {
 	 * @since 2.3
 	 */
 	public static ApplicationAction getMe(ActionEvent event) {
+		AbstractButton ab = getAbstractButton(event);
+		return (ApplicationAction) ab.getAction();
+	}
+
+	public static AbstractButton getAbstractButton(ActionEvent event) {
 		Object obj = event.getSource();
 		Preconditions.checkArgument(obj instanceof AbstractButton,
 				"The source of the ActionEvent is not an instance of abstractButton");
-		AbstractButton src = (AbstractButton) obj;
-		return (ApplicationAction) src.getAction();
+		AbstractButton ab= (AbstractButton) obj;
+		return ab;
 	}
-
 	@Action
 	public void fileChooserOpen(ActionEvent event) {
 		ApplicationAction me = getMe(event);
@@ -218,8 +225,8 @@ public class TActionsFactory {
 
 		LocalProperty lsel = getLastSelected(group);
 		TEntry tels = lsel == null ? null : new TEntry(lsel.getId(), lsel.get("name"));
-		TEntry sel = (TEntry) JOptionPane.showInputDialog(Alesia.getInstance().getMainFrame(), "Select the elements to load", "Load",
-				JOptionPane.PLAIN_MESSAGE, null, te.toArray(), tels);
+		TEntry sel = (TEntry) JOptionPane.showInputDialog(Alesia.getInstance().getMainFrame(),
+				"Select the elements to load", "Load", JOptionPane.PLAIN_MESSAGE, null, te.toArray(), tels);
 
 		// save the last selected and store the value from db in the loadPerformed property
 		if (sel != null) {
@@ -268,7 +275,8 @@ public class TActionsFactory {
 		AbstractButton src = (AbstractButton) event.getSource();
 		Object[] options = {TStringUtils.getString("deleteModel.Action.confirm"),
 				TStringUtils.getString("deleteModel.Action.cancel")};
-		int o = JOptionPane.showOptionDialog(Alesia.getInstance().getMainFrame(), TStringUtils.getString("deleteModel.Action.message"),
+		int o = JOptionPane.showOptionDialog(Alesia.getInstance().getMainFrame(),
+				TStringUtils.getString("deleteModel.Action.message"),
 				TStringUtils.getString("deleteModel.Action.title"), JOptionPane.DEFAULT_OPTION,
 				JOptionPane.WARNING_MESSAGE, null, options, options[1]);
 		if (o == JOptionPane.YES_OPTION) {
@@ -304,8 +312,8 @@ public class TActionsFactory {
 		LocalProperty lss = getLastSelected(group);
 		String ls = lss == null ? null : lss.getString("name");
 
-		String savn = (String) JOptionPane.showInputDialog(Alesia.getInstance().getMainFrame(), "Write the name", "Save",
-				JOptionPane.PLAIN_MESSAGE, null, null, ls);
+		String savn = (String) JOptionPane.showInputDialog(Alesia.getInstance().getMainFrame(), "Write the name",
+				"Save", JOptionPane.PLAIN_MESSAGE, null, null, ls);
 
 		// save & update last selected
 		if (savn != null) {

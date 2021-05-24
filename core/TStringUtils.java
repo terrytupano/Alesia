@@ -487,4 +487,23 @@ public class TStringUtils {
 		msg = msg.replace("<message>", message);
 		return msg;
 	}
+	/**
+	 * return an <code>ArrayList<ArrayList<String>></code> contain the list of element described in the propertifile
+	 * under the group parameter. the array of array contain ilve the values tabulator separated. the result is similar
+	 * to a matriz. the order of the rows elements are determinated by the natural order form the key in the
+	 * propertyfile.
+	 * 
+	 * @param group - group of elements
+	 * @return <code>ArrayList<ArrayList<String>></code> wiht all the values loaded
+	 */
+	public static ArrayList<ArrayList<String>> getTabularProperties(String group) {
+		TreeMap<String, String> tmp = getProperties(group);
+		ArrayList<String> keys = new ArrayList<>(tmp.keySet());
+		ArrayList<ArrayList<String>> rtnList = new ArrayList<>();
+		for (String key : keys) {
+			String[] row = tmp.get(key).split("[\t]");
+			rtnList.add(new ArrayList<>(Arrays.asList(row)));
+		}
+		return rtnList;
+	}
 }

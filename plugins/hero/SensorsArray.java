@@ -476,14 +476,7 @@ public class SensorsArray {
 	 * purporse
 	 */
 	public void testAreas() {
-		// if the trooper is active, do nothig (oüviously)
-		Trooper t = Trooper.getInstance();
-		if (t != null && t.isStarted())
-			return;
-
 		Hero.isTestMode = true;
-		// List<ScreenSensor> slist = screenSensors.values().stream().filter(ss -> ss.isCardArea())
-		// .collect(Collectors.toList());
 		List<ScreenSensor> slist = screenSensors.values().stream().collect(Collectors.toList());
 		readSensors(true, slist);
 	}

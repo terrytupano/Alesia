@@ -19,6 +19,7 @@ package plugins.hero.ozsoft.bots;
 
 import java.util.*;
 
+import plugins.hero.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.actions.*;
@@ -129,7 +130,7 @@ public class BasicBot extends Bot {
 			// No choice, must check.
 			action = PlayerAction.CHECK;
 		} else {
-			double chenScore = BasicBot.getChenScore(hand);
+			double chenScore = Hero.getChenScore(hand);
 			double chenScoreToPlay = tightness * 0.2;
 			if ((chenScore < chenScoreToPlay)) {
 				if (allowedActions.contains(PlayerAction.CHECK)) {
@@ -200,81 +201,5 @@ public class BasicBot extends Bot {
 			}
 		}
 		return action;
-	}
-	/**
-	 * Returns the value of the hole cards based on the Chen formula.
-	 * 
-	 * @param cards The hole cards.
-	 * 
-	 * @return The score based on the Chen formula.
-	 */
-	public static double getChenScore(UoAHand hand) {
-		if (hand.size() != 2) {
-			throw new IllegalArgumentException("Invalid number of cards: " + hand.size());
-		}
-
-		// Analyze hole cards.
-		int rank1 = hand.getCard(1).getRank();
-		int suit1 = hand.getCard(2).getSuit();
-		int rank2 = hand.getCard(1).getRank();
-		int suit2 = hand.getCard(2).getSuit();
-		int highRank = Math.max(rank1, rank2);
-		int lowRank = Math.min(rank1, rank2);
-		int rankDiff = highRank - lowRank;
-		int gap = (rankDiff > 1) ? rankDiff - 1 : 0;
-		boolean isPair = (rank1 == rank2);
-		boolean isSuited = (suit1 == suit2);
-
-		double score = 0.0;
-
-		// 1. Base score highest rank only
-		if (highRank == UoACard.ACE) {
-			score = 10.0;
-		} else if (highRank == UoACard.KING) {
-			score = 8.0;
-		} else if (highRank == UoACard.QUEEN) {
-			score = 7.0;
-		} else if (highRank == UoACard.JACK) {
-			score = 6.0;
-		} else {
-			score = (highRank + 2) / 2.0;
-		}
-
-		// 2. If pair, double score, with minimum score of 5.
-		if (isPair) {
-			score *= 2.0;
-			if (score < 5.0) {
-				score = 5.0;
-			}
-		}
-
-		// 3. If suited, add 2 points.
-		if (isSuited) {
-			score += 2.0;
-		}
-
-		// 4. Subtract points for gap.
-		if (gap == 1) {
-			score -= 1.0;
-		} else if (gap == 2) {
-			score -= 2.0;
-		} else if (gap == 3) {
-			score -= 4.0;
-		} else if (gap > 3) {
-			score -= 5.0;
-		}
-
-		// 5. Add 1 point for a 0 or 1 gap and both cards lower than a Queen.
-		if (!isPair && gap < 2 && rank1 < UoACard.QUEEN && rank2 < UoACard.QUEEN) {
-			score += 1.0;
-		}
-
-		// Minimum score is 0.
-		if (score < 0.0) {
-			score = 0.0;
-		}
-
-		// 6. Round half point scores up.
-		return Math.round(score);
 	}
 }
