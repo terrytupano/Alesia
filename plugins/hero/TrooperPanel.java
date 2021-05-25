@@ -63,8 +63,7 @@ public class TrooperPanel extends TUIFormPanel {
 		builder.append(getInputComponent("preflopRekonAmmo.hand"));
 
 		if (toolbar) {
-			getToolBarPanel().add(TUIUtils.getStartPauseToggleButton(TActionsFactory.getAction("runTrooper"), null));
-			addToolBarActions("testTrooper", "stopTrooper", "pauseTrooper");
+			addToolBarActions("runTrooper", "testTrooper", "stopTrooper", "pauseTrooper");
 		}
 
 		setBodyComponent(builder.getPanel());
@@ -72,8 +71,8 @@ public class TrooperPanel extends TUIFormPanel {
 	}
 
 	@Override
-	public Hashtable<String, Object> getValues() {
-		Hashtable vals = super.getValues();
+	public Map<String, Object> getValues() {
+		Map vals = super.getValues();
 		Hero.parseTableParameters(vals);
 		return vals;
 	}

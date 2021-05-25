@@ -17,6 +17,9 @@
 
 package plugins.hero.ozsoft.bots;
 
+import java.util.*;
+
+import core.datasource.model.*;
 import plugins.hero.*;
 import plugins.hero.ozsoft.*;
 
@@ -30,10 +33,28 @@ public abstract class Bot implements Client {
 	/** Number of hole cards. */
 	protected static final int NO_OF_HOLE_CARDS = 2;
 	protected PokerSimulator pokerSimulator;
+	protected SimulatorClient parameters;
+	protected Player heroPlayer;
+	protected List<Player> villans;
+	protected int bigBlind;
+	protected int dealer;
+	protected int pot;
+	protected int buyIn;
 
 	@Override
 	public void setObject(Object object) {
-		if(object  instanceof PokerSimulator)
-		this.pokerSimulator = (PokerSimulator) object;
+		if (object instanceof PokerSimulator)
+			this.pokerSimulator = (PokerSimulator) object;
+		if (object instanceof SimulatorClient)
+			this.parameters = (SimulatorClient) object;
+	}
+
+	@Override
+	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
+		this.villans = new ArrayList(players);
+		this.heroPlayer = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
+		villans.remove(heroPlayer);
+		this.bigBlind = bigBlind;
+		this.buyIn = heroPlayer.getCash();
 	}
 }

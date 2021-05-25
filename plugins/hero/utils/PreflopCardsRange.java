@@ -80,6 +80,7 @@ public class PreflopCardsRange {
 			{new Point(12, 10)}, {new Point(12, 8)}, {new Point(12, 7)}, {new Point(12, 11)}};
 
 	private int percentage;
+	private int[][] winnCounts = new int[13][13];
 
 	// contains the set of cards selected for this range.
 	// initially, none are selected (0 % range)
@@ -105,6 +106,9 @@ public class PreflopCardsRange {
 		this(0);
 	}
 
+	public void addCount(int row, int column, int count) {
+		winnCounts[row][column] = winnCounts[row][column] + count;
+	}
 	/**
 	 * Constructs a range with the specified percentage.
 	 * 
@@ -208,7 +212,8 @@ public class PreflopCardsRange {
 			// set the percentage only once
 			if (cardsRange.getPercentage() == 0)
 				cardsRange.setNewPercentage(range.getInteger("percentage"));
-			cardsRange.rangeSelections[range.getInteger("x")][range.getInteger("y")] = range.getBoolean("selected");
+			cardsRange.rangeSelections[range.getInteger("y")][range.getInteger("x")] = range.getBoolean("selected");
+			cardsRange.winnCounts[range.getInteger("y")][range.getInteger("x")] = range.getInteger("winCount");
 		}
 		return cardsRange;
 	}
@@ -243,9 +248,10 @@ public class PreflopCardsRange {
 				range.set("description", description);
 				range.set("percentage", getPercentage());
 				range.set("card", getCardAt(i, j));
-				range.set("x", i);
-				range.set("y", j);
+				range.set("x", j);
+				range.set("y", i);
 				range.set("selected", getValue(i, j));
+				range.set("winCount", winnCounts[i][j]);
 				range.insert();
 			}
 		}
@@ -260,10 +266,40 @@ public class PreflopCardsRange {
 	 * @return true if the specified hand is selected in this range, false otherwise.
 	 */
 	public boolean containsHand(HoleCards holeCards) {
-		return containsHand(new UoACard(holeCards.getFirstCard().toString()),
-				new UoACard(holeCards.getFirstCard().toString()));
+		String c1 = holeCards.getFirstCard().toString().replace("*", "");
+		String c2 = holeCards.getSecondCard().toString().replace("*", "");
+		return containsHand(new UoACard(c1), new UoACard(c2));
 	}
 
+	public Point getCoordenates(UoACard card1, UoACard card2) {
+		int rbig, rsmall;
+
+		if (card2.getRank() > card1.getRank()) {
+			rbig = card2.getRank();
+			rsmall = card1.getRank();
+		} else {
+			rbig = card1.getRank();
+			rsmall = card2.getRank();
+		}
+
+		int row, column;
+
+		// pocket pair, always on the main diagonal
+		if (rbig == rsmall) {
+			row = column = 14 - rbig;
+		} else {
+			// above the main diagonal
+			if (card1.getSuit() == card2.getSuit()) {
+				row = 14 - rbig;
+				column = 14 - rsmall;
+				// below the main diagonal
+			} else {
+				row = 14 - rsmall;
+				column = 14 - rbig;
+			}
+		}
+		return new Point(column, row);
+	}
 	/**
 	 * Tells if the hand composed of the two specified cards is selected in this range. The order in which you specify
 	 * the cards is not relevant.
@@ -274,33 +310,7 @@ public class PreflopCardsRange {
 	 * @return true if the specified hand is selected in this range, false otherwise.
 	 */
 	public boolean containsHand(UoACard c1, UoACard c2) {
-		int rbig, rsmall;
-
-		if (c2.getRank() > c1.getRank()) {
-			rbig = c2.getRank();
-			rsmall = c1.getRank();
-		} else {
-			rbig = c1.getRank();
-			rsmall = c2.getRank();
-		}
-
-		int row, column;
-
-		// pocket pair, always on the main diagonal
-		if (rbig == rsmall) {
-			row = column = 14 - rbig;
-		} else {
-			// above the main diagonal
-			if (c1.getSuit() == c2.getSuit()) {
-				row = 14 - rbig;
-				column = 14 - rsmall;
-				// below the main diagonal
-			} else {
-				row = 14 - rsmall;
-				column = 14 - rbig;
-			}
-		}
-
-		return this.rangeSelections[row][column];
+		Point coord = getCoordenates(c1, c2);
+		return this.rangeSelections[coord.y][coord.x];
 	}
 }

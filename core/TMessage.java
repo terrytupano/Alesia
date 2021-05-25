@@ -22,33 +22,28 @@ import javax.swing.*;
  * @author terry
  *
  */
-public class TError {
-	public static String ACTION = "action";
-	public static String ERROR = "error";
-	public static String INFORMATION = "information";
-	public static String WARNING = "warning";
+public class TMessage {
+	public static final String ACTION = "action";
+	public static final String ERROR = "error";
+	public static final String INFORMATION = "information";
+	public static final String WARNING = "warning";
 
-	public static Color ACTION_COLOR = new Color(190, 220, 250);
-	public static Color ERROR_COLOR = new Color(255, 190, 230);
-	public static Color INFORMATION_COLOR = new Color(230, 230, 255);
-	public static Color WARNING_COLOR = new Color(255, 255, 220);
+	public static final Color ACTION_COLOR = new Color(190, 220, 250);
+	public static final Color ERROR_COLOR = new Color(255, 190, 230);
+	public static final Color INFORMATION_COLOR = new Color(230, 230, 255);
+	public static final Color WARNING_COLOR = new Color(255, 255, 220);
 
-	public static int SHORT = 2000;
-	public static int A_WHILE = 10000;
-	public static int FOR_EVER = 999000;
+	public static final int SHORT = 2000;
+	public static final int A_WHILE = 10000;
+	public static final int FOR_EVER = 999000;
 
 	private Color exceptionColor;
 	private int milis;
-	private ImageIcon exceptionIcon;
+	private Icon exceptionIcon;
 	private String message;
 	private String eType;
 
-	/**
-	 * nueva instancia
-	 * 
-	 * @param mid - identificador de mensaje
-	 */
-	public TError(String mid) {
+	public TMessage(String mid) {
 		super();
 		String[] a_m = TStringUtils.getString(mid).split(";");
 		if (a_m.length < 2) {
@@ -58,25 +53,27 @@ public class TError {
 			eType = ACTION;
 			this.exceptionColor = ACTION_COLOR;
 			this.milis = FOR_EVER;
+			this.exceptionIcon = TUIUtils.getFontIcon('\ue87f', 32, ACTION_COLOR);
 		}
 		if (a_m[0].equals("e")) {
 			eType = ERROR;
 			this.exceptionColor = ERROR_COLOR;
 			this.milis = FOR_EVER;
+			this.exceptionIcon = TUIUtils.getFontIcon('\ue001', 32, ERROR_COLOR);
 		}
 		if (a_m[0].equals("i")) {
 			eType = INFORMATION;
 			this.exceptionColor = INFORMATION_COLOR;
 			this.milis = SHORT;
+			this.exceptionIcon = TUIUtils.getFontIcon('\ue88e', 32, INFORMATION_COLOR);
 		}
 		if (a_m[0].equals("w")) {
 			eType = WARNING;
 			this.exceptionColor = WARNING_COLOR;
 			this.milis = A_WHILE;
-
+			this.exceptionIcon = TUIUtils.getFontIcon('\ue8b2', 32, WARNING_COLOR);
 		}
 		this.message = a_m[1];
-		this.exceptionIcon = TResources.getIcon(eType);
 	}
 
 	/**
@@ -85,7 +82,7 @@ public class TError {
 	 * @param msgID - identificador de mensaje.
 	 * @param msgData - datos para ejecutar
 	 */
-	public TError(String msgID, Object... msgData) {
+	public TMessage(String msgID, Object... msgData) {
 		this(msgID);
 		message = MessageFormat.format(message, msgData);
 	}
@@ -104,7 +101,7 @@ public class TError {
 	 * 
 	 * @return icono
 	 */
-	public ImageIcon getExceptionIcon() {
+	public Icon getIcon() {
 		return exceptionIcon;
 	}
 

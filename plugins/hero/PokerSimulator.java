@@ -135,7 +135,7 @@ public class PokerSimulator {
 		handNames.put(7, "pair");
 		handNames.put(8, "high_card");
 
-		Hashtable<String, Object> values = Hero.trooperPanel.getValues();
+		Map<String, Object> values = Hero.trooperPanel.getValues();
 		this.buyIn = ((Double) values.get("table.buyIn")).intValue();
 		this.bigBlind = ((Double) values.get("table.bigBlid")).intValue();
 		this.smallBlind = ((Double) values.get("table.smallBlid")).intValue();

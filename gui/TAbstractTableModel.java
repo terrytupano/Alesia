@@ -25,9 +25,23 @@ public class TAbstractTableModel extends AbstractTableModel {
 	private Hashtable<String, Hashtable> referenceColumns;
 	private Vector<String> attributeNames;
 	private Function<String, List<Model>> function;
+
+	/**
+	 * new instance
+	 * 
+	 * @param function - the function that will process and retrive the result
+	 * @param colums - column information for this list
+	 */
 	public TAbstractTableModel(Function function, Map<String, ColumnMetadata> colums) {
 		setDBParameters(function, colums);
 	}
+
+	/**
+	 * set the need parameter for this instance.
+	 * 
+	 * @param function - the function that process and retrive the result
+	 * @param colums - column information for this list
+	 */
 	public void setDBParameters(Function<String, List<Model>> function, Map<String, ColumnMetadata> colums) {
 		this.function = function;
 		this.lazyList = function.apply(null);

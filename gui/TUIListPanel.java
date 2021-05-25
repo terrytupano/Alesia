@@ -90,9 +90,8 @@ public abstract class TUIListPanel extends TUIPanel implements ListSelectionList
 		this.js_pane = new JScrollPane();
 		referenceColumns = new Hashtable();
 		// better look for weblaf
-		js_pane.setBorder(null);
 		js_pane.getViewport().setBackground(Color.WHITE);
-
+//		js_pane.getViewport().setBorder(null);
 		this.view = TABLE_VIEW;
 
 		createJTable();
@@ -240,6 +239,12 @@ public abstract class TUIListPanel extends TUIPanel implements ListSelectionList
 		this.tableColumns = cols;
 	}
 
+	/**
+	 * set the database parameter for this instance. 
+	 * 
+	 * @param function - a {@link Function} that retrive and filter the data
+	 * @param columns the columns metadata
+	 */
 	public void setDBParameters(Function<String, List<Model>> function, Map<String, ColumnMetadata> columns) {
 		if (function != null || columns != null) {
 			this.columns = columns;

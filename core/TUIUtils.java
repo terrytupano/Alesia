@@ -397,20 +397,6 @@ public class TUIUtils {
 	}
 
 	/**
-	 * retorna un <code>JCheckBox</code> con valores standar para registros.
-	 * 
-	 * NOTA Esta implementacion asume que en la base de datos 's' o 'n' equivales a verdadero o falso
-	 * 
-	 * @param rcd - registro de datos
-	 * @param fld - nombre del campo
-	 * @return JCheckBox
-	 */
-	public static JCheckBox getJCheckBox(Model model, String fld) {
-		JCheckBox jcb = getJCheckBox(fld, model.getBoolean(fld));
-		// jcb.setName(fld);
-		return jcb;
-	}
-	/**
 	 * retorna un <code>JCheckBox</code> con valores standar
 	 * 
 	 * @param idt - identificador en resourcebundle para el texto
@@ -421,6 +407,19 @@ public class TUIUtils {
 	public static JCheckBox getJCheckBox(String idt, boolean sel) {
 		JCheckBox jcb = new JCheckBox(TStringUtils.getString(idt), sel);
 		jcb.setName(idt);
+		return jcb;
+	}
+	/**
+	 * create and return a {@link WebCheckBox}. this implementation assume that the data type from the model is boolean
+	 * 
+	 * @param field - the field name
+	 * @param model - the Model
+	 * 
+	 * @return {@link WebComboBox}
+	 */
+	public static JCheckBox getJCheckBox(String field, Model model) {
+		JCheckBox jcb = getJCheckBox(field, model.getBoolean(field));
+		// jcb.setName(fld);
 		return jcb;
 	}
 
@@ -469,23 +468,6 @@ public class TUIUtils {
 		return editorPane;
 	}
 
-	public static WebToggleButton getStartPauseToggleButton(Action action, ActionListener listener) {
-		WebToggleButton startPause = new WebToggleButton();
-		startPause.setSelectedIcon(TUIUtils.getSmallFontIcon('\ue034'));
-		if (action != null) {
-			startPause.setAction(action);
-		} else {
-			startPause.setIcon(TUIUtils.getSmallFontIcon('\ue037'));
-		}
-		if (listener != null)
-			startPause.addActionListener(listener);
-		return (WebToggleButton) overRideWebButton(startPause);
-
-	}
-
-	public static WebToggleButton getStartPauseToggleButton(ActionListener actionListener) {
-		return getStartPauseToggleButton(null, actionListener);
-	}
 	/**
 	 * construye y retorna una instancia de JLabel con los atributos establecidos segun los argumentos de entrada.
 	 * 
@@ -546,7 +528,6 @@ public class TUIUtils {
 		setToolTip(ti, jrb);
 		return jrb;
 	}
-
 	/**
 	 * JtextArea estadar para datos de registros
 	 * 
@@ -577,6 +558,7 @@ public class TUIUtils {
 		// jsp.setName(f);
 		return jsp;
 	}
+
 	/**
 	 * retorna <code>JTextArea</code> con formato estandar
 	 * 
@@ -653,7 +635,6 @@ public class TUIUtils {
 		g2d.drawImage(ii.getImage(), hpos, vpos, null);
 		return new ImageIcon(bi);
 	}
-
 	/**
 	 * create and return an ImageIcon that is result of drawing background icon <code>bi</code> of request size
 	 * <code>size</code> and and merging with the fornt icon <code>fi</code> with 0.6 of size
@@ -669,6 +650,13 @@ public class TUIUtils {
 		ImageIcon ii2 = TResources.getIcon(bi, size);
 		ImageIcon ii = TResources.getIcon(fi, (int) (size * 0.6));
 		return ImageUtils.mergeIcons(ii2, ii);
+	}
+
+	public static NumericTextField getNumericTextField(String field, Model model, Map<String, ColumnMetadata> columns) {
+		ColumnMetadata column = columns.get(field);
+		int len = column.getColumnSize();
+		String val = model.getString(field);
+		return getNumericTextField(field, val, len, null);
 	}
 
 	public static NumericTextField getNumericTextField(String name, String text, int cols, String mask) {
@@ -705,6 +693,7 @@ public class TUIUtils {
 		new SmartScroller(pane);
 		return pane;
 	}
+
 	/**
 	 * crea y retorna un componente informativo con formato estandar
 	 * 
@@ -730,6 +719,24 @@ public class TUIUtils {
 		ic.add(Box.createHorizontalStrut(4));
 		ic.add(inf);
 		return ic;
+	}
+
+	public static WebToggleButton getStartPauseToggleButton(Action action, ActionListener listener) {
+		WebToggleButton startPause = new WebToggleButton();
+		startPause.setSelectedIcon(TUIUtils.getSmallFontIcon('\ue034'));
+		if (action != null) {
+			startPause.setAction(action);
+			overRideToolBarButton(startPause);
+		} else {
+			startPause.setIcon(TUIUtils.getSmallFontIcon('\ue037'));
+		}
+		if (listener != null)
+			startPause.addActionListener(listener);
+		return startPause;
+
+	}
+	public static WebToggleButton getStartPauseToggleButton(ActionListener actionListener) {
+		return getStartPauseToggleButton(null, actionListener);
 	}
 
 	public static int getStringPixelHeight(String str, Font font) {
@@ -869,15 +876,7 @@ public class TUIUtils {
 	 */
 	public static WebButton getWebButtonForToolBar(Action action) {
 		WebButton button = new WebButton(action);
-		return (WebButton) overRideWebButton(button);
-	}
-
-	public static AbstractButton overRideWebButton(AbstractButton button) {
-		overRideIcons(16, null, button.getAction());
-		button.setRequestFocusEnabled(false);
-		// TooltipManager.setTooltip(jb, (String) taa.getValue(TAbstractAction.SHORT_DESCRIPTION), TooltipWay.down);
-		button.setText(null);
-		button.setPreferredSize(new Dimension(46,26));
+		overRideToolBarButton(button);
 		return button;
 	}
 
@@ -1012,20 +1011,17 @@ public class TUIUtils {
 		return findf;
 	}
 
-	/**
-	 * retorna <code>JFormattedTextField</code> estandar. NOTA: recomendado solo para numeros y fechas.
-	 * 
-	 * @param rcd - instancia de registro de datos
-	 * @param fld - id de campo con valor
-	 * 
-	 * @return <code>JFormattedTextField</code>
-	 */
-	public static JFormattedTextField getWebFormattedTextField(Model model, ColumnMetadata column) {
+	public static WebFormattedTextField getWebFormattedTextField(Model model, ColumnMetadata column) {
 		int len = column.getColumnSize();
-		String fn = column.getColumnName();
-		Object val = model.get(fn);
-		WebFormattedTextField jftf = getWebFormattedTextField(fn, val, len, null);
-		return jftf;
+		String field = column.getColumnName();
+		Object val = model.get(field);
+		return getWebFormattedTextField(field, val, len, null);
+	}
+
+	public static WebFormattedTextField getWebFormattedTextField(String field, Model model,
+			Map<String, ColumnMetadata> columns) {
+		ColumnMetadata metadata = columns.get(field);
+		return getWebFormattedTextField(model, metadata);
 	}
 
 	public static WebFormattedTextField getWebFormattedTextField(String name, Object val, int cols) {
@@ -1080,13 +1076,18 @@ public class TUIUtils {
 		wpf.setName(field);
 		return wpf;
 	}
+
 	public static WebTextField getWebTextField(Model model, ColumnMetadata column) {
 		int len = column.getColumnSize();
-		String fn = column.getColumnName();
-		// model.get(fn).toString() allow any field class
-		String val = model.get(fn).toString();
-		WebTextField jftf = getWebTextField(fn, val, len);
+		String field = column.getColumnName();
+		String val = model.getString(field);
+		WebTextField jftf = getWebTextField(field, val, len);
 		return jftf;
+	}
+
+	public static WebTextField getWebTextField(String field, Model model, Map<String, ColumnMetadata> columns) {
+		ColumnMetadata metadata = columns.get(field);
+		return getWebTextField(model, metadata);
 	}
 
 	public static WebTextField getWebTextField(String name, String val, int colums) {
@@ -1169,6 +1170,14 @@ public class TUIUtils {
 				}
 			}
 		}
+	}
+
+	public static void overRideToolBarButton(AbstractButton button) {
+		overRideIcons(16, null, button.getAction());
+		button.setRequestFocusEnabled(false);
+		// TooltipManager.setTooltip(jb, (String) taa.getValue(TAbstractAction.SHORT_DESCRIPTION), TooltipWay.down);
+		button.setText(null);
+		button.setPreferredSize(new Dimension(46, 26));
 	}
 
 	/**

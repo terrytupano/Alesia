@@ -63,7 +63,8 @@ public class TUIPanel extends WebPanel {
 		public void mouseClicked(MouseEvent e) {
 			if (e.getClickCount() == 2) {
 				if (doubleClickAction != null && doubleClickAction.isEnabled()) {
-					doubleClickAction.actionPerformed(null);
+					ActionEvent ae = new ActionEvent(doubleClickAction, 0, "no cmd");
+					doubleClickAction.actionPerformed(ae);
 				}
 			}
 		}
@@ -393,8 +394,8 @@ public class TUIPanel extends WebPanel {
 			remove(bodyMessageJComponent);
 			add(bodyJComponent, BorderLayout.CENTER);
 		} else {
-			TError te = new TError(msgId, msgData);
-			blkinfoLabel.setIcon(te.getExceptionIcon());
+			TMessage te = new TMessage(msgId, msgData);
+			blkinfoLabel.setIcon(te.getIcon());
 			blkinfoLabel.setText(te.getMessage());
 			// blkinfoLabel.setVerticalTextPosition(JLabel.TOP);
 

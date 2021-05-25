@@ -60,7 +60,7 @@ public class Trooper extends Task {
 	private long time1;
 	private DescriptiveStatistics outGameStats;
 	private boolean paused = false;
-	private Hashtable<String, Object> parameters;
+	private Map<String, Object> parameters;
 	long stepMillis;
 	// This variable is ONLY used and cleaned by ensuregametable method
 	private String lastHoleCards = "";
@@ -179,10 +179,11 @@ public class Trooper extends Task {
 		if (chips > 0 && chips < bluffParm) {
 			PreflopCardsRange bluff = cardsRanges.get("bluff");
 			HoleCards hc = pokerSimulator.getMyHoleCards();
-			if (bluff.containsHand(hc))
+			if (bluff.containsHand(hc)) {
 				setVariableAndLog(EXPLANATION, "Hero is able to bluff.");
-			setPreflopBluffActions();
-			ok = true;
+				setPreflopBluffActions();
+				ok = true;
+			}
 		}
 		return ok;
 	}

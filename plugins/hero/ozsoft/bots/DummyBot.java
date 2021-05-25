@@ -17,11 +17,14 @@
 
 package plugins.hero.ozsoft.bots;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.actions.*;
+import plugins.hero.utils.*;
 
 /**
  * Dummy Texas Hold'em poker bot that always just checks or calls. <br />
@@ -33,6 +36,10 @@ import plugins.hero.ozsoft.actions.*;
  */
 public class DummyBot extends Bot {
 
+	private PreflopCardsRange cardsRange;
+	private int prevChips;
+	private UoAHand hand;
+
 	public DummyBot() {
 
 	}
@@ -43,12 +50,21 @@ public class DummyBot extends Bot {
 
 	@Override
 	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
-		// Not implemented.
+		super.joinedTable(type, bigBlind, players);
+		this.cardsRange = new PreflopCardsRange(100);
+		this.prevChips = heroPlayer.getCash();
 	}
 
 	@Override
 	public void handStarted(Player dealer) {
-		// Not implemented.
+		if (!dealer.equals(heroPlayer))
+			return;
+		if (heroPlayer.getCash() != prevChips) {
+			int count = (heroPlayer.getCash() - prevChips) >= 0 ? 1 : -1;
+			Point coord = cardsRange.getCoordenates(hand.getCard(1), hand.getCard(2));
+			cardsRange.addCount(coord.y, coord.x, count);
+			prevChips = heroPlayer.getCash();
+		}
 	}
 
 	@Override
@@ -58,7 +74,8 @@ public class DummyBot extends Bot {
 
 	@Override
 	public void playerUpdated(Player player) {
-		// Not implemented.
+		if (player.getName().equals("Hero") && player.getHand().size() == NO_OF_HOLE_CARDS)
+			this.hand = player.getHand();
 	}
 
 	@Override
@@ -79,5 +96,4 @@ public class DummyBot extends Bot {
 			return PlayerAction.CALL;
 		}
 	}
-
 }

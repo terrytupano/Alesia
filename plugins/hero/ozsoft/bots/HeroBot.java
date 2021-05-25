@@ -31,21 +31,11 @@ import plugins.hero.ozsoft.actions.*;
 public class HeroBot extends Bot {
 
 	private Trooper trooper;
-	private TableType tableType;
-	private List<Player> villans;
-	private Player heroPlayer;
-	private int bigBlind;
-	private int dealer;
-	private int pot;
-
+	private TableType tableType;	
 	public HeroBot() {
 
 	}
-	@Override
-	public void setObject(Object object) {
-		super.setObject(object);
-		this.trooper = new Trooper(null, pokerSimulator);
-	}
+	
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		for (PlayerAction act : allowedActions) {
@@ -89,7 +79,7 @@ public class HeroBot extends Bot {
 			if (allowedActions.contains(PlayerAction.BET))
 				action = new BetAction((int) act.amount);
 		}
-		if(action == null)
+		if (action == null)
 			throw new IllegalArgumentException("Hero bot has no correct action selected. Trooper action was" + act);
 		return action;
 	}
@@ -98,6 +88,7 @@ public class HeroBot extends Bot {
 	public void actorRotated(Player actor) {
 		// Not implemented.
 	}
+	
 	@Override
 	public void boardUpdated(UoAHand hand, int bet, int pot) {
 		if (hand.getCard(1) != null)
@@ -121,17 +112,8 @@ public class HeroBot extends Bot {
 		pokerSimulator.buyIn = buyIn;
 		pokerSimulator.clearEnviorement();
 	}
-	private int buyIn;
-	@Override
-	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
-		this.tableType = type;
-		this.villans = new ArrayList(players);
-		this.heroPlayer = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
-		villans.remove(heroPlayer);
-		this.bigBlind = bigBlind;
-		this.buyIn = heroPlayer.getCash();
-	}
 
+	
 	@Override
 	public void messageReceived(String message) {
 		// Not implemented.
@@ -149,5 +131,11 @@ public class HeroBot extends Bot {
 			pokerSimulator.cardsBuffer.put("hero.card1", hand.getCard(1).toString());
 			pokerSimulator.cardsBuffer.put("hero.card2", hand.getCard(2).toString());
 		}
+	}
+
+	@Override
+	public void setObject(Object object) {
+		super.setObject(object);
+		this.trooper = new Trooper(null, pokerSimulator);
 	}
 }

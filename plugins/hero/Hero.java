@@ -21,8 +21,8 @@ import java.util.logging.*;
 
 import javax.swing.*;
 import javax.swing.Action;
-import javax.swing.table.*;
 
+import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 
 import com.alee.laf.*;
@@ -139,7 +139,7 @@ public class Hero extends TPlugin {
 	 * 
 	 * @param values - values
 	 */
-	public static void parseTableParameters(Hashtable<String, Object> values) {
+	public static void parseTableParameters(Map<String, Object> values) {
 		String[] tparms = values.get("table.parameters").toString().split("[,]");
 		values.put("table.buyIn", new Double(tparms[0]));
 		values.put("table.bigBlid", new Double(tparms[1]));
@@ -201,8 +201,7 @@ public class Hero extends TPlugin {
 	public void pauseTrooper(ActionEvent event) {
 		if (activeTrooper != null) {
 			boolean pause = !activeTrooper.isPaused();
-			AbstractButton ab = (AbstractButton) event.getSource();
-			ab.setIcon(TUIUtils.getSmallFontIcon(pause ? '\ue037' : '\ue034'));
+			TActionsFactory.getAbstractButton(event).setIcon(TUIUtils.getSmallFontIcon(pause ? '\ue037' : '\ue034'));
 			activeTrooper.pause(pause);
 		}
 	}
@@ -228,9 +227,20 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public Task startSimulation(ActionEvent event) {
 		try {
-			Hashtable<String, Object> values = trooperPanel.getValues();
-			TableModel model = simulatorPanel.getPlayersTable().getModel();
+			// check for hero client
+			if (SimulatorClient.find("name = ?", "Hero") == null) {
+				Alesia.showNotification("hero.msg01", "");
+				return null;
+			}
+			// check min num of players
+			if (SimulatorClient.count("isActive = ?", true) != 4) {
+				Alesia.showNotification("hero.msg02", "4");
+				return null;
+			}
+
 			startDate = new Date();
+			Map<String, Object> values = trooperPanel.getValues();
+			LazyList<SimulatorClient> clients = SimulatorClient.findAll();
 
 			int buy = ((Double) values.get("table.buyIn")).intValue();
 			int bb = ((Double) values.get("table.bigBlid")).intValue();
@@ -239,13 +249,14 @@ public class Hero extends TPlugin {
 			simulatorPanel.updatePokerSimulator(simulator);
 
 			Table table = new Table(TableType.NO_LIMIT, bb);
-			for (int i = 0; i < model.getRowCount(); i++) {
-				if ((Boolean) model.getValueAt(i, 2)) {
-					String name = model.getValueAt(i, 0).toString();
-					String bCls = model.getValueAt(i, 1).toString();
+			for (SimulatorClient client : clients) {
+				if (client.getBoolean("isActive")) {
+					String name = client.getString("name");
+					String bCls = client.getString("client");
 					Class cls = Class.forName("plugins.hero.ozsoft.bots." + bCls);
 					Bot bot = (Bot) cls.newInstance();
 					bot.setObject(simulator);
+					bot.setObject(client);
 					Player p = new Player(name, buy, bot);
 					table.addPlayer(p);
 				}
@@ -272,7 +283,8 @@ public class Hero extends TPlugin {
 		if (activeTrooper != null) {
 			activeTrooper.cancelTrooper(true);
 			trooperPanel.setAllEnabledBut(true, new String[0]);
-			TActionsFactory.getAction("pauseTrooper").putValue(Action.SMALL_ICON, TUIUtils.getSmallFontIcon('\ue037'));// :
+			// TActionsFactory.getAction("pauseTrooper").putValue(Action.SMALL_ICON,
+			// TUIUtils.getSmallFontIcon('\ue037'));// :
 			activeTrooper = null; // '\ue034'));
 		}
 	}

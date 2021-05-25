@@ -253,6 +253,7 @@ public class TActionsFactory {
 		ApplicationAction aa = (ApplicationAction) tuifp.getClientProperty("actionPerformed");
 		if (aa != null && aa.getName().equals("acept")) {
 			tuifp.getModel().insert();
+			tuilp.freshen();
 		}
 	}
 
@@ -267,6 +268,7 @@ public class TActionsFactory {
 		ApplicationAction aa = (ApplicationAction) tuifp.getClientProperty("actionPerformed");
 		if (aa != null && aa.getName().equals("acept")) {
 			tuifp.getModel().save();
+			tuilp.freshen();
 		}
 	}
 

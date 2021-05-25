@@ -15,9 +15,11 @@ import java.awt.*;
 import java.awt.Dialog.*;
 import java.awt.event.*;
 import java.io.*;
+import java.text.*;
 import java.util.*;
 import java.util.logging.*;
 
+import javax.swing.*;
 import javax.swing.Action;
 
 import org.apache.commons.logging.impl.*;
@@ -48,6 +50,7 @@ import com.alee.managers.style.*;
 import com.alee.skin.dark.*;
 import com.alee.utils.*;
 import com.alee.utils.CollectionUtils;
+import com.jgoodies.common.base.*;
 
 import gui.*;
 import gui.docking.*;
@@ -151,7 +154,7 @@ public class Alesia extends Application {
 		}
 		return db;
 	}
-	public static Hashtable<String, Object> showDialog(TUIFormPanel content, double withFactor, double heightFactor) {
+	public static Map<String, Object> showDialog(TUIFormPanel content, double withFactor, double heightFactor) {
 
 		// standar behavior: if the title of the tuipanel is visible, this method remove the string and put in as this
 		// dialog title
@@ -187,37 +190,17 @@ public class Alesia extends Application {
 		return content.getValues();
 	}
 
-	public static void showNotification(String mid, int lt, Object... dta) {
-		TError ae = new TError(mid, dta);
+	public static void showNotification(String messageId, Object... arguments) {
+		TMessage tm = new TMessage(messageId, arguments);
 		WebInnerNotification npop = NotificationManager.showInnerNotification(Alesia.getInstance().getMainFrame(),
-				ae.getMessage(), ae.getExceptionIcon());
+				tm.getMessage(), tm.getIcon());
 		// ae.getExceptionIcon(), NotificationOption.accept);
-		npop.setDisplayTime(lt);
-		if (mid.equals("notification.msg00")) {
+		npop.setDisplayTime(tm.getMiliSeconds());
+		if (messageId.equals("notification.msg00")) {
 			Alesia.getInstance().errMsg.play();
-			// UIManager.getLookAndFeel().provideErrorFeedback(null);
 		} else {
 			Alesia.getInstance().newMsg.play();
 		}
-	}
-	/**
-	 * show notification that does't disapear ultil user click on it
-	 * 
-	 * @param mid - messate id for {@link AplicationException}
-	 * @param dta - sustitution data for AplicationException
-	 */
-	public static void showNotification(String mid, Object... dta) {
-		showNotification(mid, 0, dta);
-	}
-
-	/**
-	 * show notification that disapear according to {@link AplicationException} limited time
-	 * 
-	 * @param mid
-	 * @param dta
-	 */
-	public static void showNotificationLT(String mid, Object... dta) {
-		showNotification(mid, new TError(mid).getMiliSeconds(), dta);
 	}
 
 	/**
@@ -329,7 +312,7 @@ public class Alesia extends Application {
 			UserLogIn li = new UserLogIn();
 			WebDialog dlg = li.createDialog(true);
 			dlg.setVisible(true);
-			Hashtable<String, Object> vals = li.getValues();
+			Map<String, Object> vals = li.getValues();
 			if (vals == null) {
 				getInstance().exit();
 			}
@@ -466,9 +449,9 @@ public class Alesia extends Application {
 
 		// parse app argument parameters and append to tpreferences to futher uses
 		// TODO: do something
-//		for (String arg : args) {
-//			String[] kv = arg.split("=");
-//		}
+		// for (String arg : args) {
+		// String[] kv = arg.split("=");
+		// }
 	}
 	@Override
 	protected void ready() {

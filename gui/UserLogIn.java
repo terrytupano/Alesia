@@ -73,8 +73,8 @@ public class UserLogIn extends TUIFormPanel {
 	}
 
 	@Override
-	public Hashtable<String, Object> getValues() {
-		Hashtable<String, Object> ht = super.getValues();
+	public Map<String, Object> getValues() {
+		Map<String, Object> ht = super.getValues();
 		if (ht.get("UserLogIn.rememberUser").equals(Boolean.TRUE))
 			SettingsManager.set("rememberUser", ht.get("UserLogIn.user"));
 		return ht;

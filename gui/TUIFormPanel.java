@@ -2,7 +2,6 @@ package gui;
 
 import java.awt.*;
 import java.io.*;
-import java.text.*;
 import java.util.*;
 import java.util.List;
 
@@ -36,24 +35,24 @@ import gui.wlaf.*;
  */
 public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSelectionListener {
 
-	private TError msg12, msg17, msg18;
+	private TMessage msg12, msg17, msg18;
 	private DefaultFormBuilder formBuilder;
-	private Hashtable<String, JComponent> fields;
-	private Vector<TError> reasons;
+	private HashMap<String, JComponent> fields;
+	private Vector<TMessage> reasons;
 	private Model model;
-	private Hashtable<String, Object> temporalStorage;
+	private HashMap<String, Object> temporalStorage;
 
 	public TUIFormPanel() {
 		FormLayout fl = new FormLayout("right:pref, 3dlu, default:grow", "");
-		this.fields = new Hashtable<String, JComponent>();
-		this.temporalStorage = new Hashtable<>();
+		this.fields = new HashMap<String, JComponent>();
+		this.temporalStorage = new HashMap<>();
 		this.reasons = new Vector<>();
 		// TODO: set the mair resourcebuldle to this panel
 		this.formBuilder = new DefaultFormBuilder(fl);
 		formBuilder.border(Borders.DIALOG);
-		this.msg12 = new TError("ui.msg12");
-		this.msg17 = new TError("ui.msg17");
-		this.msg18 = new TError("ui.msg18");
+		this.msg12 = new TMessage("ui.msg12");
+		this.msg17 = new TMessage("ui.msg17");
+		this.msg18 = new TMessage("ui.msg18");
 	}
 
 	@org.jdesktop.application.Action
@@ -126,7 +125,7 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 				JTextComponent jtc = (JTextComponent) icmp;
 				String txt = jtc.getText();
 				if (txt == null || txt.trim().equals("")) {
-					reasons.add(new TError("msg01"));
+					reasons.add(new TMessage("msg01"));
 					jtc.setBackground(Color.red);
 				}
 			}
@@ -153,7 +152,7 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 	 */
 	public JComponent getInputComponent(String field) {
 		JComponent jcmp = fields.get(field);
-		Preconditions.checkNotNull(jcmp, "Component identified as %1$ not found.", field);
+		Preconditions.checkNotNull(jcmp, "Component identified as %s not found.", field);
 		return jcmp;
 	}
 
@@ -175,7 +174,7 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 	 * 
 	 * @see #getValues()
 	 */
-	public Hashtable<String, Object> getTemporalStorage() {
+	public Map<String, Object> getTemporalStorage() {
 		return temporalStorage;
 	}
 
@@ -197,7 +196,7 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 	public Model getModel() {
 		if (model == null)
 			return null;
-		Hashtable<String, Object> vals = getValues();
+		Map<String, Object> vals = getValues();
 		model.fromMap(vals);
 		return model;
 	}
@@ -210,13 +209,12 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 	 * @return Hashtable with fields name and values found in this UI
 	 * @see #getTemporalStorage()
 	 */
-	public Hashtable<String, Object> getValues() {
-		Hashtable h = new Hashtable(temporalStorage);
-		fields.keySet().stream().forEach((key) -> {
-			Object val = getFieldValue(key);
-			if (val != null)
-				h.put(key, val);
-		});
+	public Map<String, Object> getValues() {
+		HashMap h = new HashMap(temporalStorage);
+		for (String field : fields.keySet()) {
+			Object val = getFieldValue(field);
+			h.put(field, val);
+		}
 		return h;
 	}
 
@@ -434,7 +432,7 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 			return wdf.getDate();
 		}
 
-//		test: fast replace for jformatetextfield
+		// test: fast replace for jformatetextfield
 		if (jcmp instanceof NumericTextField) {
 			try {
 				val = ((NumericTextField) jcmp).getNumberValue();
@@ -448,13 +446,14 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 		// numeros
 		if (jcmp instanceof JFormattedTextField) {
 			JFormattedTextField jftf = ((JFormattedTextField) jcmp);
-			try {
-				jftf.commitEdit();
-				val = jftf.getValue();
-			} catch (ParseException e) {
-				// TEST: print statck trace
-				e.printStackTrace();
-			}
+			val = jftf.getValue();
+			// try {
+			// jftf.commitEdit();
+			// val = jftf.getValue();
+			// } catch (ParseException e) {
+			// // TEST: print statck trace
+			// e.printStackTrace();
+			// }
 			return val;
 		}
 		// texto

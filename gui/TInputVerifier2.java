@@ -35,7 +35,7 @@ public class TInputVerifier2 extends InputVerifier {
 	private Color orgColor;
 	private long lowRange, highRange;
 	private boolean advance;
-	private TError reason;
+	private TMessage reason;
 
 	/**
 	 * nuevo verificador de entrada
@@ -131,17 +131,17 @@ public class TInputVerifier2 extends InputVerifier {
 				try {
 					String t = ftf.getText();
 					formatter.stringToValue(t);
-					reason = requiredValueSet(input) ? null : new TError("msg01");
+					reason = requiredValueSet(input) ? null : new TMessage("msg01");
 					if (reason == null) {
 						reason = advanceVerification(input);
 					}
 				} catch (ParseException pe) {
-					reason = new TError("msg02");
+					reason = new TMessage("msg02");
 				}
 			}
 		} 
 		if (reason == null) 
-			reason = requiredValueSet(input) ? null : new TError("msg02");
+			reason = requiredValueSet(input) ? null : new TMessage("msg02");
 		return reason == null;
 	}
 
@@ -150,7 +150,7 @@ public class TInputVerifier2 extends InputVerifier {
 	 * 
 	 * @return reason
 	 */
-	public TError getReason() {
+	public TMessage getReason() {
 		/*
 		 * 190611: Esta clase la hice cuando estaba aprendiendo java hace 10 anos. hoy, solo tengo que quitar unas cosas
 		 * y agregar otras !!! :D gratamente sorprendido. porque incluso hoy, estas viejas tecnicas todavia funcionan
@@ -166,8 +166,8 @@ public class TInputVerifier2 extends InputVerifier {
 	 * @param input - componente de entrada
 	 * @return expepcion indicando la razon o <code>null</code> si no exite error
 	 */
-	private TError advanceVerification(JComponent input) {
-		TError ape = null;
+	private TMessage advanceVerification(JComponent input) {
+		TMessage ape = null;
 		if (advance) {
 			double value = 0;
 			if (input instanceof JFormattedTextField) {
@@ -188,31 +188,31 @@ public class TInputVerifier2 extends InputVerifier {
 						&& (value < lowRange || value > highRange)) {
 					mdta[0] = new Double(lowRange);
 					mdta[1] = new Double(highRange);
-					ape = new TError("ui.msg13");
+					ape = new TMessage("ui.msg13");
 				}
 
 				// solo positivo
 				if (lowRange == 0 && highRange == Long.MAX_VALUE && value < 0) {
-					ape = new TError("ui.msg15");
+					ape = new TMessage("ui.msg15");
 				}
 
 				// solo negativos
 				if (lowRange == Long.MIN_VALUE && highRange == 0 && value > 0) {
-					ape = new TError("ui.msg16");
+					ape = new TMessage("ui.msg16");
 				}
 
 				// mayor
 				if (lowRange != 0 && highRange == 0 && lowRange != Long.MIN_VALUE && value < lowRange) {
 					mdta[2] = ">";
 					mdta[3] = new Double(lowRange);
-					ape = new TError("ui.msg14");
+					ape = new TMessage("ui.msg14");
 				}
 
 				// menor
 				if (lowRange == 0 && highRange != 0 && highRange != Long.MAX_VALUE && (value > highRange)) {
 					mdta[2] = "<";
 					mdta[3] = new Double(highRange);
-					ape = new TError("ui.msg14");
+					ape = new TMessage("ui.msg14");
 				}
 
 				// si exite algun error. da formato a mensaje

@@ -60,7 +60,7 @@ public class Trooper2 extends Task {
 	private long time1;
 	private DescriptiveStatistics outGameStats;
 	private boolean paused = false;
-	private Hashtable<String, Object> parameters;
+	private Map<String, Object> parameters;
 	long stepMillis;
 	// This variable is ONLY used and cleaned by ensuregametable method
 	private String lastHoleCards = "";

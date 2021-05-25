@@ -93,11 +93,11 @@ public class TableDialog extends JDialog implements Client {
 		for (Player player : players) {
 			PlayerPanel panel = new PlayerPanel();
 			playerPanels.put(player.getName(), panel);
-		}
-
-		// the player in the 3 position is allwais the test subject. this element is handled by this class but the
+		}		
+		
+		// the player "Hero" allwais the test subject. this element is handled by this class but the
 		// desition is dispacht to proxiClient
-		Player test = players.get(2);
+		Player test = players.stream().filter(p-> p.getName().equals("Hero")).findFirst().get();
 		this.proxyClient = test.getClient();
 		test.setClient(this);
 
@@ -122,6 +122,9 @@ public class TableDialog extends JDialog implements Client {
 		jp.add(endGame);
 		controlPanel.add(jp, BorderLayout.EAST);
 
+//		remove temporaly from list
+		PlayerPanel heroPanel = playerPanels.remove("Hero");
+
 		// set ui components
 		FormLayout layout = new FormLayout("center:pref, 3dlu, center:pref, 3dlu, center:pref",
 				"center:pref, 3dlu, center:pref, 3dlu, center:pref, 3dlu, fill:100dlu");
@@ -130,14 +133,17 @@ public class TableDialog extends JDialog implements Client {
 		builder.nextColumn(2);
 		builder.append(playerP.get(0));
 		builder.nextLine(2);
-		builder.append(playerP.get(3));
-		builder.append(boardPanel);
 		builder.append(playerP.get(1));
-		builder.nextLine(2);
-		builder.nextColumn(2);
+		builder.append(boardPanel);
 		builder.append(playerP.get(2));
 		builder.nextLine(2);
+		builder.nextColumn(2);
+		builder.append(heroPanel);
+		builder.nextLine(2);
 		builder.append(controlPanel, 5);
+
+		// reinsert in list
+		playerPanels.put("Hero", heroPanel);
 
 		JPanel contentPane = builder.build();
 		contentPane.setOpaque(true);

@@ -47,6 +47,8 @@ import plugins.hero.ozsoft.actions.*;
 public class BasicBot extends Bot {
 
 	/** Tightness (0 = loose, 100 = tight). */
+	// 8
+	// 36
 	private final int tightness;
 
 	/** Betting aggression (0 = safe, 100 = aggressive). */
@@ -74,30 +76,26 @@ public class BasicBot extends Bot {
 		if (aggression < 0 || aggression > 100) {
 			throw new IllegalArgumentException("Invalid aggression setting");
 		}
-		
+
 		this.tightness = tightness; // 8
 		this.aggression = aggression; // 36
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
 		this.tableType = type;
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public void messageReceived(String message) {
 		// Not implemented.
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public void handStarted(Player dealer) {
 		hand = null;
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public void actorRotated(Player actor) {
 		// Not implemented.
@@ -108,7 +106,6 @@ public class BasicBot extends Bot {
 		// TODO Auto-generated method stub
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public void playerUpdated(Player player) {
 		if (player.getHand().size() == NO_OF_HOLE_CARDS) {
@@ -116,13 +113,11 @@ public class BasicBot extends Bot {
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public void playerActed(Player player) {
 		// Not implemented.
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		PlayerAction action = null;

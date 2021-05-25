@@ -5,6 +5,7 @@ import org.jdesktop.application.*;
 import core.*;
 
 public class DoNothingTask extends Task<Void, Void> {
+	
 	DoNothingTask() {
 		super(Alesia.getInstance());
 		setUserCanCancel(true);

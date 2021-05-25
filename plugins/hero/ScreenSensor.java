@@ -471,7 +471,7 @@ public class ScreenSensor extends JPanel {
 		capturedImage = null;
 		lastOcrImage = null;
 		setEnabled(false);
-		Hashtable<String, Object> vals = Hero.trooperPanel.getValues();
+		Map<String, Object> vals = Hero.trooperPanel.getValues();
 		this.currencySymbol = vals.get("table.currency").toString();
 		repaint();
 	}
