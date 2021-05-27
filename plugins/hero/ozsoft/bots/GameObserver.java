@@ -19,9 +19,13 @@ package plugins.hero.ozsoft.bots;
 
 import java.util.*;
 
+import org.javalite.activejdbc.*;
+
+import core.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.actions.*;
+import plugins.hero.utils.*;
 
 /**
  * Dummy Texas Hold'em poker bot that always just checks or calls. <br />
@@ -31,24 +35,49 @@ import plugins.hero.ozsoft.actions.*;
  * 
  * @author Oscar Stigter
  */
-public class DummyBot extends Bot {
+public class GameObserver extends Bot {
 
-	public DummyBot() {
+	private PreflopCardsRange cardsRange;
+	private int prevChips;
+	private UoAHand myHole;
+	private DB db;
+	public GameObserver() {
 
 	}
 	@Override
 	public void messageReceived(String message) {
-		// Not implemented.
+
 	}
 
 	@Override
 	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
-		// Not implemented.
+		super.joinedTable(type, bigBlind, players);
+		this.db = Alesia.getInstance().openDB("hero", true);
+		this.cardsRange = new PreflopCardsRange("simul_11");
+		this.prevChips = heroPlayer.getCash();
+		this.myHole = new UoAHand();
 	}
 
 	@Override
 	public void handStarted(Player dealer) {
-		// Not implemented.
+		if (db.getConnection() == null) {
+			System.out.println("Opening connection...");
+			table.firePropertyChange(Table.PROP_MESSAGE, "", "Opening connection...");
+			db.open();
+		}
+
+		int delta = heroPlayer.getCash() - prevChips;
+		// if (delta != 0) {
+		// if (myHole.size() == 0) {
+		// System.out.println(heroPlayer.getCash());
+		// cardsRange.addCount(coord.y, coord.x, delta);
+		delta = delta > 0 ? 1 : -1;
+		if (myHole.size() != 0)
+			cardsRange.updateCoordenates(myHole.getCard(1), myHole.getCard(2), delta);
+		prevChips = heroPlayer.getCash();
+		// System.out.println((++handNum) + " cards: " + myHole + " delta: " + delta);
+		myHole.makeEmpty();
+		// }
 	}
 
 	@Override
@@ -58,16 +87,25 @@ public class DummyBot extends Bot {
 
 	@Override
 	public void playerUpdated(Player player) {
-		// Not implemented.
+		UoAHand hand = player.getHand();
+		if (player.equals(heroPlayer) && hand.size() == 2) {
+			this.myHole = new UoAHand(new String(player.getHand().toString()));
+			// if (myHole.size() != 2 || board.size() < 5) {
+			// return;
+			// }
+		}
 	}
 
 	@Override
 	public void boardUpdated(UoAHand hand, int bet, int pot) {
-		// TODO Auto-generated method stub
+
 	}
 
 	@Override
 	public void playerActed(Player player) {
+		// if(player.equals(heroPlayer))
+		// System.out.println("DummyBot.playerActed()");
+
 		// Not implemented.
 	}
 
@@ -79,5 +117,4 @@ public class DummyBot extends Bot {
 			return PlayerAction.CALL;
 		}
 	}
-
 }

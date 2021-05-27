@@ -44,7 +44,6 @@ import plugins.hero.utils.*;
  */
 public class Trooper extends Task {
 
-	private static Trooper instance;
 	private static DecimalFormat fourDigitFormat = new DecimalFormat("#0.0000");
 	private static DecimalFormat twoDigitFormat = new DecimalFormat("#0.00");
 	private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
@@ -86,13 +85,12 @@ public class Trooper extends Task {
 		// this.pokerSimulator = sensorsArray.getPokerSimulator();
 		this.roundCounter = 0;
 		this.playUntil = 0;
-		instance = this;
 		// load all preflop ranges
 		this.cardsRanges = new Hashtable<>();
 		TEntry<String, String>[] tarr = PreflopCardsRange.getSavedCardsRanges();
 		for (TEntry<String, String> tEntry : tarr) {
 			String rName = tEntry.getKey();
-			cardsRanges.put(rName, PreflopCardsRange.loadFromDB(rName));
+			cardsRanges.put(rName, new PreflopCardsRange(rName));
 		}
 	}
 

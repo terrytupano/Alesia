@@ -15,12 +15,9 @@ import java.awt.event.*;
 import java.beans.*;
 import java.util.List;
 
-import javax.swing.*;
-
 import org.jdesktop.application.*;
 
 import com.alee.laf.progressbar.*;
-import com.alee.managers.settings.*;
 import com.alee.utils.swing.*;
 
 public class TTaskManager implements PropertyChangeListener {
@@ -48,16 +45,26 @@ public class TTaskManager implements PropertyChangeListener {
 		return progressBar;
 	}
 
+	/**
+	 * return <code>true</code> if the Alesia enviorement can ferform one more task.
+	 * 
+	 * @return <code>true</code> for 1 more, <code>false</code> if the enviorement is allready a full capacity
+	 */
+	public boolean suporMoreTask() {
+		List<Task> tasks = monitor.getTasks();
+		int ac = (int) tasks.stream().filter(t -> t.isStarted()).count();
+		return ac < poolSize;
+	}
 	private void updateTaskBar() {
 		List<Task> tasks = monitor.getTasks();
 		int ac = (int) tasks.stream().filter(t -> t.isStarted()).count();
 		int qz = (int) tasks.stream().filter(t -> t.isPending()).count();
 		progressBar.setEnabled(ac > 0);
 		progressBar.setValue(ac);
-		progressBar.setString("Activas: " + ac + " en espera: " + qz);
+		progressBar.setString("Actives: " + ac + " waiting: " + qz);
 		float f = Math.abs((float) ((ac * .3 / poolSize) - .3)); // from green to red
 		Color c = new Color(Color.HSBtoRGB(f, .85f, .85f));
-		// progressBar.setProgressTopColor(c);
+		progressBar.setForeground(c);
 	}
 
 	@Override

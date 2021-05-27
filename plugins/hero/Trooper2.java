@@ -92,7 +92,7 @@ public class Trooper2 extends Task {
 		TEntry<String, String>[] tarr = PreflopCardsRange.getSavedCardsRanges();
 		for (TEntry<String, String> tEntry : tarr) {
 			String rName = tEntry.getKey();
-			cardsRanges.put(rName, PreflopCardsRange.loadFromDB(rName));
+//			cardsRanges.put(rName, PreflopCardsRange.loadFromDB(rName));
 		}
 	}
 

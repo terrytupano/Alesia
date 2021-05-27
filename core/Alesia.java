@@ -11,15 +11,12 @@
 package core;
 
 import java.applet.*;
-import java.awt.*;
 import java.awt.Dialog.*;
 import java.awt.event.*;
 import java.io.*;
-import java.text.*;
 import java.util.*;
 import java.util.logging.*;
 
-import javax.swing.*;
 import javax.swing.Action;
 
 import org.apache.commons.logging.impl.*;
@@ -50,7 +47,6 @@ import com.alee.managers.style.*;
 import com.alee.skin.dark.*;
 import com.alee.utils.*;
 import com.alee.utils.CollectionUtils;
-import com.jgoodies.common.base.*;
 
 import gui.*;
 import gui.docking.*;
@@ -69,7 +65,7 @@ public class Alesia extends Application {
 	public ArrayList<Skin> skins;
 	private AudioClip newMsg, errMsg;
 
-	public static TTaskManager manager;
+	public TTaskManager taskManager;
 
 	private DockingContainer mainPanel;
 	private DB alesiaDB;
@@ -118,7 +114,6 @@ public class Alesia extends Application {
 				System.getProperty("activejdbc.url"), System.getProperty("activejdbc.username"),
 				System.getProperty("activejdbc.password"));
 		alesiaDB.open(spec);
-
 	}
 	/**
 	 * Open and return an instacen of {@link DB} for the given prefix. The connection parameters must be in the
@@ -129,6 +124,10 @@ public class Alesia extends Application {
 	 * @see #getDBProperties()
 	 */
 	public DB openDB(String name) {
+		return openDB(name, false);
+	}
+
+	public DB openDB(String name, boolean silent) {
 		DB db = null;
 		try {
 			Properties orgPrp = getDBProperties();
@@ -150,10 +149,12 @@ public class Alesia extends Application {
 			db = new DB(name);
 			db.open(drv, url, properties);
 		} catch (Exception e) {
-			e.printStackTrace();
+			if (!silent)
+				e.printStackTrace();
 		}
 		return db;
 	}
+
 	public static Map<String, Object> showDialog(TUIFormPanel content, double withFactor, double heightFactor) {
 
 		// standar behavior: if the title of the tuipanel is visible, this method remove the string and put in as this
@@ -460,7 +461,7 @@ public class Alesia extends Application {
 		pluginManager.scanPluginsDirectory();
 
 		mainFrame.setSplashIncrementText("Starting task manager ...");
-		Alesia.manager = new TTaskManager();
+		this.taskManager = new TTaskManager();
 		// requestAutentication();
 
 		// load left panel actions

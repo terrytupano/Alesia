@@ -173,7 +173,7 @@ public class DockingContainer extends JPanel {
 		WebLabel pd = new WebLabel(TStringUtils.getAboutAppShort(), TResources.getSmallIcon("alpha"));
 		bar.add(pd);
 		bar.addSpacing();
-		bar.addToEnd(Alesia.manager.getProgressBar());
+		bar.addToEnd(Alesia.getInstance().taskManager.getProgressBar());
 		return bar;
 	}
 }

@@ -5,7 +5,7 @@ import org.javalite.activejdbc.annotations.*;
 
 @DbName("hero")
 @Table("PREFLOPRANGES")
-//@CompositePK({"TABLEPARAMS", "NAME" })
+@CompositePK({"rangeName", "card" })
 public class PreflopRange extends Model {
 
 }

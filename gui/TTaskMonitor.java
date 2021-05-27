@@ -12,6 +12,7 @@ package gui;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.*;
 import java.beans.*;
 import java.util.concurrent.*;
 
@@ -25,9 +26,9 @@ import com.alee.extended.layout.*;
 import com.alee.extended.panel.*;
 import com.alee.extended.window.*;
 import com.alee.laf.label.*;
+import com.alee.laf.panel.*;
 
 import core.*;
-import gui.wlaf.*;
 
 /**
  * Clone of original ProgressMonitor with is dysplay in a {@link WebPopOver}. this component display the progress of a
@@ -66,7 +67,7 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 		this.allowBg = allowBg;
 		progressBar.setStringPainted(false);
 		Dimension d = progressBar.getPreferredSize();
-		d = new Dimension(300, d.height);
+		d = new Dimension(300, d.height + 4); // FIXME: d.height+4 ???
 		progressBar.setPreferredSize(d);
 		progressBar.setMinimum(0);
 		progressBar.setValue(0);
@@ -122,8 +123,13 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 		oldGlassPanel = Alesia.getInstance().getMainFrame().getGlassPane();
 		Alesia.getInstance().getMainFrame().setGlassPane(busyPanel);
 		busyPanel.setVisible(true);
-		Point c = TWebFrame.getCenter(Alesia.getInstance().getMainFrame(), webPopup);
-		webPopup.showPopup(busyPanel, c);
+
+		// FIXME: why i need to do this ???????? im using the right component????
+		Rectangle recAle = Alesia.getInstance().mainFrame.getBounds();
+		Rectangle recPop = new Rectangle(webPopup.getPreferredSize());
+		int x = (int) (recAle.getCenterX() - recPop.getCenterX());
+		int y = (int) (recAle.getCenterY() - recPop.getHeight() * 2);
+		webPopup.showPopup(Alesia.getInstance().mainFrame, x, y);
 	}
 
 	@Override
@@ -139,30 +145,36 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 	 */
 	public void propertyChange(PropertyChangeEvent e) {
 		String propertyName = e.getPropertyName();
-		if ("started".equals(propertyName)) {
+		if (Task.PROP_STARTED.equals(propertyName)) {
 			progressBar.setEnabled(true);
 			progressBar.setIndeterminate(true);
-		} else if ("done".equals(propertyName)) {
+		} else if (Task.PROP_DONE.equals(propertyName)) {
 			progressBar.setIndeterminate(false);
 			progressBar.setEnabled(false);
 			progressBar.setValue(0);
-		} else if ("message".equals(propertyName)) {
+		} else if (Task.PROP_MESSAGE.equals(propertyName)) {
 			String text = (String) (e.getNewValue());
 			progressLabel.setText(text);
+			// } else if (Task.PROP_COMPLETED.equals(propertyName)) {
 		} else if ("progress".equals(propertyName)) {
 			int value = (Integer) (e.getNewValue());
 			progressBar.setEnabled(true);
 			progressBar.setIndeterminate(false);
 			progressBar.setValue(value);
+			progressBar.setStringPainted(true);
 		}
 	}
 
 	/*
-	 * This component is intended to be used as a GlassPane only to consumes mouse and keyboard input.
+	 * This component is intended to be used as a GlassPane only to consumes mouse and keyboard input plus perform a
+	 * blurr operation
 	 */
-	private static class BusyPanel extends JComponent {
+	private static class BusyPanel extends WebPanel {
+		private BufferedImage mOffscreenImage;
+		private BufferedImageOp mOperation;
 
 		BusyPanel() {
+			setOpaque(false);
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			MouseInputListener blockMouseEvents = new MouseInputAdapter() {
 			};
@@ -174,6 +186,33 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 				}
 			};
 			setInputVerifier(retainFocusWhileVisible);
+
+			float ninth = 1.0f / 9.0f;
+			float[] blurKernel = {ninth, ninth, ninth, ninth, ninth, ninth, ninth, ninth, ninth};
+			mOperation = new ConvolveOp(new Kernel(3, 3, blurKernel), ConvolveOp.EDGE_NO_OP, null);
+		}
+
+		@Override
+		public void paint(Graphics g) {
+			int w = getWidth();
+			int h = getHeight();
+
+			if (w == 0 || h == 0) {
+				return;
+			}
+
+			// Only create the offscreen image if the one we have
+			// is the wrong size.
+			if (mOffscreenImage == null || mOffscreenImage.getWidth() != w || mOffscreenImage.getHeight() != h) {
+				mOffscreenImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+			}
+
+			Graphics2D ig2 = mOffscreenImage.createGraphics();
+			ig2.setClip(g.getClip());
+			Alesia.getInstance().mainFrame.getContentPane().paint(ig2);
+			ig2.dispose();
+			Graphics2D g2 = (Graphics2D) g;
+			g2.drawImage(mOffscreenImage, mOperation, 0, 0);
 		}
 	}
 }

@@ -116,7 +116,7 @@ public class Player {
 				hand.addCard(cards.get(0));
 				hand.addCard(cards.get(1));
 				hasCards = true;
-//				System.out.format("[CHEAT] %s's cards:\t%s\n", name, hand);
+				// System.out.format("[CHEAT] %s's cards:\t%s\n", name, hand);
 			} else {
 				throw new IllegalArgumentException("Invalid number of cards");
 			}
@@ -260,7 +260,13 @@ public class Player {
 		return clone;
 	}
 
-	/** {@inheritDoc} */
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Player))
+			return false;
+		return getName().equals(((Player) obj).getName());
+	}
+
 	@Override
 	public String toString() {
 		return name;

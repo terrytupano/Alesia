@@ -23,11 +23,6 @@ import javax.swing.*;
  *
  */
 public class TMessage {
-	public static final String ACTION = "action";
-	public static final String ERROR = "error";
-	public static final String INFORMATION = "information";
-	public static final String WARNING = "warning";
-
 	public static final Color ACTION_COLOR = new Color(190, 220, 250);
 	public static final Color ERROR_COLOR = new Color(255, 190, 230);
 	public static final Color INFORMATION_COLOR = new Color(230, 230, 255);
@@ -41,7 +36,6 @@ public class TMessage {
 	private int milis;
 	private Icon exceptionIcon;
 	private String message;
-	private String eType;
 
 	public TMessage(String mid) {
 		super();
@@ -50,28 +44,24 @@ public class TMessage {
 			throw new NoSuchElementException("Error trying get exception ID " + mid);
 		}
 		if (a_m[0].equals("a")) {
-			eType = ACTION;
 			this.exceptionColor = ACTION_COLOR;
 			this.milis = FOR_EVER;
-			this.exceptionIcon = TUIUtils.getFontIcon('\ue87f', 32, ACTION_COLOR);
+			this.exceptionIcon = TUIUtils.getFontIcon('\ue87f', 32, ACTION_COLOR.darker());
 		}
 		if (a_m[0].equals("e")) {
-			eType = ERROR;
 			this.exceptionColor = ERROR_COLOR;
 			this.milis = FOR_EVER;
-			this.exceptionIcon = TUIUtils.getFontIcon('\ue001', 32, ERROR_COLOR);
+			this.exceptionIcon = TUIUtils.getFontIcon('\ue001', 32, ERROR_COLOR.darker());
 		}
 		if (a_m[0].equals("i")) {
-			eType = INFORMATION;
 			this.exceptionColor = INFORMATION_COLOR;
 			this.milis = SHORT;
-			this.exceptionIcon = TUIUtils.getFontIcon('\ue88e', 32, INFORMATION_COLOR);
+			this.exceptionIcon = TUIUtils.getFontIcon('\ue88e', 32, INFORMATION_COLOR.darker());
 		}
 		if (a_m[0].equals("w")) {
-			eType = WARNING;
 			this.exceptionColor = WARNING_COLOR;
 			this.milis = A_WHILE;
-			this.exceptionIcon = TUIUtils.getFontIcon('\ue8b2', 32, WARNING_COLOR);
+			this.exceptionIcon = TUIUtils.getFontIcon('\ue8b2', 32, WARNING_COLOR.darker());
 		}
 		this.message = a_m[1];
 	}
@@ -105,14 +95,6 @@ public class TMessage {
 		return exceptionIcon;
 	}
 
-	/**
-	 * retorna el tipo de esta exepcion.
-	 * 
-	 * @return tipo de exepcion
-	 */
-	public String getExceptionType() {
-		return eType;
-	}
 
 	public String getMessage() {
 		return message;

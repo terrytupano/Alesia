@@ -103,8 +103,9 @@ public class Table extends Task {
 	/** Number of raises in the current betting round. */
 	private int raises;
 
-	private int speed = 500;
-
+	private boolean paused;
+	private int speed;
+	private int simulationsHand;
 	/**
 	 * Constructor.
 	 * 
@@ -120,10 +121,6 @@ public class Table extends Task {
 		pots = new ArrayList<Pot>();
 		board = new UoAHand();
 	}
-
-	public void setSpeed(int speed) {
-		this.speed = speed;
-	}
 	/**
 	 * Adds a player.
 	 * 
@@ -132,9 +129,30 @@ public class Table extends Task {
 	public void addPlayer(Player player) {
 		players.add(player);
 	}
-
 	public List<Player> getPlayers() {
 		return players;
+	}
+	public int getSimulationsHand() {
+		return simulationsHand;
+	}
+	public int getSpeed() {
+		return speed;
+	}
+
+	public boolean isPaused() {
+		return paused;
+	}
+
+	public void pause(boolean pause) {
+		this.paused = pause;
+	}
+
+	public void setSimulationsHand(int simulationsHand) {
+		this.simulationsHand = simulationsHand;
+	}
+
+	public void setSpeed(int speed) {
+		this.speed = speed;
 	}
 
 	/**
@@ -178,7 +196,7 @@ public class Table extends Task {
 			board.addCard(deck.deal());
 		}
 		notifyPlayersUpdated(false);
-//		notifyMessage("%s deals the %s.", dealer, phaseName);
+		// notifyMessage("%s deals the %s.", dealer, phaseName);
 	}
 
 	/**
@@ -192,7 +210,7 @@ public class Table extends Task {
 			player.setCards(cs);
 		}
 		notifyPlayersUpdated(false);
-//		notifyMessage("%s deals the hole cards.", dealer);
+		// notifyMessage("%s deals the hole cards.", dealer);
 	}
 
 	/**
@@ -559,7 +577,6 @@ public class Table extends Task {
 			player.getClient().boardUpdated(board, bet, pot);
 		}
 	}
-
 	/**
 	 * Notifies listeners with a custom game message.
 	 * 
@@ -577,7 +594,6 @@ public class Table extends Task {
 			// TODO: handle exception
 		}
 	}
-
 	/**
 	 * Notifies clients that a player has acted.
 	 */
@@ -607,12 +623,12 @@ public class Table extends Task {
 			}
 		}
 	}
+
 	/**
 	 * Plays a single hand.
 	 */
 	private void playHand() {
 		resetHand();
-
 		// Small blind.
 		if (activePlayers.size() > 2) {
 			rotateActor();
@@ -655,6 +671,7 @@ public class Table extends Task {
 			}
 		}
 	}
+
 	/**
 	 * Posts the big blind.
 	 */
@@ -664,7 +681,6 @@ public class Table extends Task {
 		notifyBoardUpdated();
 		notifyPlayerActed();
 	}
-
 	/**
 	 * Posts the small blind.
 	 */
@@ -717,7 +733,6 @@ public class Table extends Task {
 		notifyPlayersUpdated(false);
 		notifyMessage("New hand, %s is the dealer.", dealer);
 	}
-
 	/**
 	 * Rotates the position of the player in turn (the actor).
 	 */
@@ -728,14 +743,6 @@ public class Table extends Task {
 			player.getClient().actorRotated(actor);
 		}
 	}
-	private boolean paused;
-
-	public boolean isPaused() {
-		return paused;
-	}
-	public void pause(boolean pause) {
-		this.paused = pause;
-	}
 	@Override
 	protected Object doInBackground() throws Exception {
 		try {
@@ -744,13 +751,16 @@ public class Table extends Task {
 			}
 			dealerPosition = -1;
 			actorPosition = -1;
-			while (!isCancelled()) {
+			// canceled or simulate a finite num of hands
+			// while (!isCancelled() && (simulationsHand = 0)(simulationsHand > 0 && numOfHand < simulationsHand)) {
+			int numOfHand;
+			for (numOfHand = 1; (numOfHand < simulationsHand || isCancelled())
+					|| (simulationsHand == 0 && !isCancelled()); numOfHand++) {
 				// pause ?
 				if (paused) {
 					Thread.sleep(100);
 					continue;
 				}
-
 				int noOfActivePlayers = 0;
 				for (Player player : players) {
 					if (player.getCash() >= bigBlind) {
@@ -759,6 +769,11 @@ public class Table extends Task {
 				}
 				if (noOfActivePlayers > 1) {
 					playHand();
+					firePropertyChange(PROP_MESSAGE, numOfHand, "played Hands: " + numOfHand);
+					if (simulationsHand > 0) {
+						double d = (numOfHand * 1.0) / (simulationsHand * 1.0);
+						firePropertyChange("progress", numOfHand, (int) (d * 100));
+					}
 				} else {
 					break;
 				}
@@ -773,6 +788,7 @@ public class Table extends Task {
 				player.resetHand();
 			}
 			notifyPlayersUpdated(false);
+			Alesia.showNotification("hero.msg04", numOfHand);
 			notifyMessage("Game over.");
 		} catch (Exception e) {
 			e.printStackTrace();

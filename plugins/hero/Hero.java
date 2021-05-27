@@ -32,6 +32,7 @@ import com.javaflair.pokerprophesier.api.card.*;
 
 import core.*;
 import core.datasource.model.*;
+import gui.*;
 import net.sourceforge.tess4j.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
@@ -227,6 +228,11 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public Task startSimulation(ActionEvent event) {
 		try {
+			// check max task
+			if (!Alesia.getInstance().taskManager.suporMoreTask()) {
+				Alesia.showNotification("hero.msg03", "");
+				return null;
+			}
 			// check for hero client
 			if (SimulatorClient.find("name = ?", "Hero") == null) {
 				Alesia.showNotification("hero.msg01", "");
@@ -247,7 +253,6 @@ public class Hero extends TPlugin {
 			int sb = ((Double) values.get("table.smallBlid")).intValue();
 			PokerSimulator simulator = new PokerSimulator();
 			simulatorPanel.updatePokerSimulator(simulator);
-
 			Table table = new Table(TableType.NO_LIMIT, bb);
 			for (SimulatorClient client : clients) {
 				if (client.getBoolean("isActive")) {
@@ -256,21 +261,21 @@ public class Hero extends TPlugin {
 					Class cls = Class.forName("plugins.hero.ozsoft.bots." + bCls);
 					Bot bot = (Bot) cls.newInstance();
 					bot.setObject(simulator);
-					bot.setObject(client);
+					bot.setObject(table);
 					Player p = new Player(name, buy, bot);
 					table.addPlayer(p);
 				}
 			}
-			TableDialog dialog = new TableDialog(table);
+			table.setSpeed(0);
+			table.setSimulationsHand(100000);
 
-			dialog.setTitle("HoldEm " + buy + " " + bb + "/" + sb);
-			dialog.addWindowListener(new WindowAdapter() {
-				@Override
-				public void windowClosing(WindowEvent e) {
-					((JDialog) e.getSource()).dispose();
-					table.cancel(true);
-				}
-			});
+			TTaskMonitor ttm = new TTaskMonitor(table, false);
+			table.setInputBlocker(ttm);
+
+			TableDialog dialog = new TableDialog(table);
+//			dialog.setVisible(true);
+
+
 			return table;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -428,9 +433,10 @@ public class Hero extends TPlugin {
 	public void savePreflopRange(ActionEvent event) {
 		AbstractButton ab = (AbstractButton) event.getSource();
 		PreFlopCardsRangePanel rangePanel = SwingUtils.getFirstParent(ab, PreFlopCardsRangePanel.class);
+		TEntry<String, String> selR = rangePanel.getSelectedRange();
 		String savn = (String) JOptionPane.showInputDialog(Alesia.getInstance().getMainFrame(),
 				"Write the name and a shor description for this range. \nThe name an description muss be coma separated.",
-				"Save", JOptionPane.PLAIN_MESSAGE, null, null, null);
+				"Save", JOptionPane.PLAIN_MESSAGE, null, null, selR.getKey() + "," + selR.getValue());
 		// save
 		if (savn == null)
 			return;

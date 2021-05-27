@@ -42,180 +42,27 @@ public class PreflopCardsRange {
 			{"A3o", "K3o", "Q3o", "J3o", "T3o", "93o", "83o", "73o", "63o", "53o", "43o", "33", "32s"},
 			{"A2o", "K2o", "Q2o", "J2o", "T2o", "92o", "82o", "72o", "62o", "52o", "42o", "32o", "22"}};
 
-	// this field defines how the card types of the range progress as the range percentage grows and shrinks
-	private static final Point[][] rangeProgressions = {{}, {new Point(0, 0), new Point(1, 1), new Point(2, 2)},
-			{new Point(3, 3), new Point(4, 4)}, {new Point(0, 1), new Point(5, 5)}, {new Point(1, 0), new Point(0, 2)},
-			{new Point(1, 2), new Point(0, 3), new Point(6, 6)}, {new Point(2, 0), new Point(0, 4)},
-			{new Point(1, 3), new Point(1, 4)}, {new Point(3, 0), new Point(2, 3)}, {new Point(2, 1)},
-			{new Point(0, 5), new Point(2, 4), new Point(7, 7)}, {new Point(4, 0)}, {new Point(3, 1), new Point(3, 4)},
-			{new Point(0, 6), new Point(1, 5), new Point(3, 2)}, {new Point(0, 7)}, {new Point(4, 1)},
-			{new Point(0, 9), new Point(2, 5), new Point(8, 8)}, {new Point(4, 2), new Point(0, 8)},
-			{new Point(5, 0), new Point(3, 5)}, {new Point(0, 10), new Point(4, 5)}, {new Point(4, 3), new Point(1, 6)},
-			{new Point(1, 7), new Point(6, 0)}, {new Point(2, 6), new Point(0, 11)}, {new Point(5, 1)},
-			{new Point(0, 12), new Point(1, 8), new Point(3, 6), new Point(4, 6)}, {new Point(7, 0)},
-			{new Point(5, 2), new Point(9, 9)}, {new Point(1, 9), new Point(5, 6)}, {new Point(2, 7), new Point(5, 3)},
-			{new Point(9, 0)}, {new Point(5, 4)}, {new Point(8, 0)}, {new Point(6, 1), new Point(1, 10)},
-			{new Point(2, 8), new Point(3, 7), new Point(4, 7)}, {new Point(10, 0)},
-			{new Point(1, 11), new Point(2, 9), new Point(5, 7), new Point(6, 7)}, {new Point(7, 1)},
-			{new Point(6, 2), new Point(10, 10)}, {new Point(11, 0)}, {new Point(1, 12), new Point(6, 3)},
-			{new Point(2, 10), new Point(6, 4)}, {new Point(3, 8)}, {new Point(8, 1)},
-			{new Point(4, 8), new Point(12, 0)}, {new Point(6, 5)}, {new Point(5, 8), new Point(6, 8), new Point(7, 8)},
-			{new Point(2, 11), new Point(3, 9), new Point(9, 1)}, {new Point(7, 2)},
-			{new Point(2, 12), new Point(3, 10)}, {new Point(8, 9), new Point(7, 3), new Point(11, 11)},
-			{new Point(7, 4)}, {new Point(10, 1)}, {new Point(4, 9), new Point(7, 9)}, {new Point(8, 2)},
-			{new Point(3, 11), new Point(5, 9), new Point(7, 6)}, {new Point(6, 9), new Point(7, 5)},
-			{new Point(4, 10)}, {new Point(11, 1)}, {new Point(3, 12), new Point(9, 2), new Point(9, 10)},
-			{new Point(4, 11), new Point(8, 10)}, {new Point(12, 1), new Point(12, 12)},
-			{new Point(7, 10), new Point(8, 7)}, {new Point(4, 12), new Point(10, 2)}, {new Point(8, 3)},
-			{new Point(6, 10)}, {new Point(5, 10), new Point(8, 6)}, {new Point(8, 4)}, {new Point(8, 5)},
-			{new Point(5, 11), new Point(9, 11), new Point(11, 2)}, {new Point(9, 3)},
-			{new Point(8, 11), new Point(10, 11)}, {new Point(5, 12), new Point(7, 11), new Point(9, 8)},
-			{new Point(12, 2)}, {new Point(10, 3)}, {new Point(6, 11), new Point(9, 7)},
-			{new Point(9, 12), new Point(9, 6)}, {new Point(6, 12)}, {new Point(9, 4)},
-			{new Point(9, 5), new Point(11, 3)}, {new Point(8, 12)}, {new Point(10, 9)},
-			{new Point(10, 4), new Point(10, 12)}, {new Point(12, 3)}, {new Point(7, 12), new Point(10, 8)},
-			{new Point(11, 4)}, {new Point(11, 12), new Point(10, 7)}, {new Point(10, 6)}, {new Point(12, 4)},
-			{new Point(10, 5)}, {new Point(11, 9)}, {new Point(11, 5)}, {new Point(11, 8), new Point(11, 10)},
-			{new Point(12, 5)}, {new Point(11, 7)}, {new Point(11, 6)}, {new Point(12, 9)}, {new Point(12, 6)},
-			{new Point(12, 10)}, {new Point(12, 8)}, {new Point(12, 7)}, {new Point(12, 11)}};
-
 	private int percentage;
-	private int[][] winnCounts = new int[13][13];
-
-	// contains the set of cards selected for this range.
-	// initially, none are selected (0 % range)
-	private final boolean[][] rangeSelections = {
-			{false, false, false, false, false, false, false, false, false, false, false, false, false},
-			{false, false, false, false, false, false, false, false, false, false, false, false, false},
-			{false, false, false, false, false, false, false, false, false, false, false, false, false},
-			{false, false, false, false, false, false, false, false, false, false, false, false, false},
-			{false, false, false, false, false, false, false, false, false, false, false, false, false},
-			{false, false, false, false, false, false, false, false, false, false, false, false, false},
-			{false, false, false, false, false, false, false, false, false, false, false, false, false},
-			{false, false, false, false, false, false, false, false, false, false, false, false, false},
-			{false, false, false, false, false, false, false, false, false, false, false, false, false},
-			{false, false, false, false, false, false, false, false, false, false, false, false, false},
-			{false, false, false, false, false, false, false, false, false, false, false, false, false},
-			{false, false, false, false, false, false, false, false, false, false, false, false, false},
-			{false, false, false, false, false, false, false, false, false, false, false, false, false},};
+	public double evRange, upperBound, lowerBound;
+	private String rangeName;
+	private LazyList<PreflopRange> preflopRanges;
 
 	/**
-	 * Constructs a range of 0 % hands.
+	 * new instance loaded with the values setted in <b>original<b> range name
 	 */
 	public PreflopCardsRange() {
-		this(0);
+		this("original");
 	}
 
-	public void addCount(int row, int column, int count) {
-		winnCounts[row][column] = winnCounts[row][column] + count;
-	}
 	/**
-	 * Constructs a range with the specified percentage.
+	 * new instance loaded with the values stored in the rangeName argument
 	 * 
-	 * @param percentage the percentage of the range.
-	 * @throws IllegalArgumentException if the percentage is below 0 or over 100
+	 * @param rangeName - the name to load
 	 */
-	public PreflopCardsRange(int percentage) {
+	public PreflopCardsRange(String rangeName) {
+		this.rangeName = rangeName;
+		loadFromDB();
 		setNewPercentage(percentage);
-	}
-
-	/**
-	 * Changes the specified card type (found at the row and column specified) to the specified value.
-	 * 
-	 * @param row the row where the card type is found
-	 * @param column the column where the card type is found
-	 * @param newValue the new value of the card type (true for enabled, false for disabled).
-	 */
-	public void changeValue(int row, int column, boolean newValue) {
-		this.rangeSelections[row][column] = newValue;
-	}
-
-	/**
-	 * Reverts the value of the specified card type: if it's true, then it will become false and vice-versa.
-	 * 
-	 * @param row the row where the card type is found
-	 * @param column the column where the card type is found
-	 */
-	public void flipValue(int row, int column) {
-		this.rangeSelections[row][column] ^= true;
-	}
-
-	/**
-	 * return the card name at this coorditates
-	 * 
-	 * @param row - x coordinates
-	 * @param column - y coordinate
-	 * 
-	 * @return the string representation
-	 */
-	public String getCardAt(int row, int column) {
-		return rangeNames[row][column];
-	}
-
-	/**
-	 * Tells you if a card type is selected in this range or not
-	 * 
-	 * @param row the row where the card type is found
-	 * @param column the column where the card type is found
-	 * @return true if the card type is selected, false otherwise.
-	 */
-	public boolean getValue(int row, int column) {
-		return this.rangeSelections[row][column];
-	}
-
-	/**
-	 * Returns the percentage of this range.
-	 * 
-	 * @return the percentage of this range.
-	 */
-	public int getPercentage() {
-		return this.percentage;
-	}
-
-	/**
-	 * Sets a new percentage for this range. This will overwrite all the card type selections.
-	 * 
-	 * @param newPercentage the new percentage.
-	 * @throws IllegalArgumentException if the new percentage is below 0 or over 100
-	 */
-	public void setNewPercentage(int newPercentage) {
-		if (newPercentage < 0 || newPercentage > 100) {
-			throw new IllegalArgumentException("percentage value must be between 0 and 100 inclusively");
-		}
-
-		for (int i = 1; i <= newPercentage; i++) {
-			for (Point c : PreflopCardsRange.rangeProgressions[i]) {
-				this.rangeSelections[c.x][c.y] = true;
-			}
-		}
-
-		for (int i = newPercentage + 1; i < PreflopCardsRange.rangeProgressions.length; i++) {
-			for (Point c : PreflopCardsRange.rangeProgressions[i]) {
-				this.rangeSelections[c.x][c.y] = false;
-			}
-		}
-
-		this.percentage = newPercentage;
-	}
-
-	/**
-	 * create and return an instance with all data stored in the database.
-	 * 
-	 * @param rangeName - name of the stored range
-	 * 
-	 * @return a ready to use {@link PreflopCardsRange}
-	 */
-	public static PreflopCardsRange loadFromDB(String rangeName) {
-		PreflopCardsRange cardsRange = new PreflopCardsRange();
-		LazyList<PreflopRange> ranges = PreflopRange.find("rangeName = ?", rangeName);
-		for (PreflopRange range : ranges) {
-			// set the percentage only once
-			if (cardsRange.getPercentage() == 0)
-				cardsRange.setNewPercentage(range.getInteger("percentage"));
-			cardsRange.rangeSelections[range.getInteger("y")][range.getInteger("x")] = range.getBoolean("selected");
-			cardsRange.winnCounts[range.getInteger("y")][range.getInteger("x")] = range.getInteger("winCount");
-		}
-		return cardsRange;
 	}
 
 	/**
@@ -225,37 +72,13 @@ public class PreflopCardsRange {
 	 */
 	public static TEntry<String, String>[] getSavedCardsRanges() {
 		ArrayList<TEntry<String, String>> names = new ArrayList<>();
-		LazyList<PreflopRange> ranges = PreflopRange.findAll();
+		LazyList<PreflopRange> ranges = PreflopRange.find("card = ?", "AA");
 		for (PreflopRange range : ranges) {
 			TEntry<String, String> te = new TEntry<>(range.getString("rangeName"), range.getString("description"));
 			if (!names.contains(te))
 				names.add(te);
 		}
 		return names.toArray(new TEntry[0]);
-	}
-	/**
-	 * save the current preflop card selection in the database
-	 * 
-	 * @param rangeName - the name for this range
-	 */
-	public void saveInDB(String rangeName, String description) {
-		PreflopRange.delete("rangename = ?", rangeName);
-		for (int i = 0; i < 13; i++) {
-			for (int j = 0; j < 13; j++) {
-				// PreflopRange range = PreflopRange.create("rangename", rangeName);
-				PreflopRange range = new PreflopRange();
-				range.set("rangeName", rangeName);
-				range.set("description", description);
-				range.set("percentage", getPercentage());
-				range.set("card", getCardAt(i, j));
-				range.set("x", j);
-				range.set("y", i);
-				range.set("selected", getValue(i, j));
-				range.set("winCount", winnCounts[i][j]);
-				range.insert();
-			}
-		}
-
 	}
 
 	/**
@@ -271,7 +94,58 @@ public class PreflopCardsRange {
 		return containsHand(new UoACard(c1), new UoACard(c2));
 	}
 
-	public Point getCoordenates(UoACard card1, UoACard card2) {
+	/**
+	 * Tells if the hand composed of the two specified cards is selected in this range. The order in which you specify
+	 * the cards is not relevant.
+	 * 
+	 * @param c1 the first card
+	 * @param c2 the second card
+	 * 
+	 * @return true if the specified hand is selected in this range, false otherwise.
+	 */
+	public boolean containsHand(UoACard c1, UoACard c2) {
+		String card = getStringCard(c1, c2);
+		return isSelected(card);
+	}
+
+	public void flipValue(String card) {
+		// exeption if card dont exist
+		PreflopRange element = preflopRanges.stream().filter(pfr -> pfr.getString("card").equals(card)).findFirst()
+				.get();
+		element.setBoolean("selected", !element.getBoolean("selected"));
+	}
+
+	/**
+	 * return the card name at this coorditates
+	 * 
+	 * @param row - x coordinates
+	 * @param column - y coordinate
+	 * 
+	 * @return the string representation
+	 */
+	public String getCardAt(int row, int column) {
+		return rangeNames[row][column];
+	}
+
+	/**
+	 * Returns the percentage of this range.
+	 * 
+	 * @return the percentage of this range.
+	 */
+	public int getPercentage() {
+		return this.percentage;
+	}
+
+	/**
+	 * return the card representation in this context. for example, when the hand is <code>As Ks</code> , this method
+	 * will return <code>AKs</code>
+	 * 
+	 * @param card1 - the first card
+	 * @param card2 - the second cards
+	 * 
+	 * @return the strin representation
+	 */
+	public String getStringCard(UoACard card1, UoACard card2) {
 		int rbig, rsmall;
 
 		if (card2.getRank() > card1.getRank()) {
@@ -286,31 +160,128 @@ public class PreflopCardsRange {
 
 		// pocket pair, always on the main diagonal
 		if (rbig == rsmall) {
-			row = column = 14 - rbig;
+			row = column = 12 - rbig;
 		} else {
 			// above the main diagonal
 			if (card1.getSuit() == card2.getSuit()) {
-				row = 14 - rbig;
-				column = 14 - rsmall;
+				row = 12 - rbig;
+				column = 12 - rsmall;
 				// below the main diagonal
 			} else {
-				row = 14 - rsmall;
-				column = 14 - rbig;
+				row = 12 - rsmall;
+				column = 12 - rbig;
 			}
 		}
-		return new Point(column, row);
+		return rangeNames[row][column];
+	}
+
+	/**
+	 * Tells you if a card type is selected in this range or not
+	 * 
+	 * @param row the row where the card type is found
+	 * @param column the column where the card type is found
+	 * @return true if the card type is selected, false otherwise.
+	 */
+	public boolean isSelected(String card) {
+		PreflopRange element = preflopRanges.stream().filter(pfr -> pfr.getString("card").equals(card)).findFirst()
+				.get();
+		return element.getBoolean("selected");
+	}
+
+	/**
+	 * save the current preflop card selection in the database
+	 * 
+	 * @param rangeName - the name for this range
+	 */
+	public void saveInDB(String rangeName, String description) {
+		PreflopRange.delete("rangename = ?", rangeName);
+		for (PreflopRange element : preflopRanges) {
+			PreflopRange range = new PreflopRange();
+			range.set("rangeName", rangeName); 
+			range.set("card", element.get("card"));
+			range.set("description", description);
+			range.set("percentage", getPercentage());
+			range.set("selected", element.get("selected"));
+			range.set("ev", element.get("ev"));
+			range.insert();			
+		}
 	}
 	/**
-	 * Tells if the hand composed of the two specified cards is selected in this range. The order in which you specify
-	 * the cards is not relevant.
+	 * Sets a new percentage for this range. This will overwrite all the card type selections.
 	 * 
-	 * @param c1 the first card
-	 * @param c2 the second card
-	 * 
-	 * @return true if the specified hand is selected in this range, false otherwise.
+	 * @param newPercentage the new percentage.
+	 * @throws IllegalArgumentException if the new percentage is below 0 or over 100
 	 */
-	public boolean containsHand(UoACard c1, UoACard c2) {
-		Point coord = getCoordenates(c1, c2);
-		return this.rangeSelections[coord.y][coord.x];
+	public void setNewPercentage(int newPercentage) {
+		if (newPercentage < 0 || newPercentage > 100) {
+			throw new IllegalArgumentException("percentage value must be between 0 and 100 inclusively");
+		}
+		this.percentage = newPercentage;
+		double factor = percentage / 100d;
+		double valid = upperBound - (evRange * factor);
+		preflopRanges.forEach(pfr -> pfr.setBoolean("selected", pfr.getDouble("ev") >= valid ? true : false));
+//		System.out.println("Valid " + valid + " "
+//				+ preflopRanges.stream().mapToDouble(pfr -> pfr.getDouble("ev")).filter(d -> d >= valid).count());;
 	}
+
+	public void updateCoordenates(UoACard card1, UoACard card2, int ammount) {
+		String card = getStringCard(card1, card2);
+		PreflopRange range = PreflopRange.findOrCreateIt("rangeName", rangeName, "card", card);
+		range.set("rangeName", rangeName);
+		range.set("card", card);
+		// range.set("description", description);
+		range.set("percentage", getPercentage());
+		range.set("selected", isSelected(card));
+		int win = range.getInteger("winnigs") == null ? 0 : range.getInteger("winnigs");
+		range.set("winnigs", win + ammount);
+		int h = range.getInteger("hits") == null ? 0 : range.getInteger("hits");
+		range.set("hits", ++h);
+		range.save();
+	}
+	/**
+	 * create and return an instance with all data stored in the database.
+	 * 
+	 * @param rangeName - name of the stored range
+	 * 
+	 * @return a ready to use {@link PreflopCardsRange}
+	 */
+	private void loadFromDB() {
+		this.preflopRanges = PreflopRange.find("rangeName = ?", rangeName);
+
+		// FIXME: compute ev from data obtain in gamesimulation
+		for (PreflopRange r : preflopRanges) {
+			Integer hitsS = r.getInteger("hits");
+			if (hitsS != null) {
+				double win = r.getInteger("winnigs").doubleValue();
+				double hits = r.getInteger("hits").doubleValue();
+				r.setDouble("ev", win / hits);
+			}
+		}
+		lowerBound = preflopRanges.stream().mapToDouble(r -> r.getDouble("ev")).min().getAsDouble();
+		upperBound = preflopRanges.stream().mapToDouble(r -> r.getDouble("ev")).max().getAsDouble();
+		// the table contain negative EV
+		evRange = upperBound - lowerBound;
+		percentage = preflopRanges.get(0).getInteger("percentage");
+	}
+
+	public double getEV(String card) {
+		PreflopRange element = preflopRanges.stream().filter(pfr -> pfr.getString("card").equals(card)).findFirst()
+				.get();
+		double ev = ((int) (element.getDouble("ev") * 10000)) / 10000d;
+		return ev;
+	}
+	// public class RangeElement {
+	// public final Point coordenates;
+	// public final String element;
+	// public double ev;
+	// public boolean isSelected;
+	//
+	// public int delta;
+	// public int hits;
+	//
+	// public RangeElement(String element, Point coordenate) {
+	// this.element = element;
+	// this.coordenates = coordenate;
+	// }
+	// }
 }

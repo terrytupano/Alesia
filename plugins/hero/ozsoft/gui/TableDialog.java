@@ -62,7 +62,8 @@ public class TableDialog extends JDialog implements Client {
 	private String actorName;
 
 	private Client proxyClient;
-
+	private Table table;
+	private ProgressMonitor progressMonitor;
 	private final WebTextArea outConsole;
 
 	/** table Related images. */
@@ -78,8 +79,7 @@ public class TableDialog extends JDialog implements Client {
 	/**
 	 * Constructor.
 	 */
-	// public TableDialog(Map<String, Player> players) {
-	public TableDialog(Table game) {
+	public TableDialog(Table table) {
 		super(Alesia.getInstance().mainFrame);
 		// cache all cards
 		List<File> files = FileUtils.findFilesRecursively("plugins/hero/resources/playCards", f -> true);
@@ -87,17 +87,17 @@ public class TableDialog extends JDialog implements Client {
 			cardsBuffer.put(file.getName().substring(0, file.getName().length() - 4), ImageUtils.getImageIcon(file));
 		}
 		boardPanel = new BoardPanel();
-
-		this.players = game.getPlayers();
+		this.table = table;
+		this.players = table.getPlayers();
 		playerPanels = new HashMap<String, PlayerPanel>();
 		for (Player player : players) {
 			PlayerPanel panel = new PlayerPanel();
 			playerPanels.put(player.getName(), panel);
-		}		
-		
+		}
+
 		// the player "Hero" allwais the test subject. this element is handled by this class but the
 		// desition is dispacht to proxiClient
-		Player test = players.stream().filter(p-> p.getName().equals("Hero")).findFirst().get();
+		Player test = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
 		this.proxyClient = test.getClient();
 		test.setClient(this);
 
@@ -109,8 +109,9 @@ public class TableDialog extends JDialog implements Client {
 		// };
 
 		// control panel
-		outConsole = TUIUtils.getConsoleTextArea();	
-		WebButton endGame = new WebButton(ap -> dispose());
+		outConsole = TUIUtils.getConsoleTextArea();
+		WebButton endGame = new WebButton();
+		// WebButton endGame = new WebButton(ap -> dispose());
 		endGame.setIcon(TUIUtils.getSmallFontIcon('\ue047'));
 
 		JPanel controlPanel = new JPanel(new BorderLayout(5, 5));
@@ -118,11 +119,11 @@ public class TableDialog extends JDialog implements Client {
 		controlPanel.add(TUIUtils.getSmartScroller(outConsole), BorderLayout.CENTER);
 		JPanel jp = new JPanel(new VerticalFlowLayout());
 		jp.setOpaque(false);
-		jp.add(TUIUtils.getStartPauseToggleButton(ap -> game.pause(!game.isPaused())));
+		jp.add(TUIUtils.getStartPauseToggleButton(ap -> table.pause(!table.isPaused())));
 		jp.add(endGame);
 		controlPanel.add(jp, BorderLayout.EAST);
 
-//		remove temporaly from list
+		// remove temporaly from list
 		PlayerPanel heroPanel = playerPanels.remove("Hero");
 
 		// set ui components
@@ -155,7 +156,7 @@ public class TableDialog extends JDialog implements Client {
 		pack();
 		setLocation(660, 95);
 		// setLocationRelativeTo(null);
-		setVisible(true);
+		// setVisible(true);
 	}
 
 	@Override
@@ -182,8 +183,14 @@ public class TableDialog extends JDialog implements Client {
 		dealerName = dealer.getName();
 		setDealer(true);
 		proxyClient.handStarted(dealer);
+
+		// update the progress monitor (if apply)
+		if (progressMonitor != null) {
+			progressMonitor.setNote("Hand simulated: " + (++numOfHand));
+		}
 	}
 
+	private int numOfHand;
 	@Override
 	public void actorRotated(Player actor) {
 		setActorInTurn(false);
