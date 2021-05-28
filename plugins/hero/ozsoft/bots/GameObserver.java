@@ -19,8 +19,6 @@ package plugins.hero.ozsoft.bots;
 
 import java.util.*;
 
-import org.javalite.activejdbc.*;
-
 import core.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
@@ -40,7 +38,6 @@ public class GameObserver extends Bot {
 	private PreflopCardsRange cardsRange;
 	private int prevChips;
 	private UoAHand myHole;
-	private DB db;
 	public GameObserver() {
 
 	}
@@ -52,7 +49,7 @@ public class GameObserver extends Bot {
 	@Override
 	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
 		super.joinedTable(type, bigBlind, players);
-		this.db = Alesia.getInstance().openDB("hero", true);
+		Alesia.getInstance().openDB("hero", true);
 		this.cardsRange = new PreflopCardsRange("simul_11");
 		this.prevChips = heroPlayer.getCash();
 		this.myHole = new UoAHand();
@@ -60,12 +57,6 @@ public class GameObserver extends Bot {
 
 	@Override
 	public void handStarted(Player dealer) {
-		if (db.getConnection() == null) {
-			System.out.println("Opening connection...");
-			table.firePropertyChange(Table.PROP_MESSAGE, "", "Opening connection...");
-			db.open();
-		}
-
 		int delta = heroPlayer.getCash() - prevChips;
 		// if (delta != 0) {
 		// if (myHole.size() == 0) {

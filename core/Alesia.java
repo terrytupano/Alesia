@@ -123,36 +123,34 @@ public class Alesia extends Application {
 	 * @return instance of {@link DB}
 	 * @see #getDBProperties()
 	 */
-	public DB openDB(String name) {
-		return openDB(name, false);
+	public void openDB(String name) {
+		openDB(name, false);
 	}
 
-	public DB openDB(String name, boolean silent) {
-		DB db = null;
-		try {
-			Properties orgPrp = getDBProperties();
+	public void openDB(String name, boolean silent) {
+		List<String> conNames = DB.getCurrrentConnectionNames();
+		if (conNames.contains("name"))
+			return;
 
-			// remove all properties except those who star whit "name"
-			Set<Object> keys = orgPrp.keySet();
-			keys.removeIf(k -> !k.toString().startsWith(name));
-			Properties properties = new Properties();
+		Properties orgPrp = getDBProperties();
 
-			// build a new propert list whiout the prefix. keeping only the property and value spected by the jdbc lib
-			keys.forEach(k -> properties.put(k.toString().substring(name.length() + 1), orgPrp.get(k)));
+		// remove all properties except those who star whit "name"
+		Set<Object> keys = orgPrp.keySet();
+		keys.removeIf(k -> !k.toString().startsWith(name));
+		Properties properties = new Properties();
 
-			// mandatory parameters
-			String drv = properties.getProperty("driver");
-			properties.remove("driver");
-			String url = properties.getProperty("url");
-			properties.remove("url");
+		// build a new propert list whiout the prefix. keeping only the property and value spected by the jdbc lib
+		keys.forEach(k -> properties.put(k.toString().substring(name.length() + 1), orgPrp.get(k)));
 
-			db = new DB(name);
-			db.open(drv, url, properties);
-		} catch (Exception e) {
-			if (!silent)
-				e.printStackTrace();
-		}
-		return db;
+		// mandatory parameters
+		String drv = properties.getProperty("driver");
+		properties.remove("driver");
+		String url = properties.getProperty("url");
+		properties.remove("url");
+
+		@SuppressWarnings("resource")
+		DB db = new DB(name);
+		db.open(drv, url, properties);
 	}
 
 	public static Map<String, Object> showDialog(TUIFormPanel content, double withFactor, double heightFactor) {
@@ -239,13 +237,18 @@ public class Alesia extends Application {
 	 * 
 	 * @return all properties found in the database properties files
 	 */
-	private Properties getDBProperties() throws Exception {
-		// active jdbc propertie files pointed form main alesia property file
-		Properties activeprp = new Properties();
-		// TODO: convert to urls to allow more access support ???
-		File fp = new File(System.getProperty("Alesia.database.file.name"));
-		activeprp.load(new FileInputStream(fp));
-		return activeprp;
+	private Properties getDBProperties() {
+		try {
+			// active jdbc propertie files pointed form main alesia property file
+			Properties activeprp = new Properties();
+			// TODO: convert to urls to allow more access support ???
+			File fp = new File(System.getProperty("Alesia.database.file.name"));
+			activeprp.load(new FileInputStream(fp));
+			return activeprp;
+		} catch (Exception e) {
+			ExceptionDialog.showDialog(e);
+		}
+		return null;
 	}
 
 	/**

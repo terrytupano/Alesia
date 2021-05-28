@@ -197,13 +197,13 @@ public class PreflopCardsRange {
 		PreflopRange.delete("rangename = ?", rangeName);
 		for (PreflopRange element : preflopRanges) {
 			PreflopRange range = new PreflopRange();
-			range.set("rangeName", rangeName); 
+			range.set("rangeName", rangeName);
 			range.set("card", element.get("card"));
 			range.set("description", description);
 			range.set("percentage", getPercentage());
 			range.set("selected", element.get("selected"));
 			range.set("ev", element.get("ev"));
-			range.insert();			
+			range.insert();
 		}
 	}
 	/**
@@ -217,11 +217,15 @@ public class PreflopCardsRange {
 			throw new IllegalArgumentException("percentage value must be between 0 and 100 inclusively");
 		}
 		this.percentage = newPercentage;
-		double factor = percentage / 100d;
-		double valid = upperBound - (evRange * factor);
-		preflopRanges.forEach(pfr -> pfr.setBoolean("selected", pfr.getDouble("ev") >= valid ? true : false));
-//		System.out.println("Valid " + valid + " "
-//				+ preflopRanges.stream().mapToDouble(pfr -> pfr.getDouble("ev")).filter(d -> d >= valid).count());;
+		// double factor = percentage / 100d;
+		// double valid = upperBound - (evRange * factor);
+		// preflopRanges.forEach(pfr -> pfr.setBoolean("selected", pfr.getDouble("ev") >= valid ? true : false));
+		// System.out.println("Valid " + valid + " "
+		// + preflopRanges.stream().mapToDouble(pfr -> pfr.getDouble("ev")).filter(d -> d >= valid).count());;
+		int valid = (int) Math.round(168 * percentage / 100d);
+		preflopRanges.forEach(pfr -> pfr.setBoolean("selected", false));
+		for (int i = 0; i < valid; i++)
+			preflopRanges.get(i).setBoolean("selected", true);
 	}
 
 	public void updateCoordenates(UoACard card1, UoACard card2, int ammount) {
@@ -236,6 +240,10 @@ public class PreflopCardsRange {
 		range.set("winnigs", win + ammount);
 		int h = range.getInteger("hits") == null ? 0 : range.getInteger("hits");
 		range.set("hits", ++h);
+		double winD = range.getInteger("winnigs").doubleValue();
+		double hitsD = range.getInteger("hits").doubleValue();
+		range.setDouble("ev", winD / hitsD);
+
 		range.save();
 	}
 	/**
@@ -246,17 +254,8 @@ public class PreflopCardsRange {
 	 * @return a ready to use {@link PreflopCardsRange}
 	 */
 	private void loadFromDB() {
-		this.preflopRanges = PreflopRange.find("rangeName = ?", rangeName);
-
-		// FIXME: compute ev from data obtain in gamesimulation
-		for (PreflopRange r : preflopRanges) {
-			Integer hitsS = r.getInteger("hits");
-			if (hitsS != null) {
-				double win = r.getInteger("winnigs").doubleValue();
-				double hits = r.getInteger("hits").doubleValue();
-				r.setDouble("ev", win / hits);
-			}
-		}
+		// this.preflopRanges = PreflopRange.find("rangeName = ?", rangeName);
+		this.preflopRanges = PreflopRange.where("rangeName = '" + rangeName + "' ORDER BY ev DESC");
 		lowerBound = preflopRanges.stream().mapToDouble(r -> r.getDouble("ev")).min().getAsDouble();
 		upperBound = preflopRanges.stream().mapToDouble(r -> r.getDouble("ev")).max().getAsDouble();
 		// the table contain negative EV

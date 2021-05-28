@@ -248,12 +248,11 @@ public class Hero extends TPlugin {
 			Map<String, Object> values = trooperPanel.getValues();
 			LazyList<SimulatorClient> clients = SimulatorClient.findAll();
 
-			int buy = ((Double) values.get("table.buyIn")).intValue();
+			int buyIn = ((Double) values.get("table.buyIn")).intValue();
 			int bb = ((Double) values.get("table.bigBlid")).intValue();
-			int sb = ((Double) values.get("table.smallBlid")).intValue();
 			PokerSimulator simulator = new PokerSimulator();
 			simulatorPanel.updatePokerSimulator(simulator);
-			Table table = new Table(TableType.NO_LIMIT, bb);
+			Table table = new Table(TableType.NO_LIMIT, buyIn, bb);
 			for (SimulatorClient client : clients) {
 				if (client.getBoolean("isActive")) {
 					String name = client.getString("name");
@@ -262,12 +261,14 @@ public class Hero extends TPlugin {
 					Bot bot = (Bot) cls.newInstance();
 					bot.setObject(simulator);
 					bot.setObject(table);
-					Player p = new Player(name, buy, bot);
+					Player p = new Player(name, buyIn, bot);
 					table.addPlayer(p);
 				}
 			}
 			table.setSpeed(0);
 			table.setSimulationsHand(100000);
+			table.whenPlayerLose(true, Table.REFILL);
+			table.whenPlayerLose(false, Table.REFILL);
 
 			TTaskMonitor ttm = new TTaskMonitor(table, false);
 			table.setInputBlocker(ttm);

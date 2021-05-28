@@ -52,7 +52,7 @@ public class Player {
 
 	/** Last action performed. */
 	private PlayerAction action;
-
+	
 	/**
 	 * Constructor.
 	 * 
@@ -68,6 +68,40 @@ public class Player {
 		resetHand();
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Player))
+			return false;
+		return getName().equals(((Player) obj).getName());
+	}
+
+	/**
+	 * Returns the player's most recent action.
+	 * 
+	 * @return The action.
+	 */
+	public PlayerAction getAction() {
+		return action;
+	}
+
+	/**
+	 * Returns the player's current bet.
+	 * 
+	 * @return The current bet.
+	 */
+	public int getBet() {
+		return bet;
+	}
+
+	/**
+	 * Returns the player's current amount of cash.
+	 * 
+	 * @return The amount of cash.
+	 */
+	public int getCash() {
+		return cash;
+	}
+
 	/**
 	 * Returns the client.
 	 * 
@@ -78,12 +112,94 @@ public class Player {
 	}
 
 	/**
-	 * set a client for this player
+	 * Returns the player's hole cards.
 	 * 
-	 * @param client - The client.
+	 * @return The hole cards.
 	 */
-	public void setClient(Client client) {
-		this.client = client;
+	public UoAHand getHand() {
+		return hand;
+	}
+
+	/**
+	 * Returns the player's name.
+	 * 
+	 * @return The name.
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * Returns whether the player has his hole cards dealt.
+	 * 
+	 * @return True if the hole cards are dealt, otherwise false.
+	 */
+	public boolean hasCards() {
+		return hasCards;
+	}
+
+	/**
+	 * Indicates whether this player is all-in.
+	 * 
+	 * @return True if all-in, otherwise false.
+	 */
+	public boolean isAllIn() {
+		return hasCards() && (cash == 0);
+	}
+
+	/**
+	 * Pays an amount of cash.
+	 * 
+	 * @param amount The amount of cash to pay.
+	 */
+	public void payCash(int amount) {
+		if (amount > cash) {
+			throw new IllegalStateException("Player asked to pay more cash than he owns!");
+		}
+		cash -= amount;
+	}
+
+	/**
+	 * Posts the big blinds.
+	 * 
+	 * @param blind The big blind.
+	 */
+	public void postBigBlind(int blind) {
+		action = PlayerAction.BIG_BLIND;
+		cash -= blind;
+		bet += blind;
+	}
+
+	/**
+	 * Posts the small blind.
+	 * 
+	 * @param blind The small blind.
+	 */
+	public void postSmallBlind(int blind) {
+		action = PlayerAction.SMALL_BLIND;
+		cash -= blind;
+		bet += blind;
+	}
+
+	/**
+	 * Returns a clone of this player with only public information.
+	 * 
+	 * @return The cloned player.
+	 */
+	public Player publicClone() {
+		Player clone = new Player(name, cash, null);
+		clone.hasCards = hasCards;
+		clone.bet = bet;
+		clone.action = action;
+		return clone;
+	}
+
+	/**
+	 * Resets the player's bet.
+	 */
+	public void resetBet() {
+		bet = 0;
+		action = (hasCards() && cash == 0) ? PlayerAction.ALL_IN : null;
 	}
 
 	/**
@@ -96,11 +212,21 @@ public class Player {
 	}
 
 	/**
-	 * Resets the player's bet.
+	 * Sets the player's most recent action.
+	 * 
+	 * @param action The action.
 	 */
-	public void resetBet() {
-		bet = 0;
-		action = (hasCards() && cash == 0) ? PlayerAction.ALL_IN : null;
+	public void setAction(PlayerAction action) {
+		this.action = action;
+	}
+
+	/**
+	 * Sets the player's current bet.
+	 * 
+	 * @param bet The current bet.
+	 */
+	public void setBet(int bet) {
+		this.bet = bet;
 	}
 
 	/**
@@ -124,118 +250,17 @@ public class Player {
 	}
 
 	/**
-	 * Returns whether the player has his hole cards dealt.
+	 * set a client for this player
 	 * 
-	 * @return True if the hole cards are dealt, otherwise false.
+	 * @param client - The client.
 	 */
-	public boolean hasCards() {
-		return hasCards;
+	public void setClient(Client client) {
+		this.client = client;
 	}
 
-	/**
-	 * Returns the player's name.
-	 * 
-	 * @return The name.
-	 */
-	public String getName() {
+	@Override
+	public String toString() {
 		return name;
-	}
-
-	/**
-	 * Returns the player's current amount of cash.
-	 * 
-	 * @return The amount of cash.
-	 */
-	public int getCash() {
-		return cash;
-	}
-
-	/**
-	 * Returns the player's current bet.
-	 * 
-	 * @return The current bet.
-	 */
-	public int getBet() {
-		return bet;
-	}
-
-	/**
-	 * Sets the player's current bet.
-	 * 
-	 * @param bet The current bet.
-	 */
-	public void setBet(int bet) {
-		this.bet = bet;
-	}
-
-	/**
-	 * Returns the player's most recent action.
-	 * 
-	 * @return The action.
-	 */
-	public PlayerAction getAction() {
-		return action;
-	}
-
-	/**
-	 * Sets the player's most recent action.
-	 * 
-	 * @param action The action.
-	 */
-	public void setAction(PlayerAction action) {
-		this.action = action;
-	}
-
-	/**
-	 * Indicates whether this player is all-in.
-	 * 
-	 * @return True if all-in, otherwise false.
-	 */
-	public boolean isAllIn() {
-		return hasCards() && (cash == 0);
-	}
-
-	/**
-	 * Returns the player's hole cards.
-	 * 
-	 * @return The hole cards.
-	 */
-	public UoAHand getHand() {
-		return hand;
-	}
-
-	/**
-	 * Posts the small blind.
-	 * 
-	 * @param blind The small blind.
-	 */
-	public void postSmallBlind(int blind) {
-		action = PlayerAction.SMALL_BLIND;
-		cash -= blind;
-		bet += blind;
-	}
-
-	/**
-	 * Posts the big blinds.
-	 * 
-	 * @param blind The big blind.
-	 */
-	public void postBigBlind(int blind) {
-		action = PlayerAction.BIG_BLIND;
-		cash -= blind;
-		bet += blind;
-	}
-
-	/**
-	 * Pays an amount of cash.
-	 * 
-	 * @param amount The amount of cash to pay.
-	 */
-	public void payCash(int amount) {
-		if (amount > cash) {
-			throw new IllegalStateException("Player asked to pay more cash than he owns!");
-		}
-		cash -= amount;
 	}
 
 	/**
@@ -246,30 +271,4 @@ public class Player {
 	public void win(int amount) {
 		cash += amount;
 	}
-
-	/**
-	 * Returns a clone of this player with only public information.
-	 * 
-	 * @return The cloned player.
-	 */
-	public Player publicClone() {
-		Player clone = new Player(name, cash, null);
-		clone.hasCards = hasCards;
-		clone.bet = bet;
-		clone.action = action;
-		return clone;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (!(obj instanceof Player))
-			return false;
-		return getName().equals(((Player) obj).getName());
-	}
-
-	@Override
-	public String toString() {
-		return name;
-	}
-
 }

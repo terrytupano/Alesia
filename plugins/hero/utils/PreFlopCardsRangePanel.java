@@ -142,15 +142,15 @@ public class PreFlopCardsRangePanel extends TUIPanel {
 			preflopCardsRange = new PreflopCardsRange();
 		}
 		
-		double steps = preflopCardsRange.evRange / 10;
-		Hashtable<Integer, JLabel> labels = new Hashtable<>();
-		for (int i = 1; i <= 10; i++) {
-			String val = String.format("%4.2f", (preflopCardsRange.lowerBound + (steps * i)));
-			labels.put(100 - (i * 10), new JLabel(val));
-		}
+//		double steps = preflopCardsRange.evRange / 10;
+//		Hashtable<Integer, JLabel> labels = new Hashtable<>();
+//		for (int i = 1; i <= 10; i++) {
+//			String val = String.format("%4.2f", (preflopCardsRange.lowerBound + (steps * i)));
+//			labels.put(100 - (i * 10), new JLabel(val));
+//		}
 
 		slider.setValue(preflopCardsRange.getPercentage());
-		slider.setLabelTable(labels);
+//		slider.setLabelTable(labels);
 		updateCardsButtons();
 	}
 }

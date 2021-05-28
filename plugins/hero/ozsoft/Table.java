@@ -103,18 +103,24 @@ public class Table extends Task {
 	/** Number of raises in the current betting round. */
 	private int raises;
 
+	/** valid action when a villan or hero loose the battle */
+	public static String GAME_OVER = "gameOver";
+	public static String REFILL = "refill";
+	public static String DO_NOTHING = "doNothing";
+
+	private int buyIn;
+	private Player heroPlayer;
 	private boolean paused;
 	private int speed;
 	private int simulationsHand;
-	/**
-	 * Constructor.
-	 * 
-	 * @param bigBlind The size of the big blind.
-	 */
-	public Table(TableType type, int bigBlind) {
+	private String actionWhenHeroLose = GAME_OVER;
+	private String actionWhenVillanLose = DO_NOTHING;
+
+	public Table(TableType type, int buyIn, int bigBlind) {
 		super(Alesia.getInstance());
 		this.tableType = type;
 		this.bigBlind = bigBlind;
+		this.buyIn = buyIn;
 		players = new ArrayList<Player>();
 		activePlayers = new ArrayList<Player>();
 		deck = new UoADeck();
@@ -746,21 +752,45 @@ public class Table extends Task {
 	@Override
 	protected Object doInBackground() throws Exception {
 		try {
+			// save heroPlayer for later comparation
+			this.heroPlayer = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
+
 			for (Player player : players) {
 				player.getClient().joinedTable(tableType, bigBlind, players);
 			}
 			dealerPosition = -1;
 			actorPosition = -1;
+			boolean endedByHero = false;
 			// canceled or simulate a finite num of hands
 			// while (!isCancelled() && (simulationsHand = 0)(simulationsHand > 0 && numOfHand < simulationsHand)) {
 			int numOfHand;
-			for (numOfHand = 1; (numOfHand < simulationsHand || isCancelled())
-					|| (simulationsHand == 0 && !isCancelled()); numOfHand++) {
+			for (numOfHand = 1; (numOfHand < simulationsHand && !isCancelled() && !endedByHero)
+					|| (simulationsHand == 0 && !isCancelled() && !endedByHero); numOfHand++) {
 				// pause ?
 				if (paused) {
 					Thread.sleep(100);
 					continue;
 				}
+
+				// action to take when any player is out of the battle. this is intendet to keep the simulation alive.
+				// if the player is hero, the action GAME_OVER can take place. but if not, only refill or do_nothis are
+				// available
+				for (Player player : players) {
+					if (player.getCash() < bigBlind) {
+						// when is Hero, end the simulation??
+						if (player.getName().equals("Hero") && GAME_OVER.equals(actionWhenHeroLose)) {
+							endedByHero = true;
+							break;
+						}
+						if (REFILL.equals(actionWhenHeroLose) || REFILL.equals(actionWhenVillanLose)) {
+							String msg = player.getName() + " lost the battle. Refilling with " + buyIn;
+							notifyMessage(msg);
+							System.out.println(msg);
+							player.win(buyIn);
+						}
+					}
+				}
+
 				int noOfActivePlayers = 0;
 				for (Player player : players) {
 					if (player.getCash() >= bigBlind) {
@@ -769,7 +799,8 @@ public class Table extends Task {
 				}
 				if (noOfActivePlayers > 1) {
 					playHand();
-					firePropertyChange(PROP_MESSAGE, numOfHand, "played Hands: " + numOfHand);
+					firePropertyChange(PROP_MESSAGE, numOfHand, "# of Players: " + noOfActivePlayers + " played Hands: "
+							+ numOfHand + " Hero Chips: " + heroPlayer.getCash());
 					if (simulationsHand > 0) {
 						double d = (numOfHand * 1.0) / (simulationsHand * 1.0);
 						firePropertyChange("progress", numOfHand, (int) (d * 100));
@@ -794,5 +825,22 @@ public class Table extends Task {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	/**
+	 * set the action that the simulation will perform if a player loose the battle.
+	 * <li>{@link #GAME_OVER} - end the simulation
+	 * <li>{@link #REFILL} - Refill the player chips artificialy
+	 * <li>{@link #DO_NOTHING} - the simulation continue
+	 * 
+	 * @param forHero - <code>true</code> if the action is intended for Hero <code>false</code> the action is for any
+	 *        villan.
+	 * @param action - action to perform
+	 */
+	public void whenPlayerLose(boolean forHero, String action) {
+		if (forHero)
+			this.actionWhenHeroLose = action;
+		else
+			this.actionWhenVillanLose = action;
 	}
 }
