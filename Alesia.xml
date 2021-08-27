@@ -13,7 +13,7 @@
   <takeOportunity type="ButtonState" selected="true"/>
   <table.smallBlid type="TextComponentState" text="1000" caretPosition="4"/>
   <preflopRekonAmmo.hand type="TextComponentState" text="10" caretPosition="2"/>
-  <plugins.hero.utils.PreFlopCardsRangePanel.rangeComboBox type="ComboBoxState" selectedIndex="1"/>
+  <plugins.hero.utils.PreFlopCardsRangePanel.rangeComboBox type="ComboBoxState" selectedIndex="0"/>
   <rememberUser type="string">admin</rememberUser>
   <topUpperHand type="ComboBoxState" selectedIndex="0"/>
   <bigBlid type="string"></bigBlid>
@@ -44,7 +44,7 @@
   <upperBoundBluff type="TextComponentState" text="200" caretPosition="3"/>
   <preflopStrategy type="ComboBoxState" selectedIndex="0"/>
   <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>
-  <TWebFrame type="WindowState" location="16,49" size="563,703" state="0"/>
+  <TWebFrame type="WindowState" location="0,40" size="547,735" state="0"/>
   <smallBlid type="string"></smallBlid>
   <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>
   <bluff type="TextComponentState" text="200" caretPosition="3"/>
