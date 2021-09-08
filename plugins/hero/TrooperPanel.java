@@ -24,7 +24,7 @@ public class TrooperPanel extends TUIFormPanel {
 		addInputComponent(TUIUtils.getNumericTextField("play.time", null, 5, null), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("play.until", null, 5, null), false, true);
 
-		WebComboBox webc = TUIUtils.getTWebComboBox("preflopCards", PreflopCardsRange.getSavedCardsRanges(), null);
+		WebComboBox webc = TUIUtils.getTWebComboBox("preflopCards", PreflopCardsModel.getPreflopList(), null);
 		addInputComponent(webc);
 
 		addInputComponent(TUIUtils.getTWebComboBox("decisionMethod", "decisionMet0"));

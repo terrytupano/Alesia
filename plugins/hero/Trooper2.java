@@ -69,7 +69,7 @@ public class Trooper2 extends Task {
 	private double currentHandCost;
 	private double playUntil;
 	private long playTime;
-	private Hashtable<String, PreflopCardsRange> cardsRanges;
+	private Hashtable<String, PreflopCardsModel> cardsRanges;
 
 	private String subObtimalDist;
 
@@ -89,7 +89,7 @@ public class Trooper2 extends Task {
 		instance = this;
 		// load all preflop ranges
 		this.cardsRanges = new Hashtable<>();
-		TEntry<String, String>[] tarr = PreflopCardsRange.getSavedCardsRanges();
+		TEntry<String, String>[] tarr = PreflopCardsModel.getPreflopList();
 		for (TEntry<String, String> tEntry : tarr) {
 			String rName = tEntry.getKey();
 //			cardsRanges.put(rName, PreflopCardsRange.loadFromDB(rName));
@@ -181,7 +181,7 @@ public class Trooper2 extends Task {
 		// if chips and bluff
 		bluffParm = (bluffParm / 100.0 * buyIn);
 		if (chips > 0 && chips < bluffParm) {
-			PreflopCardsRange bluff = cardsRanges.get("bluff");
+			PreflopCardsModel bluff = cardsRanges.get("bluff");
 			HoleCards hc = pokerSimulator.getMyHoleCards();
 			if (bluff.containsHand(hc))
 				setVariableAndLog(EXPLANATION, "Hero is able to bluff.");
@@ -547,7 +547,7 @@ public class Trooper2 extends Task {
 		availableActions.clear();
 		String rName = (String) parameters.get("preflopCards");
 		HoleCards holeCards = pokerSimulator.getMyHoleCards();
-		PreflopCardsRange cardsRange = cardsRanges.get(rName);
+		PreflopCardsModel cardsRange = cardsRanges.get(rName);
 		boolean good = cardsRange.containsHand(holeCards);
 		if (!good) {
 			setVariableAndLog(EXPLANATION, "Preflop hand not good.");

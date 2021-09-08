@@ -35,7 +35,7 @@ import plugins.hero.utils.*;
  */
 public class GameObserver extends Bot {
 
-	private PreflopCardsRange cardsRange;
+	private PreflopCardsModel cardsRange;
 	private int prevChips;
 	private UoAHand myHole;
 	public GameObserver() {
@@ -50,7 +50,7 @@ public class GameObserver extends Bot {
 	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
 		super.joinedTable(type, bigBlind, players);
 		Alesia.getInstance().openDB("hero", true);
-		this.cardsRange = new PreflopCardsRange("simul_11");
+		this.cardsRange = new PreflopCardsModel("simul_11");
 		this.prevChips = heroPlayer.getCash();
 		this.myHole = new UoAHand();
 	}

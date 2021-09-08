@@ -194,7 +194,8 @@ public class Hero extends TPlugin {
 
 	@org.jdesktop.application.Action
 	public void preFlopCardsRange(ActionEvent event) {
-		PreFlopCardsRangePanel panel = new PreFlopCardsRangePanel();
+		// this method is called by #savePreflopRange
+		PreFlopCardsPanel panel = new PreFlopCardsPanel();
 		Alesia.getInstance().getMainPanel().setContentPanel(panel);
 	}
 
@@ -274,8 +275,7 @@ public class Hero extends TPlugin {
 			table.setInputBlocker(ttm);
 
 			TableDialog dialog = new TableDialog(table);
-//			dialog.setVisible(true);
-
+			// dialog.setVisible(true);
 
 			return table;
 		} catch (Exception e) {
@@ -433,31 +433,34 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public void savePreflopRange(ActionEvent event) {
 		AbstractButton ab = (AbstractButton) event.getSource();
-		PreFlopCardsRangePanel rangePanel = SwingUtils.getFirstParent(ab, PreFlopCardsRangePanel.class);
+		PreFlopCardsPanel rangePanel = SwingUtils.getFirstParent(ab, PreFlopCardsPanel.class);
 		TEntry<String, String> selR = rangePanel.getSelectedRange();
-		String savn = (String) JOptionPane.showInputDialog(Alesia.getInstance().getMainFrame(),
+		String nameDesc = (String) JOptionPane.showInputDialog(Alesia.getInstance().getMainFrame(),
 				"Write the name and a shor description for this range. \nThe name an description muss be coma separated.",
 				"Save", JOptionPane.PLAIN_MESSAGE, null, null, selR.getKey() + "," + selR.getValue());
 		// save
-		if (savn == null)
+		if (nameDesc == null)
 			return;
 
-		PreflopRange tmp = PreflopRange.findFirst("rangeName = ? ", savn);
+		// correct format ?
+		String[] nam_desc = nameDesc.split("[,]");
+		if (nam_desc.length == 1) {
+			JOptionPane.showMessageDialog(Alesia.getInstance().getMainFrame(), "Format error", "Error",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		// override
+		PreflopCards tmp = PreflopCards.findFirst("rangeName = ? ", nam_desc[0]);
 		if (tmp != null) {
 			Object[] options = {"OK", "CANCEL"};
-			int opt = JOptionPane.showOptionDialog(rangePanel, "the preflop range " + savn + " exist. Override?",
+			int opt = JOptionPane.showOptionDialog(rangePanel, "the preflop range " + nam_desc[0] + " exist. Override?",
 					"Warning", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
 			if (opt != 0)
 				return;
 		}
 
-		// store the data
-		String[] nam_desc = savn.split("[,]");
-		if (nam_desc.length == 1) {
-			nam_desc[1] = nam_desc[0];
-			nam_desc[0] = TStringUtils.getUniqueID();
-		}
 		rangePanel.getPreflopCardsRange().saveInDB(nam_desc[0], nam_desc[1]);
+		preFlopCardsRange(null);
 	}
-
 }
