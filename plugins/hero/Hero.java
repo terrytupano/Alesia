@@ -32,7 +32,6 @@ import com.javaflair.pokerprophesier.api.card.*;
 
 import core.*;
 import core.datasource.model.*;
-import gui.*;
 import net.sourceforge.tess4j.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
@@ -259,23 +258,25 @@ public class Hero extends TPlugin {
 					String name = client.getString("name");
 					String bCls = client.getString("client");
 					Class cls = Class.forName("plugins.hero.ozsoft.bots." + bCls);
+					// Constructor cons = cls.getConstructor(String.class);
+					// Bot bot = (Bot) cons.newInstance(name);
 					Bot bot = (Bot) cls.newInstance();
-					bot.setObject(simulator);
-					bot.setObject(table);
+					bot.setPlayerName(name);
+					bot.setObservationMethod(client.getString("observationMethod"));
+					bot.setPokerSimulator(simulator);
 					Player p = new Player(name, buyIn, bot);
 					table.addPlayer(p);
 				}
 			}
-			table.setSpeed(0);
+			table.setSpeed(100);
 			table.setSimulationsHand(100000);
 			table.whenPlayerLose(true, Table.REFILL);
 			table.whenPlayerLose(false, Table.REFILL);
 
-			TTaskMonitor ttm = new TTaskMonitor(table, false);
-			table.setInputBlocker(ttm);
-
 			TableDialog dialog = new TableDialog(table);
-			// dialog.setVisible(true);
+
+			// WARNING: this method is overrided!!!
+			dialog.setVisible(true);
 
 			return table;
 		} catch (Exception e) {

@@ -10,9 +10,7 @@ package plugins.hero.ozsoft;
 import java.awt.*;
 
 import com.alee.laf.panel.*;
-import com.alee.laf.scroll.*;
 import com.alee.laf.tabbedpane.*;
-import com.alee.laf.table.*;
 import com.jgoodies.forms.builder.*;
 import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.*;

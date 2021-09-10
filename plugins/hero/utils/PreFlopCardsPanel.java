@@ -7,8 +7,6 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 
-import org.jdesktop.application.*;
-
 import com.alee.extended.layout.*;
 import com.alee.laf.combobox.*;
 import com.alee.laf.panel.*;

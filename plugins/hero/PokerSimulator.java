@@ -3,7 +3,6 @@ package plugins.hero;
 import java.awt.*;
 import java.text.*;
 import java.util.*;
-import java.util.List;
 import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.*;
@@ -60,7 +59,7 @@ public class PokerSimulator {
 	private int numSimulations = 100000;
 
 	/**
-	 * temporal storage for the incoming cards
+	 * temporal storage for the incoming cards (simulator)
 	 */
 	public final Hashtable<String, String> cardsBuffer;
 	/**

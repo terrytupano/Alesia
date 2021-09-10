@@ -33,9 +33,13 @@ import plugins.hero.ozsoft.actions.*;
 public interface Client {
 
 	/**
-	 * set an arbitrary object form the outside of the simulation
+	 * set an arbitrary key/value parameters form the outside of the simulation.
+	 * 
+	 * @param key - key
+	 * @param value - value
 	 */
-	void setObject(Object object);
+	// void setParameter(String key, Object value);
+
 	/**
 	 * Handles a game message.
 	 * 

@@ -100,7 +100,7 @@ public class Trooper extends Task {
 	}
 
 	/**
-	 * link between {@link HeroBot} an this instance. this method perfom all the decition and return the action that he
+	 * link between {@link HeroBot} an this instance. this method perfom all the decitions and return the action that he
 	 * want to execute
 	 * 
 	 * @return the action to execute

@@ -33,6 +33,7 @@ import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.FormLayout;
 
 import core.*;
+import gui.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.actions.*;
@@ -167,6 +168,8 @@ public class TableDialog extends JDialog implements Client {
 				playerPanel.update(player);
 			}
 		}
+
+//		
 		proxyClient.joinedTable(type, bigBlind, players);
 	}
 
@@ -174,6 +177,8 @@ public class TableDialog extends JDialog implements Client {
 	public void messageReceived(String message) {
 		outConsole.append(message + "\n");
 		// boardPanel.waitForUserInput();
+		
+//		
 		proxyClient.messageReceived(message);
 	}
 
@@ -182,6 +187,8 @@ public class TableDialog extends JDialog implements Client {
 		setDealer(false);
 		dealerName = dealer.getName();
 		setDealer(true);
+		
+//		
 		proxyClient.handStarted(dealer);
 
 		// update the progress monitor (if apply)
@@ -196,12 +203,16 @@ public class TableDialog extends JDialog implements Client {
 		setActorInTurn(false);
 		actorName = actor.getName();
 		setActorInTurn(true);
+		
+//		
 		proxyClient.actorRotated(actor);
 	}
 
 	@Override
 	public void boardUpdated(UoAHand hand, int bet, int pot) {
 		boardPanel.update(hand, bet, pot);
+		
+//		
 		proxyClient.boardUpdated(hand, bet, pot);
 	}
 
@@ -211,6 +222,8 @@ public class TableDialog extends JDialog implements Client {
 		if (playerPanel != null) {
 			playerPanel.update(player);
 		}
+		
+//		
 		proxyClient.playerUpdated(player);
 	}
 
@@ -224,8 +237,10 @@ public class TableDialog extends JDialog implements Client {
 			if (action != null) {
 				// boardPanel.setMessage(String.format("%s %s.", name, action.getVerb()));
 				if (player.getClient() != this) {
-					proxyClient.playerActed(player);
 					// boardPanel.waitForUserInput();
+					
+//					
+					proxyClient.playerActed(player);
 				}
 			}
 		} else {
@@ -234,9 +249,21 @@ public class TableDialog extends JDialog implements Client {
 	}
 
 	@Override
+	public void setVisible(boolean b) {
+		// only show this dialo when the table speed value is >0. this allow doinbackground show the dialog
+		if (table.getSpeed() > 0)
+			super.setVisible(b);
+		else {
+			TTaskMonitor ttm = new TTaskMonitor(table, false);
+			table.setInputBlocker(ttm);
+		}
+	}
+	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		// boardPanel.setMessage("Please select an action:");
 		// return controlPanel.getUserInput(minBet, humanPlayer.getCash(), allowedActions);
+		
+//		
 		return proxyClient.act(minBet, currentBet, allowedActions);
 	}
 
@@ -266,9 +293,5 @@ public class TableDialog extends JDialog implements Client {
 				playerPanel.setDealer(isDealer);
 			}
 		}
-	}
-	@Override
-	public void setObject(Object object) {
-
 	}
 }

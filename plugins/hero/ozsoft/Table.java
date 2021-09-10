@@ -35,9 +35,7 @@
 package plugins.hero.ozsoft;
 
 import java.util.*;
-
 import org.jdesktop.application.*;
-
 import core.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.actions.*;
@@ -126,6 +124,8 @@ public class Table extends Task {
 		deck = new UoADeck();
 		pots = new ArrayList<Pot>();
 		board = new UoAHand();
+		speed = 100;
+		simulationsHand = 0;
 	}
 	/**
 	 * Adds a player.
@@ -153,11 +153,24 @@ public class Table extends Task {
 		this.paused = pause;
 	}
 
+	/**
+	 * set the number of simulations. 0 mean the simulation run forever until hero lose (setted in
+	 * {@link Table#whenPlayerLose(boolean, String)} method) or i press the cansel button in the UI interface.
+	 * 
+	 * @param simulationsHand - num of hands. see
+	 */
 	public void setSimulationsHand(int simulationsHand) {
 		this.simulationsHand = simulationsHand;
 	}
 
+	/**
+	 * set the speed for the simulation. this speed is the nummer of milliseconds bethween actions. 0 means this table
+	 * instance will not show the game flow, instead olny a dialog with the number of simulations performed
+	 * 
+	 * @param speed - speed in milliseconds
+	 */
 	public void setSpeed(int speed) {
+
 		this.speed = speed;
 	}
 
@@ -786,6 +799,9 @@ public class Table extends Task {
 							String msg = player.getName() + " lost the battle. Refilling with " + buyIn;
 							notifyMessage(msg);
 							System.out.println(msg);
+
+							// TODO: discard this player and create a new player that join the table. artificialy set a
+							// value in win method will affect the statistics of GameObserver
 							player.win(buyIn);
 						}
 					}

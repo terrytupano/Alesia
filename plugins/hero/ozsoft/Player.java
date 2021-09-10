@@ -65,7 +65,7 @@ public class Player {
 		this.cash = cash;
 		this.client = client;
 		hand = new UoAHand();
-		resetHand();
+		resetHand();		
 	}
 
 	@Override

@@ -31,10 +31,6 @@ import plugins.hero.ozsoft.actions.*;
 public class HeroBot extends Bot {
 
 	private Trooper trooper;
-	private TableType tableType;	
-	public HeroBot() {
-
-	}
 	
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
@@ -51,7 +47,7 @@ public class HeroBot extends Bot {
 			pokerSimulator.setCallValue(0);
 
 		pokerSimulator.setPotValue(pot);
-		pokerSimulator.setHeroChips(heroPlayer.getCash());
+		pokerSimulator.setHeroChips(player.getCash());
 		// FIXME: temporal
 		pokerSimulator.setRaiseValue(minBet * 2);
 		int actV = (int) villans.stream().filter(p -> p.hasCards()).count();
@@ -83,12 +79,13 @@ public class HeroBot extends Bot {
 			throw new IllegalArgumentException("Hero bot has no correct action selected. Trooper action was" + act);
 		return action;
 	}
-
+	
 	@Override
 	public void actorRotated(Player actor) {
-		// Not implemented.
+		// TODO Auto-generated method stub
+		
 	}
-	
+
 	@Override
 	public void boardUpdated(UoAHand hand, int bet, int pot) {
 		if (hand.getCard(1) != null)
@@ -113,15 +110,10 @@ public class HeroBot extends Bot {
 		pokerSimulator.clearEnviorement();
 	}
 
-	
 	@Override
 	public void messageReceived(String message) {
-		// Not implemented.
-	}
-
-	@Override
-	public void playerActed(Player player) {
-
+		// TODO Auto-generated method stub
+		
 	}
 
 	@Override
@@ -132,10 +124,9 @@ public class HeroBot extends Bot {
 			pokerSimulator.cardsBuffer.put("hero.card2", hand.getCard(2).toString());
 		}
 	}
-
 	@Override
-	public void setObject(Object object) {
-		super.setObject(object);
+	public void setPokerSimulator(PokerSimulator pokerSimulator) {
+		super.setPokerSimulator(pokerSimulator);
 		this.trooper = new Trooper(null, pokerSimulator);
 	}
 }

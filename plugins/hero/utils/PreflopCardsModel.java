@@ -53,13 +53,18 @@ public class PreflopCardsModel {
 	}
 
 	/**
-	 * new instance loaded with the values stored in the rangeName argument
+	 * new instace. the argumetn rangeName is name of a new oer existent preflop rage. if the DB dont contain such
+	 * preflop range, this instance will create a fresh copy of preflopt list stored in <b>original</b>
 	 * 
-	 * @param rangeName - the name to load
+	 * @param rangeName - the name to load or create
 	 */
 	public PreflopCardsModel(String rangeName) {
 		this.rangeName = rangeName;
 		this.preflopCards = PreflopCards.where("rangeName = '" + rangeName + "' ORDER BY ev DESC");
+		if (preflopCards.size() == 0) {
+			this.preflopCards = PreflopCards.where("rangeName = 'original' ORDER BY ev DESC");
+			preflopCards.forEach(card -> card.set("selected", false, "winnigs", 0, "hits", 0, "ev", 0.0));
+		}
 		this.percentage = preflopCards.get(0).getInteger("percentage");
 	}
 
@@ -211,7 +216,8 @@ public class PreflopCardsModel {
 		}
 	}
 	/**
-	 * Sets a new percentage for this range. This will overwrite all the card type selections.
+	 * Sets a new percentage for this range. This will overwrite only the cards inside of the selection. Cards outside
+	 * of the specify procet, remaind equal.
 	 * 
 	 * @param newPercentage the new percentage.
 	 * @throws IllegalArgumentException if the new percentage is below 0 or over 100
@@ -234,6 +240,14 @@ public class PreflopCardsModel {
 			preflopCards.get(i).setBoolean("selected", true);
 	}
 
+	/**
+	 * used for statistics purporse. this method update the <code>winnings</code> and <code>ev</code> fields
+	 * preflopscards file.
+	 * 
+	 * @param card1 - preflop card 1
+	 * @param card2 - preflop card 2
+	 * @param ammount - normaly +1 or -1 to update the count and ev
+	 */
 	public void updateCoordenates(UoACard card1, UoACard card2, int ammount) {
 		String card = getStringCard(card1, card2);
 		PreflopCards range = PreflopCards.findOrCreateIt("rangeName", rangeName, "card", card);
@@ -253,8 +267,15 @@ public class PreflopCardsModel {
 		range.save();
 	}
 
-	public double getEV(String card) {
-		PreflopCards element = preflopCards.stream().filter(pfr -> pfr.getString("card").equals(card)).findFirst()
+	/**
+	 * return the stored EV from the cards pass as argument.
+	 * 
+	 * @param cards - cards in preflop format (AA, AKs, ...)
+	 * 
+	 * @return the expected value
+	 */
+	public double getEV(String cards) {
+		PreflopCards element = preflopCards.stream().filter(pfr -> pfr.getString("card").equals(cards)).findFirst()
 				.get();
 		double ev = ((int) (element.getDouble("ev") * 10000)) / 10000d;
 		return ev;
