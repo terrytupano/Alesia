@@ -35,7 +35,9 @@
 package plugins.hero.ozsoft;
 
 import java.util.*;
+
 import org.jdesktop.application.*;
+
 import core.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.actions.*;
@@ -127,6 +129,7 @@ public class Table extends Task {
 		speed = 100;
 		simulationsHand = 0;
 	}
+	
 	/**
 	 * Adds a player.
 	 * 

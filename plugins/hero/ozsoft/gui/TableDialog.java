@@ -98,9 +98,9 @@ public class TableDialog extends JDialog implements Client {
 
 		// the player "Hero" allwais the test subject. this element is handled by this class but the
 		// desition is dispacht to proxiClient
-		Player test = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
-		this.proxyClient = test.getClient();
-		test.setClient(this);
+		Player heroP = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
+		this.proxyClient = heroP.getClient();
+		heroP.setClient(this);
 
 		// ActionListener al = new ActionListener() {
 		// public void actionPerformed(ActionEvent e) {
@@ -169,7 +169,7 @@ public class TableDialog extends JDialog implements Client {
 			}
 		}
 
-//		
+		//
 		proxyClient.joinedTable(type, bigBlind, players);
 	}
 
@@ -177,8 +177,8 @@ public class TableDialog extends JDialog implements Client {
 	public void messageReceived(String message) {
 		outConsole.append(message + "\n");
 		// boardPanel.waitForUserInput();
-		
-//		
+
+		//
 		proxyClient.messageReceived(message);
 	}
 
@@ -187,8 +187,8 @@ public class TableDialog extends JDialog implements Client {
 		setDealer(false);
 		dealerName = dealer.getName();
 		setDealer(true);
-		
-//		
+
+		//
 		proxyClient.handStarted(dealer);
 
 		// update the progress monitor (if apply)
@@ -203,16 +203,16 @@ public class TableDialog extends JDialog implements Client {
 		setActorInTurn(false);
 		actorName = actor.getName();
 		setActorInTurn(true);
-		
-//		
+
+		//
 		proxyClient.actorRotated(actor);
 	}
 
 	@Override
 	public void boardUpdated(UoAHand hand, int bet, int pot) {
 		boardPanel.update(hand, bet, pot);
-		
-//		
+
+		//
 		proxyClient.boardUpdated(hand, bet, pot);
 	}
 
@@ -222,8 +222,8 @@ public class TableDialog extends JDialog implements Client {
 		if (playerPanel != null) {
 			playerPanel.update(player);
 		}
-		
-//		
+
+		//
 		proxyClient.playerUpdated(player);
 	}
 
@@ -238,8 +238,8 @@ public class TableDialog extends JDialog implements Client {
 				// boardPanel.setMessage(String.format("%s %s.", name, action.getVerb()));
 				if (player.getClient() != this) {
 					// boardPanel.waitForUserInput();
-					
-//					
+
+					//
 					proxyClient.playerActed(player);
 				}
 			}
@@ -262,8 +262,8 @@ public class TableDialog extends JDialog implements Client {
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		// boardPanel.setMessage("Please select an action:");
 		// return controlPanel.getUserInput(minBet, humanPlayer.getCash(), allowedActions);
-		
-//		
+
+		//
 		return proxyClient.act(minBet, currentBet, allowedActions);
 	}
 

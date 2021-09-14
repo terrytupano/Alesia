@@ -512,6 +512,9 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 					// TEntry ae = (TEntry) ((JComboBox) jcmp).getSelectedItem();
 					// val = ae.getKey();
 					val = ((TEntry) obj).getKey();
+					// new Supor for *null 
+					if("*null".equals(val))
+						val = null;
 				} else {
 					val = obj;
 				}
@@ -568,7 +571,7 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 		}
 	}
 
-	protected void addInputComponent(JComponent cmp, boolean required, boolean enable) {
+	public void addInputComponent(JComponent cmp, boolean required, boolean enable) {
 		String name = cmp.getName();
 		Preconditions.checkNotNull(name, "the component name can't be null");
 		addInputComponent(name, cmp, required, enable);

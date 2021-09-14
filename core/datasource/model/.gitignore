@@ -13,3 +13,6 @@
 /Bot.class
 /SimulatorClient.class
 /PreflopCards.class
+/ClientStatistics.class
+/ClientStatistic.class
+/SimulatorStatistic.class

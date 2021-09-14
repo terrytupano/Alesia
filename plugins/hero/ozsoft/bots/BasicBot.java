@@ -17,24 +17,37 @@
 
 package plugins.hero.ozsoft.bots;
 
+import java.text.*;
 import java.util.*;
 
+import org.javalite.activejdbc.*;
+
+import com.javaflair.pokerprophesier.api.card.*;
+
+import core.datasource.model.*;
 import plugins.hero.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.actions.*;
+import plugins.hero.utils.*;
 
 /**
- * Basic Texas Hold'em poker bot. <br />
- * <br />
+ * Auto mutable Alpha and Tau paremeters bot.
  * 
- * The current implementation acts purely on the bot's hole cards, based on the Chen formula, combined with a
- * configurable level of tightness (when to play or fold a hand ) and aggression (how much to bet or raise in case of
- * good cards or when bluffing). <br />
+ * Current implementation acts purely on the bot's hole cards, based on <code>Tau</code> parameter of Original preflop
+ * dsitribution. and <code>alpha</code> mutable parameter selection. Only <b>hero</b> ist allow to mutate every 100
+ * hands. All other players will be randomly created with random parameters.
+ * 
+ * <li>combined with a configurable level of tightness (when to play or fold a hand ) and aggression (how much to bet or
+ * raise in case of good cards or when bluffing). <br />
  * <br />
+ * </ul>
  * 
  * TODO:
  * <ul>
+ * <li>measurement of bad-luck biorhitmus</li>
+ * <li>measurement of bad-luck biorhitmus</li>
+ * 
  * <li>Improve basic bot AI</li>
  * <li>bluffing</li>
  * <li>consider board cards</li>
@@ -46,77 +59,17 @@ import plugins.hero.ozsoft.actions.*;
  */
 public class BasicBot extends Bot {
 
-	/** Tightness (0 = loose, 100 = tight). */
-	// 8
-	// 36
-	private final int tightness;
+	private static DateFormat dateFormat = DateFormat.getDateTimeInstance();
 
-	/** Betting aggression (0 = safe, 100 = aggressive). */
-	private final int aggression;
+	private int tau;
+	private int alpha;
+	private int hands = 0;
+	private int wins = 0;
 
-	/** Table type. */
-	private TableType tableType;
+	// private SimulatorClient heroClient;
+	private PreflopCardsModel cardsModel;
 
-	/** The hole cards. */
-	private UoAHand hand;
-
-	public BasicBot() {
-		this((int) (Math.random() * 100d), (int) (Math.random() * 100d));
-	}
-	/**
-	 * Constructor.
-	 * 
-	 * @param tightness The bot's tightness (0 = loose, 100 = tight).
-	 * @param aggression The bot's aggressiveness in betting (0 = careful, 100 = aggressive).
-	 */
-	public BasicBot(int tightness, int aggression) {
-		if (tightness < 0 || tightness > 100) {
-			throw new IllegalArgumentException("Invalid tightness setting");
-		}
-		if (aggression < 0 || aggression > 100) {
-			throw new IllegalArgumentException("Invalid aggression setting");
-		}
-
-		this.tightness = tightness; // 8
-		this.aggression = aggression; // 36
-	}
-
-	@Override
-	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
-		this.tableType = type;
-	}
-
-	@Override
-	public void messageReceived(String message) {
-		// Not implemented.
-	}
-
-	@Override
-	public void handStarted(Player dealer) {
-		hand = null;
-	}
-
-	@Override
-	public void actorRotated(Player actor) {
-		// Not implemented.
-	}
-
-	@Override
-	public void boardUpdated(UoAHand hand, int bet, int pot) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void playerUpdated(Player player) {
-		if (player.getHand().size() == NO_OF_HOLE_CARDS) {
-			this.hand = player.getHand();
-		}
-	}
-
-	@Override
-	public void playerActed(Player player) {
-		// Not implemented.
-	}
+	private String session;
 
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
@@ -125,9 +78,8 @@ public class BasicBot extends Bot {
 			// No choice, must check.
 			action = PlayerAction.CHECK;
 		} else {
-			double chenScore = Hero.getChenScore(hand);
-			double chenScoreToPlay = tightness * 0.2;
-			if ((chenScore < chenScoreToPlay)) {
+			// check hole card. NOT in tau range
+			if (!cardsModel.containsHand(myHole)) {
 				if (allowedActions.contains(PlayerAction.CHECK)) {
 					// Always check for free if possible.
 					action = PlayerAction.CHECK;
@@ -136,20 +88,59 @@ public class BasicBot extends Bot {
 					action = PlayerAction.FOLD;
 				}
 			} else {
-				// Good enough hole cards, play hand.
-				if ((chenScore - chenScoreToPlay) >= ((20.0 - chenScoreToPlay) / 2.0)) {
-					// Very good hole cards; bet or raise!
-					if (aggression == 0) {
-						// Never bet.
-						if (allowedActions.contains(PlayerAction.CALL)) {
-							action = PlayerAction.CALL;
-						} else {
-							action = PlayerAction.CHECK;
-						}
-					} else if (aggression == 100) {
-						// Always go all-in!
-						// FIXME: Check and bet/raise player's remaining cash.
-						int amount = (tableType == TableType.FIXED_LIMIT) ? minBet : 100 * minBet;
+				// range in tau. Bet or raise!
+				if (alpha == 0) {
+					// Never bet.
+					if (allowedActions.contains(PlayerAction.CALL)) {
+						action = PlayerAction.CALL;
+					} else {
+						action = PlayerAction.CHECK;
+					}
+				} else if (alpha == 100) {
+					// Always go all-in!
+					int amount = 100 * minBet;
+					if (allowedActions.contains(PlayerAction.BET)) {
+						action = new BetAction(amount);
+					} else if (allowedActions.contains(PlayerAction.RAISE)) {
+						action = new RaiseAction(amount);
+					} else if (allowedActions.contains(PlayerAction.CALL)) {
+						action = PlayerAction.CALL;
+					} else {
+						action = PlayerAction.CHECK;
+					}
+				} else {
+					// ------------------
+					// baseRange to comparation: a Ace High Straight Flush
+					double baseRank = 2970356d;
+					// baseRange to comparation: Three of a Kind, Eights
+					// int baseRank = 1115012;
+					double rank = (double) UoAHandEvaluator.rankHand(hand);
+					double preAlpha = rank / baseRank;
+
+					// danger implementation allow Hero to leva the battle based on the risck of the current hand. this
+					// implementation is linke whit agresion. meaning: more agresion, less care of posible danger.
+
+					double danger = (Double) Hero.getUoAEvaluation(myHole.toString(), communityHand.toString())
+							.get("2BetterThanMinePercent");
+
+					// test danger implenetation. delete the danger from available ammunitions
+					danger = danger / 100;
+					double cashToDanger = cash - (cash *danger);
+					
+					double a = (alpha / 50.0) * preAlpha * cash;
+
+					// simulation of triangular distribution: random Value from minBet to max allow for hand rank.
+					int amount = (int) (Math.random() * a);
+
+					// street check. if str >= FLOP and the minBet represent more that ranck factor, Fold
+					if (hand.size() > 2 && minBet > a) {
+						return PlayerAction.FOLD;
+					}
+
+					amount = amount < minBet ? minBet : amount;
+					// ------------------
+
+					if (currentBet < amount) {
 						if (allowedActions.contains(PlayerAction.BET)) {
 							action = new BetAction(amount);
 						} else if (allowedActions.contains(PlayerAction.RAISE)) {
@@ -160,41 +151,86 @@ public class BasicBot extends Bot {
 							action = PlayerAction.CHECK;
 						}
 					} else {
-						int amount = minBet;
-						if (tableType == TableType.NO_LIMIT) {
-							int betLevel = aggression / 20;
-							for (int i = 0; i < betLevel; i++) {
-								amount *= 2;
-							}
-						}
-						if (currentBet < amount) {
-							if (allowedActions.contains(PlayerAction.BET)) {
-								action = new BetAction(amount);
-							} else if (allowedActions.contains(PlayerAction.RAISE)) {
-								action = new RaiseAction(amount);
-							} else if (allowedActions.contains(PlayerAction.CALL)) {
-								action = PlayerAction.CALL;
-							} else {
-								action = PlayerAction.CHECK;
-							}
+						if (allowedActions.contains(PlayerAction.CALL)) {
+							action = PlayerAction.CALL;
 						} else {
-							if (allowedActions.contains(PlayerAction.CALL)) {
-								action = PlayerAction.CALL;
-							} else {
-								action = PlayerAction.CHECK;
-							}
+							action = PlayerAction.CHECK;
 						}
-					}
-				} else {
-					// Decent hole cards; check or call.
-					if (allowedActions.contains(PlayerAction.CHECK)) {
-						action = PlayerAction.CHECK;
-					} else {
-						action = PlayerAction.CALL;
 					}
 				}
 			}
 		}
 		return action;
+	}
+
+	@Override
+	public void actorRotated(Player actor) {
+		// Not implemented.
+	}
+
+	@Override
+	public void handStarted(Player dealer) {
+
+		//
+		// TODO: move to basic bot implemetation and assing a observationMethod parameterVariation
+		//
+		int delta = player.getCash() - prevCash;
+		super.handStarted(dealer);
+		if (!"Hero".equals(playerName))
+			return;
+
+		// wins = heroClient.getInteger("wins") == null ? 0 : heroClient.getInteger("wins");
+		wins = wins + delta;
+		// heroClient.set("wins", wins);
+		// hands = heroClient.getInteger("hands") == null ? 0 : heroClient.getInteger("hands");
+		hands++;
+		// heroClient.set("hands", hands);
+
+		// update DB
+		if (hands % 10 == 0) {
+			SimulatorStatistic statistic = SimulatorStatistic.findOrCreateIt("session", session, "measureName",
+					"tau Estimation");
+			statistic.set("hands", hands);
+			statistic.set("wins", wins);
+			statistic.set("tau", tau);
+			statistic.save();
+		}
+	}
+
+	@Override
+	public void messageReceived(String message) {
+		// Not implemented.
+	}
+	@Override
+	public void setPlayerName(String playerName) {
+		super.setPlayerName(playerName);
+
+		// Random values for villans
+		// tightness The bot's tightness (0 = tight, 100 = loose).
+		this.tau = (int) (Math.random() * 100d);
+		// aggression The bot's aggressiveness in betting (0.0 = careful, 2.0 = aggressive).
+		// this.alpha = (int) (Math.random() * 100d);
+
+		if ("Hero".equals(playerName)) {
+			LazyList<SimulatorStatistic> list = SimulatorStatistic.where("ORDER BY session DESC").limit(1);
+			tau = 5;
+			if (list.size() > 0) {
+				SimulatorStatistic statistic = list.get(0);
+				tau = statistic.getInteger("tau") == null ? 0 : statistic.getInteger("tau");
+				tau = tau == 100 ? 5 : tau + 5;
+				session = dateFormat.format(new Date());
+			}
+			// this.heroClient = SimulatorClient.first("playerName = ?", "Hero");
+			// this.alpha = heroClient.getInteger("alpha") == null ? 0 : heroClient.getInteger("alpha");
+			// this.tau = heroClient.getInteger("tau") == null ? 0 : heroClient.getInteger("tau");
+		}
+
+		// for all players
+		this.cardsModel = new PreflopCardsModel();
+		cardsModel.setPercentage(tau);
+
+		// FIX: temporal alpha = 25 ( 1/4 times less that equations say)
+		alpha = 25;
+
 	}
 }

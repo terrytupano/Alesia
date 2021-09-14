@@ -124,6 +124,57 @@ public class Hero extends TPlugin {
 		return sb.toString().trim();
 	}
 
+	/**
+	 * return a {@link Properties} object fill whit all data obtains using methods in {@link UoAHandEvaluator}. 
+	 * <ul>
+	 * <li>2BetterThanMinePercent: parameter contain the porcent of PreflopCards that are better that my Holecards
+	 * </ul>
+	 * 
+	 * @param holeCards - Hole Cards
+	 * @param comunityCards - Comunity cards
+	 * @return properties
+	 */
+	public static Properties getUoAEvaluation(String holeCards, String comunityCards) {
+		UoAHandEvaluator evaluator = new UoAHandEvaluator();
+		int handRank = UoAHandEvaluator.rankHand(new UoAHand(holeCards + " " + comunityCards));
+		UoAHand allCards = new UoAHand(holeCards + " " + comunityCards);
+
+		Properties prp = new Properties();
+		
+		// my hand evaluation
+		if (!holeCards.equals("")) {
+			prp.put("rank", handRank);
+			prp.put("name", UoAHandEvaluator.nameHand(allCards));
+			prp.put("bestOf5Cards", evaluator.getBest5CardHand(allCards));
+		}
+
+		// board evaluation
+		if (!comunityCards.equals("")) {
+			int count = 0;
+			int total = 0;
+			ArrayList<UoAHand> list = new ArrayList<>();
+			int[][] rowcol = evaluator.getRanks(new UoAHand(comunityCards));
+			for (int i = 0; i < 52; i++) {
+				for (int j = 0; j < 52; j++) {
+					if (rowcol[i][j] > 0)
+						total++;
+					if (handRank < rowcol[i][j]) {
+						count++;
+						// FIXME: this list don.t take into account my hole cards. incorporate cards elimination from
+						// the list where i already habe those cards
+						list.add(new UoAHand((new UoACard(i)).toString() + " " + (new UoACard(j)).toString()));
+					}
+				}
+			}
+			double per = ((int) ((count / (total * 1.0)) * 10000)) / 100.0;
+			prp.put("2BetterThanMineOf", total);
+			prp.put("2BetterThanMineCount", count);
+			prp.put("2BetterThanMinePercent", per);
+			prp.put("2BetterThanMinelist", list);
+		}
+		return prp;
+	}
+
 	public static String parseHands(List<UoAHand> hands) {
 		String hs = hands.toString();
 		hs = hs.replaceAll("[ ]", "");
@@ -244,7 +295,6 @@ public class Hero extends TPlugin {
 				return null;
 			}
 
-			startDate = new Date();
 			Map<String, Object> values = trooperPanel.getValues();
 			LazyList<SimulatorClient> clients = SimulatorClient.findAll();
 
@@ -255,7 +305,7 @@ public class Hero extends TPlugin {
 			Table table = new Table(TableType.NO_LIMIT, buyIn, bb);
 			for (SimulatorClient client : clients) {
 				if (client.getBoolean("isActive")) {
-					String name = client.getString("name");
+					String name = client.getString("playerName");
 					String bCls = client.getString("client");
 					Class cls = Class.forName("plugins.hero.ozsoft.bots." + bCls);
 					// Constructor cons = cls.getConstructor(String.class);
@@ -268,7 +318,7 @@ public class Hero extends TPlugin {
 					table.addPlayer(p);
 				}
 			}
-			table.setSpeed(100);
+			table.setSpeed(0);
 			table.setSimulationsHand(100000);
 			table.whenPlayerLose(true, Table.REFILL);
 			table.whenPlayerLose(false, Table.REFILL);

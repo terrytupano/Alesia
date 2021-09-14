@@ -259,10 +259,9 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * FIXME: incomplete implementation
+	 * FIXME: use {@link Hero#getUoAEvaluation(String, String)} instead
 	 * 
 	 * @return
-	 */
 	public int getDanger() {
 		String communitiC = communityCards.toString().replace(",", " ");
 		String myhand = myHandHelper.getHand().toString().split("[:]")[1].replace(",", " ");
@@ -295,6 +294,7 @@ public class PokerSimulator {
 		}
 		return cards.size();
 	}
+	 */
 
 	public int getHandPotential() {
 		return handPotential;

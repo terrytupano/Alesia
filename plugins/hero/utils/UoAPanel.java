@@ -29,7 +29,6 @@ import gui.*;
 import plugins.hero.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.UoALoky.util.*;
-import plugins.hero.ozsoft.bots.*;
 
 /**
  * panel with UI components to test {@link UoAHandEvaluator} capabilities
@@ -136,16 +135,14 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 
 		console.append("Hole cards: " + holeCards + " Comunity cards: " + comunityCards + "\n");
 
-		UoAHandEvaluator evaluator = new UoAHandEvaluator();
-		int handRank = UoAHandEvaluator.rankHand(new UoAHand(holeCards + " " + comunityCards));
-		UoAHand allCards = new UoAHand(holeCards + " " + comunityCards);
+		Properties properties = Hero.getUoAEvaluation(holeCards, comunityCards);
 
 		// my hand evaluation
 		if (!holeCards.equals("")) {
 			console.append("\nMy hand evaluation:\n");
-			console.append("Rank: " + handRank + "\n");
-			console.append("Name: " + UoAHandEvaluator.nameHand(allCards) + "\n");
-			console.append("Best: " + evaluator.getBest5CardHand(allCards) + "\n");
+			console.append("Rank: " + properties.get("rank") + "\n");
+			console.append("Name: " + properties.get("name") + "\n");
+			console.append("Best: " + properties.get("bestOf5Cards") + "\n");
 		}
 
 		// Chen score
@@ -155,26 +152,15 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 
 		// board evaluation
 		if (!comunityCards.equals("")) {
-			int count = 0;
-			int total = 0;
-			ArrayList<UoAHand> top10 = new ArrayList<>();
-			int[][] rowcol = evaluator.getRanks(new UoAHand(comunityCards));
-			for (int i = 0; i < 52; i++) {
-				for (int j = 0; j < 52; j++) {
-					if (rowcol[i][j] > 0)
-						total++;
-					if (handRank < rowcol[i][j]) {
-						count++;
-						top10.add(new UoAHand((new UoACard(i)).toString() + " " + (new UoACard(j)).toString()));
-					}
-				}
-			}
-			double per = ((int) ((count / (total * 1.0)) * 10000)) / 100.0;
 			console.append("\nBoard evaluation:\n");
-			console.append("2 cards better that my Hole cards: " + count + " of " + total + " (" + per + "%)\n");
-			String examp = Hero.parseHands(top10.subList(0, Math.min(top10.size(), 10)));
+			console.append("2 cards better that my Hole cards: " + properties.get("2BetterThanMineCount") + " of "
+					+ properties.get("2BetterThanMineOf") + " (" + properties.get("2BetterThanMinePercent") + "%)\n");
+
+			ArrayList<UoAHand> list = (ArrayList<UoAHand>) properties.get("2BetterThanMinelist");
+			// String examp = Hero.parseHands(top10.subList(0, Math.min(top10.size(), 10)));
+			String examp = Hero.parseHands(list.subList(0, Math.min(list.size(), 20)));
 			// examp = Hero.parseToUnicode(examp);
-			console.append("examples: " + examp + "\n");
+			console.append("Examples: " + examp + "\n");
 		}
 	}
 

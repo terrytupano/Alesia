@@ -95,7 +95,7 @@ public class ExtendedJLabel extends JLabel {
 	 */
 	public void setValue(Object v) {
 		this.value = v;
-		String f_value = value.toString();
+		String f_value = value == null ? "" : value.toString();
 		setHorizontalAlignment(LEFT);
 
 //		// si o no

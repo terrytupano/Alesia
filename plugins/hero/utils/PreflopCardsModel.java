@@ -63,7 +63,8 @@ public class PreflopCardsModel {
 		this.preflopCards = PreflopCards.where("rangeName = '" + rangeName + "' ORDER BY ev DESC");
 		if (preflopCards.size() == 0) {
 			this.preflopCards = PreflopCards.where("rangeName = 'original' ORDER BY ev DESC");
-			preflopCards.forEach(card -> card.set("selected", false, "winnigs", 0, "hits", 0, "ev", 0.0));
+			preflopCards.forEach(card -> card.set("rangeName", rangeName, "description", rangeName, "percentage", 0,
+					"selected", false, "wins", 0, "hands", 0, "ev", 0.0));
 		}
 		this.percentage = preflopCards.get(0).getInteger("percentage");
 	}
@@ -109,6 +110,16 @@ public class PreflopCardsModel {
 	public boolean containsHand(UoACard c1, UoACard c2) {
 		String card = getStringCard(c1, c2);
 		return isSelected(card);
+	}
+
+	/**
+	 * perform {@link #containsHand(UoACard, UoACard)} whit the first 2 cards of this Hand. (in theory, the hole hand)
+	 * 
+	 * @param aHand - hand
+	 * @return true if the specified hand is selected in this range, false otherwise.
+	 */
+	public boolean containsHand(UoAHand aHand) {
+		return containsHand(aHand.getCard(1), aHand.getCard(2));
 	}
 
 	/**
@@ -256,13 +267,13 @@ public class PreflopCardsModel {
 		// range.set("description", description);
 		range.set("percentage", getPercentage());
 		range.set("selected", isSelected(card));
-		int win = range.getInteger("winnigs") == null ? 0 : range.getInteger("winnigs");
-		range.set("winnigs", win + ammount);
-		int h = range.getInteger("hits") == null ? 0 : range.getInteger("hits");
-		range.set("hits", ++h);
-		double winD = range.getInteger("winnigs").doubleValue();
-		double hitsD = range.getInteger("hits").doubleValue();
-		range.setDouble("ev", winD / hitsD);
+		int win = range.getInteger("wins") == null ? 0 : range.getInteger("wins");
+		range.set("wins", win + ammount);
+		int h = range.getInteger("hands") == null ? 0 : range.getInteger("hands");
+		range.set("hands", ++h);
+		double winD = range.getInteger("wins").doubleValue();
+		double handsD = range.getInteger("hands").doubleValue();
+		range.setDouble("ev", winD / handsD);
 
 		range.save();
 	}

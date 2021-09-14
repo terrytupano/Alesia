@@ -139,7 +139,7 @@ public class TEntry<K, V> implements Entry<K, V>, java.io.Serializable, Comparab
 	 */
 	public String toString() {
 		// return key + "=" + value;
-		return value.toString();
+		return value == null ? "" : value.toString();
 	}
 
 	@Override

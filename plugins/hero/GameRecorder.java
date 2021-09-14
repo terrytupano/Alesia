@@ -2,8 +2,6 @@ package plugins.hero;
 
 import java.util.*;
 
-import core.*;
-
 /**
  * This class record the game secuence and store the result in the games db file. instance of this class are dispached
  * when is the trooper turns to fight. all sensor information are stored inside of this class and this class silent

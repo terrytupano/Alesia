@@ -33,21 +33,8 @@ import plugins.hero.ozsoft.actions.*;
  */
 public class DummyBot extends Bot {
 
-	public DummyBot() {
-
-	}
 	@Override
 	public void messageReceived(String message) {
-		// Not implemented.
-	}
-
-	@Override
-	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
-		// Not implemented.
-	}
-
-	@Override
-	public void handStarted(Player dealer) {
 		// Not implemented.
 	}
 
@@ -57,17 +44,7 @@ public class DummyBot extends Bot {
 	}
 
 	@Override
-	public void playerUpdated(Player player) {
-		// Not implemented.
-	}
-
-	@Override
 	public void boardUpdated(UoAHand hand, int bet, int pot) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void playerActed(Player player) {
 		// Not implemented.
 	}
 

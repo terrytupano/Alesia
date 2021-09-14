@@ -89,7 +89,10 @@ public class TAbstractTableModel extends AbstractTableModel {
 	public Class getColumnClass(int idx) {
 		String atn = attributeNames.get(idx);
 		Model m = lazyList.get(0);
-		return m.get(atn).getClass();
+		Object obj = m.get(atn);
+//		if (obj == null)
+//			System.out.println("TAbstractTableModel.getColumnClass()");
+		return obj == null ? Object.class : obj.getClass();
 	}
 
 	@Override
