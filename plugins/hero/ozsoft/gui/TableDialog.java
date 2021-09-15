@@ -175,8 +175,14 @@ public class TableDialog extends JDialog implements Client {
 
 	@Override
 	public void messageReceived(String message) {
+//		String msg = message.startsWith("New hand,") ? message : "\t" + message;
+		String msg = message.startsWith("New match,") ? message : "    " + message;
 		outConsole.append(message + "\n");
 		// boardPanel.waitForUserInput();
+
+		// TODO: temporal. this message muss be logged
+		if (table.getSpeed() == 0)
+			System.out.println(msg);
 
 		//
 		proxyClient.messageReceived(message);
@@ -235,11 +241,11 @@ public class TableDialog extends JDialog implements Client {
 			playerPanel.update(player);
 			PlayerAction action = player.getAction();
 			if (action != null) {
-				// boardPanel.setMessage(String.format("%s %s.", name, action.getVerb()));
-				if (player.getClient() != this) {
+				// detail message for every action
+				messageReceived(String.format("%s %s.", name, action.getVerb()));
+//				boardPanel.setMessage(String.format("%s %s.", name, action.getVerb()));
+				if (player.getClient() == this) {
 					// boardPanel.waitForUserInput();
-
-					//
 					proxyClient.playerActed(player);
 				}
 			}

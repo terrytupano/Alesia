@@ -279,6 +279,17 @@ public class PreflopCardsModel {
 	}
 
 	/**
+	 * call {@link #getEV(String)} parsing the string representation from this hand
+	 * 
+	 * @param aHand - a hand contain hole cards
+	 * 
+	 * @return ev
+	 */
+	public double getEV(UoAHand aHand) {
+		return getEV(getStringCard(aHand.getCard(1), aHand.getCard(2)));
+	}
+
+	/**
 	 * return the stored EV from the cards pass as argument.
 	 * 
 	 * @param cards - cards in preflop format (AA, AKs, ...)

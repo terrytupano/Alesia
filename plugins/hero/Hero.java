@@ -311,7 +311,7 @@ public class Hero extends TPlugin {
 					// Constructor cons = cls.getConstructor(String.class);
 					// Bot bot = (Bot) cons.newInstance(name);
 					Bot bot = (Bot) cls.newInstance();
-					bot.setPlayerName(name);
+					bot.messageReceived("PlayerName="+name);
 					bot.setObservationMethod(client.getString("observationMethod"));
 					bot.setPokerSimulator(simulator);
 					Player p = new Player(name, buyIn, bot);

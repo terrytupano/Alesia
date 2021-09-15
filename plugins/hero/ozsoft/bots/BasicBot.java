@@ -17,19 +17,15 @@
 
 package plugins.hero.ozsoft.bots;
 
-import java.text.*;
 import java.util.*;
 
 import org.javalite.activejdbc.*;
-
-import com.javaflair.pokerprophesier.api.card.*;
 
 import core.datasource.model.*;
 import plugins.hero.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.actions.*;
-import plugins.hero.utils.*;
 
 /**
  * Auto mutable Alpha and Tau paremeters bot.
@@ -59,18 +55,6 @@ import plugins.hero.utils.*;
  */
 public class BasicBot extends Bot {
 
-	private static DateFormat dateFormat = DateFormat.getDateTimeInstance();
-
-	private int tau;
-	private int alpha;
-	private int hands = 0;
-	private int wins = 0;
-
-	// private SimulatorClient heroClient;
-	private PreflopCardsModel cardsModel;
-
-	private String session;
-
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		PlayerAction action = null;
@@ -79,7 +63,7 @@ public class BasicBot extends Bot {
 			action = PlayerAction.CHECK;
 		} else {
 			// check hole card. NOT in tau range
-			if (!cardsModel.containsHand(myHole)) {
+			if (!preflopCardsModel.containsHand(myHole)) {
 				if (allowedActions.contains(PlayerAction.CHECK)) {
 					// Always check for free if possible.
 					action = PlayerAction.CHECK;
@@ -117,17 +101,34 @@ public class BasicBot extends Bot {
 					double rank = (double) UoAHandEvaluator.rankHand(hand);
 					double preAlpha = rank / baseRank;
 
-					// danger implementation allow Hero to leva the battle based on the risck of the current hand. this
-					// implementation is linke whit agresion. meaning: more agresion, less care of posible danger.
+					// TODO: check Poker Expected Value (EV) Formula: EV = (%W * $W) – (%L * $L)
+					// https://www.splitsuit.com/simple-poker-expected-value-formula
 
+					/**
+					 * danger implementation allow Hero to leave the battle based on the risck of the current hand. this
+					 * implementation is linked whit agresion. meaning: more agresion, less care of posible danger.
+					 */
+					cash = player.getCash();
 					double danger = (Double) Hero.getUoAEvaluation(myHole.toString(), communityHand.toString())
-							.get("2BetterThanMinePercent");
-
-					// test danger implenetation. delete the danger from available ammunitions
+							.getOrDefault("2BetterThanMinePercent", 0.0);
 					danger = danger / 100;
-					double cashToDanger = cash - (cash *danger);
-					
-					double a = (alpha / 50.0) * preAlpha * cash;
+					double cashToDanger = cash * danger;
+
+					/**
+					 * pp implementation: this constant muss expres th number of BB allow to pull or pusch
+					 * implementation. (maxx recon ammunitions). this implemntation read th EV value from
+					 * preflopdistribution and compute the inverse of danger (positive EV, hat -danger value). diferenty
+					 * of normal danger after preflop. preflop danger is incremental. meaning every previous call/bet
+					 * increaase the chanse of Fold
+					 */
+					int pp = 10;
+					if (hand.size() == 2) {
+						double ev = preflopCardsModel.getEV(myHole);
+						double base = (pp * bigBlind) * ev;
+						cashToDanger = matchCost - base;
+					}
+
+					double a = ((alpha / 50.0) * preAlpha * cash) - cashToDanger;
 
 					// simulation of triangular distribution: random Value from minBet to max allow for hand rank.
 					int amount = (int) (Math.random() * a);
@@ -166,71 +167,5 @@ public class BasicBot extends Bot {
 	@Override
 	public void actorRotated(Player actor) {
 		// Not implemented.
-	}
-
-	@Override
-	public void handStarted(Player dealer) {
-
-		//
-		// TODO: move to basic bot implemetation and assing a observationMethod parameterVariation
-		//
-		int delta = player.getCash() - prevCash;
-		super.handStarted(dealer);
-		if (!"Hero".equals(playerName))
-			return;
-
-		// wins = heroClient.getInteger("wins") == null ? 0 : heroClient.getInteger("wins");
-		wins = wins + delta;
-		// heroClient.set("wins", wins);
-		// hands = heroClient.getInteger("hands") == null ? 0 : heroClient.getInteger("hands");
-		hands++;
-		// heroClient.set("hands", hands);
-
-		// update DB
-		if (hands % 10 == 0) {
-			SimulatorStatistic statistic = SimulatorStatistic.findOrCreateIt("session", session, "measureName",
-					"tau Estimation");
-			statistic.set("hands", hands);
-			statistic.set("wins", wins);
-			statistic.set("tau", tau);
-			statistic.save();
-		}
-	}
-
-	@Override
-	public void messageReceived(String message) {
-		// Not implemented.
-	}
-	@Override
-	public void setPlayerName(String playerName) {
-		super.setPlayerName(playerName);
-
-		// Random values for villans
-		// tightness The bot's tightness (0 = tight, 100 = loose).
-		this.tau = (int) (Math.random() * 100d);
-		// aggression The bot's aggressiveness in betting (0.0 = careful, 2.0 = aggressive).
-		// this.alpha = (int) (Math.random() * 100d);
-
-		if ("Hero".equals(playerName)) {
-			LazyList<SimulatorStatistic> list = SimulatorStatistic.where("ORDER BY session DESC").limit(1);
-			tau = 5;
-			if (list.size() > 0) {
-				SimulatorStatistic statistic = list.get(0);
-				tau = statistic.getInteger("tau") == null ? 0 : statistic.getInteger("tau");
-				tau = tau == 100 ? 5 : tau + 5;
-				session = dateFormat.format(new Date());
-			}
-			// this.heroClient = SimulatorClient.first("playerName = ?", "Hero");
-			// this.alpha = heroClient.getInteger("alpha") == null ? 0 : heroClient.getInteger("alpha");
-			// this.tau = heroClient.getInteger("tau") == null ? 0 : heroClient.getInteger("tau");
-		}
-
-		// for all players
-		this.cardsModel = new PreflopCardsModel();
-		cardsModel.setPercentage(tau);
-
-		// FIX: temporal alpha = 25 ( 1/4 times less that equations say)
-		alpha = 25;
-
 	}
 }

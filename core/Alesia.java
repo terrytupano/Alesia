@@ -126,7 +126,7 @@ public class Alesia extends Application {
 	public void openDB(String name) {
 //		if the database is allready open, do nothig
 		List<String> conNames = DB.getCurrrentConnectionNames();
-		if (conNames.contains("name"))
+		if (conNames.contains(name))
 			return;
 
 		Properties orgPrp = getDBProperties();

@@ -104,9 +104,14 @@ public class Table extends Task {
 	private int raises;
 
 	/** valid action when a villan or hero loose the battle */
+	/** End the simulation. */
 	public static String GAME_OVER = "gameOver";
+	/** Refill the player chips artificialy allowing the simulation to continue */
 	public static String REFILL = "refill";
+	/** The simulation continue to the end. */
 	public static String DO_NOTHING = "doNothing";
+	/** Restart the hole table. */
+	public static String RESTAR = "reStar";
 
 	private int buyIn;
 	private Player heroPlayer;
@@ -129,7 +134,7 @@ public class Table extends Task {
 		speed = 100;
 		simulationsHand = 0;
 	}
-	
+
 	/**
 	 * Adds a player.
 	 * 
@@ -218,7 +223,7 @@ public class Table extends Task {
 			board.addCard(deck.deal());
 		}
 		notifyPlayersUpdated(false);
-		// notifyMessage("%s deals the %s.", dealer, phaseName);
+		notifyMessage("%s deals the %s.", dealer, phaseName);
 	}
 
 	/**
@@ -232,7 +237,7 @@ public class Table extends Task {
 			player.setCards(cs);
 		}
 		notifyPlayersUpdated(false);
-		// notifyMessage("%s deals the hole cards.", dealer);
+		notifyMessage("%s deals the hole cards.", dealer);
 	}
 
 	/**
@@ -349,7 +354,7 @@ public class Table extends Task {
 						int amount = getTotalPot();
 						winner.win(amount);
 						notifyBoardUpdated();
-						notifyMessage("%s wins $ %d.", winner, amount);
+						notifyMessage("%s wins %d.", winner, amount);
 						playersToAct = 0;
 					}
 				} else {
@@ -613,7 +618,7 @@ public class Table extends Task {
 		try {
 			Thread.sleep(speed);
 		} catch (Exception e) {
-			// TODO: handle exception
+			// do nothing
 		}
 	}
 	/**
@@ -753,7 +758,7 @@ public class Table extends Task {
 			player.getClient().handStarted(dealer);
 		}
 		notifyPlayersUpdated(false);
-		notifyMessage("New hand, %s is the dealer.", dealer);
+		notifyMessage("New match, %s is the dealer.", dealer);
 	}
 	/**
 	 * Rotates the position of the player in turn (the actor).
@@ -801,11 +806,12 @@ public class Table extends Task {
 						if (REFILL.equals(actionWhenHeroLose) || REFILL.equals(actionWhenVillanLose)) {
 							String msg = player.getName() + " lost the battle. Refilling with " + buyIn;
 							notifyMessage(msg);
-							System.out.println(msg);
-
-							// TODO: discard this player and create a new player that join the table. artificialy set a
-							// value in win method will affect the statistics of GameObserver
 							player.win(buyIn);
+						}
+						if (RESTAR.equals(actionWhenHeroLose) || RESTAR.equals(actionWhenVillanLose)) {
+							String msg = player.getName() + " lost the battle. Restartting the hole table.";
+							notifyMessage(msg);
+							notifyMessage(RESTAR);
 						}
 					}
 				}
@@ -848,9 +854,6 @@ public class Table extends Task {
 
 	/**
 	 * set the action that the simulation will perform if a player loose the battle.
-	 * <li>{@link #GAME_OVER} - end the simulation
-	 * <li>{@link #REFILL} - Refill the player chips artificialy
-	 * <li>{@link #DO_NOTHING} - the simulation continue
 	 * 
 	 * @param forHero - <code>true</code> if the action is intended for Hero <code>false</code> the action is for any
 	 *        villan.
