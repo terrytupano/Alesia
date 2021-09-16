@@ -33,13 +33,12 @@ package dev;
 
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
 import javax.swing.text.*;
 
 import com.alee.laf.*;
 import com.alee.managers.style.*;
-import com.alee.skin.dark.*;
-import com.alee.utils.*;
 
 import core.*;
 

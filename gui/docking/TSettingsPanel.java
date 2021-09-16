@@ -2,8 +2,6 @@ package gui.docking;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.lang.annotation.*;
-import java.util.*;
 
 import javax.swing.*;
 

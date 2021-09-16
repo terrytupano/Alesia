@@ -39,6 +39,7 @@ public abstract class Bot implements Client {
 
 	/** Number of hole cards. */
 	protected static final int NO_OF_HOLE_CARDS = 2;
+	private static DateFormat dateFormat = DateFormat.getDateTimeInstance();
 	protected PokerSimulator pokerSimulator;
 	protected Player player;
 	protected List<Player> villans;
@@ -48,13 +49,13 @@ public abstract class Bot implements Client {
 	protected int buyIn;
 	protected String playerName;
 	protected String observationMethod;
+
 	protected UoAHand myHole, communityHand, hand;
 
 	/** cash that the player had when the hand start */
 	protected int prevCash;
-
-	protected int match = 0;
-	protected int wins = 0;
+	
+	private int wins = 0;
 
 	/** track the number of simulated hands */
 	protected int numOfMatch = 0;
@@ -68,42 +69,21 @@ public abstract class Bot implements Client {
 	/** the PreflopCardsModel ussed by this client */
 	protected PreflopCardsModel preflopCardsModel;
 
-	@Override
-	public void handStarted(Player dealer) {
-		matchCost = prevCash - player.getCash();
-	}
+	protected int playerWins;
+	protected int tau;
+	protected int alpha;
 
-	private void performObservation() {
-		// TODO: all observacion method implement only for hero
-		if (!"Hero".equals(playerName))
-			return;
-
-		if ("parameterVariation".equals(observationMethod) && myHole.size() != 0) {
-			wins = wins + playerWins;
-			if (numOfMatch % 100 == 0) {
-				Alesia.getInstance().openDB("hero");
-				SimulatorStatistic statistic = SimulatorStatistic.findOrCreateIt("session", session, "measureName",
-						"tau Estimation");
-				statistic.set("hands", numOfMatch);
-				statistic.set("wins", wins);
-				// statistic.set("tau", tau);
-				statistic.save();
-			}
-		}
-
-		if ("preFlopConvergency".equals(observationMethod) && myHole.size() != 0) {
-			// TODO:
-			// preflopCardsModel.updateCoordenates(myHole.getCard(1), myHole.getCard(2), delta);
-		}
-
-	}
 	@Override
 	public void boardUpdated(UoAHand hand, int bet, int pot) {
 		this.communityHand = hand;
 		this.hand = new UoAHand(myHole.toString() + " " + hand.toString());
 		this.pot = pot + bet;
 	}
-	private static DateFormat dateFormat = DateFormat.getDateTimeInstance();
+
+	@Override
+	public void handStarted(Player dealer) {
+
+	}
 
 	@Override
 	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
@@ -116,8 +96,6 @@ public abstract class Bot implements Client {
 		this.myHole = new UoAHand();
 		this.prevCash = buyIn;
 	}
-
-	protected int playerWins;
 
 	@Override
 	public void messageReceived(String message) {
@@ -139,19 +117,37 @@ public abstract class Bot implements Client {
 		if (message.startsWith("New match,")) {
 			performObservation();
 			prevCash = player.getCash();
+			matchCost = 0;
 			numOfMatch++;
 		}
 	}
-
-	protected int tau;
-	protected int alpha;
-
-	private void initPreFlopConvergency() {
-		Alesia.getInstance().openDB("hero");
-		// fail save: preFlopConvergency allow only for hero (temporal maybe)
-		if ("preFlopConvergency".equals(observationMethod) && "Hero".equals(playerName)) {
-			this.preflopCardsModel = new PreflopCardsModel("preFlopConvergency");
+	@Override
+	public void playerActed(Player player) {
+		if (playerName.equals(player.getName())) {
+			matchCost = prevCash - player.getCash();
+//			System.out.println(playerName + " " + matchCost);
 		}
+		// Not implemented.
+	}
+
+	@Override
+	public void playerUpdated(Player player) {
+		if (playerName.equals(player.getName()) && player.getHand().size() == NO_OF_HOLE_CARDS) {
+			this.myHole = player.getHand();
+		}
+	}
+
+	/**
+	 * set the observation method for this Bot.
+	 * 
+	 * @param observationMethod - the observation method
+	 */
+	public void setObservationMethod(String observationMethod) {
+		this.observationMethod = observationMethod;
+	}
+
+	public void setPokerSimulator(PokerSimulator pokerSimulator) {
+		this.pokerSimulator = pokerSimulator;
 	}
 
 	private void initParameterVariation() {
@@ -175,34 +171,42 @@ public abstract class Bot implements Client {
 		this.preflopCardsModel = new PreflopCardsModel("original");
 		preflopCardsModel.setPercentage(tau);
 
-		// FIX: temporal alpha = 25 ( 1/4 times less that equations say)
-		alpha = 25;
+		// FIX: temporal alpha = 25 ( 1/2 times less that equations say)
+		// FIX: temporal alpha = 50 zero initiative. Hero do exactly what ammunition control say
+		alpha = 50;
 
 	}
 
-	@Override
-	public void playerActed(Player player) {
-		System.out.println("Bot.playerActed()");
-		// Not implemented.
-	}
-
-	@Override
-	public void playerUpdated(Player player) {
-		if (playerName.equals(player.getName()) && player.getHand().size() == NO_OF_HOLE_CARDS) {
-			this.myHole = player.getHand();
+	private void initPreFlopConvergency() {
+		Alesia.getInstance().openDB("hero");
+		// fail save: preFlopConvergency allow only for hero (temporal maybe)
+		if ("preFlopConvergency".equals(observationMethod) && "Hero".equals(playerName)) {
+			this.preflopCardsModel = new PreflopCardsModel("preFlopConvergency");
 		}
 	}
 
-	/**
-	 * set the observation method for this Bot.
-	 * 
-	 * @param observationMethod - the observation method
-	 */
-	public void setObservationMethod(String observationMethod) {
-		this.observationMethod = observationMethod;
-	}
+	private void performObservation() {
+		// TODO: all observacion method implement only for hero
+		if (!"Hero".equals(playerName))
+			return;
 
-	public void setPokerSimulator(PokerSimulator pokerSimulator) {
-		this.pokerSimulator = pokerSimulator;
+		if ("parameterVariation".equals(observationMethod)) {
+			wins = wins + playerWins;
+			if (numOfMatch % 100 == 0) {
+				Alesia.getInstance().openDB("hero");
+				SimulatorStatistic statistic = SimulatorStatistic.findOrCreateIt("session", session, "measureName",
+						"tau Estimation");
+				statistic.set("hands", numOfMatch);
+				statistic.set("wins", wins);
+				// statistic.set("tau", tau);
+				statistic.save();
+			}
+		}
+
+		if ("preFlopConvergency".equals(observationMethod) && myHole.size() != 0) {
+			// TODO:
+			// preflopCardsModel.updateCoordenates(myHole.getCard(1), myHole.getCard(2), delta);
+		}
+
 	}
 }
