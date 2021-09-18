@@ -266,14 +266,9 @@ public class Table extends Task {
 		notifyBoardUpdated();
 
 		while (playersToAct > 0) {
-			try {
-				Thread.sleep(speed);
-				// pause ?
-				if (paused) {
-					continue;
-				}
-			} catch (Exception e) {
-
+			// pause ?
+			if (paused) {
+				continue;
 			}
 
 			rotateActor();
@@ -348,6 +343,8 @@ public class Table extends Task {
 					actorPosition--;
 					if (activePlayers.size() == 1) {
 						// Only one player left, so he wins the entire pot.
+						// <<<<<<<<<<<
+						actor.setAction(action);
 						notifyBoardUpdated();
 						notifyPlayerActed();
 						Player winner = activePlayers.get(0);
@@ -534,7 +531,7 @@ public class Table extends Task {
 			if (winnerText.length() > 0) {
 				winnerText.append(", ");
 			}
-			winnerText.append(String.format("%s wins $ %d", winner, potShare));
+			winnerText.append(String.format("%s wins %d", winner, potShare));
 			notifyPlayersUpdated(true);
 		}
 		winnerText.append('.');
@@ -614,11 +611,6 @@ public class Table extends Task {
 		message = String.format(message, args);
 		for (Player player : players) {
 			player.getClient().messageReceived(message);
-		}
-		try {
-			Thread.sleep(speed);
-		} catch (Exception e) {
-			// do nothing
 		}
 	}
 	/**
@@ -805,13 +797,17 @@ public class Table extends Task {
 						}
 						if (REFILL.equals(actionWhenHeroLose) || REFILL.equals(actionWhenVillanLose)) {
 							String msg = player.getName() + " lost the battle. Refilling with " + buyIn;
-							notifyMessage(msg);
-							player.win(buyIn);
+							notifyMessage(REFILL + ": " + msg);
+							player.setCash(buyIn);
 						}
 						if (RESTAR.equals(actionWhenHeroLose) || RESTAR.equals(actionWhenVillanLose)) {
 							String msg = player.getName() + " lost the battle. Restartting the hole table.";
 							notifyMessage(msg);
-							notifyMessage(RESTAR);
+//							send notification to the clients so they can init the values
+							notifyMessage(RESTAR + ": " + msg);
+							for (Player player2 : players) {
+								player2.setCash(buyIn);
+							}
 						}
 					}
 				}
@@ -847,7 +843,8 @@ public class Table extends Task {
 			Alesia.showNotification("hero.msg04", numOfHand);
 			notifyMessage("Game over.");
 		} catch (Exception e) {
-			e.printStackTrace();
+			if (!(e instanceof InterruptedException))
+				e.printStackTrace();
 		}
 		return null;
 	}

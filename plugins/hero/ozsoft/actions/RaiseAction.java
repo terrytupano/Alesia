@@ -24,20 +24,12 @@ package plugins.hero.ozsoft.actions;
  */
 public class RaiseAction extends PlayerAction {
 
-    /**
-     * Constructor.
-     * 
-     * @param amount
-     *            The amount to raise with.
-     */
-    public RaiseAction(int amount) {
-        super("Raise", "raises", amount);
-    }
-    
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return String.format("Raise(%d)", getAmount());
-    }
-    
+	/**
+	 * Constructor.
+	 * 
+	 * @param amount The amount to raise with.
+	 */
+	public RaiseAction(int amount) {
+		super("Raise", "raises " + amount, amount);
+	}
 }

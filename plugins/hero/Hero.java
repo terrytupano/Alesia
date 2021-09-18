@@ -320,11 +320,11 @@ public class Hero extends TPlugin {
 			}
 			table.setSpeed(0);
 			table.setSimulationsHand(100000);
-			table.whenPlayerLose(true, Table.REFILL);
-			table.whenPlayerLose(false, Table.REFILL);
+			table.whenPlayerLose(true, Table.RESTAR);
+			table.whenPlayerLose(false, Table.RESTAR);
 
 			TableDialog dialog = new TableDialog(table);
-
+			
 			// WARNING: this method is overrided!!!
 			dialog.setVisible(true);
 

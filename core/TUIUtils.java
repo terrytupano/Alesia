@@ -723,12 +723,12 @@ public class TUIUtils {
 
 	public static WebToggleButton getStartPauseToggleButton(Action action, ActionListener listener) {
 		WebToggleButton startPause = new WebToggleButton();
-		startPause.setSelectedIcon(TUIUtils.getSmallFontIcon('\ue034'));
+		startPause.setSelectedIcon(TUIUtils.getSmallFontIcon('\ue037'));
 		if (action != null) {
 			startPause.setAction(action);
 			overRideToolBarButton(startPause);
 		} else {
-			startPause.setIcon(TUIUtils.getSmallFontIcon('\ue037'));
+			startPause.setIcon(TUIUtils.getSmallFontIcon('\ue034'));
 		}
 		if (listener != null)
 			startPause.addActionListener(listener);

@@ -24,20 +24,12 @@ package plugins.hero.ozsoft.actions;
  */
 public class BetAction extends PlayerAction {
 
-    /**
-     * Constructor.
-     * 
-     * @param amount
-     *            The amount to bet.
-     */
-    public BetAction(int amount) {
-        super("Bet", "bets", amount);
-    }
-    
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return String.format("Bet(%d)", getAmount());
-    }
-    
+	/**
+	 * Constructor.
+	 * 
+	 * @param amount The amount to bet.
+	 */
+	public BetAction(int amount) {
+		super("Bet", "bets " + amount, amount);
+	}
 }

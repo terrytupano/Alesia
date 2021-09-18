@@ -58,147 +58,110 @@ public class BasicBot extends Bot {
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		PlayerAction action = null;
-		if (allowedActions.size() == 1) {
-			// No choice, must check.
-			action = PlayerAction.CHECK;
-		} else {
-			// check hole card. NOT in tau range
-			if (!preflopCardsModel.containsHand(myHole)) {
-				if (allowedActions.contains(PlayerAction.CHECK)) {
-					// Always check for free if possible.
-					action = PlayerAction.CHECK;
-				} else {
-					// Bad hole cards; play tight.
-					action = PlayerAction.FOLD;
-				}
+
+		// No choice, must check.
+		if (allowedActions.size() == 1)
+			return PlayerAction.CHECK;
+
+		// Bad hole cards; play tight. SEE tau parameter
+		if (!preflopCardsModel.containsHand(myHole)) {
+			return PlayerAction.FOLD;
+		}
+
+		/**
+		 * in order to try to unify rank and EV en preflop (not expresed in 0,1 range else as a factor of wins) the
+		 * upper bound of the base calculation will now be a factor from the top. the idea is after certain point, the
+		 * rank will be > 1. in original preflop distribution 39 of 168 (23,21%) preflopgrups haven ev>0
+		 */
+		// a Ace High Straight Flush
+		// double baseRank = 2970356d;
+
+		// 23,21% of a Ace High Straight Flush
+		double baseRank = 2280937d;
+
+		// a Full House, Twos over Threes
+		// double baseRank = 2227759d;
+
+		// baseRange to comparation: Three of a Kind, Eights
+		// int baseRank = 1115012;
+		double r = (double) UoAHandEvaluator.rankHand(hand);
+		double evHand = r / baseRank;
+		int S = -1;
+		S = hand.size() == 2 ? 2 : S; // pre-flop
+		S = hand.size() == 5 ? 3 : S; // flop
+		S = hand.size() == 6 ? 3 : S; // turn
+		S = hand.size() == 7 ? 1 : S; // river
+
+		// TODO: check Poker Expected Value (EV) Formula: EV = (%W * $W) – (%L * $L)
+		// https://www.splitsuit.com/simple-poker-expected-value-formula
+
+		double cash = (double) player.getCash();
+		double q = (Double) Hero.getUoAEvaluation(myHole.toString(), communityHand.toString())
+				.getOrDefault("2BetterThanMinePercent", 0.0);
+		q = q / 100;
+		double p = 1 - q;
+		double cashInDanger = cash * q;
+
+		/**
+		 * pp implementation: this constant muss expres th number of BB allow to pull or pusch implementation. (maxx
+		 * recon ammunitions). this implemntation read th EV value from preflopdistribution and compute the inverse of
+		 * danger (positive EV, hat -danger value). diferenty of normal danger after preflop. preflop danger is
+		 * incremental. meaning every previous call/bet increaase the chanse of Fold
+		 */
+
+		/**
+		 * ppMax represent the max number of ammo allow to expend to see the flop- when the preflop is good, this allos
+		 * multiples call/reise
+		 */
+		int ppMax = 20 * bigBlind;
+
+		/**
+		 * ppBase is a minimun allow to see the preflop. whe the ppMax * ev value are negative but not so far, ppBase
+		 * allow Hero to call a number of bb calls in order to se the flop. when another villa, try to steal the pot,
+		 * the the value of the equation is so negative thtat hero Fold
+		 */
+		int ppBase = 0;
+		if (hand.size() == 2) {
+			ppBase = 5 * bigBlind;
+			evHand = preflopCardsModel.getEV(myHole);
+			// cash = ppBase + ppMax * evHand;
+			cash = ppMax;
+			cashInDanger = matchCost;
+			// cashInDanger = matchCost;
+			q = 0.75;
+			p = 1 - q;
+		}
+
+		double ammo = ppBase + ((cash - cashInDanger) * evHand);
+
+		// if amunition control equation is less that minimun bet
+		if (minBet > ammo) {
+			return PlayerAction.FOLD;
+		}
+
+		double b = ammo + alpha * ammo; // agresive: b > 0
+		double c = alpha < 0 ? b : ammo; // K sugestions allways as upperbound
+		TriangularDistribution td = new TriangularDistribution(0, c, b);
+		int amount = (int) td.sample();
+
+		amount = amount < minBet ? minBet : amount;
+		// ------------------
+
+		if (currentBet < amount) {
+			if (allowedActions.contains(PlayerAction.BET)) {
+				action = new BetAction(amount);
+			} else if (allowedActions.contains(PlayerAction.RAISE)) {
+				action = new RaiseAction(amount);
+			} else if (allowedActions.contains(PlayerAction.CALL)) {
+				action = PlayerAction.CALL;
 			} else {
-				// range in tau. Bet or raise!
-				if (alpha == 0) {
-					// Never bet.
-					if (allowedActions.contains(PlayerAction.CALL)) {
-						action = PlayerAction.CALL;
-					} else {
-						action = PlayerAction.CHECK;
-					}
-				} else if (alpha == 100) {
-					// Always go all-in!
-					int amount = 100 * minBet;
-					if (allowedActions.contains(PlayerAction.BET)) {
-						action = new BetAction(amount);
-					} else if (allowedActions.contains(PlayerAction.RAISE)) {
-						action = new RaiseAction(amount);
-					} else if (allowedActions.contains(PlayerAction.CALL)) {
-						action = PlayerAction.CALL;
-					} else {
-						action = PlayerAction.CHECK;
-					}
-				} else {
-					// ------------------
-
-					/**
-					 * in order to try to unify rank and EV en preflop (not expresed in 0,1 range else as a factor of
-					 * wins) the upper bound of the base calculation will now be a factor from the top. the idea is
-					 * after certain point, the rank will be > 1. in original preflop distribution 39 of 168 (23,21%)
-					 * preflopgrups haven ev>0
-					 */
-					// a Ace High Straight Flush
-					// double baseRank = 2970356d;
-
-					// 23,21% of a Ace High Straight Flush
-					double baseRank = 2280937d;
-
-					// a Full House, Twos over Threes
-					// double baseRank = 2227759d;
-
-					// baseRange to comparation: Three of a Kind, Eights
-					// int baseRank = 1115012;
-					double r = (double) UoAHandEvaluator.rankHand(hand);
-					double evHand = r / baseRank;
-					int S = -1;
-					S = hand.size() == 2 ? 2 : S; // pre-flop
-					S = hand.size() == 5 ? 3 : S; // flop
-					S = hand.size() == 6 ? 3 : S; // turn
-					S = hand.size() == 7 ? 1 : S; // river
-
-					// TODO: check Poker Expected Value (EV) Formula: EV = (%W * $W) – (%L * $L)
-					// https://www.splitsuit.com/simple-poker-expected-value-formula
-
-					/**
-					 * danger implementation allow Hero to leave the battle based on the risck of the current hand. this
-					 * implementation is linked whit agresion. meaning: more agresion, less care of posible danger.
-					 */
-					double cash = (double) player.getCash();
-					double q = (Double) Hero.getUoAEvaluation(myHole.toString(), communityHand.toString())
-							.getOrDefault("2BetterThanMinePercent", 0.0);
-					q = q / 100;
-					double p = 1 - q;
-					double cashInDanger = cash * q;
-
-					/**
-					 * pp implementation: this constant muss expres th number of BB allow to pull or pusch
-					 * implementation. (maxx recon ammunitions). this implemntation read th EV value from
-					 * preflopdistribution and compute the inverse of danger (positive EV, hat -danger value). diferenty
-					 * of normal danger after preflop. preflop danger is incremental. meaning every previous call/bet
-					 * increaase the chanse of Fold
-					 */
-
-					/**
-					 * ppMax represent the max number of ammo allow to expend to see the flop- when the preflop is good,
-					 * this allos multiples call/reise
-					 */
-					int ppMax = 10 * bigBlind;
-
-					/**
-					 * ppBase is a minimun allow to see the preflop. whe the ppMax * ev value are negative but not so
-					 * far, ppBase allow Hero to call a number of bb calls in order to se the flop. when another villa,
-					 * try to steal the pot, the the value of the equation is so negative thtat hero Fold
-					 */
-					int ppBase = 1 * bigBlind;
-					if (hand.size() == 2) {
-						evHand = preflopCardsModel.getEV(myHole);
-						to implemetn Kelly remove preflop restrictions 
->>>>						cash = ppBase + ppMax * evHand;
-						cashInDanger = matchCost - cash;
-						q = 0.75;
-						p = 1 - q;
-					}
-
-					double ammo = (alpha / 50.0) * cash * (p - q / (pot + cash - cashInDanger));
-
-					// if amunition control equation is less that minimun bet, Fold
-					// if (hand.size() > 2 && minBet > a) {
-
-//					double c = evHand * ammo - minBet;
-//					if (minBet > ammo || c < 0) {
-					if (minBet > ammo) {
-						return PlayerAction.FOLD;
-					}
-
-//					TriangularDistribution td = new TriangularDistribution((double) minBet, c, ammo);
-//					int amount = (int) td.sample();
-					int amount = (int) (Math.random() * ammo);
-
-					amount = amount < minBet ? minBet : amount;
-					// ------------------
-
-					if (currentBet < amount) {
-						if (allowedActions.contains(PlayerAction.BET)) {
-							action = new BetAction(amount);
-						} else if (allowedActions.contains(PlayerAction.RAISE)) {
-							action = new RaiseAction(amount);
-						} else if (allowedActions.contains(PlayerAction.CALL)) {
-							action = PlayerAction.CALL;
-						} else {
-							action = PlayerAction.CHECK;
-						}
-					} else {
-						if (allowedActions.contains(PlayerAction.CALL)) {
-							action = PlayerAction.CALL;
-						} else {
-							action = PlayerAction.CHECK;
-						}
-					}
-				}
+				action = PlayerAction.CHECK;
+			}
+		} else {
+			if (allowedActions.contains(PlayerAction.CALL)) {
+				action = PlayerAction.CALL;
+			} else {
+				action = PlayerAction.CHECK;
 			}
 		}
 		return action;

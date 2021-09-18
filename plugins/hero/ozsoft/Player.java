@@ -158,6 +158,10 @@ public class Player {
 		}
 		cash -= amount;
 	}
+	
+	public void setCash(int cash) {
+		this.cash = cash;
+	}
 
 	/**
 	 * Posts the big blinds.

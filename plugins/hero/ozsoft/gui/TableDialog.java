@@ -18,6 +18,7 @@
 package plugins.hero.ozsoft.gui;
 
 import java.awt.*;
+import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 import java.util.List;
@@ -102,6 +103,14 @@ public class TableDialog extends JDialog implements Client {
 		this.proxyClient = heroP.getClient();
 		heroP.setClient(this);
 
+		WindowAdapter wa = new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				table.cancel(true);
+
+			};
+		};
+
+		addWindowListener(wa);
 		// ActionListener al = new ActionListener() {
 		// public void actionPerformed(ActionEvent e) {
 		// WebButton btn = (WebButton) e.getSource();
@@ -111,9 +120,11 @@ public class TableDialog extends JDialog implements Client {
 
 		// control panel
 		outConsole = TUIUtils.getConsoleTextArea();
-		WebButton endGame = new WebButton();
-		// WebButton endGame = new WebButton(ap -> dispose());
+		WebButton endGame = new WebButton(ap -> dispose());
 		endGame.setIcon(TUIUtils.getSmallFontIcon('\ue047'));
+
+		WebButton stepButton = new WebButton();
+		stepButton.setIcon(TUIUtils.getSmallFontIcon('\ue0e4'));
 
 		JPanel controlPanel = new JPanel(new BorderLayout(5, 5));
 		controlPanel.setOpaque(false);
@@ -121,7 +132,7 @@ public class TableDialog extends JDialog implements Client {
 		JPanel jp = new JPanel(new VerticalFlowLayout());
 		jp.setOpaque(false);
 		jp.add(TUIUtils.getStartPauseToggleButton(ap -> table.pause(!table.isPaused())));
-		jp.add(endGame);
+		jp.add(stepButton);
 		controlPanel.add(jp, BorderLayout.EAST);
 
 		// remove temporaly from list
@@ -175,17 +186,24 @@ public class TableDialog extends JDialog implements Client {
 
 	@Override
 	public void messageReceived(String message) {
-//		String msg = message.startsWith("New hand,") ? message : "\t" + message;
 		String msg = message.startsWith("New match,") ? message : "    " + message;
-		outConsole.append(message + "\n");
+		outConsole.append(msg + "\n");
 		// boardPanel.waitForUserInput();
 
-		// TODO: temporal. this message muss be logged
-		if (table.getSpeed() == 0)
+		// TODO: temporal. messages muss be logged.
+		if (table.getSpeed() == 0 && (message.startsWith(Table.REFILL) || message.startsWith(Table.RESTAR)))
 			System.out.println(msg);
 
 		//
 		proxyClient.messageReceived(message);
+
+		// wait
+		try {
+			Thread.sleep(table.getSpeed());
+		} catch (Exception e) {
+			// do nothig
+		}
+
 	}
 
 	@Override
@@ -243,7 +261,7 @@ public class TableDialog extends JDialog implements Client {
 			if (action != null) {
 				// detail message for every action
 				messageReceived(String.format("%s %s.", name, action.getVerb()));
-//				boardPanel.setMessage(String.format("%s %s.", name, action.getVerb()));
+				// boardPanel.setMessage(String.format("%s %s.", name, action.getVerb()));
 				if (player.getClient() == this) {
 					// boardPanel.waitForUserInput();
 					proxyClient.playerActed(player);
