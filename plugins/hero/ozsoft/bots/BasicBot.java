@@ -79,6 +79,8 @@ public class BasicBot extends Bot {
 		// 23,21% of a Ace High Straight Flush
 		double baseRank = 2280937d;
 
+		// low base rank to allow simulation: Three of a Kind, Aces
+		// double baseRank = 1116018d;
 		// a Full House, Twos over Threes
 		// double baseRank = 2227759d;
 
@@ -134,12 +136,19 @@ public class BasicBot extends Bot {
 
 		double ammo = ppBase + ((cash - cashInDanger) * evHand);
 
-		// if amunition control equation is less that minimun bet
+		double K = ammo/2;
+		if( matchCost > 0) {
+			double den = (pot / matchCost);
+			K = p - q / den;			
+		}
+
+		// if amunition control equation is less that minimun Fold
 		if (minBet > ammo) {
 			return PlayerAction.FOLD;
 		}
 
-		double b = ammo + alpha * ammo; // agresive: b > 0
+		double b = ammo + alpha * ammo; // agresive: b > ammo
+		b = b == 0 ? 1 : b; // avoid error when alpha is extreme low
 		double c = alpha < 0 ? b : ammo; // K sugestions allways as upperbound
 		TriangularDistribution td = new TriangularDistribution(0, c, b);
 		int amount = (int) td.sample();

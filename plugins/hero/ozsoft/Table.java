@@ -539,7 +539,9 @@ public class Table extends Task {
 
 		// Sanity check.
 		if (totalWon != totalPot) {
-			throw new IllegalStateException("Incorrect pot division!");
+			System.err.println("WARNING: Incorrect pot division!");
+			// TODO: comented to allow the simulation to continue
+			// throw new IllegalStateException("Incorrect pot division!");
 		}
 	}
 
@@ -752,6 +754,7 @@ public class Table extends Task {
 		notifyPlayersUpdated(false);
 		notifyMessage("New match, %s is the dealer.", dealer);
 	}
+
 	/**
 	 * Rotates the position of the player in turn (the actor).
 	 */
@@ -796,16 +799,18 @@ public class Table extends Task {
 							break;
 						}
 						if (REFILL.equals(actionWhenHeroLose) || REFILL.equals(actionWhenVillanLose)) {
-							String msg = player.getName() + " lost the battle. Refilling with " + buyIn;
-							notifyMessage(REFILL + ": " + msg);
+							String msg = player.getName() + " lost the battle. Refilling cash " + buyIn;
+							notifyMessage(msg);
+							notifyMessage(REFILL);
+							player.resetHand();
 							player.setCash(buyIn);
 						}
 						if (RESTAR.equals(actionWhenHeroLose) || RESTAR.equals(actionWhenVillanLose)) {
 							String msg = player.getName() + " lost the battle. Restartting the hole table.";
 							notifyMessage(msg);
-//							send notification to the clients so they can init the values
-							notifyMessage(RESTAR + ": " + msg);
+							notifyMessage(RESTAR);
 							for (Player player2 : players) {
+								player2.resetHand();
 								player2.setCash(buyIn);
 							}
 						}

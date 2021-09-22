@@ -67,6 +67,7 @@ public class TableDialog extends JDialog implements Client {
 	private Table table;
 	private ProgressMonitor progressMonitor;
 	private final WebTextArea outConsole;
+	private Player heroPlayer;
 
 	/** table Related images. */
 	public static final Icon BUTTON_PRESENT_ICON = TResources.getIcon("dealer_button");
@@ -99,9 +100,9 @@ public class TableDialog extends JDialog implements Client {
 
 		// the player "Hero" allwais the test subject. this element is handled by this class but the
 		// desition is dispacht to proxiClient
-		Player heroP = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
-		this.proxyClient = heroP.getClient();
-		heroP.setClient(this);
+		heroPlayer = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
+		this.proxyClient = heroPlayer.getClient();
+		heroPlayer.setClient(this);
 
 		WindowAdapter wa = new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
@@ -191,8 +192,10 @@ public class TableDialog extends JDialog implements Client {
 		// boardPanel.waitForUserInput();
 
 		// TODO: temporal. messages muss be logged.
-		if (table.getSpeed() == 0 && (message.startsWith(Table.REFILL) || message.startsWith(Table.RESTAR)))
+		if (table.getSpeed() == 0 && (message.contains("lost the battle. "))) {
 			System.out.println(msg);
+			System.out.println("Hero cash = " + heroPlayer.getCash());
+		}
 
 		//
 		proxyClient.messageReceived(message);

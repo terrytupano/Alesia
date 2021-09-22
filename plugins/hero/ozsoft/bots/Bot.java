@@ -37,7 +37,6 @@ public abstract class Bot implements Client {
 
 	/** Number of hole cards. */
 	protected static final int NO_OF_HOLE_CARDS = 2;
-	private static DateFormat dateFormat = DateFormat.getDateTimeInstance();
 	protected PokerSimulator pokerSimulator;
 	protected Player player;
 	protected List<Player> villans;
@@ -46,7 +45,9 @@ public abstract class Bot implements Client {
 	protected int pot;
 	protected int buyIn;
 	protected String playerName;
-	protected String observationMethod;
+
+	/** the observation method for the entire simulation. stored in Hero client table */
+	protected static String observationMethod;
 
 	protected UoAHand myHole, communityHand, hand;
 
@@ -58,7 +59,10 @@ public abstract class Bot implements Client {
 	/** track the number of simulated hands */
 	protected int numOfMatch = 0;
 
-	/** Sesiton id for statistical record */
+	/** poker street. preFlop=0, Flop=1 ... */
+	protected int street = 0;
+
+	/** Session id for statistical record */
 	protected String session;
 
 	/** keep track the current match cost. the cumulative cost of all actions */
@@ -68,8 +72,10 @@ public abstract class Bot implements Client {
 	protected PreflopCardsModel preflopCardsModel;
 	protected SimulatorStatistic statistic;
 	protected int playerWins;
-	protected int tau;
+	protected int value;
+
 	protected double alpha;
+	protected int tau;
 
 	@Override
 	public void boardUpdated(UoAHand hand, int bet, int pot) {
@@ -102,33 +108,40 @@ public abstract class Bot implements Client {
 		 */
 		if (message.startsWith("PlayerName=")) {
 			this.playerName = message.split("[=]")[1];
-			// this.session = dateFormat.format(new Date());
+			this.preflopCardsModel = new PreflopCardsModel("original");
 			session = "" + System.currentTimeMillis();
-			if (playerName.equals("Hero"))
-				Alesia.getInstance().openDB("hero");
-			initParameterVariation();
 		}
 
 		if (message.contains("wins ")) {
 			String[] tmp = message.split("[ ]");
 			String name = tmp[0];
-			if (playerName.equals(name))
-				playerWins = Integer.parseInt(tmp[2].substring(0, tmp[2].length() - 1));
+			if (playerName.equals(name)) {
+				// playerWins = Integer.parseInt(tmp[2].substring(0, tmp[2].length() - 1));
+			}
 		}
 
 		if (message.startsWith("New match,")) {
-			performObservation();
+			playerWins = (player.getCash() - prevCash);
+
+//			performObservation();
+
 			prevCash = player.getCash();
 			matchCost = 0;
 			playerWins = 0;
 			numOfMatch++;
 		}
 
-		if (message.startsWith(Table.RESTAR)) {
-			// session = dateFormat.format(new Date());
+		if (message.contains("Flop.") || message.contains("Turn.") || message.contains("River.")) {
+			street++;
+		}
+
+		if (message.equals(Table.RESTAR)) {
+			saveObservations();
 			session = "" + System.currentTimeMillis();
 			numOfMatch = 0;
-			initParameterVariation();
+			street = 0;
+			prevCash = buyIn;
+			initObservationParameters();
 		}
 
 	}
@@ -149,71 +162,74 @@ public abstract class Bot implements Client {
 	}
 
 	/**
-	 * set the observation method for this Bot.
+	 * set the observation method. the method name is stored in Hero client table record and is setted only one and
+	 * accesible for all instance of this class.
 	 * 
 	 * @param observationMethod - the observation method
 	 */
 	public void setObservationMethod(String observationMethod) {
-		this.observationMethod = observationMethod;
+		if ("Hero".equals(playerName))
+			Bot.observationMethod = observationMethod == null ? "*null" : observationMethod;
+		SimulatorClient client = SimulatorClient.findFirst("playerName = ?", playerName);
+		this.tau = client.getInteger("tau") == null ? 0 : client.getInteger("tau");
+		this.alpha = client.getDouble("alpha") == null ? -1 : client.getInteger("alpha");
+		initObservationParameters();
 	}
 
+	/**
+	 * invoqued after contruction. set the simulator for this boot
+	 * 
+	 * @param pokerSimulator - Instace of poker simulator
+	 */
 	public void setPokerSimulator(PokerSimulator pokerSimulator) {
 		this.pokerSimulator = pokerSimulator;
 	}
 
-	private void initParameterVariation() {
-		// Random values for all players
-		this.tau = "Hero".equals(playerName) ? tau : (int) (Math.random() * 100d);
+	private void initObservationParameters() {
+		// DON.T MOVE DB CONNECTION FROM THIS METHOD: THIS METHOD IS CALLED FROM MUTIPLE THREAD
+		if (playerName.equals("Hero"))
+			Alesia.getInstance().openDB("hero");
 
 		this.wins = 0;
+
+		// initial estimation of parameter occur in setObservationMethdo() random values for villas and secuencial for
+		// hero
+		if ("tauVariation".equals(observationMethod)) {
+			this.tau = "Hero".equals(playerName) ? (tau == 100 ? 5 : tau + 5) : (int) (Math.random() * 100d);
+			this.value = tau;
+		}
+		if ("alphaVariation".equals(observationMethod)) {
+			this.alpha = "Hero".equals(playerName) ? (alpha >= 1 ? -1.0 : alpha + 0.1) : (Math.random() * 2d) - 1d;
+			this.value = (int) (alpha * 100);
+		}
+
+		// retrive last values from statistical table
 		if ("Hero".equals(playerName)) {
-			tau = tau == 100 ? 5 : tau + 5;
-			statistic = SimulatorStatistic.findFirst("value = ?", tau);
+			statistic = SimulatorStatistic.findFirst("measureName = ? AND value = ?", observationMethod, value);
 			if (statistic == null) {
-				statistic = SimulatorStatistic.create("session", session, "measureName", "tau Estimation");
+				statistic = SimulatorStatistic.create("session", session, "measureName", observationMethod);
 			} else {
-				tau = statistic.getInteger("value") == null ? 0 : statistic.getInteger("value");
 				wins = statistic.getInteger("wins");
 				numOfMatch = statistic.getInteger("hands");
 			}
 		}
-
 		// for all players
-		this.preflopCardsModel = new PreflopCardsModel("original");
 		preflopCardsModel.setPercentage(tau);
-		// FIX: alpha range: [-1,1] temporal alpha = 0 (Hero do exactly what ammunition control say)
-		alpha = -0.35;
-
 	}
 
-	private void initPreFlopConvergency() {
-		// fail save: preFlopConvergency allow only for hero (temporal maybe)
-		if ("preFlopConvergency".equals(observationMethod) && "Hero".equals(playerName)) {
-			this.preflopCardsModel = new PreflopCardsModel("preFlopConvergency");
-		}
-	}
-
-	private void performObservation() {
-		// TODO: all observacion method implement only for hero
+	private void saveObservations() {
 		if (!"Hero".equals(playerName))
 			return;
 
-		if ("parameterVariation".equals(observationMethod)) {
-			wins = wins + playerWins;
-			if (numOfMatch % 100 == 0 && numOfMatch > 0) {
-				Alesia.getInstance().openDB("hero");
-				statistic.set("hands", numOfMatch);
-				statistic.set("wins", wins);
-				statistic.set("value", tau);
-				int r = (int) ((double) wins / numOfMatch * 100);
-				statistic.set("ratio", r / 100d);
-				statistic.save();
-			}
-		}
-
-		if ("preFlopConvergency".equals(observationMethod) && myHole.size() != 0) {
-			// TODO:
-			// preflopCardsModel.updateCoordenates(myHole.getCard(1), myHole.getCard(2), delta);
-		}
+		wins = wins + player.getCash() - buyIn;
+		Alesia.getInstance().openDB("hero");
+		statistic.set("hands", numOfMatch);
+		statistic.set("wins", wins);
+		statistic.set("value", value);
+		// int r = (int) ((double) wins / numOfMatch * 100);
+		// statistic.set("ratio", r / 100d);
+		double bb = wins / (bigBlind * 1.0);
+		statistic.set("ratio", bb / (numOfMatch * 1.0));
+		statistic.save();
 	}
 }

@@ -24,6 +24,7 @@ import javax.swing.Action;
 
 import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
+import org.jdesktop.application.Task.*;
 
 import com.alee.laf.*;
 import com.alee.laf.button.*;
@@ -276,6 +277,7 @@ public class Hero extends TPlugin {
 		return start(event);
 	}
 
+//	@org.jdesktop.application.Action(block = BlockingScope.WINDOW)
 	@org.jdesktop.application.Action
 	public Task startSimulation(ActionEvent event) {
 		try {
@@ -318,8 +320,8 @@ public class Hero extends TPlugin {
 					table.addPlayer(p);
 				}
 			}
-			table.setSpeed(0);
-			table.setSimulationsHand(100000);
+			table.setSpeed(000);
+			table.setSimulationsHand(2000000);
 			table.whenPlayerLose(true, Table.RESTAR);
 			table.whenPlayerLose(false, Table.RESTAR);
 

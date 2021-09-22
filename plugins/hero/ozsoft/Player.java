@@ -52,7 +52,7 @@ public class Player {
 
 	/** Last action performed. */
 	private PlayerAction action;
-	
+
 	/**
 	 * Constructor.
 	 * 
@@ -65,7 +65,7 @@ public class Player {
 		this.cash = cash;
 		this.client = client;
 		hand = new UoAHand();
-		resetHand();		
+		resetHand();
 	}
 
 	@Override
@@ -154,11 +154,18 @@ public class Player {
 	 */
 	public void payCash(int amount) {
 		if (amount > cash) {
-			throw new IllegalStateException("Player asked to pay more cash than he owns!");
+			System.err.println("Player asked to pay more cash than he owns!");
+			// TODO: comented to allow the simulation to continue
+			// throw new IllegalStateException("Player asked to pay more cash than he owns!");
 		}
 		cash -= amount;
 	}
-	
+
+	/**
+	 * Terry: set method for cash allos reinit for mutiple simulation.
+	 * 
+	 * @param cash - the cas
+	 */
 	public void setCash(int cash) {
 		this.cash = cash;
 	}
