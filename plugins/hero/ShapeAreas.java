@@ -5,7 +5,6 @@ import java.awt.geom.*;
 import java.io.*;
 import java.util.*;
 import java.util.function.*;
-import java.util.logging.*;
 
 import javax.swing.*;
 

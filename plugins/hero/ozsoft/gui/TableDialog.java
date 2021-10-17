@@ -65,7 +65,6 @@ public class TableDialog extends JDialog implements Client {
 
 	private Client proxyClient;
 	private Table table;
-	private ProgressMonitor progressMonitor;
 	private final WebTextArea outConsole;
 	private Player heroPlayer;
 
@@ -193,8 +192,7 @@ public class TableDialog extends JDialog implements Client {
 
 		// TODO: temporal. messages muss be logged.
 		if (table.getSpeed() == 0 && (message.contains("lost the battle. "))) {
-			System.out.println(msg);
-			System.out.println("Hero cash = " + heroPlayer.getCash());
+//			System.out.println(msg + " Hero cash = " + heroPlayer.getCash());
 		}
 
 		//
@@ -217,14 +215,8 @@ public class TableDialog extends JDialog implements Client {
 
 		//
 		proxyClient.handStarted(dealer);
-
-		// update the progress monitor (if apply)
-		if (progressMonitor != null) {
-			progressMonitor.setNote("Hand simulated: " + (++numOfHand));
-		}
 	}
 
-	private int numOfHand;
 	@Override
 	public void actorRotated(Player actor) {
 		setActorInTurn(false);

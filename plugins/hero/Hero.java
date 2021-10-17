@@ -126,7 +126,7 @@ public class Hero extends TPlugin {
 	}
 
 	/**
-	 * return a {@link Properties} object fill whit all data obtains using methods in {@link UoAHandEvaluator}. 
+	 * return a {@link Properties} object fill whit all data obtains using methods in {@link UoAHandEvaluator}.
 	 * <ul>
 	 * <li>2BetterThanMinePercent: parameter contain the porcent of PreflopCards that are better that my Holecards
 	 * </ul>
@@ -141,7 +141,7 @@ public class Hero extends TPlugin {
 		UoAHand allCards = new UoAHand(holeCards + " " + comunityCards);
 
 		Properties prp = new Properties();
-		
+
 		// my hand evaluation
 		if (!holeCards.equals("")) {
 			prp.put("rank", handRank);
@@ -277,7 +277,8 @@ public class Hero extends TPlugin {
 		return start(event);
 	}
 
-//	@org.jdesktop.application.Action(block = BlockingScope.WINDOW)
+	// @org.jdesktop.application.Action(block = BlockingScope.COMPONENT)
+	// @org.jdesktop.application.Action(block = BlockingScope.WINDOW)
 	@org.jdesktop.application.Action
 	public Task startSimulation(ActionEvent event) {
 		try {
@@ -313,20 +314,20 @@ public class Hero extends TPlugin {
 					// Constructor cons = cls.getConstructor(String.class);
 					// Bot bot = (Bot) cons.newInstance(name);
 					Bot bot = (Bot) cls.newInstance();
-					bot.messageReceived("PlayerName="+name);
+					bot.messageReceived("PlayerName=" + name);
 					bot.setObservationMethod(client.getString("observationMethod"));
 					bot.setPokerSimulator(simulator);
 					Player p = new Player(name, buyIn, bot);
 					table.addPlayer(p);
 				}
 			}
-			table.setSpeed(000);
+			table.setSpeed(1000);
 			table.setSimulationsHand(2000000);
 			table.whenPlayerLose(true, Table.RESTAR);
 			table.whenPlayerLose(false, Table.RESTAR);
 
 			TableDialog dialog = new TableDialog(table);
-			
+
 			// WARNING: this method is overrided!!!
 			dialog.setVisible(true);
 

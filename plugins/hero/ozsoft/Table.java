@@ -799,14 +799,16 @@ public class Table extends Task {
 							break;
 						}
 						if (REFILL.equals(actionWhenHeroLose) || REFILL.equals(actionWhenVillanLose)) {
-							String msg = player.getName() + " lost the battle. Refilling cash " + buyIn;
+							String msg = "Hand # " + numOfHand + ": " + player.getName()
+									+ " lost the battle. Refilling cash " + buyIn;
 							notifyMessage(msg);
 							notifyMessage(REFILL);
 							player.resetHand();
 							player.setCash(buyIn);
 						}
 						if (RESTAR.equals(actionWhenHeroLose) || RESTAR.equals(actionWhenVillanLose)) {
-							String msg = player.getName() + " lost the battle. Restartting the hole table.";
+							String msg = "Hand # " + numOfHand + ": " + player.getName()
+									+ " lost the battle. Restartting the hole table.";
 							notifyMessage(msg);
 							notifyMessage(RESTAR);
 							for (Player player2 : players) {

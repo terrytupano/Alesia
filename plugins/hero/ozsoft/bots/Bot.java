@@ -17,7 +17,6 @@
 
 package plugins.hero.ozsoft.bots;
 
-import java.text.*;
 import java.util.*;
 
 import core.*;
@@ -35,8 +34,11 @@ import plugins.hero.utils.*;
  */
 public abstract class Bot implements Client {
 
+	/** the observation method for the entire simulation. stored in Hero client table */
+	protected static String observationMethod;
 	/** Number of hole cards. */
 	protected static final int NO_OF_HOLE_CARDS = 2;
+
 	protected PokerSimulator pokerSimulator;
 	protected Player player;
 	protected List<Player> villans;
@@ -45,37 +47,28 @@ public abstract class Bot implements Client {
 	protected int pot;
 	protected int buyIn;
 	protected String playerName;
-
-	/** the observation method for the entire simulation. stored in Hero client table */
-	protected static String observationMethod;
-
 	protected UoAHand myHole, communityHand, hand;
-
-	/** cash that the player had when the hand start */
-	protected int prevCash;
-
-	private int wins = 0;
-
-	/** track the number of simulated hands */
-	protected int numOfMatch = 0;
 
 	/** poker street. preFlop=0, Flop=1 ... */
 	protected int street = 0;
-
-	/** Session id for statistical record */
-	protected String session;
 
 	/** keep track the current match cost. the cumulative cost of all actions */
 	protected int matchCost = 0;
 
 	/** the PreflopCardsModel ussed by this client */
 	protected PreflopCardsModel preflopCardsModel;
-	protected SimulatorStatistic statistic;
-	protected int playerWins;
-	protected int value;
 
+	/** easy access to client parameters */
 	protected double alpha;
 	protected int tau;
+
+	/** only for stadistical analisis */
+	private SimulatorStatistic statistic;
+	private int prevCash; //
+	private int wins; // easy access to wins field
+	private int numOfMatch = 0; // # of mathc
+	private int value; // easy access to value field
+	protected String session; // Session id for statistical record
 
 	@Override
 	public void boardUpdated(UoAHand hand, int bet, int pot) {
@@ -86,7 +79,7 @@ public abstract class Bot implements Client {
 
 	@Override
 	public void handStarted(Player dealer) {
-
+		// not implemented
 	}
 
 	@Override
@@ -121,13 +114,13 @@ public abstract class Bot implements Client {
 		}
 
 		if (message.startsWith("New match,")) {
-			playerWins = (player.getCash() - prevCash);
+			// playerWins = (player.getCash() - prevCash);
 
-//			performObservation();
+			// performObservation();
 
 			prevCash = player.getCash();
 			matchCost = 0;
-			playerWins = 0;
+			// playerWins = 0;
 			numOfMatch++;
 		}
 

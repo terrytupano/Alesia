@@ -49,6 +49,7 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 	private Task task;
 	private BusyPanel busyPanel;
 	private Component oldGlassPanel;
+	private WindowAdapter adapter;
 
 	public TTaskMonitor(Task task, boolean allowBg) {
 		super(task, Task.BlockingScope.WINDOW, Alesia.getInstance().getMainPanel());
@@ -58,6 +59,23 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 		webPopup.setDraggable(false);
 		webPopup.setCloseOnFocusLoss(false);
 		webPopup.setCloseOnOuterAction(false);
+//		webPopup.setAlwaysOnTop(true);
+//		webPopup.setAnimate(false);
+
+		// TODO: verify ProgersMonitor to corrert visivility problem in
+		// ProgressMonitor
+		adapter = new WindowAdapter() {
+			public void windowDeiconified(WindowEvent e) {
+//				System.out.println("windowDeiconified");
+			}
+		    public void windowActivated(WindowEvent e) {
+		    	webPopup.hidePopup();
+				showPopUp();
+		    }
+
+
+		};
+		Alesia.getInstance().mainFrame.addWindowListener(adapter);
 
 		this.busyPanel = new BusyPanel();
 		this.task = task;
@@ -112,18 +130,14 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 		if (e.getSource() == cancel) {
 			task.cancel(true);
 			webPopup.hidePopup();
+			Alesia.getInstance().mainFrame.removeWindowListener(adapter);
 		}
 		if (e.getSource() == background) {
 			webPopup.hidePopup();
 		}
 	}
 
-	@Override
-	protected void block() {
-		oldGlassPanel = Alesia.getInstance().getMainFrame().getGlassPane();
-		Alesia.getInstance().getMainFrame().setGlassPane(busyPanel);
-		busyPanel.setVisible(true);
-
+	private void  showPopUp() {
 		// FIXME: why i need to do this ???????? im using the right component????
 		Rectangle recAle = Alesia.getInstance().mainFrame.getBounds();
 		Rectangle recPop = new Rectangle(webPopup.getPreferredSize());
@@ -131,11 +145,19 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 		int y = (int) (recAle.getCenterY() - recPop.getHeight() * 2);
 		webPopup.showPopup(Alesia.getInstance().mainFrame, x, y);
 	}
+	@Override
+	protected void block() {
+		oldGlassPanel = Alesia.getInstance().getMainFrame().getGlassPane();
+		Alesia.getInstance().getMainFrame().setGlassPane(busyPanel);
+		busyPanel.setVisible(true);
+		showPopUp();
+	}
 
 	@Override
 	protected void unblock() {
 		webPopup.hidePopup();
 		busyPanel.setVisible(false);
+		Alesia.getInstance().mainFrame.removeWindowListener(adapter);
 		Alesia.getInstance().getMainFrame().setGlassPane(oldGlassPanel);
 	}
 

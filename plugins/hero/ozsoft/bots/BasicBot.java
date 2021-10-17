@@ -55,6 +55,12 @@ import plugins.hero.ozsoft.gui.*;
  */
 public class BasicBot extends Bot {
 
+	private Properties UoAEvaluation;
+
+	public Properties getUoAEvaluation() {
+		return UoAEvaluation;
+	}
+	
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		PlayerAction action = null;
@@ -98,8 +104,8 @@ public class BasicBot extends Bot {
 		// https://www.splitsuit.com/simple-poker-expected-value-formula
 
 		double cash = (double) player.getCash();
-		double q = (Double) Hero.getUoAEvaluation(myHole.toString(), communityHand.toString())
-				.getOrDefault("2BetterThanMinePercent", 0.0);
+		UoAEvaluation = Hero.getUoAEvaluation(myHole.toString(), communityHand.toString());
+		double q = (Double) UoAEvaluation.getOrDefault("2BetterThanMinePercent", 0.0);
 		q = q / 100;
 		double p = 1 - q;
 		double cashInDanger = cash * q;
@@ -136,10 +142,10 @@ public class BasicBot extends Bot {
 
 		double ammo = ppBase + ((cash - cashInDanger) * evHand);
 
-		double K = ammo/2;
-		if( matchCost > 0) {
-			double den = (pot / matchCost);
-			K = p - q / den;			
+		double K = ammo / 2;
+		if (matchCost > 0) {
+			double risk = (pot / matchCost);
+			K = p - q / risk;
 		}
 
 		// if amunition control equation is less that minimun Fold
