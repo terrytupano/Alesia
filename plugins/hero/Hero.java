@@ -22,9 +22,9 @@ import java.util.logging.*;
 import javax.swing.*;
 import javax.swing.Action;
 
+import org.apache.commons.math3.stat.descriptive.*;
 import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
-import org.jdesktop.application.Task.*;
 
 import com.alee.laf.*;
 import com.alee.laf.button.*;
@@ -33,6 +33,7 @@ import com.javaflair.pokerprophesier.api.card.*;
 
 import core.*;
 import core.datasource.model.*;
+import joptsimple.*;
 import net.sourceforge.tess4j.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
@@ -127,9 +128,10 @@ public class Hero extends TPlugin {
 
 	/**
 	 * return a {@link Properties} object fill whit all data obtains using methods in {@link UoAHandEvaluator}.
-	 * <ul>
-	 * <li>2BetterThanMinePercent: parameter contain the porcent of PreflopCards that are better that my Holecards
-	 * </ul>
+	 * 
+	 * 
+	 * FIXME: This method dont remove the card in my hole cards, despite these fact, the probability converge to the
+	 * real probability. any futher use of ahead, 0 or tied list, muss be filtered.
 	 * 
 	 * @param holeCards - Hole Cards
 	 * @param comunityCards - Comunity cards
@@ -139,7 +141,6 @@ public class Hero extends TPlugin {
 		UoAHandEvaluator evaluator = new UoAHandEvaluator();
 		int handRank = UoAHandEvaluator.rankHand(new UoAHand(holeCards + " " + comunityCards));
 		UoAHand allCards = new UoAHand(holeCards + " " + comunityCards);
-
 		Properties prp = new Properties();
 
 		// my hand evaluation
@@ -151,31 +152,149 @@ public class Hero extends TPlugin {
 
 		// board evaluation
 		if (!comunityCards.equals("")) {
-			int count = 0;
 			int total = 0;
-			ArrayList<UoAHand> list = new ArrayList<>();
+			ArrayList<UoAHand> ahead = new ArrayList<>();
+			ArrayList<UoAHand> tied = new ArrayList<>();
+			ArrayList<UoAHand> behind = new ArrayList<>();
 			int[][] rowcol = evaluator.getRanks(new UoAHand(comunityCards));
 			for (int i = 0; i < 52; i++) {
 				for (int j = 0; j < 52; j++) {
-					if (rowcol[i][j] > 0)
+					UoAHand hand = new UoAHand((new UoACard(i)).toString() + " " + (new UoACard(j)).toString());
+					// FIXME: to retrive the real prob and elements, muss only take into account the upper diagonal of
+					// the matrix. locate rowcol[i][j] > 0 and check only riht elements of the same row
+					if (rowcol[i][j] > 0) {
 						total++;
-					if (handRank < rowcol[i][j]) {
-						count++;
-						// FIXME: this list don.t take into account my hole cards. incorporate cards elimination from
-						// the list where i already habe those cards
-						list.add(new UoAHand((new UoACard(i)).toString() + " " + (new UoACard(j)).toString()));
+						if (handRank > rowcol[i][j])
+							ahead.add(hand);
+
+						if (handRank == rowcol[i][j])
+							tied.add(hand);
+
+						if (handRank < rowcol[i][j])
+							behind.add(hand);
 					}
 				}
 			}
-			double per = ((int) ((count / (total * 1.0)) * 10000)) / 100.0;
-			prp.put("2BetterThanMineOf", total);
-			prp.put("2BetterThanMineCount", count);
-			prp.put("2BetterThanMinePercent", per);
-			prp.put("2BetterThanMinelist", list);
+			prp.put("HStotal", total);
+
+			prp.put("HSAhead", ahead.size());
+			prp.put("HSAhead%", ((int) ((ahead.size() / (total * 1.0)) * 10000)) / 100.0);
+			prp.put("HSAheadList", ahead);
+
+			prp.put("HSTied", tied.size());
+			prp.put("HSTied%", ((int) ((tied.size() / (total * 1.0)) * 10000)) / 100.0);
+			prp.put("HSTiedList", tied);
+
+			prp.put("HSBehind", behind.size());
+			prp.put("HSBehind%", ((int) ((behind.size() / (total * 1.0)) * 10000)) / 100.0);
+			prp.put("HSBehindList", behind);
 		}
 		return prp;
 	}
 
+	/**
+	 * Hand Potential algorithm based on "Opponent Modeling in Poker", Darse Billings, Denis Papp, Jonathan Schaeffer,
+	 * Duane SzafronPoker. page 7.
+	 * <p>
+	 * this method compute and return a the <code>PPot</code> and <code>NPot</code> in array format.
+	 * 
+	 * @param ourcards - my current hole cards
+	 * @param boardcards - the current flop. this method will throw an exception if the current street is not flop
+	 * @param opponents - Number of opponent to model
+	 * 
+	 * @return new double[]{Ppot, Npot};
+	 * @throws Exception if the current status in not flop street
+	 */
+	public static double[] getHandPotential(String ourcards, String boardcards, int opponents) throws Exception {
+		UoAHand hole = new UoAHand(ourcards);
+		UoAHand board = new UoAHand(boardcards);
+		return getHandPotential(hole, board, opponents);
+	}
+
+	/**
+	 * Hand Potential algorithm based on "Opponent Modeling in Poker", Darse Billings, Denis Papp, Jonathan Schaeffer,
+	 * Duane SzafronPoker. page 7.
+	 * <p>
+	 * this method compute and return a the <code>PPot</code> and <code>NPot</code> in array format.
+	 * 
+	 * @param ourcards - my current hole cards
+	 * @param boardcards - the current flop. this method will throw an exception if the current street is not flop
+	 * @param opponents - Number of opponent to model
+	 * 
+	 * @return new double[]{Ppot, Npot};
+	 * @throws Exception if the current status in not flop street
+	 */
+	public static double[] getHandPotential(UoAHand ourcards, UoAHand boardcards, int opponents) throws Exception {
+		if (ourcards.size() != 2 || boardcards.size() != 3)
+			throw new Exception("Board cards muss be in Flop state.");
+		UoAHand iBoard = new UoAHand();
+		/*
+		 * Hand potential array, each index represents ahead, tied, and behind.
+		 */
+		int HP[][] = new int[3][3];
+		int HPTotal[] = new int[3];
+		UoAHand villans[] = new UoAHand[opponents]; // two cards for each villans
+		UoAHandEvaluator evaluator = new UoAHandEvaluator();
+		int ourrank = evaluator.rankHand(ourcards.getCard(1), ourcards.getCard(2), boardcards);
+
+		// Consider all two card combinations of the remaining cards for the opponent.
+		UoADeck deck = new UoADeck();
+		int index = 0;
+		for (int i = 0; i < 100000; i++) {
+			deck.reset();
+			deck.shuffle();
+			deck.extractHand(ourcards);
+			deck.extractHand(boardcards);
+
+			for (int v = 0; v < villans.length; v++) {
+				villans[v] = new UoAHand();
+				villans[v].addCard(deck.deal().getIndex());
+				villans[v].addCard(deck.deal().getIndex());
+				int opprank = evaluator.rankHand(villans[v].getCard(1), villans[v].getCard(2), boardcards);
+				if (ourrank > opprank)
+					index = 0; // ahead
+				else if (ourrank == opprank)
+					index = 1;// tied
+				else
+					index = 2; // behind
+				HPTotal[index] += 1;
+
+				/* All possible board cards to come. */
+				// for (int tr = 0; tr < 2; tr++) {
+				iBoard.makeEmpty();
+				for (int b = 0; b < boardcards.size(); b++)
+					iBoard.addCard(boardcards.getCard(b + 1).getIndex());
+				iBoard.addCard(deck.deal().getIndex());
+				iBoard.addCard(deck.deal().getIndex());
+				int ourbest = evaluator.rankHand(ourcards.getCard(1), ourcards.getCard(2), iBoard);
+				int oppbest = evaluator.rankHand(villans[v].getCard(1), villans[v].getCard(2), iBoard);
+				if (ourbest > oppbest)
+					HP[index][0] += 1;
+				else if (ourbest == oppbest)
+					HP[index][1] += 1;
+				else
+					HP[index][2] += 1;
+
+				// }
+			}
+		}
+		/* Ppot: were behind but moved ahead. */
+		// double Ppot = (HP[behind][ahead] + HP[behind][tied] / 2 + HP[tied][ahead] / 2) / (HPTotal[behind] +
+		// HPTotal[tied]);
+		double Ppot = (HP[2][0] + HP[2][1] / 2d + HP[1][0] / 2d) / (HPTotal[2] + HPTotal[1]);
+		Ppot = ((int) (Ppot * 1000)) / 1000d;
+		/* Npot: were ahead but fell behind. */
+		double Npot = (HP[0][2] + HP[1][2] / 2d + HP[0][1] / 2d) / (HPTotal[0] + HPTotal[1]);
+		Npot = ((int) (Npot * 1000)) / 1000d;
+		return new double[]{Ppot, Npot};
+	}
+
+	/**
+	 * String representation of a list of {@link UoACard}
+	 * 
+	 * @param hands - List of Hands
+	 * @return formated string
+	 */
 	public static String parseHands(List<UoAHand> hands) {
 		String hs = hands.toString();
 		hs = hs.replaceAll("[ ]", "");
@@ -200,6 +319,7 @@ public class Hero extends TPlugin {
 		values.put("table.currency", tparms.length > 3 ? tparms[3] : "");
 	}
 
+	@Deprecated
 	public static String parseToUnicode(String hand) {
 		String uni = new String(hand);
 		uni = uni.replace('s', '\u2660');// u2660

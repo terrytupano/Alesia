@@ -152,15 +152,39 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 
 		// board evaluation
 		if (!comunityCards.equals("")) {
-			console.append("\nBoard evaluation:\n");
-			console.append("2 cards better that my Hole cards: " + properties.get("2BetterThanMineCount") + " of "
-					+ properties.get("2BetterThanMineOf") + " (" + properties.get("2BetterThanMinePercent") + "%)\n");
+			console.append("\nHand Strength:\n");
+			ArrayList<UoAHand> list = (ArrayList<UoAHand>) properties.get("HSAheadList");
+			// String examp = Hero.parseHands(list.subList(0, Math.min(list.size(), 20)));
+			String examp = Hero.parseHands(list);
+			console.append("Ahead: \t" + properties.get("HSAhead") + "\t (" + properties.get("HSAhead%") + "%)\t"
+					+ examp + "\n");
 
-			ArrayList<UoAHand> list = (ArrayList<UoAHand>) properties.get("2BetterThanMinelist");
-			// String examp = Hero.parseHands(top10.subList(0, Math.min(top10.size(), 10)));
-			String examp = Hero.parseHands(list.subList(0, Math.min(list.size(), 20)));
-			// examp = Hero.parseToUnicode(examp);
-			console.append("Examples: " + examp + "\n");
+			list = (ArrayList<UoAHand>) properties.get("HSTiedList");
+			// String examp = Hero.parseHands(list.subList(0, Math.min(list.size(), 20)));
+			examp = Hero.parseHands(list);
+			console.append(
+					"Tied: \t" + properties.get("HSTied") + "\t (" + properties.get("HSTied%") + "%)\t" + examp + "\n");
+
+			list = (ArrayList<UoAHand>) properties.get("HSBehindList");
+			// String examp = Hero.parseHands(list.subList(0, Math.min(list.size(), 20)));
+			examp = Hero.parseHands(list);
+			console.append("Behind: " + properties.get("HSBehind") + "\t (" + properties.get("HSBehind%") + "%)\t"
+					+ examp + "\n");
+
+			// hand Strehent evaluator
+			console.append("\nHand Potential:\n");
+			double[] PPot_NPot = null;
+			try {
+				long t = System.currentTimeMillis();
+				PPot_NPot = Hero.getHandPotential(holeCards, comunityCards, 1);
+				console.append("PPot: " + PPot_NPot[0] + "\n");
+				console.append("NPot: " + PPot_NPot[1] + "\n");
+				console.append("Excetution time: " + (System.currentTimeMillis() - t) + "\n");
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				console.append(e.getMessage() + "\n");
+			}
 		}
 	}
 

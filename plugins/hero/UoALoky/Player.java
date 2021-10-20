@@ -138,7 +138,7 @@ public class Player {
      * @param unknownCards The unknown cards
      * @throws HandRankingException 
      */
-    public void calculateHandPotential(List<List<Double>> weights, int nrOpponents, boolean effectiveOdds, List<Card> unknownCards) throws HandRankingException{
+	public void calculateHandPotential(List<List<Double>> weights, int nrOpponents, boolean effectiveOdds, List<Card> unknownCards) throws HandRankingException{
         calculateHandStatistics(weights, nrOpponents, true, effectiveOdds, unknownCards);
     }
     

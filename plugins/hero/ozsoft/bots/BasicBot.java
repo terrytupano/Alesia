@@ -105,7 +105,7 @@ public class BasicBot extends Bot {
 
 		double cash = (double) player.getCash();
 		UoAEvaluation = Hero.getUoAEvaluation(myHole.toString(), communityHand.toString());
-		double q = (Double) UoAEvaluation.getOrDefault("2BetterThanMinePercent", 0.0);
+		double q = (Double) UoAEvaluation.getOrDefault("HSBehind%", 0.0);
 		q = q / 100;
 		double p = 1 - q;
 		double cashInDanger = cash * q;
