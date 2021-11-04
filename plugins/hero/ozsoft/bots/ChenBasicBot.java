@@ -125,7 +125,7 @@ public class ChenBasicBot extends Bot {
 			// No choice, must check.
 			action = PlayerAction.CHECK;
 		} else {
-			double chenScore = Hero.getChenScore(hand);
+			double chenScore = PokerSimulator.getChenScore(hand);
 			double chenScoreToPlay = tightness * 0.2;
 			if ((chenScore < chenScoreToPlay)) {
 				if (allowedActions.contains(PlayerAction.CHECK)) {

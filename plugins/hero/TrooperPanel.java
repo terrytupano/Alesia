@@ -32,8 +32,8 @@ public class TrooperPanel extends TUIFormPanel {
 		addInputComponent(TUIUtils.getTWebComboBox("tDistributionRange", "tdisrange"));
 
 		addInputComponent(TUIUtils.getWebTextField("availableActions", null, 50));
-		addInputComponent(TUIUtils.getWebCheckBox("takeOportunity"));
-		addInputComponent(TUIUtils.getNumericTextField("upperBoundBluff", null, 5, null), false, true);
+		addInputComponent(TUIUtils.getWebCheckBox("takeOpportunity"));
+		addInputComponent(TUIUtils.getNumericTextField("bluffUpperBound", null, 5, null), false, true);
 
 		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.base", null, 5, null), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.hand", null, 5, null), false, true);
@@ -49,14 +49,18 @@ public class TrooperPanel extends TUIFormPanel {
 
 		builder.append(TStringUtils.getString("preflopCards"), getInputComponent("preflopCards"), 5);
 		builder.nextLine();
-		builder.append(getInputComponent("takeOportunity"), 7);
+		builder.append(getInputComponent("takeOpportunity"), 7);
 		builder.nextLine();
-		builder.append(TStringUtils.getString("upperBoundBluff"), getInputComponent("upperBoundBluff"));
+		builder.append(TStringUtils.getString("bluffUpperBound"), getInputComponent("bluffUpperBound"));
 		builder.nextLine();
 		builder.append(TStringUtils.getString("decisionMethod"), getInputComponent("decisionMethod"), 5);
 		builder.append(TStringUtils.getString("tDistributionRange"), getInputComponent("tDistributionRange"), 5);
 		builder.nextLine();
 
+		Properties params = new Properties();		
+		params.put("preFlopReconnAmmo.base", 1);
+		params.put("preFlopReconnAmmo.band", 10);
+		params.put("preFlopReconnAmmo.band", 10);
 		builder.append("maxRekonAmmo = ");
 		builder.append(getInputComponent("preflopRekonAmmo.base"));
 		builder.append(" + ");

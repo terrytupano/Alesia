@@ -3,19 +3,14 @@ package plugins.hero;
 import java.awt.*;
 import java.text.*;
 import java.util.*;
+import java.util.List;
 import java.util.function.*;
-import java.util.logging.*;
 import java.util.stream.*;
 
 import javax.swing.*;
 
-import com.alee.laf.combobox.*;
-import com.alee.managers.settings.*;
 import com.javaflair.pokerprophesier.api.adapter.*;
 import com.javaflair.pokerprophesier.api.card.*;
-import com.javaflair.pokerprophesier.api.exception.*;
-import com.javaflair.pokerprophesier.api.helper.*;
-import com.jgoodies.common.base.*;
 
 import core.*;
 import gui.*;
@@ -34,10 +29,10 @@ public class PokerSimulator {
 
 	// same values as PokerProphesierAdapter + no_card_deal status
 	public static final int NO_CARDS_DEALT = 0;
-	public static final int HOLE_CARDS_DEALT = 1;
-	public static final int FLOP_CARDS_DEALT = 2;
-	public static final int TURN_CARD_DEALT = 3;
-	public static final int RIVER_CARD_DEALT = 4;
+	public static final int HOLE_CARDS_DEALT = 2;
+	public static final int FLOP_CARDS_DEALT = 5;
+	public static final int TURN_CARD_DEALT = 6;
+	public static final int RIVER_CARD_DEALT = 7;
 	public static int SMALL_BLIND = 1;
 	public static int BIG_BLIND = 2;
 	public static int MIDLE = 3;
@@ -47,16 +42,6 @@ public class PokerSimulator {
 	public static String STATUS_ERROR = "Error";
 	private static NumberFormat percentageFormat = NumberFormat.getPercentInstance();
 	private static DecimalFormat twoDigitFormat = new DecimalFormat("#0.00");
-	// pair of 22
-	// private static int minHandRank = 371293;
-	// top hole card (no pair) (AK)
-	private static int topHoleRank = 167;
-	// villans top hand
-	private int oppMostProbHand, oppTopHand;
-	private int handPotential;
-	private int handPotentialOuts;
-	// Number of simulations, total players
-	private int numSimulations = 100000;
 
 	/**
 	 * temporal storage for the incoming cards (simulator)
@@ -67,42 +52,29 @@ public class PokerSimulator {
 	 */
 	public final Hashtable<String, Boolean> sensorStatus;
 
-	// number of players
-	private int numSimPlayers;
 	private TreeMap<String, Object> variableList;
-	private PokerProphesierAdapter adapter;
-	private double callValue, raiseValue, potValue, prevPotValue;
-	private CommunityCards communityCards;
 	private JLabel reportJLabel;
 	private TUIPanel reportPanel;
-	private int currentRound;
-	private HoleCards holeCards;
-	private int tablePosition;
-	private WebComboBox helperFilterComboBox;
-	private MyHandHelper myHandHelper;
-	private MyHandStatsHelper myHandStatsHelper;
-	private MyOutsHelper myOutsHelper;
-	private OppHandStatsHelper oppHandStatsHelper;
-	private MyGameStatsHelper myGameStatsHelper;
 	private Hashtable<Integer, Double> upperProbability;
-	private double heroChips;
-	private double heroChipsMax;
+
 	/**
-	 * the buy in amount for a table
+	 * ............
 	 */
-	public double buyIn;
-	/**
-	 * the small blind
-	 */
-	public double smallBlind;
-	/**
-	 * the big blind
-	 */
-	public double bigBlind;
+	// TODO: all prevvalue chips related muss be tracked by the correct instance of {@link GameRecorder}
+	// TODO: all heromax chips related muss be tracked by the correct instance of {@link GameRecorder}
+	public double heroChips, heroChipsMax;
+	public double callValue, raiseValue, potValue, prevPotValue;
+	public int numSimPlayers;
+	public int currentRound = NO_CARDS_DEALT;
+	public double buyIn, smallBlind, bigBlind;
+	public final UoAHand communityCards = new UoAHand();
+	public final UoAHand holeCards = new UoAHand();
+	public final UoAHand currentHand = new UoAHand();
+	public int tablePosition;
+	public final Properties uoAEvaluation = new Properties();
+
 	private ActionsBarChart actionsBarChart;
 	// private long lastStepMillis;
-	private double winPlusTieProbability;
-	private UoAHand uoAHand;
 	private Hashtable<Integer, String> handNames = new Hashtable<>();
 	private Vector<Integer> handStrengSamples = new Vector<>();
 	private Hashtable<Integer, String> streetNames = new Hashtable<>();
@@ -118,11 +90,11 @@ public class PokerSimulator {
 		handStrengSamples.add(384475); // pair
 		handStrengSamples.add(0); // hight card
 
-		streetNames.put(0, "no_cards_dealt");
-		streetNames.put(1, "hole_cards_dealt");
-		streetNames.put(2, "flop");
-		streetNames.put(3, "turn");
-		streetNames.put(4, "river");
+		streetNames.put(NO_CARDS_DEALT, "No cards dealt");
+		streetNames.put(HOLE_CARDS_DEALT, "Hole cards dealt");
+		streetNames.put(FLOP_CARDS_DEALT, "Flop");
+		streetNames.put(TURN_CARD_DEALT, "Turn");
+		streetNames.put(RIVER_CARD_DEALT, "River");
 
 		handNames.put(0, "straight_flush");
 		handNames.put(1, "four_of_a_kind");
@@ -143,26 +115,10 @@ public class PokerSimulator {
 		this.prevPotValue = -1;
 		this.cardsBuffer = new Hashtable<String, String>();
 		this.sensorStatus = new Hashtable<>();
-		this.uoAHand = new UoAHand();
-		// Create an adapter to communicate with the simulator
-		this.adapter = new PokerProphesierAdapter();
-		adapter.setNumSimulations(numSimulations);
 		variableList = new TreeMap<>();
-
-		// information components
-		helperFilterComboBox = new WebComboBox();
-		helperFilterComboBox.addItem(new TEntry("MyHandHelper", "My hand"));
-		helperFilterComboBox.addItem(new TEntry("MyHandStatsHelper", "My hand statistics"));
-		helperFilterComboBox.addItem(new TEntry("MyOutsHelper", "My outs"));
-		helperFilterComboBox.addItem(new TEntry("OppHandStatsHelper", "Oponent Hand"));
-		helperFilterComboBox.addItem(new TEntry("MyGameStatsHelper", "Game statistic"));
-		helperFilterComboBox.addItem(new TEntry("trooperVariables", "Trooper variables"));
-		// helperFilterComboBox.addActionListener(evt -> filterSensors());
-		helperFilterComboBox.registerSettings(new Configuration<ComboBoxState>("PokerSimulator.HelperFilter"));
 
 		this.reportPanel = new TUIPanel();
 		reportPanel.showAditionalInformation(false);
-		reportPanel.getToolBarPanel().add(helperFilterComboBox);
 		this.reportJLabel = new JLabel();
 		reportJLabel.setVerticalAlignment(JLabel.TOP);
 		reportJLabel.setFont(new Font("courier new", Font.PLAIN, 12));
@@ -170,7 +126,6 @@ public class PokerSimulator {
 		JPanel jp = new JPanel(new BorderLayout());
 		jp.add(reportJLabel, BorderLayout.CENTER);
 		jp.add(actionsBarChart.getChartPanel(), BorderLayout.SOUTH);
-		// reportPanel.setBodyComponent(new JScrollPane(reportJLabel));
 		reportPanel.setBodyComponent(jp);
 
 		// test: uper probabilitiy by street.
@@ -184,273 +139,288 @@ public class PokerSimulator {
 
 		// clearEnviorement();
 	}
-	public void cleanReport() {
-		variableList.keySet().forEach(key -> variableList.put(key, ""));
-		variableList.put(STATUS, STATUS_OK);
-		actionsBarChart.setDataSet(null);
-		updateReport();
-	}
 	/**
-	 * clear the simulation eviorement. Use this metod to clear al component in case of error or start/stop event
+	 * Returns the value of the hole cards based on the Chen formula.
 	 * 
-	 */
-	public void clearEnviorement() {
-		this.currentRound = NO_CARDS_DEALT;
-		this.numSimPlayers = -1;
-		holeCards = null;
-		communityCards = null;
-		// variableList.clear();
-		// 190831: ya el sistema se esta moviendo. por lo menos hace fold !!!! :D estoy en el salon de clases del campo
-		// de refujiados en dresden !!!! ya van 2 meses
-		cardsBuffer.clear();
-		sensorStatus.clear();
-		potValue = -1;
-		tablePosition = -1;
-		callValue = -1;
-		raiseValue = -1;
-		heroChips = -1;
-		oppMostProbHand = Hand.STRAIGHT_FLUSH;
-		oppTopHand = Hand.STRAIGHT_FLUSH;
-//		// parameters from the panel
-//			this.parameters = Hero.heroPanel.getTrooperPanel().getValues();
-//			this.buyIn = ((Number) parameters.get("table.buyIn")).doubleValue();
-//			this.smallBlind = ((Number) parameters.get("table.smallBlid")).doubleValue();
-//			this.bigBlind = ((Number) parameters.get("table.bigBlid")).doubleValue();
-	}
-
-	public double getCallValue() {
-		return callValue;
-	}
-
-	public CommunityCards getCommunityCards() {
-		return communityCards;
-	}
-
-	public int getCurrentHandRank() {
-		return myHandHelper.getHandRank();
-	}
-
-	public double getCurrentHandStreng() {
-		return getCurrentHandStreng(false);
-	}
-	/**
-	 * this method compute and return the relation between gloval variable {@link #oppMostProbHand} and the current hero
-	 * hand. this range is: [0.11,3]
-	 */
-	public double getCurrentHandStreng(boolean danger) {
-		double rtnval = 0.0;
-		double rank = myHandHelper.getHandRank();
-		if (danger)
-			rtnval = rank / oppTopHand;
-		else
-			rtnval = rank / oppMostProbHand;
-		return rtnval;
-	}
-
-	public String getCurrentHandStrengName() {
-		return UoAHandEvaluator.nameHand(uoAHand);
-	}
-
-	public int getCurrentRound() {
-		return currentRound;
-	}
-	public String getCurrentRoundName() {
-		return streetNames.get(currentRound);
-	}
-
-	/**
-	 * FIXME: use {@link Hero#getUoAEvaluation(String, String)} instead
+	 * @param cards The hole cards.
 	 * 
-	 * @return
-	public int getDanger() {
-		String communitiC = communityCards.toString().replace(",", " ");
-		String myhand = myHandHelper.getHand().toString().split("[:]")[1].replace(",", " ");
-		myhand = myhand.replace("*", "");
-		UoAHandEvaluator evaluator = new UoAHandEvaluator();
+	 * @return The score based on the Chen formula.
+	 */
+	public static double getChenScore(HoleCards holeCards) {
+		return PokerSimulator.getChenScore(
+				new UoAHand(holeCards.getFirstCard().toString() + " " + holeCards.getSecondCard().toString()));
+	}
 
-		// my hand.s rank
-		UoAHand uoahand = new UoAHand(myhand);
-		int myrank = UoAHandEvaluator.rankHand(uoahand);
+	/**
+	 * Returns the value of the hole cards based on the Chen formula.
+	 * 
+	 * @param cards The hole cards.
+	 * 
+	 * @return The score based on the Chen formula.
+	 */
+	public static double getChenScore(UoAHand hand) {
+		if (hand.size() != 2) {
+			throw new IllegalArgumentException("Invalid number of cards: " + hand.size());
+		}
 
-		// all 2-cards convinations
-		UoAHand board = new UoAHand(communitiC);
-		int[][] ranks = evaluator.getRanks(board);
+		// Analyze hole cards.
+		int rank1 = hand.getCard(1).getRank();
+		int suit1 = hand.getCard(2).getSuit();
+		int rank2 = hand.getCard(1).getRank();
+		int suit2 = hand.getCard(2).getSuit();
+		int highRank = Math.max(rank1, rank2);
+		int lowRank = Math.min(rank1, rank2);
+		int rankDiff = highRank - lowRank;
+		int gap = (rankDiff > 1) ? rankDiff - 1 : 0;
+		boolean isPair = (rank1 == rank2);
+		boolean isSuited = (suit1 == suit2);
 
-		// danger
-		ArrayList<UoAHand> cards = new ArrayList<>();
-		// int danger = 0;
-		int solved = 0;
-		for (int i = 0; i < UoADeck.NUM_CARDS; i++) {
-			for (int j = 0; j < UoADeck.NUM_CARDS; j++) {
-				solved += ranks[i][j] > 0 ? 1 : 0;
-				if (ranks[i][j] > myrank) {
-					UoACard c1 = new UoACard();
-					c1.setIndex(i);
-					UoACard c2 = new UoACard();
-					c2.setIndex(j);
-					cards.add(new UoAHand(c1.toString() + " " + c2.toString()));
-				}
+		double score = 0.0;
+
+		// 1. Base score highest rank only
+		if (highRank == UoACard.ACE) {
+			score = 10.0;
+		} else if (highRank == UoACard.KING) {
+			score = 8.0;
+		} else if (highRank == UoACard.QUEEN) {
+			score = 7.0;
+		} else if (highRank == UoACard.JACK) {
+			score = 6.0;
+		} else {
+			score = (highRank + 2) / 2.0;
+		}
+
+		// 2. If pair, double score, with minimum score of 5.
+		if (isPair) {
+			score *= 2.0;
+			if (score < 5.0) {
+				score = 5.0;
 			}
 		}
-		return cards.size();
-	}
-	 */
 
-	public int getHandPotential() {
-		return handPotential;
-	}
-	public int getHandPotentialOuts() {
-		return handPotentialOuts;
+		// 3. If suited, add 2 points.
+		if (isSuited) {
+			score += 2.0;
+		}
+
+		// 4. Subtract points for gap.
+		if (gap == 1) {
+			score -= 1.0;
+		} else if (gap == 2) {
+			score -= 2.0;
+		} else if (gap == 3) {
+			score -= 4.0;
+		} else if (gap > 3) {
+			score -= 5.0;
+		}
+
+		// 5. Add 1 point for a 0 or 1 gap and both cards lower than a Queen.
+		if (!isPair && gap < 2 && rank1 < UoACard.QUEEN && rank2 < UoACard.QUEEN) {
+			score += 1.0;
+		}
+
+		// Minimum score is 0.
+		if (score < 0.0) {
+			score = 0.0;
+		}
+
+		// 6. Round half point scores up.
+		return Math.round(score);
 	}
 
 	/**
-	 * this method return a factor 0 to (possible max value) 2 that represent the relation between the the best hand
-	 * that hero can posible have and the best hand that any villan can hold.
+	 * Hand Potential algorithm based on "Opponent Modeling in Poker", Darse Billings, Denis Papp, Jonathan Schaeffer,
+	 * Duane SzafronPoker. page 7.
 	 * <p>
-	 * E.g. Hero: Ac As, flop Ad 7d 4h. at this point, Hero hat the Nut, {@link #oppMostProbHand} =
-	 * Hand.THREE_OF_A_KIND. the best hand that hero can have will be Hand.FOUR_OF_A_KIND. this metod will return 2
+	 * this method compute and return a the <code>PPot</code> and <code>NPot</code> in array format.
 	 * 
-	 * @see #updateHandValues()
+	 * note: The hand strength calculation is with respect to one opponent but can be extrapolated to multiple opponents
+	 * by raising it to the power of the number of active opponents.
 	 * 
-	 * @return the hand potential
+	 * @param ourcards - my current hole cards
+	 * @param boardcards - the current flop. this method will throw an exception if the current street is not flop
+	 * 
+	 * @return new double[]{Ppot, Npot, winProb};
 	 */
-	// public Pair<Double, Integer> getHandPotential() {
-	// double handPotential = 0.0;
-	// String hs = "";
-	// int outs = 0;
-	//
-	// if (myOutsHelper != null) {
-	// Card cards[][] = myOutsHelper.getAllOuts();
-	// for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
-	// int currOut = cards[i].length;
-	// if (currOut > 0 && currOut > outs) {
-	// outs = currOut;
-	// handPotential = (Hand.STRAIGHT_FLUSH - i);
-	// // 210117: with this modification, hero supportet 3 hour of continuous battle in a table without
-	// // oportunity and hold steady without loosing his chips. :D
-	// hs += handNames.get(i) + " " + outs + " ";
-	// }
-	// }
-	// }
-	// // if (handPotential > 0)
-	// // handPotential = handPotential / oppTopHand;
-	// hs += "= " + twoDigitFormat.format(handPotential);
-	// setVariable("simulator.Hand potential", hs);
-	// return new Pair<>(handPotential, outs);
-	// }
+	private void getHandPotential(UoAHand ourcards, UoAHand boardcards, int opponents) {
+		UoAHand iBoard = new UoAHand();
+		int iterations = 100000;
+		int ahead = 0, tied = 0, behind = 0;
 
-	public double getHeroChips() {
-		return heroChips;
-	}
-	public double getHeroChipsMax() {
-		// TODO: all heromax chips related muss be tracked by the correct instance of {@link GameRecorder}
-		return heroChipsMax;
-	}
-	public MyGameStatsHelper getMyGameStatsHelper() {
-		return myGameStatsHelper;
-	}
+		// TODO: this method muss count most probable villans hand and top villan hands ?????????? or better work
+		// arround whit oponent modelint implementation
 
-	public MyHandHelper getMyHandHelper() {
-		return myHandHelper;
-	}
+		// Hand potential array, each index represents ahead, tied, and behind.
+		int HP[][] = new int[3][3];
+		int HPTotal[] = new int[3];
+		UoAHand villan = new UoAHand(); // two cards for each villans
+		UoAHandEvaluator evaluator = new UoAHandEvaluator();
+		int ourrank = evaluator.rankHand(ourcards.getCard(1), ourcards.getCard(2), boardcards);
 
-	public MyHandStatsHelper getMyHandStatsHelper() {
-		return myHandStatsHelper;
-	}
-	public HoleCards getMyHoleCards() {
-		return holeCards;
-	}
-	public int getNumSimPlayers() {
-		return numSimPlayers;
-	}
-	public OppHandStatsHelper getOppHandStatsHelper() {
-		return oppHandStatsHelper;
-	}
+		// Consider all two card combinations of the remaining cards for the opponent.
+		UoADeck deck = new UoADeck();
+		int index = 0;
+		for (int i = 0; i < iterations; i++) {
+			deck.reset();
+			deck.shuffle();
+			deck.extractHand(ourcards);
+			deck.extractHand(boardcards);
 
-	public int getOppMostProbHand() {
-		return oppMostProbHand;
-	}
+			villan.makeEmpty();
+			villan.addCard(deck.deal().getIndex());
+			villan.addCard(deck.deal().getIndex());
+			int opprank = evaluator.rankHand(villan.getCard(1), villan.getCard(2), boardcards);
+			if (ourrank > opprank)
+				index = 0; // ahead
+			else if (ourrank == opprank)
+				index = 1;// tied
+			else
+				index = 2; // behind
+			HPTotal[index] += 1;
 
-	public int getOppTopHand() {
-		return oppTopHand;
-	}
-	public double getPotValue() {
-		return potValue;
-	}
-	public double getPreFlopHandStreng() {
-		double rank = UoAHandEvaluator.rankHand(uoAHand);
-		// if is already a poket pair, assig 1
-		rank = myHandHelper.isPocketPair() ? 1.0 : rank / topHoleRank;
-		return rank;
-	}
+			/* All possible board cards to come. */
+			iBoard.makeEmpty();
+			for (int b = 0; b < boardcards.size(); b++)
+				iBoard.addCard(boardcards.getCard(b + 1).getIndex());
+			// board in in flop state: deal turn
+			if (boardcards.size() == 3)
+				iBoard.addCard(deck.deal().getIndex());
+			// board in in turn state: deal river
+			if (boardcards.size() == 4)
+				iBoard.addCard(deck.deal().getIndex());
+			int myRank = evaluator.rankHand(ourcards.getCard(1), ourcards.getCard(2), iBoard);
+			int villanRank = evaluator.rankHand(villan.getCard(1), villan.getCard(2), iBoard);
+			if (myRank > villanRank) {
+				HP[index][0] += 1;
+				ahead++;
+			} else if (myRank == villanRank) {
+				HP[index][1] += 1;
+				tied++;
+			} else {
+				HP[index][2] += 1;
+				behind++;
+			}
 
-	public double getPrevPotValue() {
-		// TODO: all heromax chips related muss be tracked by the correct instance of {@link GameRecorder}
-		return prevPotValue;
-	}
-	/**
-	 * return the probability of win plus tie
-	 * 
-	 * @return the probability of win + prob of tie
-	 */
-	public double getProbability() {
-		return winPlusTieProbability;
+		}
+		/* Ppot: were behind but moved ahead. */
+		// double Ppot = (HP[behind][ahead] + HP[behind][tied] / 2 + HP[tied][ahead] / 2) / (HPTotal[behind] +
+		// HPTotal[tied]);
+		Ppot = (HP[2][0] + HP[2][1] / 2d + HP[1][0] / 2d) / (HPTotal[2] + HPTotal[1]);
+
+		/* Npot: were ahead but fell behind. */
+		Npot = (HP[0][2] + HP[1][2] / 2d + HP[0][1] / 2d) / (HPTotal[0] + HPTotal[1]);
+
+		// HandStrength: chance that our hand is better than a random hand.
+		HS_n = Math.pow((ahead + tied / 2) / (ahead + tied + behind), opponents);
+
+		// winning probabilities ?!?!?!?!?!?
+		winProb_n = Math.pow(ahead + tied / iterations, opponents);
 	}
 
-	public double getRaiseValue() {
-		return raiseValue;
-	}
+	// gloval variables updated by getHandPotential method
+	public double Ppot, Npot, HS_n, winProb_n;
 
 	/**
-	 * Return the information component whit all values computesd form simulations and game status
+	 * return a {@link Properties} object fill whit all data obtains using methods in {@link UoAHandEvaluator}.
 	 * 
-	 * @return information component
+	 * 
+	 * FIXME: This method dont remove the card in my hole cards, despite these fact, the probability converge to the
+	 * real probability. any futher use of ahead, 0 or tied list, muss be filtered.
+	 * 
+	 * @param holeCards - Hole Cards
+	 * @param communityCards - Comunity cards
+	 * @param opponents - number of opponents
+	 * @return properties
 	 */
-	public TUIPanel getReportPanel() {
-		return reportPanel;
+	public static Properties getUoAEvaluation(UoAHand holeCards, UoAHand communityCards) {
+		UoAHandEvaluator evaluator = new UoAHandEvaluator();
+		UoAHand allCards = new UoAHand(holeCards + " " + communityCards);
+		int handRank = UoAHandEvaluator.rankHand(allCards);
+		Properties prp = new Properties();
+
+		// my hand evaluation
+		if (holeCards.size() > 0) {
+			prp.put("rank", handRank);
+			prp.put("name", UoAHandEvaluator.nameHand(allCards));
+			prp.put("bestOf5Cards", evaluator.getBest5CardHand(allCards));
+		}
+
+		// board evaluation
+		if (communityCards.size() > 0) {
+			int total = 0;
+			ArrayList<UoAHand> ahead = new ArrayList<>();
+			ArrayList<UoAHand> tied = new ArrayList<>();
+			ArrayList<UoAHand> behind = new ArrayList<>();
+			int[][] rowcol = evaluator.getRanks(new UoAHand(communityCards));
+			for (int i = 0; i < 52; i++) {
+				for (int j = 0; j < 52; j++) {
+					UoAHand hand = new UoAHand((new UoACard(i)).toString() + " " + (new UoACard(j)).toString());
+					// FIXME: to retrive the real prob and elements, muss only take into account the upper diagonal of
+					// the matrix. locate rowcol[i][j] > 0 and check only riht elements of the same row
+					if (rowcol[i][j] > 0) {
+						total++;
+						if (handRank > rowcol[i][j])
+							ahead.add(hand);
+
+						if (handRank == rowcol[i][j])
+							tied.add(hand);
+
+						if (handRank < rowcol[i][j])
+							behind.add(hand);
+					}
+				}
+			}
+			prp.put("HStotal", total);
+
+			prp.put("HSAhead", ahead.size());
+			prp.put("HSAhead%", ((int) ((ahead.size() / (total * 1.0)) * 10000)) / 100.0);
+			prp.put("HSAheadList", ahead);
+
+			prp.put("HSTied", tied.size());
+			prp.put("HSTied%", ((int) ((tied.size() / (total * 1.0)) * 10000)) / 100.0);
+			prp.put("HSTiedList", tied);
+
+			prp.put("HSBehind", behind.size());
+			prp.put("HSBehind%", ((int) ((behind.size() / (total * 1.0)) * 10000)) / 100.0);
+			prp.put("HSBehindList", behind);
+		}
+
+		// invoque getHandPotential and add goval variable to the list
+		PokerSimulator ps = new PokerSimulator();
+		ps.getHandPotential(holeCards, communityCards, 1);
+		prp.put("PPot", ps.Ppot);
+		prp.put("NPot", ps.Npot);
+		prp.put("winProb", ps.winProb_n);
+		prp.put("HS", ps.HS_n);
+
+		// aditional computation tested hand: Hole cards: Ac Ad Comunity cards: Qs 9d As
+
+		// is the nuts: hero can loose
+		prp.put("isTheNut", false);
+		if ((double) prp.get("HSBehind%") == 0)
+			prp.put("isTheNut", true);
+
+		// TODO: getSignificantCard()
+		// upperbound opponent hand probability: this value refleck the fack that the vas mayority of case, the
+		// computation dont need to compute using the full range of card. e.g it is improbable that an some point, a
+		// villa hat a royal flush or a streich flush and the villan is allin and hero hat a flush. in order to avoid a
+		// hight provability of fold, the computation take into accound that a villas hand with ranck > this upperbound
+		// is not take into acount
+
+		return prp;
 	}
 
 	/**
-	 * return hightes rank of the card that is in my Hole card and participate in the current hand. This method return
-	 * -1 when the Trooper hast nothig in the current hand.
+	 * return the string representation of a list of cards
 	 * 
-	 * @return the rank of my best card in my hands
-	 */
-	public int getSignificantRank() {
-		int rank = -1;
-		Card[] cards = myHandHelper.getSignificantCards();
-		for (Card card : cards)
-			rank = card.isHoleCard() && card.getRank() > rank ? card.getRank() : rank;
-		return rank;
-	}
-	/**
-	 * Return the strin representation of the parameters of the table
+	 * @param cards cards
 	 * 
-	 * @return table parms
+	 * @return
 	 */
-	public String getTableParameters() {
-		return buyIn + " " + bigBlind + "," + smallBlind;
-	}
-
-	public int getTablePosition() {
-		return tablePosition;
-	}
-	public TreeMap<String, Object> getVariables() {
-		return variableList;
-	}
-	/**
-	 * check if trooper hat a set hand. a set Hand here is when both hole cards participaten in the hand AND is not a
-	 * pocker pair. the idea here is try to detect how hide is the ttrooper currend hand for the villans
-	 * 
-	 * @return <code>true</code> when both cards in hole card participate in the hand
-	 */
-	public boolean isSet() {
-		int cnt = 0;
-		Card[] cards = myHandHelper.getSignificantCards();
-		for (Card card : cards)
-			cnt = card.isHoleCard() ? cnt + 1 : cnt;
-		return cnt == 2 && !myHandHelper.isPocketPair();
-		// return cnt == 2;
+	public static String parseCards(List<UoACard> cards) {
+		StringBuffer sb = new StringBuffer();
+		cards.forEach(c -> sb.append(c.toString() + " "));
+		return sb.toString().trim();
 	}
 
 	// /**
@@ -464,9 +434,96 @@ public class PokerSimulator {
 	// * @return a text explain what oportunity is detected or <code>null</code> if no oportunity are present
 	// */
 	// public String isOportunity() {
+
+	// TODO: reevaluate this method. compute the bluf probability. especialy istheNut()
+
+	/**
+	 * String representation of a list of {@link UoACard}
+	 * 
+	 * @param hands - List of Hands
+	 * @return formated string
+	 */
+	public static String parseHands(List<UoAHand> hands) {
+		String hs = hands.toString();
+		hs = hs.replaceAll("[ ]", "");
+		hs = hs.replace(',', ' ');
+		return hs.substring(1, hs.length() - 1);
+	}
+
+	public void cleanReport() {
+		variableList.keySet().forEach(key -> variableList.put(key, ""));
+		variableList.put(STATUS, STATUS_OK);
+		actionsBarChart.setDataSet(null);
+		updateReport();
+	}
+	/**
+	 * clear the simulation eviorement. Use this metod to clear al component in case of error or start/stop event
+	 * 
+	 */
+	public void clearEnviorement() {
+		currentRound = NO_CARDS_DEALT;
+		this.numSimPlayers = -1;
+		holeCards.makeEmpty();
+		communityCards.makeEmpty();
+		// 190831: ya el sistema se esta moviendo. por lo menos hace fold !!!! :D estoy en el salon de clases del campo
+		// de refujiados en dresden !!!! ya van 2 meses
+		cardsBuffer.clear();
+		sensorStatus.clear();
+		potValue = -1;
+		tablePosition = -1;
+		callValue = -1;
+		raiseValue = -1;
+		heroChips = -1;
+		// // parameters from the panel
+		// this.parameters = Hero.heroPanel.getTrooperPanel().getValues();
+		// this.buyIn = ((Number) parameters.get("table.buyIn")).doubleValue();
+		// this.smallBlind = ((Number) parameters.get("table.smallBlid")).doubleValue();
+		// this.bigBlind = ((Number) parameters.get("table.bigBlid")).doubleValue();
+	}
+
+	public String getCurrentHandStrengName() {
+		return UoAHandEvaluator.nameHand(currentHand);
+	}
+
+	public String getCurrentRoundName() {
+		return streetNames.get(currentRound);
+	}
+
+	/**
+	 * Return the information component whit all values computesd form simulations and game status
+	 * 
+	 * @return information component
+	 */
+	public TUIPanel getReportPanel() {
+		return reportPanel;
+	}
+
+	/**
+	 * Return the strin representation of the parameters of the table
+	 * 
+	 * @return table parms
+	 */
+	public String getTableParameters() {
+		return buyIn + " " + bigBlind + "," + smallBlind;
+	}
+	public TreeMap<String, Object> getVariables() {
+		// TODO: delete ???
+		return variableList;
+	}
+
+	/**
+	 * return <code>true</code> if the sensor argument is enable. false otherwise
+	 * 
+	 * @param sensor - sensor name
+	 * @return <code>true</code> if enabled
+	 */
+	public boolean isSensorEnabled(String sensor) {
+		return sensorStatus.getOrDefault(sensor, false);
+	}
+
 	// String txt = null;
 	// // Hero must check for oportunity
-	// if (!takeOportunity)
+	// if (!takeOpportunity)
 	// return txt;
 	// // the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
 	// if (currentRound < FLOP_CARDS_DEALT)
@@ -499,56 +556,59 @@ public class PokerSimulator {
 	 * 
 	 */
 	public void runSimulation() {
-		try {
-			variableList.put(STATUS, "Runing ...");
-			updateReport();
-			// Set the simulator parameters
 
-			// TODO: check this parameters. maybe is better set off or change it during the game play because not all
-			// the
-			// time are true. for example, in a 6 villans pre flop game, i can.t assume set opp hole card realiytic is
-			// false, but in th turn, if a villan still in the battle, is set to true because maybe he got something
-			//
-			// or use this info comparing with the gameplayer history !!!!!!!!!!!!!
-			adapter.setMyOutsHoleCardSensitive(true);
-			adapter.setOppHoleCardsRealistic(true);
-			adapter.setOppProbMyHandSensitive(true);
+		variableList.put(STATUS, "Runing ...");
+		updateReport();
 
-			// String c1 = cardsBuffer.get("hero.card1");
-			// String c2 = cardsBuffer.get("hero.card2");
-			// if (c1 == null || c2 == null) {
-			// JOptionPane.showMessageDialog(Alesia.getInstance().getMainFrame(), "error");
-			// Trooper.getInstance().cancel(true);
-			// }
-			createHoleCards();
-			createComunityCards();
+		// Hero.heroLogger.warning("String " + card + " for card representation incorrect. Card not created");
+		UoACard c1 = new UoACard(cardsBuffer.get("hero.card1"));
+		UoACard c2 = new UoACard(cardsBuffer.get("hero.card2"));
+		holeCards.makeEmpty();
+		holeCards.addCard(c1);
+		holeCards.addCard(c2);
 
-			String h = cardsBuffer.values().stream().collect(Collectors.joining(" "));
-			this.uoAHand = new UoAHand(h);
+		communityCards.makeEmpty();
+		if (cardsBuffer.containsKey("flop1"))
+			communityCards.addCard(new UoACard("flop1"));
+		if (cardsBuffer.containsKey("flop2"))
+			communityCards.addCard(new UoACard("flop2"));
+		if (cardsBuffer.containsKey("flop3"))
+			communityCards.addCard(new UoACard("flop3"));
+		if (cardsBuffer.containsKey("turn"))
+			communityCards.addCard(new UoACard("turn"));
+		if (cardsBuffer.containsKey("river"))
+			communityCards.addCard(new UoACard("river"));
 
-			adapter.runMySimulations(holeCards, communityCards, numSimPlayers, currentRound);
-			myGameStatsHelper = adapter.getMyGameStatsHelper();
-			myHandStatsHelper = adapter.getMyHandStatsHelper();
-			oppHandStatsHelper = adapter.getOppHandStatsHelper();
-			myOutsHelper = adapter.getMyOutsHelper();
-			myHandHelper = adapter.getMyHandHelper();
-			updateHandValues();
-			updateSimulationResults();
-			variableList.put(STATUS, STATUS_OK);
-			// String oportunity = isOportunity();
-			// if (oportunity != null)
-			// variableList.put(STATUS, oportunity);
-			updateReport();
-		} catch (SimulatorException e) {
-			setVariable(STATUS, STATUS_ERROR);
-			// setVariable(STATUS, e.getClass().getSimpleName() + e.getMessage());
-			Hero.heroLogger.warning(e.getMessage() + "\n\tCurrent round: " + currentRound + "\n\tHole cards: "
-					+ holeCards + "\n\tComunity cards: " + communityCards);
-		} catch (Exception e) {
-			setVariable(STATUS, STATUS_ERROR);
-			// setVariable(STATUS, e.getClass().getSimpleName() + " " + e.getMessage());
-			Hero.heroLogger.log(Level.SEVERE, e.getMessage(), e);
-		}
+		// String h = cardsBuffer.values().stream().collect(Collectors.joining(" "));
+		currentHand.makeEmpty();
+		cardsBuffer.forEach((key, val) -> currentHand.addCard(new UoACard(val)));
+		currentRound = currentHand.size();
+
+		uoAEvaluation.clear();
+		uoAEvaluation.putAll(PokerSimulator.getUoAEvaluation(holeCards, communityCards));
+
+		/**
+		 * update the simulation result to the console
+		 */
+		variableList.put("simulator.Troper probability", percentageFormat.format(winProb_n));
+		variableList.put("simulator.Trooper Current hand", uoAEvaluation.get("name"));
+		variableList.put("simulator.Table cards", currentHand.toString());
+		String txt = "Amunitions " + heroChips + " Pot " + potValue + " Call " + callValue + " Raise " + raiseValue
+				+ " Position " + tablePosition;
+		variableList.put("simulator.Table values", txt);
+		variableList.put("simulator.Simulator values", "Round " + getCurrentRoundName() + " Players " + numSimPlayers);
+
+		Hero.heroLogger.info("Table values: " + variableList.get("simulator.Table values"));
+		Hero.heroLogger.info("Troper probability: " + variableList.get("simulator.Troper probability"));
+		Hero.heroLogger.info("Trooper Current hand: " + variableList.get("simulator.Trooper Current hand"));
+		Hero.heroLogger.info("Simulator values: " + variableList.get("simulator.Simulator values"));
+		Hero.heroLogger.info("Hand: " + variableList.get("simulator.Hand potential") + " "
+				+ variableList.get("simulator.Hand streng villans"));
+
+		variableList.put(STATUS, STATUS_OK);
+
+		updateReport();
+
 	}
 
 	/**
@@ -563,29 +623,25 @@ public class PokerSimulator {
 		actionsBarChart.setDataSet(actions);
 		updateReport();
 	}
+
 	public void setCallValue(double callValue) {
 		this.callValue = callValue;
 	}
-
 	public void setHeroChips(double heroChips) {
 		this.heroChips = heroChips;
 		if (heroChips > heroChipsMax)
 			heroChipsMax = heroChips;
 	}
-
 	public void setNunOfPlayers(int p) {
 		this.numSimPlayers = p;
 	}
-
 	public void setPotValue(double potValue) {
 		this.prevPotValue = this.potValue;
 		this.potValue = potValue;
 	}
-
 	public void setRaiseValue(double raiseValue) {
 		this.raiseValue = raiseValue;
 	}
-
 	/**
 	 * Update the table position. the Hero´s table position is determinated detecting the dealer button and counting
 	 * clockwise. For examples, in a 4 villans table:
@@ -612,17 +668,6 @@ public class PokerSimulator {
 		// mandatori. i nedd to see what is happening
 		updateReport();
 	}
-
-	/**
-	 * return <code>true</code> if the sensor argument is enable. false otherwise
-	 * 
-	 * @param sensor - sensor name
-	 * @return <code>true</code> if enabled
-	 */
-	public boolean isSensorEnabled(String sensor) {
-		return sensorStatus.getOrDefault(sensor, false);
-	}
-
 	public void updateReport() {
 		Predicate<String> valgt0 = new Predicate<String>() {
 			@Override
@@ -632,143 +677,22 @@ public class PokerSimulator {
 			}
 		};
 		// long t1 = System.currentTimeMillis();
-		String selectedHelper = ((TEntry) helperFilterComboBox.getSelectedItem()).getKey().toString();
 		String text = "<html>";
-		if (myHandHelper != null && selectedHelper.equals("MyHandHelper")) {
-			text += getFormateTable(myHandHelper.toString());
-		}
-		if (myHandStatsHelper != null && selectedHelper.equals("MyHandStatsHelper")) {
-			String tmp = myHandStatsHelper.toString();
-			tmp = tmp.replaceFirst("[=]", ":");
-			text += getFormateTable(tmp, valgt0);
-		}
-		MyOutsHelper myOutsHelper = adapter.getMyOutsHelper();
-		if (myOutsHelper != null && selectedHelper.equals("MyOutsHelper")) {
-			text += getFormateTable(myOutsHelper.toString(), str -> !Strings.isBlank(str));
-		}
-		OppHandStatsHelper oppHandStatsHelper = adapter.getOppHandStatsHelper();
-		if (oppHandStatsHelper != null && selectedHelper.equals("OppHandStatsHelper")) {
-			text += getFormateTable(oppHandStatsHelper.toString(), valgt0);
-		}
-		if (myGameStatsHelper != null && selectedHelper.equals("MyGameStatsHelper")) {
-			text += getFormateTable(myGameStatsHelper.toString());
-		}
-		if (selectedHelper.equals("trooperVariables")) {
-			String tmp = variableList.keySet().stream().map(key -> key + ": " + variableList.get(key))
-					.collect(Collectors.joining("\n"));
+		String tmp = variableList.keySet().stream().map(key -> key + ": " + variableList.get(key))
+				.collect(Collectors.joining("\n"));
 
-			// remove the group heather. just for visual purporse
-			tmp = tmp.replace("sensorArray.", "");
-			tmp = tmp.replace("simulator.ammount.", "");
-			tmp = tmp.replace("simulator.", "");
-			tmp = tmp.replace("trooper.", "");
-			tmp = tmp.replace("aa.", "");
-			text += getFormateTable(tmp);
-		}
+		// remove the group heather. just for visual purporse
+		tmp = tmp.replace("sensorArray.", "");
+		tmp = tmp.replace("simulator.ammount.", "");
+		tmp = tmp.replace("simulator.", "");
+		tmp = tmp.replace("trooper.", "");
+		tmp = tmp.replace("aa.", "");
+		text += getFormateTable(tmp);
 
 		text += "</html>";
 		reportJLabel.setText(text);
 		reportJLabel.repaint();
 		// Hero.heroLogger.severe("updateMyOutsHelperInfo(): " + (System.currentTimeMillis() - t1));
-	}
-
-	/**
-	 * Create and return an {@link Card} based on the string representation. this method return <code>null</code> if the
-	 * string representation is not correct.
-	 * 
-	 * @param scard - Standar string representation of a card
-	 * @return Card
-	 */
-	private Card createCardFromString(String card) {
-		Card car = null;
-		int suit = -1;
-		int rank = -1;
-		String scard = new String(card);
-
-		String srank = scard.substring(0, 1).toUpperCase();
-		rank = srank.equals("A") ? Card.ACE : rank;
-		rank = srank.equals("K") ? Card.KING : rank;
-		rank = srank.equals("Q") ? Card.QUEEN : rank;
-		rank = srank.equals("J") ? Card.JACK : rank;
-		rank = srank.equals("T") ? Card.TEN : rank;
-		if (scard.startsWith("10")) {
-			rank = Card.TEN;
-			scard = scard.substring(1);
-		}
-		rank = scard.startsWith("9") ? Card.NINE : rank;
-		rank = scard.startsWith("8") ? Card.EIGHT : rank;
-		rank = scard.startsWith("7") ? Card.SEVEN : rank;
-		rank = scard.startsWith("6") ? Card.SIX : rank;
-		rank = scard.startsWith("5") ? Card.FIVE : rank;
-		rank = scard.startsWith("4") ? Card.FOUR : rank;
-		rank = scard.startsWith("3") ? Card.THREE : rank;
-		rank = scard.startsWith("2") ? Card.TWO : rank;
-
-		// remove rank
-		scard = scard.substring(1).toLowerCase();
-
-		suit = scard.startsWith("s") ? Card.SPADES : suit;
-		suit = scard.startsWith("c") ? Card.CLUBS : suit;
-		suit = scard.startsWith("d") ? Card.DIAMONDS : suit;
-		suit = scard.startsWith("h") ? Card.HEARTS : suit;
-
-		if (rank > 0 && suit > 0)
-			car = new Card(rank, suit);
-		else
-			Hero.heroLogger.warning("String " + card + " for card representation incorrect. Card not created");
-
-		return car;
-	}
-
-	/**
-	 * create the comunity cards. This method also set the currnet round of the game based on length of the
-	 * <code>cards</code> parameter.
-	 * <ul>
-	 * <li>3 for {@link PokerSimulator#FLOP_CARDS_DEALT}
-	 * <li>4 for {@link PokerSimulator#TURN}
-	 * <li>5 for {@link PokerSimulator#RIVER}
-	 * </ul>
-	 */
-	private void createComunityCards() {
-		ArrayList<String> list = new ArrayList<>();
-		if (cardsBuffer.containsKey("flop1"))
-			list.add(cardsBuffer.get("flop1"));
-		if (cardsBuffer.containsKey("flop2"))
-			list.add(cardsBuffer.get("flop2"));
-		if (cardsBuffer.containsKey("flop3"))
-			list.add(cardsBuffer.get("flop3"));
-		if (cardsBuffer.containsKey("turn"))
-			list.add(cardsBuffer.get("turn"));
-		if (cardsBuffer.containsKey("river"))
-			list.add(cardsBuffer.get("river"));
-
-		Card[] ccars = new Card[list.size()];
-		for (int i = 0; i < ccars.length; i++) {
-			ccars[i] = createCardFromString(list.get(i));
-		}
-		communityCards = new CommunityCards(ccars);
-		// set current round
-		currentRound = ccars.length == 3 ? FLOP_CARDS_DEALT : currentRound;
-		currentRound = ccars.length == 4 ? TURN_CARD_DEALT : currentRound;
-		currentRound = ccars.length == 5 ? RIVER_CARD_DEALT : currentRound;
-	}
-	/**
-	 * Create my cards
-	 * 
-	 * @param c1 - String representation of card 1
-	 * @param c2 - String representation of card 2
-	 */
-	private void createHoleCards() {
-		String c1 = cardsBuffer.get("hero.card1");
-		String c2 = cardsBuffer.get("hero.card2");
-		Card ca1 = createCardFromString(c1);
-		Card ca2 = createCardFromString(c2);
-		holeCards = new HoleCards(ca1, ca2);
-		currentRound = HOLE_CARDS_DEALT;
-	}
-
-	private String getFormateTable(String helperString) {
-		return getFormateTable(helperString, s -> true);
 	}
 
 	/**
@@ -781,116 +705,14 @@ public class PokerSimulator {
 	 * 
 	 * @return HTML table
 	 */
-	private String getFormateTable(String helperString, Predicate<String> valueFilter) {
+	private String getFormateTable(String helperString) {
 		String[] hslines = helperString.split("\n");
 		String res = "";
 		for (String lin : hslines) {
-			final String[] k_v = lin.split("[:]");
-			if (valueFilter.test(k_v[1])) {
-				lin = "<tr><td>" + lin + "</td></tr>";
-				res += lin.replaceAll(": ", "</td><td>");
-			}
+			lin = "<tr><td>" + lin + "</td></tr>";
+			res += lin.replaceAll(": ", "</td><td>");
 		}
 		return "<table border=\"0\", cellspacing=\"0\">" + res + "</table>";
 	}
 
-	/**
-	 * <p>
-	 * The probabilities aren't future predictions of what hand one or many opponents may achieve by the river, rather
-	 * they reflect the current hand that any single opponent may have already achieved.
-	 * <p>
-	 * this method allways set a minimum value for the gloval variable. when hero hat the nuts, set this variable as
-	 * <code>Hand.THREE_OF_A_KIND</code>
-	 */
-	private void updateHandValues() {
-		// the initialization of oppMostProbHand happen in clearenviorement method
-		String mostprobMsg = "";
-		String tophandMsg = "";
-		handPotential = 0;
-		handPotentialOuts = 0;
-		boolean oth = false;
-
-		// the values are selected from the list avoiding the hight card and pair
-		double lastVal = 0.0;
-		if (oppHandStatsHelper != null) {
-			float[] list = oppHandStatsHelper.getAllProbs();
-			for (int i = 0; i < Hand.STRAIGHT_FLUSH - 2; i++) {
-
-				// top opponent hand
-				if (list[i] > 0 && !oth) {
-					oth = true;
-					oppTopHand = Hand.STRAIGHT_FLUSH - i;
-					tophandMsg = handNames.get(i) + " " + percentageFormat.format(list[i]);
-				}
-
-				// most probable hand
-				if (list[i] > 0 && list[i] > lastVal) {
-					lastVal = list[i];
-					oppMostProbHand = Hand.STRAIGHT_FLUSH - i;
-					mostprobMsg = handNames.get(i) + " " + percentageFormat.format(list[i]);
-				}
-			}
-		}
-
-		// no detection of oppMostProbHand can be from 2 way. hero is in preflop or the current hand favor hero (is the
-		// nut). manual set to the standar Hand.THREE_OF_A_KIND
-		if (oppMostProbHand == -1 || currentRound < FLOP_CARDS_DEALT) {
-			oppMostProbHand = Hand.THREE_OF_A_KIND;
-			oppTopHand = Hand.THREE_OF_A_KIND;
-			mostprobMsg = "Manual setted to Hand.THREE_OF_A_KIND.";
-		}
-		setVariable("simulator.Hand streng villans", mostprobMsg + " " + tophandMsg);
-
-		// TEMP. select as potential, all hands that are EQUAL or BETTER than the most probable villan hand
-		String msg = "";
-		int prevOut = 0;
-		if (myOutsHelper != null) {
-			Card cards[][] = myOutsHelper.getAllOuts();
-			// for (int i = 0; i < Hand.STRAIGHT_FLUSH; i++) {
-			for (int i = 0; i <= (Hand.STRAIGHT_FLUSH - oppMostProbHand); i++) {
-				int outs = cards[i].length;
-				// if (currOut > 0 && currOut > handPotentialOuts) {
-				if (outs > 0) {
-					handPotentialOuts += outs;
-					// the most ount hand
-					if (outs > prevOut) {
-						handPotential = (Hand.STRAIGHT_FLUSH - i);
-						prevOut = outs;
-					}
-					msg += outs + " for " + handNames.get(i) + ", ";
-					// 210117: with this modification, hero supportet 3 hour of continuous battle in a table without
-					// oportunity and hold steady without loosing his chips. :D
-				}
-			}
-		}
-		// msg += handNames.get(Hand.STRAIGHT_FLUSH - handPotential) + " with " + handPotentialOuts + " outs";
-		msg = msg.length() > 0 ? msg.substring(0, msg.length() - 2) : msg;
-		setVariable("simulator.Hand potential", msg);
-	}
-
-	/**
-	 * update the simulation result to the console
-	 */
-	private void updateSimulationResults() {
-		winPlusTieProbability = myGameStatsHelper == null
-				? 0
-				: myGameStatsHelper.getWinProb() + myGameStatsHelper.getTieProb();
-
-		variableList.put("simulator.Troper probability", percentageFormat.format(winPlusTieProbability));
-		variableList.put("simulator.Trooper Current hand", getMyHandHelper().getHand().toString());
-		variableList.put("simulator.Table cards", getMyHoleCards().getFirstCard() + ", "
-				+ getMyHoleCards().getSecondCard() + ", " + getCommunityCards().toString());
-		String txt = "Amunitions " + getHeroChips() + " Pot " + getPotValue() + " Call " + getCallValue() + " Raise "
-				+ getRaiseValue() + " Position " + getTablePosition();
-		variableList.put("simulator.Table values", txt);
-		variableList.put("simulator.Simulator values",
-				"Round " + getCurrentRoundName() + " Players " + getNumSimPlayers());
-
-		Hero.heroLogger.info("Table values: " + variableList.get("simulator.Table values"));
-		Hero.heroLogger.info("Troper probability: " + variableList.get("simulator.Troper probability"));
-		Hero.heroLogger.info("Trooper Current hand: " + variableList.get("simulator.Trooper Current hand"));
-		Hero.heroLogger.info("Simulator values: " + variableList.get("simulator.Simulator values"));
-		Hero.heroLogger.info("Hand: " + variableList.get("simulator.Hand potential") + " "
-				+ variableList.get("simulator.Hand streng villans"));
-	}
 }

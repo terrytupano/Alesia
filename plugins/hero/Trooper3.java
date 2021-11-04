@@ -8,6 +8,9 @@ import org.apache.commons.math3.distribution.*;
 import org.apache.commons.math3.stat.descriptive.*;
 import org.jdesktop.application.*;
 
+import com.javaflair.pokerprophesier.api.adapter.*;
+import com.javaflair.pokerprophesier.api.card.*;
+
 import core.*;
 import plugins.hero.ozsoft.bots.*;
 import plugins.hero.utils.*;
@@ -39,7 +42,7 @@ import plugins.hero.utils.*;
  * @author terry
  *
  */
-public class Trooper extends Task {
+public class Trooper3 extends Task {
 
 	private static DecimalFormat fourDigitFormat = new DecimalFormat("#0.0000");
 	private static DecimalFormat twoDigitFormat = new DecimalFormat("#0.00");
@@ -65,11 +68,11 @@ public class Trooper extends Task {
 	private double currentHandCost;
 	private double playUntil;
 	private long playTime;
-	private Hashtable<String, PreflopCardsModel> preFlopCardsDist;
+	private Hashtable<String, PreflopCardsModel> cardsRanges;
 
 	private String subObtimalDist;
 
-	public Trooper(SensorsArray array, PokerSimulator pokerSimulator) {
+	public Trooper3(SensorsArray array, PokerSimulator pokerSimulator) {
 		super(Alesia.getInstance());
 		this.availableActions = new ArrayList<>();
 		this.pokerSimulator = pokerSimulator;
@@ -82,13 +85,12 @@ public class Trooper extends Task {
 		// this.pokerSimulator = sensorsArray.getPokerSimulator();
 		this.roundCounter = 0;
 		this.playUntil = 0;
-
 		// load all preflop ranges
-		this.preFlopCardsDist = new Hashtable<>();
+		this.cardsRanges = new Hashtable<>();
 		TEntry<String, String>[] tarr = PreflopCardsModel.getPreflopList();
 		for (TEntry<String, String> tEntry : tarr) {
 			String rName = tEntry.getKey();
-			preFlopCardsDist.put(rName, new PreflopCardsModel(rName));
+			cardsRanges.put(rName, new PreflopCardsModel(rName));
 		}
 	}
 
@@ -118,55 +120,70 @@ public class Trooper extends Task {
 		this.paused = pause;
 		setVariableAndLog(STATUS, paused ? "Trooper paused" : "Trooper resumed");
 	}
+	/**
+	 * this method override the global variable {@link #availableActions} when the tropper detect an oportunity.
+	 * 
+	 * @return <code>true</code> if hero has an oportunity
+	 * @see #setBluffActions()
+	 */
+	private boolean checkPosflopBluff() {
+		String txt = null;
+
+		if (pokerSimulator.getMyHandHelper().isTheNuts())
+			txt = "Is the Nuts";
+
+		// trooper is set
+		boolean set = pokerSimulator.isSet();
+
+		// probability
+		double prob = pokerSimulator.getProbability();
+
+		// is a T o better card. T o better are the 40% of all card. this mean, hero hat 60% chance of win in a bluff
+		if (pokerSimulator.getSignificantRank() > Card.NINE && set && prob > 0.66) {
+			Card[] cards = pokerSimulator.getMyHandHelper().getSignificantCards();
+			txt = cards.length + " Significant card with " + twoDigitFormat.format(prob);
+		}
+
+		if (txt != null) {
+			setVariableAndLog(EXPLANATION, "--- Oportunity detected " + txt + " ---");
+		}
+		return txt != null;
+	}
 
 	/**
-	 * this method check the bluff parameter and act accordinly. when Hero is in range of the parameter
-	 * <code>bluffUpperBound</code> and the hero cards are in range of the preflop card distribution named <b>bluff</b>
-	 * this method will return <code>true</code> and override the main variable {@link #availableActions} and set only
-	 * reise all actions for hero to bluff
+	 * this method check the bluff parameter and act accordinly. the bluff parameter is expresed in porcentage of when
+	 * hero is allow to bluff. E.G: bluff=300, buyIn=10000, Nro. of elements in blufflist=10. With this parameteres,
+	 * hero build a list of level 10000/10 = 10 levels. When an bluff oportunity is present, hero if only available to
+	 * bluff when:
+	 * <ul>
+	 * <li>the EV ist > 0
+	 * <li>the ammunitions is <= to the upper bound
+	 * <li>the index of the currend hand (allow to bluf) >= ammunitions level.
+	 * </ul>
+	 * <p>
+	 * the last option, allow hero to bluff with poor hand when hero is in hard situation. when hero recovery his chips,
+	 * the index ist hi
 	 * 
-	 * @return <code>true</code> for bluff, <code>false</code> oetherwise
+	 * @return <code>true</code> when this method clear the main variable {@link #availableActions} and set only reise
+	 *         all actions for hero to bluff. false otherwise.
 	 */
-	private boolean checkOpportunities() {
-		if ((boolean) parameters.get("takeOpportunity") == false)
-			return false;
-
-		String txt = null;
+	private boolean checkPreflopBluff() {
+		boolean ok = false;
+		double bluffParm = Double.parseDouble(parameters.get("bluffUpperBound").toString());
+		double chips = pokerSimulator.getHeroChips();
 		double buyIn = pokerSimulator.buyIn;
-		int bluffUpperB = Integer.parseInt(parameters.get("bluffUpperBound").toString());
-		double chips = pokerSimulator.heroChips;
-		double BUPB = (bluffUpperB / 100.0 * buyIn);
-
-		// TEMP: implementation of bluffUpperBound is suspended. The direct selection of the preflop distribution take
-		// control of the preflop frecuence (5% card selection ist direct correlate with 5% bluff frecuence).
-		// TODO: this decition is BIAS and maybe muss be controled randomly
-		// if (chips > 0 && chips < BUPB && bluffP <= p) {
-
-		// Preflop
-		if (pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
-			PreflopCardsModel bluff = preFlopCardsDist.get("bluff");
-			if (bluff.containsHand(pokerSimulator.holeCards)) {
-				txt = "Current Hole cards in bluff range.";
+		// if chips and bluff
+		bluffParm = (bluffParm / 100.0 * buyIn);
+		if (chips > 0 && chips < bluffParm) {
+			PreflopCardsModel bluff = cardsRanges.get("bluff");
+			HoleCards hc = pokerSimulator.getMyHoleCards();
+			if (bluff.containsHand(hc)) {
+				setVariableAndLog(EXPLANATION, "Hero is able to bluff.");
 				setPreflopBluffActions();
+				ok = true;
 			}
 		}
-
-		// posflop
-		if (pokerSimulator.currentRound == PokerSimulator.FLOP_CARDS_DEALT) {
-			if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
-				txt = "Is the Nuts.";
-
-			double minWin = Integer.parseInt(parameters.get("oppLowerBound").toString());
-			if (pokerSimulator.winProb_n >= minWin) {
-				txt = String.format("Current win probability (%1.3f) >= (%1.3f) oppLowerBound",
-						pokerSimulator.winProb_n , minWin);
-			}
-		}
-
-		if (txt != null)
-			setVariableAndLog(EXPLANATION, ">> OPPORTUNITY DETECTED: " + txt + " <<");
-
-		return txt == null;
+		return ok;
 	}
 	/**
 	 * clear the enviorement for a new round.
@@ -189,7 +206,7 @@ public class Trooper extends Task {
 	}
 
 	/**
-	 * decide de action(s) to perform. This method is called when the {@link Trooper} detect that is my turn to play. At
+	 * decide de action(s) to perform. This method is called when the {@link Trooper3} detect that is my turn to play. At
 	 * this point, the game enviorement is waiting for an accion.
 	 * 
 	 */
@@ -204,7 +221,7 @@ public class Trooper extends Task {
 
 		// PREFLOP
 		if (pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
-			if (!checkOpportunities())
+			if (!checkPreflopBluff())
 				setPreflopActions();
 		}
 
@@ -218,7 +235,8 @@ public class Trooper extends Task {
 		// in concordance whit rule1: if i can keep checking until i get a luck card. i will do. this behabior also
 		// allow for example getpreflop action continue because some times, the enviorement is too fast and the trooper
 		// is unable to retribe all information
-		if (availableActions.size() == 0 && pokerSimulator.isSensorEnabled("call") && pokerSimulator.callValue <= 0) {
+		if (availableActions.size() == 0 && pokerSimulator.isSensorEnabled("call")
+				&& pokerSimulator.getCallValue() <= 0) {
 			setVariableAndLog(STATUS, "Empty list. Checking");
 			availableActions.add(TrooperAction.CHECK);
 		}
@@ -236,16 +254,85 @@ public class Trooper extends Task {
 	 * real chance of winning. The previos estimation based on probabilities send the trooper to invest a lot on
 	 * amunitions in low value hands an is easy anbush by villans.
 	 * 
+	 * // double EHS = HS + (1 - HS) * pHS; // empirical top: 0.8131 prob with 20 ouds of improbe hand in the folowin
+	 * example: Ts Qs Js Tc Ks // return hp / 0.8131;
+	 * 
+	 * TODO: control the number of amunitions per street. the trooper most dangeros disadvantege is when all the villas
+	 * put small amount of chips during a lager period of time in a single street (generaly preflop) hero must avoid
+	 * this situation because in subsecuent street, the pot will be so hight that hero will be available to go allin
+	 * whit poor hands
 	 **/
 	private double getAmmunitions() {
-		// EHS = HSn + (1 - HSn) x Ppot
-		double EHS = PokerSimulator.HS_n + (1 - PokerSimulator.HS_n) * PokerSimulator.Ppot;
-		double ammo = EHS * pokerSimulator.heroChips;
-		String txt1 = String.format("%0.3f = %0.3f + (1 - %0.3f) Ammo = %7.2f", EHS, PokerSimulator.HS_n,
-				PokerSimulator.HS_n, PokerSimulator.Ppot);
+		double pot = pokerSimulator.getPotValue();
+		// int handPotential = pokerSimulator.getHandPotential();
+		int handOuts = pokerSimulator.getHandPotentialOuts();
+		double bBlind = pokerSimulator.bigBlind;
+
+		String bluffMsg = "No bluff";
+		double bluff = 0.0;
+		if (checkPosflopBluff()) {
+			double[] bv = getAvgBluffValue();
+			bluff = bv[0];
+			int vill = (int) bv[1];
+			bluffMsg = twoDigitFormat.format(bluff) + " bluff form " + vill + " villans";
+		}
+
+		// PROBLEM: hero try to presuit hight hands. the relation handpotential / oppMostProbHand is to low, the result
+		// is invest part of the pot * 2 or 3 times
+		// solution: normailization of the result, or handpotential / oppMostProbHand
+		// TEST: the future hand potential is in relation whit oppTopHand. this avoid hero to prusuit hand whit many
+		// outs and hihgt
+		double opt1 = pokerSimulator.getCurrentHandStreng(false);
+		double opt2 = pokerSimulator.getSignificantRank() / (Card.ACE * 1.0);
+		// when significat card is negative, haro has nothing. force selection to opt1
+		opt2 = opt2 < 0 ? Double.MAX_VALUE : opt2;
+		double handStreng = Math.min(opt1, opt2);
+		String sufix = handStreng == opt1 ? "Hs" : "Sc";
+		String myPotMsg = twoDigitFormat.format(pot) + " * " + twoDigitFormat.format(handStreng) + sufix;
+
+		// int oppTopHand = pokerSimulator.getOppTopHand();
+
+		// the current fraction of the pot ammount that until now, is already mine
+		double myPot = pot * handStreng;
+
+		// ammount of ammo that is worth to invest according to future outcome
+		int factor = 2;
+		double outAmmo = handOuts * bBlind * factor;
+		// double fhp = (handPotential * 1.0) / (oppTopHand * 1.0);
+		// double hsdiff = (pot - myPot) * fhp;
+		double invest = 0.0;
+		String investMsg = "";
+		// TEST: assign nur the value computed in outshand. this allow hero only go for really good hand instead of try
+		// whid hands that are por in outs
+		// if (outAmmo > hsdiff) {
+		invest = outAmmo;
+		investMsg = (handOuts * factor) + " BB";
+		// } else {
+		// invest = hsdiff;
+		// investMsg = twoDigitFormat.format((pot - myPot)) + " * " + twoDigitFormat.format(fhp);
+		// }
+
+		double ammunitions = myPot + invest + bluff;
+
+		String txt1 = "(" + myPotMsg + ") + (" + investMsg + ") + (" + bluffMsg + ") = "
+				+ twoDigitFormat.format(ammunitions);
 		setVariableAndLog(EXPLANATION, txt1);
-		return ammo;
+		return ammunitions;
 	}
+
+	/**
+	 * return the EV for the preflop card accourding to the blufflist. this method return <code>-1</code> if no EV was
+	 * found
+	 * 
+	 * @return ev or -1 private double getPreflopEV() { double ev = -1; HoleCards hc = pokerSimulator.getMyHoleCards();
+	 *         String s = hc.isSuited() ? "s" : ""; String c1 = hc.getFirstCard().toString().substring(0, 1) +
+	 *         hc.getSecondCard().toString().substring(0, 1); String c2 = hc.getSecondCard().toString().substring(0, 1)
+	 *         + hc.getFirstCard().toString().substring(0, 1); ArrayList<String> list1 = bluffHands.stream().filter(lst
+	 *         -> lst.get(0).equals(c1 + s)).findFirst().orElse(null); ArrayList<String> list2 =
+	 *         bluffHands.stream().filter(lst -> lst.get(0).equals(c2 + s)).findFirst().orElse(null); ArrayList<String>
+	 *         evvalues = list1 == null ? list2 : list1; int tablep = pokerSimulator.getTablePosition(); if (evvalues !=
+	 *         null && tablep > -1) ev = Double.parseDouble(evvalues.get(tablep + 2)); return ev; }
+	 */
 
 	/**
 	 * this method retrive the ammount of chips of all currentliy active villans. the 0 position is the amount of chips
@@ -257,7 +344,7 @@ public class Trooper extends Task {
 		double[] rval = new double[2];
 		// FIXME: for simulation purpose, return my chips
 		if (sensorsArray == null) {
-			rval[0] = pokerSimulator.heroChips;
+			rval[0] = pokerSimulator.getHeroChips();
 			rval[1] = 3;
 			return rval;
 		}
@@ -304,6 +391,28 @@ public class Trooper extends Task {
 		return selact;
 	}
 
+	private void handStrengFilter() {
+		// fail safe.
+		if (availableActions.isEmpty()) {
+			Hero.heroLogger.info("handStrengFilter() has no actions to filter");
+			return;
+		}
+		int orgActNum = availableActions.size();
+		double handS = pokerSimulator.getCurrentHandStreng();
+		double max = availableActions.stream().mapToDouble(act -> act.amount).max().getAsDouble();
+		double upperB = max * handS;
+		availableActions.removeIf(act -> act.amount > upperB);
+		// invert sing so, suboptimal mehtod can order in the right way
+		// availableActions.forEach((ta) -> ta.setAmount(ta.amount * -1.0));
+		String fila = availableActions.size() == 0 ? "all" : "" + (orgActNum - availableActions.size());
+		setVariableAndLog(EXPLANATION,
+				"Hero hand streng ratio = " + twoDigitFormat.format(handS) + " " + fila + " actions removed");
+	}
+	private boolean isMyTurnToPlay() {
+		return sensorsArray.isSensorEnabled("fold") || sensorsArray.isSensorEnabled("call")
+				|| sensorsArray.isSensorEnabled("raise");
+	}
+
 	/**
 	 * 
 	 * this method fill the global variable {@link #availableActions} whit all available actions according to the
@@ -320,10 +429,10 @@ public class Trooper extends Task {
 	 */
 	private void loadActions(double maximum) {
 		availableActions.clear();
-		double call = pokerSimulator.callValue;
-		double raise = pokerSimulator.raiseValue;
-		double chips = pokerSimulator.heroChips;
-		double pot = pokerSimulator.potValue;
+		double call = pokerSimulator.getCallValue();
+		double raise = pokerSimulator.getRaiseValue();
+		double chips = pokerSimulator.getHeroChips();
+		double pot = pokerSimulator.getPotValue();
 
 		// fail safe: the maximun can.t be greater as chips.
 		double imax = maximum > chips ? chips : maximum;
@@ -375,7 +484,7 @@ public class Trooper extends Task {
 	 * 
 	 */
 	private void potOdd() {
-		double prob = PokerSimulator.winProb_n;
+		double prob = pokerSimulator.getProbability();
 		double ammunitions = getAmmunitions();
 
 		// no calculation for 0 values
@@ -391,7 +500,13 @@ public class Trooper extends Task {
 		}
 		// remove all negative values
 		availableActions.removeIf(ta -> ta.expectedValue < 0);
+
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
+		// String val = availableActions.keySet().stream().map(k -> k + "=" +
+		// twoDigitFormat.format(asociatedCost.get(k)))
+		// .collect(Collectors.joining(", "));
+		// val = val.trim().isEmpty() ? "No positive EV" : val;
+		// TODO: log availa actions??
 	}
 
 	/**
@@ -406,25 +521,26 @@ public class Trooper extends Task {
 	private void setPreflopActions() {
 		availableActions.clear();
 		String rName = (String) parameters.get("preflopCards");
-		PreflopCardsModel pfcm = preFlopCardsDist.get(rName);
-		boolean good = pfcm.containsHand(pokerSimulator.holeCards);
+		HoleCards holeCards = pokerSimulator.getMyHoleCards();
+		PreflopCardsModel cardsRange = cardsRanges.get(rName);
+		boolean good = cardsRange.containsHand(holeCards);
 		if (!good) {
 			setVariableAndLog(EXPLANATION, "Preflop hand not good.");
 			return;
 		}
-
 		double pfBase = ((Number) parameters.get("preflopRekonAmmo.base")).doubleValue();
-		double pfband = ((Number) parameters.get("preflopRekonAmmo.hand")).doubleValue();
-		double base = pokerSimulator.bigBlind * pfBase;
-		double ev = pfcm.getEV(pokerSimulator.holeCards);
+		double bBlind = pokerSimulator.bigBlind;
+		double base = bBlind * pfBase;
 
-		// maxreconammo = base + (inversion * ev)
+		// chen score is a renge [7,22] - 7 = [0, 15]
+		double chenRank = PokerSimulator.getChenScore(holeCards);
+		chenRank = (chenRank - 7d) / 15d;
 		if (maxRekonAmmo == -1) {
-			maxRekonAmmo = base + (pfband * ev);
+			maxRekonAmmo = base + (bBlind * chenRank);
 		}
 
-		double call = pokerSimulator.callValue;
-		double raise = pokerSimulator.raiseValue;
+		double call = pokerSimulator.getCallValue();
+		double raise = pokerSimulator.getRaiseValue();
 		// can i check ??
 		if (call == 0) {
 			availableActions.add(TrooperAction.CHECK);
@@ -444,7 +560,7 @@ public class Trooper extends Task {
 			return;
 		}
 
-		String txt1 = String.format("Preflop hand in range %7.2f + (%7.2f * %7.2f) = %7.2f", base, pfband, ev,
+		String txt1 = String.format("Preflop hand in range %7.2f (%7.2f * %7.2f) = %7.2f", base, bBlind, chenRank,
 				maxRekonAmmo);
 		setVariableAndLog(EXPLANATION, txt1);
 	}
@@ -465,8 +581,9 @@ public class Trooper extends Task {
 
 		// to this point, if availableactions are empty, means hero is responding a extreme hihgt raise. that mean meybe
 		// hero is weak. at this point reise mean all in. (call actions is not considerer because is not bluff)
-		if (availableActions.size() == 0 && pokerSimulator.raiseValue >= 0)
-			availableActions.add(new TrooperAction("raise", pokerSimulator.raiseValue));
+		double raise = pokerSimulator.getRaiseValue();
+		if (availableActions.size() == 0 && raise >= 0)
+			availableActions.add(new TrooperAction("raise", raise));
 	}
 
 	private void setVariableAndLog(String key, Object value) {
@@ -485,11 +602,6 @@ public class Trooper extends Task {
 			// 200210: Hero play his first 2 hours with REAL +EV. Convert 10000 chips in 64000
 			Hero.heroLogger.info(key1 + value1);
 		}
-	}
-
-	private boolean isMyTurnToPlay() {
-		return sensorsArray.isSensorEnabled("fold") || sensorsArray.isSensorEnabled("call")
-				|| sensorsArray.isSensorEnabled("raise");
 	}
 
 	/**
@@ -551,7 +663,7 @@ public class Trooper extends Task {
 				double chips = sensorsArray.getSensor("hero.chips").getNumericOCR();
 				// if chips are not available, show the last computed play safe value
 				if (chips > 0)
-					playUntil = pokerSimulator.heroChipsMax - (playUntilParm * pokerSimulator.buyIn);
+					playUntil = pokerSimulator.getHeroChipsMax() - (playUntilParm * pokerSimulator.buyIn);
 
 				if ((playtimeParm > 0 && playTime > playtimeParm)
 						|| (chips > 0 && playUntilParm > 0 && chips <= playUntil)
@@ -672,11 +784,12 @@ public class Trooper extends Task {
 	protected void performDecisionMethod() {
 		String decisionM = parameters.get("decisionMethod").toString();
 		if ("potOdd".equals(decisionM)) {
-			loadActions(pokerSimulator.heroChips);
+			loadActions(pokerSimulator.getHeroChips());
 			potOdd();
 		} else {
-			// loadActions(pokerSimulator.heroChips);
-			// TODO: future decition method or delete this method
+			loadActions(pokerSimulator.getHeroChips());
+			// loadPostFlopActions(pokerSimulator.getPotValue());
+			handStrengFilter();
 		}
 	}
 

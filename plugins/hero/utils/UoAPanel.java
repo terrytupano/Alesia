@@ -130,12 +130,13 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 			console.append("ERROR: Comunity card must contain 3, 4 or 5 cards.\n");
 			return;
 		}
-		String comunityCards = Hero.parseCards(selectedCopy);
+		String comunityCards = PokerSimulator.parseCards(selectedCopy);
 		comunityCards = comunityCards.replace("1c", "").trim();
 
 		console.append("Hole cards: " + holeCards + " Comunity cards: " + comunityCards + "\n");
 
-		Properties properties = Hero.getUoAEvaluation(holeCards, comunityCards);
+		long t = System.currentTimeMillis();
+		Properties properties = PokerSimulator.getUoAEvaluation(new UoAHand(holeCards), new UoAHand(holeCards));
 
 		// my hand evaluation
 		if (!holeCards.equals("")) {
@@ -147,7 +148,7 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 
 		// Chen score
 		if (!holeCards.equals("")) {
-			console.append("\nChen score: " + Hero.getChenScore(new UoAHand(holeCards)) + "\n");
+			console.append("\nChen score: " + PokerSimulator.getChenScore(new UoAHand(holeCards)) + "\n");
 		}
 
 		// board evaluation
@@ -155,36 +156,29 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 			console.append("\nHand Strength:\n");
 			ArrayList<UoAHand> list = (ArrayList<UoAHand>) properties.get("HSAheadList");
 			// String examp = Hero.parseHands(list.subList(0, Math.min(list.size(), 20)));
-			String examp = Hero.parseHands(list);
+			String examp = PokerSimulator.parseHands(list);
 			console.append("Ahead: \t" + properties.get("HSAhead") + "\t (" + properties.get("HSAhead%") + "%)\t"
 					+ examp + "\n");
 
 			list = (ArrayList<UoAHand>) properties.get("HSTiedList");
 			// String examp = Hero.parseHands(list.subList(0, Math.min(list.size(), 20)));
-			examp = Hero.parseHands(list);
+			examp = PokerSimulator.parseHands(list);
 			console.append(
 					"Tied: \t" + properties.get("HSTied") + "\t (" + properties.get("HSTied%") + "%)\t" + examp + "\n");
 
 			list = (ArrayList<UoAHand>) properties.get("HSBehindList");
 			// String examp = Hero.parseHands(list.subList(0, Math.min(list.size(), 20)));
-			examp = Hero.parseHands(list);
+			examp = PokerSimulator.parseHands(list);
 			console.append("Behind: " + properties.get("HSBehind") + "\t (" + properties.get("HSBehind%") + "%)\t"
 					+ examp + "\n");
 
-			// hand Strehent evaluator
-			console.append("\nHand Potential:\n");
-			double[] PPot_NPot = null;
-			try {
-				long t = System.currentTimeMillis();
-				PPot_NPot = Hero.getHandPotential(holeCards, comunityCards, 1);
-				console.append("PPot: " + PPot_NPot[0] + "\n");
-				console.append("NPot: " + PPot_NPot[1] + "\n");
-				console.append("Excetution time: " + (System.currentTimeMillis() - t) + "\n");
-
-			} catch (Exception e) {
-				e.printStackTrace();
-				console.append(e.getMessage() + "\n");
-			}
+			// hand Strehent evaluator			
+			console.append("PPot: \t" + properties.get("PPot") + "\n");
+			console.append("NPot: \t" + properties.get("NPot") + "\n");
+			console.append("winProb: \t" + properties.get("winProb") + "\n");
+			console.append("isTheNut: \t" + properties.get("isTheNut") + "\n");
+			
+			console.append("Excetution time: " + (System.currentTimeMillis() - t) + "\n");
 		}
 	}
 

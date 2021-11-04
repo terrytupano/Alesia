@@ -175,7 +175,7 @@ public class Trooper2 extends Task {
 	 */
 	private boolean checkPreflopBluff() {
 		boolean ok = false;
-		double bluffParm = Double.parseDouble(parameters.get("upperBoundBluff").toString());
+		double bluffParm = Double.parseDouble(parameters.get("bluffUpperBound").toString());
 		double chips = pokerSimulator.getHeroChips();
 		double buyIn = pokerSimulator.buyIn;
 		// if chips and bluff
