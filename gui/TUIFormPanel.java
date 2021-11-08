@@ -512,8 +512,8 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 					// TEntry ae = (TEntry) ((JComboBox) jcmp).getSelectedItem();
 					// val = ae.getKey();
 					val = ((TEntry) obj).getKey();
-					// new Supor for *null 
-					if("*null".equals(val))
+					// new Supor for *null
+					if ("*null".equals(val))
 						val = null;
 				} else {
 					val = obj;
@@ -546,12 +546,11 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 	 */
 	public void registreSettings() {
 		Collection<JComponent> cmps = fields.values();
+		ArrayList<String> mths = new ArrayList<>();
 		for (JComponent cmp : cmps) {
-			if (cmp instanceof SettingsMethods) {
-				Configuration cnf = (Configuration) cmp.getClientProperty("settingsProcessor");
-				((SettingsMethods) cmp).registerSettings(cnf);
-			}
+			mths.add(cmp.getName());
 		}
+		registreSettings(mths.toArray(new String[0]));
 	}
 
 	/**

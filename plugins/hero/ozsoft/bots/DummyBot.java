@@ -19,7 +19,6 @@ package plugins.hero.ozsoft.bots;
 
 import java.util.*;
 
-import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.actions.*;
 
@@ -34,19 +33,10 @@ import plugins.hero.ozsoft.actions.*;
 public class DummyBot extends Bot {
 
 	@Override
-	public void messageReceived(String message) {
-		// Not implemented.
-	}
-
-	@Override
 	public void actorRotated(Player actor) {
 		// Not implemented.
 	}
 
-	@Override
-	public void boardUpdated(UoAHand hand, int bet, int pot) {
-		// Not implemented.
-	}
 
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
@@ -55,6 +45,13 @@ public class DummyBot extends Bot {
 		} else {
 			return PlayerAction.CALL;
 		}
+	}
+
+
+	@Override
+	public void handStarted(Player dealer) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

@@ -27,12 +27,10 @@ import org.jdesktop.application.*;
 import com.alee.laf.*;
 import com.alee.laf.button.*;
 import com.alee.utils.*;
-import com.javaflair.pokerprophesier.api.card.*;
 
 import core.*;
 import core.datasource.model.*;
 import net.sourceforge.tess4j.*;
-import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.bots.*;
 import plugins.hero.ozsoft.gui.*;
@@ -64,6 +62,19 @@ public class Hero extends TPlugin {
 
 		Alesia.getInstance().openDB("hero");
 
+	}
+
+	public static boolean allowSimulationGUIUpdate() {
+		// never log in simulationSpeed = 0;
+		if (Hero.simulationSpeed == 0)
+			return false;
+
+		// in simulation eviorement, update panel only for hero when the speed is not 0
+		if (!(Hero.simulationSpeed > 0 && "Hero".equals(Hero.simulationPlayer)))
+			return false;
+
+		// the speed is correct and the current player is Hero
+		return true;
 	}
 
 	public static Action getLoadAction() {
@@ -232,8 +243,6 @@ public class Hero extends TPlugin {
 
 			int buyIn = ((Double) values.get("table.buyIn")).intValue();
 			int bb = ((Double) values.get("table.bigBlid")).intValue();
-			PokerSimulator simulator = new PokerSimulator();
-			simulatorPanel.updatePokerSimulator(simulator);
 			Table table = new Table(TableType.NO_LIMIT, buyIn, bb);
 			for (SimulatorClient client : clients) {
 				if (client.getBoolean("isActive")) {
@@ -244,13 +253,18 @@ public class Hero extends TPlugin {
 					// Bot bot = (Bot) cons.newInstance(name);
 					Bot bot = (Bot) cls.newInstance();
 					bot.messageReceived("PlayerName=" + name);
-					bot.setObservationMethod(client.getString("observationMethod"));
-					bot.setPokerSimulator(simulator);
+					PokerSimulator simulator = new PokerSimulator();
+					Trooper trooper = new Trooper(null, simulator);
+					bot.setPokerSimulator(simulator, trooper);
 					Player p = new Player(name, buyIn, bot);
 					table.addPlayer(p);
+					if ("Hero".equals(name))
+						simulatorPanel.updatePokerSimulator(simulator);
 				}
 			}
-			table.setSpeed(1000);
+			startDate = new Date();
+			simulationSpeed = 0;
+			table.setSpeed(simulationSpeed);
 			table.setSimulationsHand(2000000);
 			table.whenPlayerLose(true, Table.RESTAR);
 			table.whenPlayerLose(false, Table.RESTAR);
@@ -266,6 +280,12 @@ public class Hero extends TPlugin {
 			return null;
 		}
 	}
+
+	/** in simualtion envioremet, this is the speed of the simulation. -1 mean no simulation eviorement. real live */
+	private static int simulationSpeed = -1;
+
+	/** in simualtion envioremet, this is the current player that muss decide or act */
+	public static String simulationPlayer;
 
 	@org.jdesktop.application.Action
 	public void stopTrooper(ActionEvent event) {
@@ -298,6 +318,8 @@ public class Hero extends TPlugin {
 
 	private void initTrooperEnviorement() {
 		// dont put isTestMode = false; HERE !!!!!!!!!!!!!!!!!
+		simulationPlayer = null;
+		simulationSpeed = -1;
 		startDate = new Date();
 		shapeAreas = new ShapeAreas(Hero.tableFile);
 		shapeAreas.read();

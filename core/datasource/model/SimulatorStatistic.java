@@ -5,7 +5,7 @@ import org.javalite.activejdbc.annotations.*;
 
 @DbName("hero")
 @Table("SIMULATORSTATISTICS")
-@CompositePK({"session"})
+@CompositePK({"reconnBase", "reconnBand", "oppLowerBound"})
 public class SimulatorStatistic extends Model {
 
 }

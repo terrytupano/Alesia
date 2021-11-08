@@ -56,8 +56,6 @@ public class SensorsArray {
 	private PokerSimulator pokerSimulator;
 	private ShapeAreas screenAreas;
 	DescriptiveStatistics tesseractTime = new DescriptiveStatistics(10);
-	private ArrayList<DescriptiveStatistics> potValStats;
-	private ArrayList<DescriptiveStatistics> ammoControlStats;
 	private GameRecorder gameRecorder;
 	private int villansBeacon = 0;
 
@@ -68,19 +66,6 @@ public class SensorsArray {
 		this.lookingBorder = new LineBorder(Color.ORANGE, 2);
 		this.standByBorder = new LineBorder(new JPanel().getBackground(), 2);
 		this.screenSensors = new TreeMap<>();
-		this.potValStats = new ArrayList<>();
-		// TODO: temp solution
-		// potValStats.add(new DescriptiveStatistics());
-		// potValStats.add(new DescriptiveStatistics());
-		// potValStats.add(new DescriptiveStatistics());
-		// potValStats.add(new DescriptiveStatistics());
-		// potValStats.add(new DescriptiveStatistics());
-		// this.ammoControlStats = new ArrayList<>();
-		// ammoControlStats.add(new DescriptiveStatistics());
-		// ammoControlStats.add(new DescriptiveStatistics());
-		// ammoControlStats.add(new DescriptiveStatistics());
-		// ammoControlStats.add(new DescriptiveStatistics());
-		// ammoControlStats.add(new DescriptiveStatistics());
 	}
 
 	/**

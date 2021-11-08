@@ -20,7 +20,6 @@ package plugins.hero.ozsoft.bots;
 import java.util.*;
 
 import plugins.hero.*;
-import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.actions.*;
 
@@ -33,22 +32,11 @@ import plugins.hero.ozsoft.actions.*;
  * good cards or when bluffing). <br />
  * <br />
  * 
- * TODO:
- * <ul>
- * <li>Improve basic bot AI</li>
- * <li>bluffing</li>
- * <li>consider board cards</li>
- * <li>consider current bet</li>
- * <li>consider pot</li>
- * </ul>
- * 
  * @author Oscar Stigter
  */
 public class ChenBasicBot extends Bot {
 
 	/** Tightness (0 = loose, 100 = tight). */
-	// 8
-	// 36
 	private final int tightness;
 
 	/** Betting aggression (0 = safe, 100 = aggressive). */
@@ -57,12 +45,10 @@ public class ChenBasicBot extends Bot {
 	/** Table type. */
 	private TableType tableType;
 
-	/** The hole cards. */
-	private UoAHand hand;
-
 	public ChenBasicBot() {
 		this((int) (Math.random() * 100d), (int) (Math.random() * 100d));
 	}
+	
 	/**
 	 * Constructor.
 	 * 
@@ -82,39 +68,7 @@ public class ChenBasicBot extends Bot {
 	}
 
 	@Override
-	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
-		this.tableType = type;
-	}
-
-	@Override
-	public void messageReceived(String message) {
-		// Not implemented.
-	}
-
-	@Override
-	public void handStarted(Player dealer) {
-		hand = null;
-	}
-
-	@Override
 	public void actorRotated(Player actor) {
-		// Not implemented.
-	}
-
-	@Override
-	public void boardUpdated(UoAHand hand, int bet, int pot) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void playerUpdated(Player player) {
-		if (player.getHand().size() == NO_OF_HOLE_CARDS) {
-			this.hand = player.getHand();
-		}
-	}
-
-	@Override
-	public void playerActed(Player player) {
 		// Not implemented.
 	}
 
@@ -125,7 +79,7 @@ public class ChenBasicBot extends Bot {
 			// No choice, must check.
 			action = PlayerAction.CHECK;
 		} else {
-			double chenScore = PokerSimulator.getChenScore(hand);
+			double chenScore = PokerSimulator.getChenScore(myHole);
 			double chenScoreToPlay = tightness * 0.2;
 			if ((chenScore < chenScoreToPlay)) {
 				if (allowedActions.contains(PlayerAction.CHECK)) {
@@ -196,5 +150,11 @@ public class ChenBasicBot extends Bot {
 			}
 		}
 		return action;
+	}
+
+	@Override
+	public void handStarted(Player dealer) {
+		// TODO Auto-generated method stub
+		
 	}
 }

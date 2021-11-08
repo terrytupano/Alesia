@@ -39,19 +39,6 @@ import plugins.hero.ozsoft.gui.*;
  * <br />
  * </ul>
  * 
- * TODO:
- * <ul>
- * <li>measurement of bad-luck biorhitmus</li>
- * <li>measurement of bad-luck biorhitmus</li>
- * 
- * <li>Improve basic bot AI</li>
- * <li>bluffing</li>
- * <li>consider board cards</li>
- * <li>consider current bet</li>
- * <li>consider pot</li>
- * </ul>
- * 
- * @author Oscar Stigter
  */
 public class BasicBot extends Bot {
 
@@ -185,5 +172,11 @@ public class BasicBot extends Bot {
 	@Override
 	public void actorRotated(Player actor) {
 		// Not implemented.
+	}
+
+	@Override
+	public void handStarted(Player dealer) {
+		// TODO Auto-generated method stub
+		
 	}
 }

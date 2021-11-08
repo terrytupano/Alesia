@@ -136,7 +136,7 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 		console.append("Hole cards: " + holeCards + " Comunity cards: " + comunityCards + "\n");
 
 		long t = System.currentTimeMillis();
-		Properties properties = PokerSimulator.getUoAEvaluation(new UoAHand(holeCards), new UoAHand(holeCards));
+		Properties properties = PokerSimulator.getUoAEvaluation(new UoAHand(holeCards), new UoAHand(comunityCards));
 
 		// my hand evaluation
 		if (!holeCards.equals("")) {
@@ -176,6 +176,7 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 			console.append("PPot: \t" + properties.get("PPot") + "\n");
 			console.append("NPot: \t" + properties.get("NPot") + "\n");
 			console.append("winProb: \t" + properties.get("winProb") + "\n");
+			console.append("HS: \t" + properties.get("HS") + "\n");
 			console.append("isTheNut: \t" + properties.get("isTheNut") + "\n");
 			
 			console.append("Excetution time: " + (System.currentTimeMillis() - t) + "\n");

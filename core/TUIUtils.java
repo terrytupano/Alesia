@@ -828,17 +828,14 @@ public class TUIUtils {
 		return jcbox;
 	}
 
-	/**
-	 * Return a {@link TWebComboBox} with the standar configuration parameters
-	 * 
-	 * @param componentName - name of the compoment
-	 * @param listId - prefix of the list elements stored in the app or plugins {@link ResourceBundle}
-	 * 
-	 * @return {@link TWebComboBox}
-	 */
 	public static TWebComboBox getTWebComboBox(String componentName, String listId) {
 		TEntry[] entries = TStringUtils.getTEntryGroup(listId);
 		return getTWebComboBox(componentName, entries, null);
+	}
+
+	public static TWebComboBox getTWebComboBox(String componentName, String listId, Object selected) {
+		TEntry[] entries = TStringUtils.getTEntryGroup(listId);
+		return getTWebComboBox(componentName, entries, selected);
 	}
 
 	/**
@@ -881,7 +878,12 @@ public class TUIUtils {
 	}
 
 	public static WebCheckBox getWebCheckBox(String name) {
+		return getWebCheckBox(name, false);
+	}
+
+	public static WebCheckBox getWebCheckBox(String name, boolean selected) {
 		WebCheckBox jcb = new WebCheckBox(TStringUtils.getString(name));
+		jcb.setSelected(selected);
 		jcb.setName(name);
 		setToolTip(name, jcb);
 		jcb.putClientProperty("settingsProcessor", new Configuration<ButtonState>(name));

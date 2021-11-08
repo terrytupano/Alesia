@@ -2,12 +2,15 @@ package plugins.hero;
 
 import java.util.*;
 
+import org.javalite.activejdbc.*;
+
 import com.alee.laf.combobox.*;
 import com.jgoodies.forms.builder.*;
 import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.*;
 
 import core.*;
+import core.datasource.model.*;
 import gui.*;
 import plugins.hero.utils.*;
 
@@ -20,25 +23,25 @@ import plugins.hero.utils.*;
 public class TrooperPanel extends TUIFormPanel {
 
 	public TrooperPanel(boolean toolbar) {
-		addInputComponent(TUIUtils.getTWebComboBox("table.parameters", "table.parameters0"));
+
+		SimulatorClient model = SimulatorClient.findFirst("playerName = ?", "Hero");
+		Map<String, ColumnMetadata> columns = SimulatorClient.getMetaModel().getColumnMetadata();
+		setModel(model);
+
 		addInputComponent(TUIUtils.getNumericTextField("play.time", null, 5, null), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("play.until", null, 5, null), false, true);
+		addInputComponent(TUIUtils.getTWebComboBox("table.parameters", "table.parameters0"));
 
-		WebComboBox webc = TUIUtils.getTWebComboBox("preflopCards", PreflopCardsModel.getPreflopList(), null);
+		addInputComponent(TUIUtils.getTWebComboBox("tDistributionRange", "tdisrange", model.get("tDistributionRange")));
+		WebComboBox webc = TUIUtils.getTWebComboBox("preflopCards", PreflopCardsModel.getPreflopList(),
+				model.get("preflopCards"));
 		addInputComponent(webc);
+		addInputComponent(TUIUtils.getWebCheckBox("takeOpportunity", model.getBoolean("takeOpportunity")));
+		addInputComponent(TUIUtils.getNumericTextField("reconnBase", model, columns), false, true);
+		addInputComponent(TUIUtils.getNumericTextField("reconnBand", model, columns), false, true);
+		addInputComponent(TUIUtils.getNumericTextField("oppLowerBound", model, columns), false, true);
 
-		addInputComponent(TUIUtils.getTWebComboBox("decisionMethod", "decisionMet0"));
-
-		addInputComponent(TUIUtils.getTWebComboBox("tDistributionRange", "tdisrange"));
-
-		addInputComponent(TUIUtils.getWebTextField("availableActions", null, 50));
-		addInputComponent(TUIUtils.getWebCheckBox("takeOpportunity"));
-		addInputComponent(TUIUtils.getNumericTextField("bluffUpperBound", null, 5, null), false, true);
-
-		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.base", null, 5, null), false, true);
-		addInputComponent(TUIUtils.getNumericTextField("preflopRekonAmmo.hand", null, 5, null), false, true);
-
-		FormLayout layout = new FormLayout("right:pref, 3dlu, left:pref, 3dlu, left:pref, 3dlu, left:90dlu", "");
+		FormLayout layout = new FormLayout("left:pref, 3dlu, left:pref, 7dlu, left:pref, 3dlu, left:pref");
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG);
 
 		builder.append(TStringUtils.getString("play.time"), getInputComponent("play.time"));
@@ -47,31 +50,23 @@ public class TrooperPanel extends TUIFormPanel {
 		builder.append(TStringUtils.getString("table.parameters"), getInputComponent("table.parameters"), 5);
 		builder.nextLine();
 
+		builder.appendSeparator();
 		builder.append(TStringUtils.getString("preflopCards"), getInputComponent("preflopCards"), 5);
 		builder.nextLine();
-		builder.append(getInputComponent("takeOpportunity"), 7);
+		builder.append(getInputComponent("takeOpportunity"), 3);
+		builder.append(TStringUtils.getString("oppLowerBound"), getInputComponent("oppLowerBound"));
 		builder.nextLine();
-		builder.append(TStringUtils.getString("bluffUpperBound"), getInputComponent("bluffUpperBound"));
-		builder.nextLine();
-		builder.append(TStringUtils.getString("decisionMethod"), getInputComponent("decisionMethod"), 5);
 		builder.append(TStringUtils.getString("tDistributionRange"), getInputComponent("tDistributionRange"), 5);
 		builder.nextLine();
-
-		Properties params = new Properties();		
-		params.put("preFlopReconnAmmo.base", 1);
-		params.put("preFlopReconnAmmo.band", 10);
-		params.put("preFlopReconnAmmo.band", 10);
-		builder.append("maxRekonAmmo = ");
-		builder.append(getInputComponent("preflopRekonAmmo.base"));
-		builder.append(" + ");
-		builder.append(getInputComponent("preflopRekonAmmo.hand"));
+		builder.append(TStringUtils.getString("reconnBase"), getInputComponent("reconnBase"));
+		builder.append(TStringUtils.getString("reconnBand"), getInputComponent("reconnBand"));
 
 		if (toolbar) {
 			addToolBarActions("runTrooper", "testTrooper", "stopTrooper", "pauseTrooper");
 		}
 
 		setBodyComponent(builder.getPanel());
-		registreSettings();
+		registreSettings("play.time", "play.until", "table.parameters");
 	}
 
 	@Override

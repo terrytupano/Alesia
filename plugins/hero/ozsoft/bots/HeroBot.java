@@ -19,6 +19,8 @@ package plugins.hero.ozsoft.bots;
 
 import java.util.*;
 
+import org.apache.commons.math3.stat.descriptive.*;
+
 import plugins.hero.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
@@ -30,10 +32,11 @@ import plugins.hero.ozsoft.actions.*;
  */
 public class HeroBot extends Bot {
 
-	private Trooper trooper;
-	
+	private DescriptiveStatistics statistics;
+
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
+		Hero.simulationPlayer = playerName;
 		for (PlayerAction act : allowedActions) {
 			String sensor = act.getName().toLowerCase();
 			if (act instanceof AllInAction)
@@ -55,8 +58,10 @@ public class HeroBot extends Bot {
 		pokerSimulator.setNunOfPlayers(actV + 1);
 		pokerSimulator.setTablePosition(dealer, actV);
 
+		long t1 = System.currentTimeMillis();
 		pokerSimulator.runSimulation();
-		TrooperAction act = trooper.getSimulationAction();
+		TrooperAction act = trooper.getSimulationAction(client);
+		statistics.addValue(System.currentTimeMillis() - t1);
 
 		PlayerAction action = null;
 		if (act.equals(TrooperAction.FOLD))
@@ -79,15 +84,17 @@ public class HeroBot extends Bot {
 			throw new IllegalArgumentException("Hero bot has no correct action selected. Trooper action was" + act);
 		return action;
 	}
-	
-	@Override
-	public void actorRotated(Player actor) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	@Override
+	public void messageReceived(String message) {
+		super.messageReceived(message);
+		if (message.equals(Table.RESTAR)) {
+//		System.out.println("Avg descition method: "+statistics.getMean());	
+		}
+	}
+	@Override
 	public void boardUpdated(UoAHand hand, int bet, int pot) {
+		super.boardUpdated(hand, bet, pot);
 		if (hand.getCard(1) != null)
 			pokerSimulator.cardsBuffer.put("flop1", hand.getCard(1).toString());
 		if (hand.getCard(2) != null)
@@ -102,6 +109,12 @@ public class HeroBot extends Bot {
 	}
 
 	@Override
+	public void setPokerSimulator(PokerSimulator pokerSimulator, Trooper trooper) {
+		super.setPokerSimulator(pokerSimulator, trooper);
+		this.statistics = new DescriptiveStatistics(10);
+	}
+
+	@Override
 	public void handStarted(Player dealer) {
 		this.dealer = villans.indexOf(dealer) + 1;
 		pokerSimulator.bigBlind = bigBlind;
@@ -111,22 +124,11 @@ public class HeroBot extends Bot {
 	}
 
 	@Override
-	public void messageReceived(String message) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public void playerUpdated(Player player) {
-		if (player.getHand().size() == NO_OF_HOLE_CARDS) {
-			UoAHand hand = player.getHand();
-			pokerSimulator.cardsBuffer.put("hero.card1", hand.getCard(1).toString());
-			pokerSimulator.cardsBuffer.put("hero.card2", hand.getCard(2).toString());
+		super.playerUpdated(player);
+		if (myHole.size() > 0) {
+			pokerSimulator.cardsBuffer.put("hero.card1", myHole.getCard(1).toString());
+			pokerSimulator.cardsBuffer.put("hero.card2", myHole.getCard(2).toString());
 		}
-	}
-	@Override
-	public void setPokerSimulator(PokerSimulator pokerSimulator) {
-		super.setPokerSimulator(pokerSimulator);
-		this.trooper = new Trooper(null, pokerSimulator);
 	}
 }

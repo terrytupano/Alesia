@@ -28,7 +28,7 @@ public class SimulatorClientList extends TUIListPanel {
 
 	public SimulatorClientList() {
 		addToolBarActions("newModel", "editModel", "deleteModel");
-		setColumns("playerName;client;observationMethod;isActive");
+		setColumns("playerName;client;preflopCards;isActive");
 		// setIconParameters("0;gender-;rehorsegender");
 	}
 
@@ -60,18 +60,18 @@ public class SimulatorClientList extends TUIListPanel {
 		formPanel.addInputComponent(TUIUtils.getWebTextField("playerName", model, columns), true, true);
 		formPanel.addInputComponent(TUIUtils.getTWebComboBox("client", model, "botClient"), false, true);
 		formPanel.addInputComponent(TUIUtils.getJCheckBox("isActive", model), false, true);
-		formPanel.addInputComponent(TUIUtils.getTWebComboBox("observationMethod", model, "ObservationMth"), false, true);
-		formPanel.addInputComponent(TUIUtils.getNumericTextField("alpha", model, columns), false, true);
-		formPanel.addInputComponent(TUIUtils.getNumericTextField("tau", model, columns), false, true);
+//		formPanel.addInputComponent(TUIUtils.getTWebComboBox("observationMethod", model, "ObservationMth"), false, true);
+//		formPanel.addInputComponent(TUIUtils.getNumericTextField("alpha", model, columns), false, true);
+//		formPanel.addInputComponent(TUIUtils.getNumericTextField("tau", model, columns), false, true);
 		
 		FormLayout layout = new FormLayout("left:pref, 3dlu, left:pref, 7dlu, left:pref, 3dlu, left:pref", "");
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG);
 		builder.append(formPanel.getLabel("playerName"), formPanel.getInputComponent("playerName"));
 		builder.append(formPanel.getLabel("client"), formPanel.getInputComponent("client"));
-		builder.append(formPanel.getLabel("observationMethod"), formPanel.getInputComponent("observationMethod"));
+//		builder.append(formPanel.getLabel("observationMethod"), formPanel.getInputComponent("observationMethod"));
 		builder.nextLine();
-		builder.append(formPanel.getLabel("alpha"), formPanel.getInputComponent("alpha"));
-		builder.append(formPanel.getLabel("tau"), formPanel.getInputComponent("tau"));
+//		builder.append(formPanel.getLabel("alpha"), formPanel.getInputComponent("alpha"));
+//		builder.append(formPanel.getLabel("tau"), formPanel.getInputComponent("tau"));
 		builder.append(formPanel.getInputComponent("isActive"));
 
 		formPanel.setBodyComponent(builder.build());

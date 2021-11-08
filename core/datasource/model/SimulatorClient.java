@@ -1,5 +1,7 @@
 package core.datasource.model;
 
+import java.util.*;
+
 import org.javalite.activejdbc.*;
 import org.javalite.activejdbc.annotations.*;
 
@@ -8,4 +10,7 @@ import org.javalite.activejdbc.annotations.*;
 @CompositePK({"playerName"})
 public class SimulatorClient extends Model {
 
+	public Map<String, Object> getAttributes2() {
+		return super.getAttributes();
+	}
 }

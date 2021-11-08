@@ -9,6 +9,7 @@ import org.apache.commons.math3.stat.descriptive.*;
 import org.jdesktop.application.*;
 
 import core.*;
+import core.datasource.model.*;
 import plugins.hero.ozsoft.bots.*;
 import plugins.hero.utils.*;
 
@@ -103,9 +104,13 @@ public class Trooper extends Task {
 	 * 
 	 * @return the action to execute
 	 */
-	public TrooperAction getSimulationAction() {
+	public TrooperAction getSimulationAction(SimulatorClient client) {
 		playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
 		clearEnviorement();
+
+		// in simulation envioremet, simulation variables are updated direct from the passed argument
+		Map<String, Object> m = client.getAttributes2();
+		parameters.putAll(m);
 		decide();
 		return act();
 	}
@@ -118,24 +123,19 @@ public class Trooper extends Task {
 		this.paused = pause;
 		setVariableAndLog(STATUS, paused ? "Trooper paused" : "Trooper resumed");
 	}
-
 	/**
-	 * this method check the bluff parameter and act accordinly. when Hero is in range of the parameter
+	 * this method check the oportunity parameter and act accordinly. when Hero is in range of the parameter
 	 * <code>bluffUpperBound</code> and the hero cards are in range of the preflop card distribution named <b>bluff</b>
 	 * this method will return <code>true</code> and override the main variable {@link #availableActions} and set only
 	 * reise all actions for hero to bluff
 	 * 
-	 * @return <code>true</code> for bluff, <code>false</code> oetherwise
+	 * @return <code>true</code> for oportunity, <code>false</code> oetherwise
 	 */
 	private boolean checkOpportunities() {
 		if ((boolean) parameters.get("takeOpportunity") == false)
 			return false;
 
 		String txt = null;
-		double buyIn = pokerSimulator.buyIn;
-		int bluffUpperB = Integer.parseInt(parameters.get("bluffUpperBound").toString());
-		double chips = pokerSimulator.heroChips;
-		double BUPB = (bluffUpperB / 100.0 * buyIn);
 
 		// TEMP: implementation of bluffUpperBound is suspended. The direct selection of the preflop distribution take
 		// control of the preflop frecuence (5% card selection ist direct correlate with 5% bluff frecuence).
@@ -144,30 +144,31 @@ public class Trooper extends Task {
 
 		// Preflop
 		if (pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
-			PreflopCardsModel bluff = preFlopCardsDist.get("bluff");
-			if (bluff.containsHand(pokerSimulator.holeCards)) {
-				txt = "Current Hole cards in bluff range.";
-				setPreflopBluffActions();
+			PreflopCardsModel opppcs = preFlopCardsDist.get("oportunity");
+			if (opppcs.containsHand(pokerSimulator.holeCards)) {
+				txt = "Current Hole cards in oportunity range.";
 			}
 		}
 
 		// posflop
-		if (pokerSimulator.currentRound == PokerSimulator.FLOP_CARDS_DEALT) {
+		if (pokerSimulator.currentRound >= PokerSimulator.FLOP_CARDS_DEALT) {
 			if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
 				txt = "Is the Nuts.";
 
-			double minWin = Integer.parseInt(parameters.get("oppLowerBound").toString());
+			double minWin = Integer.parseInt(parameters.get("oppLowerBound").toString()) / 100d;
 			if (pokerSimulator.winProb_n >= minWin) {
-				txt = String.format("Current win probability (%1.3f) >= (%1.3f) oppLowerBound",
-						pokerSimulator.winProb_n , minWin);
+				txt = String.format("%1.3f >= %1.3f", pokerSimulator.winProb_n, minWin);
 			}
 		}
 
-		if (txt != null)
-			setVariableAndLog(EXPLANATION, ">> OPPORTUNITY DETECTED: " + txt + " <<");
+		if (txt != null) {
+			setVariableAndLog(EXPLANATION, "--- OPPORTUNITY DETECTED " + txt + " ---");
+			setOportunitiesActions();
+		}
 
-		return txt == null;
+		return txt != null;
 	}
+
 	/**
 	 * clear the enviorement for a new round.
 	 * 
@@ -210,8 +211,10 @@ public class Trooper extends Task {
 
 		// FLOP AND FUTHER
 		if (pokerSimulator.currentRound > PokerSimulator.HOLE_CARDS_DEALT) {
-			performDecisionMethod();
-
+			if (!checkOpportunities()) {
+				loadActions(pokerSimulator.heroChips);
+				potOdd();
+			}
 		}
 
 		// if the list of available actions are empty, i habe no option but fold/check
@@ -231,29 +234,12 @@ public class Trooper extends Task {
 	}
 
 	/**
-	 * compute and return the amount of chips available for actions. The number of amount are directe related to the
-	 * currnet hand rank. More the rank, more chips to invest. This allow the troper invest ammunitons acording to a
-	 * real chance of winning. The previos estimation based on probabilities send the trooper to invest a lot on
-	 * amunitions in low value hands an is easy anbush by villans.
-	 * 
-	 **/
-	private double getAmmunitions() {
-		// EHS = HSn + (1 - HSn) x Ppot
-		double EHS = PokerSimulator.HS_n + (1 - PokerSimulator.HS_n) * PokerSimulator.Ppot;
-		double ammo = EHS * pokerSimulator.heroChips;
-		String txt1 = String.format("%0.3f = %0.3f + (1 - %0.3f) Ammo = %7.2f", EHS, PokerSimulator.HS_n,
-				PokerSimulator.HS_n, PokerSimulator.Ppot);
-		setVariableAndLog(EXPLANATION, txt1);
-		return ammo;
-	}
-
-	/**
 	 * this method retrive the ammount of chips of all currentliy active villans. the 0 position is the amount of chips
 	 * computed and the index 1 is the number of active villans
 	 * 
 	 * @return - [total chips, num of villans]
 	 */
-	private double[] getAvgBluffValue() {
+	private double[] getOportunityAvg() {
 		double[] rval = new double[2];
 		// FIXME: for simulation purpose, return my chips
 		if (sensorsArray == null) {
@@ -274,12 +260,19 @@ public class Trooper extends Task {
 	}
 
 	private TrooperAction getSubOptimalAction() {
+
+		// double b = ammo + alpha * ammo; // agresive: b > ammo
+		// b = b == 0 ? 1 : b; // avoid error when alpha is extreme low
+		// double c = alpha < 0 ? b : ammo; // K sugestions allways as upperbound
+		// TriangularDistribution td = new TriangularDistribution(0, c, b);
+		// int amount = (int) td.sample();
+
 		Vector<TEntry<TrooperAction, Double>> actProb = new Vector<>();
 		availableActions.forEach((ta) -> actProb.add(new TEntry(ta, ta.amount)));
 		Collections.sort(actProb, Collections.reverseOrder());
 
 		int elements = availableActions.size();
-		double hs = pokerSimulator.getCurrentHandStreng() * elements;
+		double hs = pokerSimulator.HS_n * elements;
 		double mode = (hs > 1) ? elements : hs * elements;
 		AbstractRealDistribution tdist = new TriangularDistribution(0, mode, elements);
 		if (subObtimalDist.equals("UniformReal"))
@@ -302,6 +295,11 @@ public class Trooper extends Task {
 		TrooperAction selact = actProb.elementAt(ele).getKey();
 		pokerSimulator.setActionsData(selact, actProb);
 		return selact;
+	}
+
+	private boolean isMyTurnToPlay() {
+		return sensorsArray.isSensorEnabled("fold") || sensorsArray.isSensorEnabled("call")
+				|| sensorsArray.isSensorEnabled("raise");
 	}
 
 	/**
@@ -375,18 +373,32 @@ public class Trooper extends Task {
 	 * 
 	 */
 	private void potOdd() {
-		double prob = PokerSimulator.winProb_n;
-		double ammunitions = getAmmunitions();
+		double prob = pokerSimulator.winProb_n;
+
+		// TODO: check Poker Expected Value (EV) Formula: EV = (%W * $W) – (%L * $L)
+		// https://www.splitsuit.com/simple-poker-expected-value-formula
+
+		// ammo control
+		// EHS = HSn + (1 - HSn) x Ppot
+		// double EHS = pokerSimulator.HS_n + (1 - pokerSimulator.HS_n) * pokerSimulator.Ppot;
+		// double ammo = EHS * pokerSimulator.heroChips;
+		// ammo= HSn * pot + ((1 - HSn) x Ppot * chip) <<<<<<<<<
+		double HSnC = (1 - pokerSimulator.HS_n);
+		double ammo = pokerSimulator.HS_n * pokerSimulator.potValue
+				+ HSnC * pokerSimulator.Ppot * pokerSimulator.heroChips;
+		String txt1 = String.format("%7.2f = %1.3f * %7.2f  + (%1.3f * %1.3f * %7.2f)", ammo, pokerSimulator.HS_n,
+				pokerSimulator.potValue, HSnC, pokerSimulator.Ppot, pokerSimulator.heroChips);
+		setVariableAndLog(EXPLANATION, txt1);
 
 		// no calculation for 0 values
-		if (ammunitions == 0 || prob == 0) {
+		if (ammo == 0 || prob == 0) {
 			availableActions.clear();
-			Hero.heroLogger.info("No posible decision for values prob = " + twoDigitFormat.format(prob)
-					+ " or ammuntion = " + twoDigitFormat.format(ammunitions));
+			Hero.heroLogger.info(
+					String.format("No posible decision for values prob = %1.3f or amunitions = %7.2f", prob, ammo));
 			return;
 		}
 		for (TrooperAction act : availableActions) {
-			double ev = (prob * ammunitions) - act.amount;
+			double ev = (prob * ammo) - act.amount;
 			act.expectedValue = ev;
 		}
 		// remove all negative values
@@ -395,32 +407,48 @@ public class Trooper extends Task {
 	}
 
 	/**
-	 * Set the action based on the starting hand distribution. If the starting hand is inside on the predefined hands
-	 * distribution, this method evaluate if a predefinde max amount of chips has ben reached (due to an allin or
-	 * repeated villans.s rise/call) . if this is the case, the metodh clear the action list and the standar final
-	 * action will be selected (check/fold).
+	 * clear the global variable {@link #availableActions} and set only <code>raise.pot</code> and
+	 * <code>raise.allin</code> actions whit equal probability.
 	 * <p>
-	 * the general idea here is try to put the trooper in folp, so the normal odds operation has chance to decide, at
-	 * lower posible cost
+	 * This method signal {@link #getSubOptimalAction()} to use UniformRealDistribution. this allow true random
+	 * selection of all posible oportunities actions
+	 */
+	private void setOportunitiesActions() {
+		availableActions.clear();
+		subObtimalDist = "UniformReal";
+		double[] bv = getOportunityAvg();
+		double oppavg = bv[0];
+		loadActions(oppavg);
+
+		// to this point, if availableactions are empty, means hero is responding a extreme hihgt raise. that mean meybe
+		// hero is weak. at this point reise mean all in. (call actions is not considerer because is not oportuniti)
+		if (availableActions.size() == 0 && pokerSimulator.raiseValue >= 0)
+			availableActions.add(new TrooperAction("raise", pokerSimulator.raiseValue));
+	}
+
+	/**
+	 * Set the action based on the starting hand distribution. This method set the global variable {@link #maxRekonAmmo}
+	 * this method allwais select the less cost action. The general idea here is try to put the trooper in folp, so the
+	 * normal odds operation has chance to decide, at lower posible cost
 	 */
 	private void setPreflopActions() {
 		availableActions.clear();
-		String rName = (String) parameters.get("preflopCards");
-		PreflopCardsModel pfcm = preFlopCardsDist.get(rName);
-		boolean good = pfcm.containsHand(pokerSimulator.holeCards);
-		if (!good) {
-			setVariableAndLog(EXPLANATION, "Preflop hand not good.");
-			return;
-		}
-
-		double pfBase = ((Number) parameters.get("preflopRekonAmmo.base")).doubleValue();
-		double pfband = ((Number) parameters.get("preflopRekonAmmo.hand")).doubleValue();
+		double pfBase = ((Number) parameters.get("reconnBase")).doubleValue();
+		double pfband = ((Number) parameters.get("reconnBand")).doubleValue();
 		double base = pokerSimulator.bigBlind * pfBase;
-		double ev = pfcm.getEV(pokerSimulator.holeCards);
+		double band = pokerSimulator.bigBlind * pfband;
 
 		// maxreconammo = base + (inversion * ev)
+		String rName = (String) parameters.get("preflopCards");
+		PreflopCardsModel pfcm = preFlopCardsDist.get(rName);
+		double ev = pfcm.getEV(pokerSimulator.holeCards);
 		if (maxRekonAmmo == -1) {
-			maxRekonAmmo = base + (pfband * ev);
+			maxRekonAmmo = base + (band * ev);
+		}
+
+		String txt = "Preflop Ok.";
+		if (!pfcm.containsHand(pokerSimulator.holeCards)) {
+			txt = "Preflop not Ok.";
 		}
 
 		double call = pokerSimulator.callValue;
@@ -428,48 +456,34 @@ public class Trooper extends Task {
 		// can i check ??
 		if (call == 0) {
 			availableActions.add(TrooperAction.CHECK);
+			txt += " Checking.";
 		} else {
 			// can i call ?
 			if (call > 0 && (call + currentHandCost) < maxRekonAmmo) {
 				availableActions.add(new TrooperAction("call", call));
+				txt += " Calling.";
 			} else {
 				// the raise is mariginal ??
 				if (raise != -1 && (raise + currentHandCost) < maxRekonAmmo) {
 					availableActions.add(new TrooperAction("raise", raise));
+					txt += " Raising.";
 				}
 			}
 		}
 		if (availableActions.size() == 0) {
-			setVariableAndLog(EXPLANATION, "Preflop hand in range but no more ammunition available.");
+			txt = String.format(txt + " No more ammunition available. (%7.2f)", maxRekonAmmo);
+			setVariableAndLog(EXPLANATION, txt);
 			return;
 		}
 
-		String txt1 = String.format("Preflop hand in range %7.2f + (%7.2f * %7.2f) = %7.2f", base, pfband, ev,
-				maxRekonAmmo);
+		String txt1 = String.format(txt + " %7.2f = %7.2f + %7.2f * %1.3f", maxRekonAmmo, base, band, ev);
 		setVariableAndLog(EXPLANATION, txt1);
 	}
 
-	/**
-	 * clear the global variable {@link #availableActions} and set only <code>raise.pot</code> and
-	 * <code>raise.allin</code> actions whit equal probability.
-	 * <p>
-	 * This method signal {@link #getSubOptimalAction()} to use UniformRealDistribution. this allow true random
-	 * selection of all posible bluff actions
-	 */
-	private void setPreflopBluffActions() {
-		availableActions.clear();
-		subObtimalDist = "UniformReal";
-		double[] bv = getAvgBluffValue();
-		double bluff = bv[0];
-		loadActions(bluff);
-
-		// to this point, if availableactions are empty, means hero is responding a extreme hihgt raise. that mean meybe
-		// hero is weak. at this point reise mean all in. (call actions is not considerer because is not bluff)
-		if (availableActions.size() == 0 && pokerSimulator.raiseValue >= 0)
-			availableActions.add(new TrooperAction("raise", pokerSimulator.raiseValue));
-	}
-
 	private void setVariableAndLog(String key, Object value) {
+		if (!Hero.allowSimulationGUIUpdate())
+			return;
+
 		String value1 = value.toString();
 		if (value instanceof Double)
 			value1 = fourDigitFormat.format(((Double) value).doubleValue());
@@ -485,11 +499,6 @@ public class Trooper extends Task {
 			// 200210: Hero play his first 2 hours with REAL +EV. Convert 10000 chips in 64000
 			Hero.heroLogger.info(key1 + value1);
 		}
-	}
-
-	private boolean isMyTurnToPlay() {
-		return sensorsArray.isSensorEnabled("fold") || sensorsArray.isSensorEnabled("call")
-				|| sensorsArray.isSensorEnabled("raise");
 	}
 
 	/**
@@ -667,17 +676,6 @@ public class Trooper extends Task {
 			act();
 		}
 		return null;
-	}
-
-	protected void performDecisionMethod() {
-		String decisionM = parameters.get("decisionMethod").toString();
-		if ("potOdd".equals(decisionM)) {
-			loadActions(pokerSimulator.heroChips);
-			potOdd();
-		} else {
-			// loadActions(pokerSimulator.heroChips);
-			// TODO: future decition method or delete this method
-		}
 	}
 
 	/**
