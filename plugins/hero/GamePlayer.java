@@ -25,7 +25,7 @@ public class GamePlayer {
 	private int playerId;
 	private double prevValue;
 	private boolean isActive;
-	private boolean isBoss;
+	private int activeCounter, totalMeasuremet;
 	private double chips;
 	private double bigBlind;
 
@@ -84,20 +84,23 @@ public class GamePlayer {
 	 */
 	public void readSensors(SensorsArray sensorsArray) {
 		isActive = false;
+		totalMeasuremet++;
 		bigBlind = sensorsArray.getPokerSimulator().bigBlind;
 		String ssPrefix = (playerId == 0) ? "hero" : "villan" + playerId;
-		List<ScreenSensor> list = sensorsArray.getSensors(ssPrefix);
-		sensorsArray.readSensors(true, list);
 
-		// test: all sensor must be active
-		boolean disab = !(sensorsArray.getSensor(ssPrefix + ".name").isEnabled()
-				&& sensorsArray.getSensor(ssPrefix + ".chips").isEnabled());
-		if (!sensorsArray.isActive(playerId) || disab)
+		// first step: read only card1 and card2 sensor.
+		List<ScreenSensor> list = sensorsArray.getSensors(ssPrefix + ".card");
+		sensorsArray.readSensors(false, list);
+		if (sensorsArray.isActive(playerId)) {
+			activeCounter++;
+		} else {
+			activeCounter--;
+			activeCounter = activeCounter < 0 ? 0 : activeCounter;
 			return;
-
-		// Active variable here to avoid blick in assesment. if in this moment can retrive all info, present the
-		// assesment any way
+		}
 		isActive = true;
+		list = sensorsArray.getSensors(ssPrefix);
+		sensorsArray.readSensors(true, list);
 
 		// amunitions
 		String sName = (playerId == 0) ? "hero.chips" : "villan" + playerId + ".chips";
@@ -196,6 +199,10 @@ public class GamePlayer {
 		return mean;
 	}
 
+	public double getTau() {
+		return ((int) (activeCounter/(double) totalMeasuremet) *100) / 100;
+	}
+	
 	public long getN() {
 		return bettingPattern.getN();
 	}

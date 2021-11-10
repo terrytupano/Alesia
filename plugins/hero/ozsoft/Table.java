@@ -58,6 +58,28 @@ public class Table extends Task {
 	/** Whether players will always call the showdown, or fold when no chance. */
 	private static final boolean ALWAYS_CALL_SHOWDOWN = false;
 
+	/** valid action when a villan or hero loose the battle */
+	/** End the simulation. */
+	public static final String GAME_OVER = "gameOver";
+
+	/** simulation running mode */
+	public static final int RUN_BACKGROUND = 0;
+
+	/** simulation running mode */
+	public static final int RUN_INTERACTIVE_NO_LOG = 10;
+
+	/** simulation running mode */
+	public static final int RUN_INTERACTIVE_LOG = 50;
+
+	/** Refill the player chips artificialy allowing the simulation to continue */
+	public static final String REFILL = "refill";
+
+	/** The simulation continue to the end. */
+	public static final String DO_NOTHING = "doNothing";
+
+	/** Restart the hole table. */
+	public static final String RESTAR = "reStar";
+
 	/** Table type (poker variant). */
 	private final TableType tableType;
 
@@ -93,25 +115,14 @@ public class Table extends Task {
 
 	/** The current bet in the current hand. */
 	private int bet;
-
 	/** All pots in the current hand (main pot and any side pots). */
 	private final List<Pot> pots;
-
 	/** The player who bet or raised last (aggressor). */
 	private Player lastBettor;
-
 	/** Number of raises in the current betting round. */
 	private int raises;
-
-	/** valid action when a villan or hero loose the battle */
-	/** End the simulation. */
-	public static String GAME_OVER = "gameOver";
-	/** Refill the player chips artificialy allowing the simulation to continue */
-	public static String REFILL = "refill";
-	/** The simulation continue to the end. */
-	public static String DO_NOTHING = "doNothing";
-	/** Restart the hole table. */
-	public static String RESTAR = "reStar";
+	/** num of current plyed hands */
+	private int numOfHand;
 
 	private int buyIn;
 	private Player heroPlayer;
@@ -131,8 +142,8 @@ public class Table extends Task {
 		deck = new UoADeck();
 		pots = new ArrayList<Pot>();
 		board = new UoAHand();
-		speed = 100;
-		simulationsHand = 0;
+		speed = RUN_INTERACTIVE_LOG;
+		simulationsHand = 100000;
 	}
 
 	/**
@@ -180,6 +191,20 @@ public class Table extends Task {
 	public void setSpeed(int speed) {
 
 		this.speed = speed;
+	}
+
+	/**
+	 * set the action that the simulation will perform if a player loose the battle.
+	 * 
+	 * @param forHero - <code>true</code> if the action is intended for Hero <code>false</code> the action is for any
+	 *        villan.
+	 * @param action - action to perform
+	 */
+	public void whenPlayerLose(boolean forHero, String action) {
+		if (forHero)
+			this.actionWhenHeroLose = action;
+		else
+			this.actionWhenVillanLose = action;
 	}
 
 	/**
@@ -593,7 +618,6 @@ public class Table extends Task {
 		}
 		return totalPot;
 	}
-
 	/**
 	 * Notifies clients that the board has been updated.
 	 */
@@ -615,6 +639,7 @@ public class Table extends Task {
 			player.getClient().messageReceived(message);
 		}
 	}
+
 	/**
 	 * Notifies clients that a player has acted.
 	 */
@@ -692,7 +717,6 @@ public class Table extends Task {
 			}
 		}
 	}
-
 	/**
 	 * Posts the big blind.
 	 */
@@ -702,6 +726,7 @@ public class Table extends Task {
 		notifyBoardUpdated();
 		notifyPlayerActed();
 	}
+
 	/**
 	 * Posts the small blind.
 	 */
@@ -752,9 +777,8 @@ public class Table extends Task {
 			player.getClient().handStarted(dealer);
 		}
 		notifyPlayersUpdated(false);
-		notifyMessage("New match, %s is the dealer.", dealer);
+		notifyMessage("Hand: %d, %s is the dealer.", numOfHand, dealer);
 	}
-
 	/**
 	 * Rotates the position of the player in turn (the actor).
 	 */
@@ -765,6 +789,7 @@ public class Table extends Task {
 			player.getClient().actorRotated(actor);
 		}
 	}
+
 	@Override
 	protected Object doInBackground() throws Exception {
 		try {
@@ -777,9 +802,9 @@ public class Table extends Task {
 			dealerPosition = -1;
 			actorPosition = -1;
 			boolean endedByHero = false;
+			numOfHand = 0;
 			// canceled or simulate a finite num of hands
 			// while (!isCancelled() && (simulationsHand = 0)(simulationsHand > 0 && numOfHand < simulationsHand)) {
-			int numOfHand;
 			for (numOfHand = 1; (numOfHand < simulationsHand && !isCancelled() && !endedByHero)
 					|| (simulationsHand == 0 && !isCancelled() && !endedByHero); numOfHand++) {
 				// pause ?
@@ -807,10 +832,9 @@ public class Table extends Task {
 							player.setCash(buyIn);
 						}
 						if (RESTAR.equals(actionWhenHeroLose) || RESTAR.equals(actionWhenVillanLose)) {
-							String msg = "Hand # " + numOfHand + ": " + player.getName()
+							String msg = "Hand: " + numOfHand + ": " + player.getName()
 									+ " lost the battle. Restartting the hole table.";
 							notifyMessage(msg);
-							notifyMessage(RESTAR);
 							for (Player player2 : players) {
 								player2.resetHand();
 								player2.setCash(buyIn);
@@ -854,19 +878,5 @@ public class Table extends Task {
 				e.printStackTrace();
 		}
 		return null;
-	}
-
-	/**
-	 * set the action that the simulation will perform if a player loose the battle.
-	 * 
-	 * @param forHero - <code>true</code> if the action is intended for Hero <code>false</code> the action is for any
-	 *        villan.
-	 * @param action - action to perform
-	 */
-	public void whenPlayerLose(boolean forHero, String action) {
-		if (forHero)
-			this.actionWhenHeroLose = action;
-		else
-			this.actionWhenVillanLose = action;
 	}
 }

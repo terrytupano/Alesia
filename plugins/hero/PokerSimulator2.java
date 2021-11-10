@@ -259,7 +259,7 @@ public class PokerSimulator2 {
 	}
 
 	/**
-	 * FIXME: use {@link PokerSimulator#getUoAEvaluation(String, String)} instead
+	 * FIXME: use {@link PokerSimulator#getEvaluation(String, String)} instead
 	 * 
 	 * @return
 	public int getDanger() {

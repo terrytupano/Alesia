@@ -186,16 +186,17 @@ public class TableDialog extends JDialog implements Client {
 
 	@Override
 	public void messageReceived(String message) {
-		String msg = message.startsWith("New match,") ? message : "    " + message;
-		outConsole.append(msg + "\n");
+		String msg = message.startsWith("Hand: ") ? message : "    " + message;
 		// boardPanel.waitForUserInput();
 
-		// TODO: temporal. messages muss be logged.
-		if (table.getSpeed() == 0 && (message.contains("lost the battle. "))) {
-//			System.out.println(msg + " Hero cash = " + heroPlayer.getCash());
-		}
+		// TODO: temporal. avoid log detail messages
+		String[] dets = {"blind", "deals", "calls", "checks", "bets", "folds", "raises"};
+		boolean log = true;
+		for (String det : dets)
+			log = message.contains(det) ? false : log;
+		if (log)
+			outConsole.append(msg + "\n");
 
-		//
 		proxyClient.messageReceived(message);
 
 		// wait
@@ -204,7 +205,6 @@ public class TableDialog extends JDialog implements Client {
 		} catch (Exception e) {
 			// do nothig
 		}
-
 	}
 
 	@Override
@@ -270,7 +270,7 @@ public class TableDialog extends JDialog implements Client {
 	@Override
 	public void setVisible(boolean b) {
 		// only show this dialo when the table speed value is >0. this allow doinbackground show the dialog
-		if (table.getSpeed() > 0)
+		if (table.getSpeed() == Table.RUN_BACKGROUND)
 			super.setVisible(b);
 		else {
 			TTaskMonitor ttm = new TTaskMonitor(table, false);

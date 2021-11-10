@@ -213,9 +213,10 @@ public class ScreenSensor extends JPanel {
 		return val;
 	}
 	/**
-	 * Retrun the optical caracter recognition extracted from the asociated area
+	 * Retrun the optical caracter recognition extracted from the asociated area or <code>null</code> if the OCR is not
+	 * available (disabled sensor)
 	 * 
-	 * @return OCR result
+	 * @return OCR result or <code>null</code>
 	 */
 	public String getOCR() {
 		return ocrResult;

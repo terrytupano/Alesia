@@ -183,16 +183,12 @@ public class PokerSimulator {
 	/**
 	 * return a {@link Properties} object fill whit all data obtains using methods in {@link UoAHandEvaluator}.
 	 * 
-	 * 
-	 * FIXME: This method dont remove the card in my hole cards, despite these fact, the probability converge to the
-	 * real probability. any futher use of ahead, 0 or tied list, muss be filtered.
-	 * 
 	 * @param holeCards - Hole Cards
 	 * @param communityCards - Comunity cards
 	 * @param opponents - number of opponents
 	 * @return properties
 	 */
-	public static Properties getUoAEvaluation(UoAHand holeCards, UoAHand communityCards) {
+	public static Properties getEvaluation(UoAHand holeCards, UoAHand communityCards) {
 		UoAHandEvaluator evaluator = new UoAHandEvaluator();
 		UoAHand allCards = new UoAHand(holeCards + " " + communityCards);
 		int handRank = UoAHandEvaluator.rankHand(allCards);
@@ -213,10 +209,15 @@ public class PokerSimulator {
 			ArrayList<UoAHand> behind = new ArrayList<>();
 			int[][] rowcol = evaluator.getRanks(new UoAHand(communityCards));
 			for (int i = 0; i < 52; i++) {
-				for (int j = 0; j < 52; j++) {
+				for (int j = i; j < 52; j++) {
 					UoAHand hand = new UoAHand((new UoACard(i)).toString() + " " + (new UoACard(j)).toString());
-					// FIXME: to retrive the real prob and elements, muss only take into account the upper diagonal of
-					// the matrix. locate rowcol[i][j] > 0 and check only riht elements of the same row
+					// don.t include hands where hero hat one or both cards
+					if (hand.getCardIndex(1) == holeCards.getCardIndex(1)
+							|| hand.getCardIndex(1) == holeCards.getCardIndex(2)
+							|| hand.getCardIndex(2) == holeCards.getCardIndex(1)
+							|| hand.getCardIndex(2) == holeCards.getCardIndex(2)) {
+						continue;
+					}
 					if (rowcol[i][j] > 0) {
 						total++;
 						if (handRank > rowcol[i][j])
@@ -230,19 +231,19 @@ public class PokerSimulator {
 					}
 				}
 			}
-			prp.put("HStotal", total);
+			prp.put("rankTotal", total);
 
-			prp.put("HSAhead", ahead.size());
-			prp.put("HSAhead%", ((int) ((ahead.size() / (total * 1.0)) * 10000)) / 100.0);
-			prp.put("HSAheadList", ahead);
+			prp.put("rankAhead", ahead.size());
+			prp.put("rankAhead%", ((int) ((ahead.size() / (total * 1.0)) * 10000)) / 100.0);
+			prp.put("rankAheadList", ahead);
 
-			prp.put("HSTied", tied.size());
-			prp.put("HSTied%", ((int) ((tied.size() / (total * 1.0)) * 10000)) / 100.0);
-			prp.put("HSTiedList", tied);
+			prp.put("rankTied", tied.size());
+			prp.put("rankTied%", ((int) ((tied.size() / (total * 1.0)) * 10000)) / 100.0);
+			prp.put("rankTiedList", tied);
 
-			prp.put("HSBehind", behind.size());
-			prp.put("HSBehind%", ((int) ((behind.size() / (total * 1.0)) * 10000)) / 100.0);
-			prp.put("HSBehindList", behind);
+			prp.put("rankBehind", behind.size());
+			prp.put("rankBehind%", ((int) ((behind.size() / (total * 1.0)) * 10000)) / 100.0);
+			prp.put("rankBehindList", behind);
 		}
 
 		// invoque getHandPotential and add gobal variable to the list
@@ -253,7 +254,7 @@ public class PokerSimulator {
 
 		// is the nuts: hero can loose
 		prp.put("isTheNut", false);
-		if (allCards.size() > 2 && (double) prp.get("HSBehind%") == 0)
+		if (allCards.size() > 2 && (double) prp.get("rankBehind%") == 0)
 			prp.put("isTheNut", true);
 
 		// TODO: getSignificantCard()
@@ -399,6 +400,7 @@ public class PokerSimulator {
 		prp.put("NPot", Npot);
 		prp.put("winProb", winProb_n);
 		prp.put("HS", HS_n);
+
 		return prp;
 	}
 	public void cleanReport() {
@@ -534,7 +536,7 @@ public class PokerSimulator {
 		currentRound = currentHand.size();
 
 		uoAEvaluation.clear();
-		uoAEvaluation.putAll(getUoAEvaluation(holeCards, communityCards));
+		uoAEvaluation.putAll(getEvaluation(holeCards, communityCards));
 		Ppot = (double) uoAEvaluation.get("PPot");
 		Npot = (double) uoAEvaluation.get("NPot");
 		winProb_n = (double) uoAEvaluation.get("winProb");
@@ -551,9 +553,13 @@ public class PokerSimulator {
 		variableList.put("simulator.Table values", txt);
 		variableList.put("simulator.Simulator values",
 				"Round " + streetNames.get(currentRound) + " Players " + numSimPlayers);
+		
+		Hero.heroLogger.info("Table values: " + variableList.get("simulator.Table values"));
+		Hero.heroLogger.info("Troper probability: " + variableList.get("simulator.Troper probability"));
+		Hero.heroLogger.info("Trooper Current hand: " + variableList.get("simulator.Trooper Current hand"));
+		Hero.heroLogger.info("Simulator values: " + variableList.get("simulator.Simulator values"));
 
-		variableList.put(STATUS, STATUS_OK);
-
+		variableList.put(STATUS, STATUS_OK);		
 		updateReport();
 	}
 
@@ -617,11 +623,6 @@ public class PokerSimulator {
 	public void updateReport() {
 		if (!Hero.allowSimulationGUIUpdate())
 			return;
-
-		Hero.heroLogger.info("Table values: " + variableList.get("simulator.Table values"));
-		Hero.heroLogger.info("Troper probability: " + variableList.get("simulator.Troper probability"));
-		Hero.heroLogger.info("Trooper Current hand: " + variableList.get("simulator.Trooper Current hand"));
-		Hero.heroLogger.info("Simulator values: " + variableList.get("simulator.Simulator values"));
 
 		// long t1 = System.currentTimeMillis();
 		String text = "<html>";

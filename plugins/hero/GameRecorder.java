@@ -17,39 +17,17 @@ import java.util.*;
  */
 public class GameRecorder {
 
-	private Vector<GamePlayer> players;
+	private ArrayList<GamePlayer> players;
 
 	public GameRecorder(int vills) {
 		// 0 index is the troper
-		this.players = new Vector<>(vills);
+		this.players = new ArrayList<>(vills);
 		for (int i = 0; i <= vills; i++) {
 			players.add(new GamePlayer(i));
 		}
 	}
-	public Vector<GamePlayer> getPlayers() {
+	public List<GamePlayer>getPlayers() {
 		return players;
-	}
-	/**
-	 * 
-	 * @return
-	 */
-	public ArrayList<GamePlayer> getAssesment() {
-		tempList.clear();
-		for (int i = 0; i < players.size(); i++) {
-			GamePlayer gp = players.elementAt(i);
-			// active player only
-//			if (gp.isActive())
-				tempList.add(gp);
-		}
-//		tempList.sort(Comparator.reverseOrder());
-//		if (tempList.size() > 0) {
-//			for (int i = 0; i < Math.min(4, tempList.size()); i++) {
-//				GamePlayer gp = tempList.get(i).getKey();
-////				tempList2.add(gp.getId() + " " + gp.getName() + " " + gp.getStats());
-//				tempList2.add(gp.getDesignation() + " " + gp.getStats());
-//			}
-//		}
-		return tempList;
 	}
 
 	/**
@@ -61,11 +39,8 @@ public class GameRecorder {
 		players.forEach(gr -> gr.updateDB());
 	}
 
-	private ArrayList<GamePlayer> tempList = new ArrayList<>();
-	private ArrayList<String> tempList2 = new ArrayList<>();
-
 	public GamePlayer getGamePlayer(int index) {
-		return players.elementAt(index);
+		return players.get(index);
 	}
 	/**
 	 * Take a snapshot of the game status. At this point all elements are available for be processed because this method

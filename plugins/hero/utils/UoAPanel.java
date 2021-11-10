@@ -136,51 +136,28 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 		console.append("Hole cards: " + holeCards + " Comunity cards: " + comunityCards + "\n");
 
 		long t = System.currentTimeMillis();
-		Properties properties = PokerSimulator.getUoAEvaluation(new UoAHand(holeCards), new UoAHand(comunityCards));
+		Properties properties = PokerSimulator.getEvaluation(new UoAHand(holeCards), new UoAHand(comunityCards));
+		// Add Chen score
+		properties.put("Chen Score", PokerSimulator.getChenScore(new UoAHand(holeCards)));
 
-		// my hand evaluation
-		if (!holeCards.equals("")) {
-			console.append("\nMy hand evaluation:\n");
-			console.append("Rank: " + properties.get("rank") + "\n");
-			console.append("Name: " + properties.get("name") + "\n");
-			console.append("Best: " + properties.get("bestOf5Cards") + "\n");
+		// to sort the list
+		TreeMap<Object, Object> tm = new TreeMap<>(properties);
+
+		// all elements instance of List are array of cards. override this property
+		Set keys = tm.keySet();
+		for (Object key : keys) {
+			if (tm.get(key) instanceof List) {
+				List l = (List) tm.get(key);
+				String examp = PokerSimulator.parseHands(l.subList(0, Math.min(l.size(), 10)));
+				tm.put(key, examp);
+			}
 		}
+//		console.append("\nEvaluation\n");
+		String patt = "%-15s %-50s";
+		// console.append("\n" + String.format(patt, "Property", "Value"));
+		tm.forEach((key, value) -> console.append("\n" + String.format(patt, key, value)));
 
-		// Chen score
-		if (!holeCards.equals("")) {
-			console.append("\nChen score: " + PokerSimulator.getChenScore(new UoAHand(holeCards)) + "\n");
-		}
-
-		// board evaluation
-		if (!comunityCards.equals("")) {
-			console.append("\nHand Strength:\n");
-			ArrayList<UoAHand> list = (ArrayList<UoAHand>) properties.get("HSAheadList");
-			// String examp = Hero.parseHands(list.subList(0, Math.min(list.size(), 20)));
-			String examp = PokerSimulator.parseHands(list);
-			console.append("Ahead: \t" + properties.get("HSAhead") + "\t (" + properties.get("HSAhead%") + "%)\t"
-					+ examp + "\n");
-
-			list = (ArrayList<UoAHand>) properties.get("HSTiedList");
-			// String examp = Hero.parseHands(list.subList(0, Math.min(list.size(), 20)));
-			examp = PokerSimulator.parseHands(list);
-			console.append(
-					"Tied: \t" + properties.get("HSTied") + "\t (" + properties.get("HSTied%") + "%)\t" + examp + "\n");
-
-			list = (ArrayList<UoAHand>) properties.get("HSBehindList");
-			// String examp = Hero.parseHands(list.subList(0, Math.min(list.size(), 20)));
-			examp = PokerSimulator.parseHands(list);
-			console.append("Behind: " + properties.get("HSBehind") + "\t (" + properties.get("HSBehind%") + "%)\t"
-					+ examp + "\n");
-
-			// hand Strehent evaluator			
-			console.append("PPot: \t" + properties.get("PPot") + "\n");
-			console.append("NPot: \t" + properties.get("NPot") + "\n");
-			console.append("winProb: \t" + properties.get("winProb") + "\n");
-			console.append("HS: \t" + properties.get("HS") + "\n");
-			console.append("isTheNut: \t" + properties.get("isTheNut") + "\n");
-			
-			console.append("Excetution time: " + (System.currentTimeMillis() - t) + "\n");
-		}
+		console.append("\nExcetution time: " + (System.currentTimeMillis() - t));
 	}
 
 	private JPanel getSelectedCardsPanel(List<UoAIconCard> cards) {

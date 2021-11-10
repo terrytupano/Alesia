@@ -53,7 +53,7 @@ public class Trooper extends Task {
 	private RobotActuator robotActuator;
 	private List<TrooperAction> availableActions;
 	private int countdown = 5;
-	private int roundCounter = 0;
+	private int handsCounter = 0;
 	private long time1;
 	private DescriptiveStatistics outGameStats;
 	private boolean paused = false;
@@ -81,8 +81,12 @@ public class Trooper extends Task {
 		}
 		this.outGameStats = new DescriptiveStatistics(10);
 		// this.pokerSimulator = sensorsArray.getPokerSimulator();
-		this.roundCounter = 0;
+		this.handsCounter = 0;
 		this.playUntil = 0;
+
+		this.villansBeacon = 0;
+		this.NumOfVillans = sensorsArray == null ? 3 : sensorsArray.getVillans();
+		gameRecorder = new GameRecorder(NumOfVillans);
 
 		// load all preflop ranges
 		this.preFlopCardsDist = new Hashtable<>();
@@ -125,9 +129,9 @@ public class Trooper extends Task {
 	}
 	/**
 	 * this method check the oportunity parameter and act accordinly. when Hero is in range of the parameter
-	 * <code>bluffUpperBound</code> and the hero cards are in range of the preflop card distribution named <b>bluff</b>
-	 * this method will return <code>true</code> and override the main variable {@link #availableActions} and set only
-	 * reise all actions for hero to bluff
+	 * <code>oppLowerBound</code> and the hero cards are in range of the preflop card distribution named
+	 * <b>oportunity</b> this method will return <code>true</code> and override the main variable
+	 * {@link #availableActions} and set only raise all actions for hero to take the oportunity
 	 * 
 	 * @return <code>true</code> for oportunity, <code>false</code> oetherwise
 	 */
@@ -163,7 +167,17 @@ public class Trooper extends Task {
 
 		if (txt != null) {
 			setVariableAndLog(EXPLANATION, "--- OPPORTUNITY DETECTED " + txt + " ---");
-			setOportunitiesActions();
+			availableActions.clear();
+			subObtimalDist = "UniformReal";
+			// double[] bv = getOportunityAvg();
+			// double oppavg = bv[0];
+			loadActions(pokerSimulator.heroChips);
+
+			// to this point, if availableactions are empty, means hero is responding a extreme hihgt raise. that mean
+			// meybe
+			// hero is weak. at this point reise mean all in. (call actions is not considerer because is not oportuniti)
+			if (availableActions.size() == 0 && pokerSimulator.raiseValue >= 0)
+				availableActions.add(new TrooperAction("raise", pokerSimulator.raiseValue));
 		}
 
 		return txt != null;
@@ -237,27 +251,12 @@ public class Trooper extends Task {
 	 * this method retrive the ammount of chips of all currentliy active villans. the 0 position is the amount of chips
 	 * computed and the index 1 is the number of active villans
 	 * 
-	 * @return - [total chips, num of villans]
+	 * @return - [total chips, num of villans] private double[] getOportunityAvg() { double[] rval = new double[2]; //
+	 *         FIXME: for simulation purpose, return my chips if (sensorsArray == null) { rval[0] =
+	 *         pokerSimulator.heroChips; rval[1] = 3; return rval; } List<GamePlayer> list = gameRecorder.getPlayers();
+	 *         for (GamePlayer gp : list) { if (gp.isActive() && gp.getId() > 0) { rval[0] += gp.getChips(); rval[1]++;
+	 *         } } rval[0] = rval[0] / rval[1]; return rval; }
 	 */
-	private double[] getOportunityAvg() {
-		double[] rval = new double[2];
-		// FIXME: for simulation purpose, return my chips
-		if (sensorsArray == null) {
-			rval[0] = pokerSimulator.heroChips;
-			rval[1] = 3;
-			return rval;
-		}
-		GameRecorder gameRecorder = sensorsArray.getGameRecorder();
-		ArrayList<GamePlayer> list = gameRecorder.getAssesment();
-		for (GamePlayer gp : list) {
-			if (gp.isActive() && gp.getId() > 0) {
-				rval[0] += gp.getChips();
-				rval[1]++;
-			}
-		}
-		rval[0] = rval[0] / rval[1];
-		return rval;
-	}
 
 	private TrooperAction getSubOptimalAction() {
 
@@ -407,26 +406,6 @@ public class Trooper extends Task {
 	}
 
 	/**
-	 * clear the global variable {@link #availableActions} and set only <code>raise.pot</code> and
-	 * <code>raise.allin</code> actions whit equal probability.
-	 * <p>
-	 * This method signal {@link #getSubOptimalAction()} to use UniformRealDistribution. this allow true random
-	 * selection of all posible oportunities actions
-	 */
-	private void setOportunitiesActions() {
-		availableActions.clear();
-		subObtimalDist = "UniformReal";
-		double[] bv = getOportunityAvg();
-		double oppavg = bv[0];
-		loadActions(oppavg);
-
-		// to this point, if availableactions are empty, means hero is responding a extreme hihgt raise. that mean meybe
-		// hero is weak. at this point reise mean all in. (call actions is not considerer because is not oportuniti)
-		if (availableActions.size() == 0 && pokerSimulator.raiseValue >= 0)
-			availableActions.add(new TrooperAction("raise", pokerSimulator.raiseValue));
-	}
-
-	/**
 	 * Set the action based on the starting hand distribution. This method set the global variable {@link #maxRekonAmmo}
 	 * this method allwais select the less cost action. The general idea here is try to put the trooper in folp, so the
 	 * normal odds operation has chance to decide, at lower posible cost
@@ -493,7 +472,7 @@ public class Trooper extends Task {
 					+ twoDigitFormat.format(playUntil) + " " + value.toString();
 		}
 		pokerSimulator.setVariable(key, value);
-		// don.t log the status, only the explanatio
+		// don.t log the status, only the explanation
 		if (!STATUS.equals(key)) {
 			String key1 = key.replace(EXPLANATION, "");
 			// 200210: Hero play his first 2 hours with REAL +EV. Convert 10000 chips in 64000
@@ -531,7 +510,7 @@ public class Trooper extends Task {
 			// canceled ?
 			if (isCancelled())
 				return false;
-			sensorsArray.readPlayerStat();
+			readPlayerStat();
 			sensorsArray.read(SensorsArray.TYPE_ACTIONS);
 
 			// NEW ROUND: if the hero current hand is diferent to the last measure, clear the enviorement.
@@ -542,7 +521,7 @@ public class Trooper extends Task {
 			if (!("".equals(hch) || lastHoleCards.equals(hch))) {
 				lastHoleCards = hch;
 				setVariableAndLog(EXPLANATION,
-						"--- Round " + (++roundCounter) + " " + pokerSimulator.getTableParameters() + " ---");
+						"--- Hand " + (++handsCounter) + " " + pokerSimulator.getTableParameters() + " ---");
 
 				// play time or play sae parameter parameters. when the play time is reach, the action sit.out is
 				// clicked and hero return
@@ -609,6 +588,42 @@ public class Trooper extends Task {
 		return false;
 	}
 
+	private int NumOfVillans;
+	private int villansBeacon;
+	private GameRecorder gameRecorder;
+
+	/**
+	 * read one unit of information. This method is intented to retrive information from the enviorement in small amount
+	 * to avoid exces of time comsumption.
+	 * 
+	 */
+	public void readPlayerStat() {
+		// gamers information
+		if (sensorsArray != null)
+			gameRecorder.getGamePlayer(villansBeacon).readSensors(sensorsArray);
+		// TODO: implement simulation game recorder
+		villansBeacon++;
+		String asse = "<html><table border=\"0\", cellspacing=\"0\"><assesment></table></html>";
+		String tmp = "";
+		List<GamePlayer> list = gameRecorder.getPlayers();
+		if (list.size() > 0) {
+			for (GamePlayer gp : list) {
+				String rowsty = gp.isActive() ? "" : "style=\"color:#808080\"";
+				tmp += "<tr " + rowsty + "><td>" + gp.getId() + " " + gp.getName() + "</td><td>" + gp.getChips()
+						+ "</td><td>" + gp.getTau() + "</td><td>" + gp.getMean() + "</td><td>"
+						+ gp.getStandardDeviation() + "</td></tr>";
+			}
+			asse = asse.replace("<assesment>", tmp);
+		} else
+			asse = "Unknow";
+		// pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
+		pokerSimulator.setVariable("trooper.Assesment", asse);
+
+		if (villansBeacon > NumOfVillans) {
+			villansBeacon = 0;
+		}
+	}
+
 	/**
 	 * perform the action. At this point, the game table is waiting for the hero action.
 	 * 
@@ -629,14 +644,7 @@ public class Trooper extends Task {
 	@Override
 	protected Object doInBackground() throws Exception {
 
-		// ensure db connection on the current thread.
-		// try {
-		// Alesia.getInstance().openDB();
 		// Alesia.getInstance().openDB("hero");
-		// } catch (Exception e) {
-		// // just a warning log because reiterated pause/stop/play can generate error re opening the connection
-		// Hero.heroLogger.warning(e.getMessage());
-		// }
 
 		clearEnviorement();
 

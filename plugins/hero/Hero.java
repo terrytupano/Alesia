@@ -64,13 +64,23 @@ public class Hero extends TPlugin {
 
 	}
 
+	/**
+	 * in simulation enviorement, this method return <code>true</code> if the current enviorement is NOT a simulation or
+	 * when the current player is Hero and the speed is correct
+	 * 
+	 * @return
+	 */
 	public static boolean allowSimulationGUIUpdate() {
-		// never log in simulationSpeed = 0;
-		if (Hero.simulationSpeed == 0)
+		// enviorement is NOT in simulation?
+		if(simulationPlayer == null)
+			return true;
+		
+		// never log in simulationSpeed <= 10;
+		if (Hero.simulationSpeed == Table.RUN_BACKGROUND)
 			return false;
 
 		// in simulation eviorement, update panel only for hero when the speed is not 0
-		if (!(Hero.simulationSpeed > 0 && "Hero".equals(Hero.simulationPlayer)))
+		if (Hero.simulationSpeed < Table.RUN_INTERACTIVE_LOG && !"Hero".equals(Hero.simulationPlayer))
 			return false;
 
 		// the speed is correct and the current player is Hero
@@ -263,9 +273,9 @@ public class Hero extends TPlugin {
 				}
 			}
 			startDate = new Date();
-			simulationSpeed = 0;
+			simulationSpeed = Table.RUN_INTERACTIVE_NO_LOG;
 			table.setSpeed(simulationSpeed);
-			table.setSimulationsHand(2000000);
+			table.setSimulationsHand(100000);
 			table.whenPlayerLose(true, Table.RESTAR);
 			table.whenPlayerLose(false, Table.RESTAR);
 

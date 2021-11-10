@@ -19,6 +19,8 @@ package plugins.hero.ozsoft.bots;
 
 import java.util.*;
 
+import com.javaflair.pokerprophesier.api.card.*;
+
 import core.*;
 import core.datasource.model.*;
 import plugins.hero.*;
@@ -34,7 +36,7 @@ public abstract class Bot implements Client {
 
 	/** Number of hole cards. */
 	protected static final int NO_OF_HOLE_CARDS = 2;
-
+	protected static Hashtable<String, Object> parm1 = new Hashtable<>();
 	protected PokerSimulator pokerSimulator;
 	protected Trooper trooper;
 	protected Player player;
@@ -61,7 +63,7 @@ public abstract class Bot implements Client {
 	private SimulatorStatistic statistic;
 	private int prevCash; //
 	private int wins; // easy access to wins field
-	private int numOfMatch = 0; // # of mathc
+	private int hands = 0; // # of hands
 
 	@Override
 	public void actorRotated(Player actor) {
@@ -106,23 +108,23 @@ public abstract class Bot implements Client {
 			}
 		}
 
-		if (message.startsWith("New match,")) {
+		if (message.contains("is the dealer.")) {
 			// playerWins = (player.getCash() - prevCash);
 
 			// performObservation();
 			matchCost = 0;
 			// playerWins = 0;
-			numOfMatch++;
+			hands++;
 		}
 
 		if (message.contains("Flop.") || message.contains("Turn.") || message.contains("River.")) {
 			street++;
 		}
 
-		if (message.equals(Table.RESTAR)) {
+		if (message.contains("Restartting the hole table.")) {
 			saveObservations();
 			// session = "" + System.currentTimeMillis();
-			numOfMatch = 0;
+			hands = 0;
 			street = 0;
 			prevCash = buyIn;
 			initStatisticsParms();
@@ -163,8 +165,12 @@ public abstract class Bot implements Client {
 	private void initStatisticsParms() {
 		// DON.T MOVE DB CONNECTION FROM THIS METHOD: THIS METHOD IS CALLED FROM MUTIPLE THREAD
 		Alesia.getInstance().openDB("hero");
-		client = SimulatorClient.findFirst("playerName = ?", playerName);
 
+		// clear collision table values for this bot. this implementation leav the old values for all others players.
+		// that mean the new simulation force all bot take anoter random values (good for uniformitiy)
+		parm1.remove(playerName);
+
+		client = SimulatorClient.findFirst("playerName = ?", playerName);
 		this.wins = 0;
 		// range of random variations for all know variables
 		if (client.getInteger("reconnBase") == null || client.getInteger("reconnBase") == -1) {
@@ -183,10 +189,16 @@ public abstract class Bot implements Client {
 
 		if (client.getInteger("oppLowerBound") == null || client.getInteger("oppLowerBound") == -1) {
 			this.oppLowerBound = -1;
-			// Starting at 50% and only modulus 5
-			while (!(oppLowerBound % 5 == 0 && oppLowerBound >= 50))
+			boolean con = true;
+			while (con) {
 				this.oppLowerBound = (int) (Math.random() * 100d);
+				// Starting at 50% and only modulus 5
+				if (oppLowerBound % 5 == 0 && oppLowerBound >= 50 && !parm1.containsValue(oppLowerBound))
+					con = false;
+			}
+//			System.out.println(playerName + " " + oppLowerBound);
 			client.set("oppLowerBound", oppLowerBound);
+			parm1.put(playerName, oppLowerBound);
 		} else {
 			this.oppLowerBound = client.getInteger("oppLowerBound");
 		}
@@ -199,22 +211,23 @@ public abstract class Bot implements Client {
 					oppLowerBound);
 		} else {
 			wins = statistic.getInteger("wins");
-			numOfMatch = statistic.getInteger("hands");
+			hands = statistic.getInteger("hands");
 		}
-		// // for all players
-		// preflopCardsModel.setPercentage(tau);
-	}
-
+	} 
+	
+	/**
+	 * save the the values of global variables {@link #wins} and {@link Hand}
+	 */
 	private void saveObservations() {
 		wins = wins + player.getCash() - buyIn;
 		Alesia.getInstance().openDB("hero");
-		statistic.set("hands", numOfMatch);
+		statistic.set("hands", hands);
 		statistic.set("wins", wins);
 		statistic.set("takeOpportunity", true);
 		// int r = (int) ((double) wins / numOfMatch * 100);
 		// statistic.set("ratio", r / 100d);
 		double bb = wins / (bigBlind * 1.0);
-		statistic.set("ratio", bb / (numOfMatch * 1.0));
+		statistic.set("ratio", bb / (hands * 1.0));
 		statistic.save();
 	}
 }

@@ -4,11 +4,11 @@
   <UserLogIn.rememberUser type="ButtonState" selected="true"/>
   <logging.level type="ComboBoxState" selectedIndex="3"/>
   <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
-  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="0"/>
+  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="2"/>
   <reconnBand type="TextComponentState" text="10" caretPosition="2"/>
   <tDistributionRange type="ComboBoxState" selectedIndex="4"/>
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
-  <SensorPanel.imageType type="ComboBoxState" selectedIndex="2"/>
+  <SensorPanel.imageType type="ComboBoxState" selectedIndex="0"/>
   <buyIn type="string"></buyIn>
   <play.goal type="TextComponentState" text="300" caretPosition="3"/>
   <table.smallBlid type="TextComponentState" text="1000" caretPosition="4"/>
@@ -30,7 +30,7 @@
   <plugins.hero.utils.PreFlopCardsPanel.rangeComboBox type="ComboBoxState" selectedIndex="3"/>
   <oddCalculation type="ComboBoxState" selectedIndex="1"/>
   <postflopAmmoControl type="ComboBoxState" selectedIndex="0"/>
-  <SensorPanel.filter type="ComboBoxState" selectedIndex="12"/>
+  <SensorPanel.filter type="ComboBoxState" selectedIndex="13"/>
   <reconnBase type="TextComponentState" text="1" caretPosition="1"/>
   <bigBlindFactor type="ComboBoxState" selectedIndex="5"/>
   <FlickaDockablePane type="DockablePaneState">

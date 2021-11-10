@@ -56,8 +56,6 @@ public class SensorsArray {
 	private PokerSimulator pokerSimulator;
 	private ShapeAreas screenAreas;
 	DescriptiveStatistics tesseractTime = new DescriptiveStatistics(10);
-	private GameRecorder gameRecorder;
-	private int villansBeacon = 0;
 
 	public SensorsArray() {
 		this.pokerSimulator = new PokerSimulator();
@@ -160,9 +158,6 @@ public class SensorsArray {
 			Hero.heroLogger.severe("Fail to detect table position.");
 		}
 		return bp;
-	}
-	public GameRecorder getGameRecorder() {
-		return gameRecorder;
 	}
 
 	public PokerSimulator getPokerSimulator() {
@@ -371,67 +366,7 @@ public class SensorsArray {
 		// pokerSimulator.setVariable("sensorArray.Total readed sensors", slist.size());
 		pokerSimulator.setVariable("sensorArray.Performance", "Tesseract " + ((int) tesseractTime.getMean()));
 	}
-	/**
-	 * read one unit of information. This method is intented to retrive information from the enviorement in small amount
-	 * to avoid exces of time comsumption.
-	 * 
-	 */
-	public void readPlayerStat() {
-		// gamers information
-		gameRecorder.getGamePlayer(villansBeacon).readSensors(this);
-		villansBeacon++;
-		String asse = "<html><table border=\"0\", cellspacing=\"0\"><assesment></table></html>";
-		String tmp = "";
-		ArrayList<GamePlayer> list = gameRecorder.getAssesment();
-		if (list.size() > 0) {
-			for (GamePlayer gp : list) {
-				String rowsty = gp.isActive() ? "" : "style=\"color:#808080\"";
-				tmp += "<tr " + rowsty + "><td>" + gp.getId() + " " + gp.getName() + "</td><td>" + gp.getChips()
-						+ "</td><td>" + gp.getN() + "</td><td>" + gp.getMean() + "</td><td>" + gp.getStandardDeviation()
-						+ "</td></tr>";
-			}
-			asse = asse.replace("<assesment>", tmp);
-		} else
-			asse = "Unknow";
-		// pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
-		pokerSimulator.setVariable("trooper.Assesment", asse);
-
-		if (villansBeacon > getVillans()) {
-			villansBeacon = 0;
-			// gameRecorder.updateDB();
-			// StringBuffer sb = new StringBuffer();
-			// ArrayList<String> list = gameRecorder.getAssesment();
-			// if (list.size() > 0)
-			// gameRecorder.getAssesment().forEach(str -> sb.append(str + "<br>"));
-			// else
-			// sb.append("Unknow <br>");
-			// pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
-		}
-
-		// pot value information
-		// Statistic s = Statistic.findOrInit("session", Hero.getSesionID(), "tableparams",
-		// pokerSimulator.getTableParameters(), "STREET", pokerSimulator.getCurrentRound(), "name", "pot");
-		// DescriptiveStatistics sts = potValStats.get(pokerSimulator.getCurrentRound());
-		// sts.addValue(pokerSimulator.getPotValue());
-		// s.set("mean", sts.getMean());
-		// s.set("min", sts.getMin());
-		// s.set("max", sts.getMax());
-		// s.save();
-		//
-		// // ammoControl value information
-		// String ammoControl = (String) pokerSimulator.getVariables().get("Trooper.ammoControl");
-		// if (ammoControl != null) {
-		// s = Statistic.findOrInit("session", Hero.getSesionID(), "tableparams", pokerSimulator.getTableParameters(),
-		// "STREET", pokerSimulator.getCurrentRound(), "name", "ammoControl");
-		// sts = ammoControlStats.get(pokerSimulator.getCurrentRound());
-		// // data for getAmmunition
-		// sts.addValue(Double.parseDouble(ammoControl));
-		// s.set("mean", sts.getMean());
-		// s.set("min", sts.getMin());
-		// s.set("max", sts.getMax());
-		// s.save();
-		// }
-	}
+	
 	/**
 	 * Perform the read operation for all {@link ScreenSensor} passed int the list argument.
 	 * 
@@ -486,6 +421,5 @@ public class SensorsArray {
 		}
 		setStandByBorder();
 		// pokerSimulator.clearEnviorement();
-		gameRecorder = new GameRecorder(getVillans());
 	}
 }

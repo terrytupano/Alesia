@@ -91,7 +91,7 @@ public class BasicBot extends Bot {
 		// https://www.splitsuit.com/simple-poker-expected-value-formula
 
 		double cash = (double) player.getCash();
-		UoAEvaluation = PokerSimulator.getUoAEvaluation(myHole, communityHand);
+		UoAEvaluation = PokerSimulator.getEvaluation(myHole, communityHand);
 		double q = (Double) UoAEvaluation.getOrDefault("HSBehind%", 0.0);
 		q = q / 100;
 		double p = 1 - q;
