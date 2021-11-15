@@ -116,33 +116,6 @@ public class SensorsArray {
 	}
 
 	/**
-	 * Check for all sensor and return the current active stronger villan. The stronger villan in this functions is the
-	 * villan with more chips.
-	 * 
-	 * @return the boss or -1 in case of error or no boss detected at this time
-	 */
-	public double getBoss() {
-
-		// TODO: get the infor from last assesment
-		//////////////////////////////////////////////////
-
-		// ArrayList<Double> chips = new ArrayList<>();
-		// for (int id = 1; id <= getVillans(); id++) {
-		// if (isActive(id))
-		// chips.add(getSensor("villan" + id + ".chips").getNumericOCR());
-		// }
-		// chips.removeIf(i -> i.doubleValue() < 0);
-		// chips.sort(null);
-		//
-		// if (chips.isEmpty())
-		// return -1;
-		//
-		// double wv = chips.get(chips.size() - 1);
-		// return wv;
-		return 0;
-	}
-
-	/**
 	 * return where in the table, the dealer button are. If hero has the button, this method return 0.
 	 * 
 	 * @return where the dealer button are or -1 for a fail in thable position detection
@@ -358,7 +331,7 @@ public class SensorsArray {
 					pokerSimulator.cardsBuffer.put(ss.getName(), ocr);
 			}
 
-			pokerSimulator.setNunOfPlayers(getActiveVillans() + 1);
+			pokerSimulator.setNunOfOpponets(getActiveVillans());
 			pokerSimulator.runSimulation();
 		}
 

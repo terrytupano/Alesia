@@ -52,6 +52,9 @@ public class Player {
 
 	/** Last action performed. */
 	private PlayerAction action;
+	
+	/**the chair in the table for this player*/
+	private int chair;
 
 	/**
 	 * Constructor.
@@ -59,15 +62,16 @@ public class Player {
 	 * @param name The player's name.
 	 * @param cash The player's starting amount of cash.
 	 * @param client The client application.
+	 * @param chair The chair in the table for this player.
 	 */
-	public Player(String name, int cash, Client client) {
+	public Player(String name, int cash, Client client, int chair) {
 		this.name = name;
 		this.cash = cash;
 		this.client = client;
+		this.chair = chair;
 		hand = new UoAHand();
 		resetHand();
 	}
-
 	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof Player))
@@ -100,6 +104,10 @@ public class Player {
 	 */
 	public int getCash() {
 		return cash;
+	}
+
+	public int getChair() {
+		return chair;
 	}
 
 	/**
@@ -162,15 +170,6 @@ public class Player {
 	}
 
 	/**
-	 * Terry: set method for cash allos reinit for mutiple simulation.
-	 * 
-	 * @param cash - the cas
-	 */
-	public void setCash(int cash) {
-		this.cash = cash;
-	}
-
-	/**
 	 * Posts the big blinds.
 	 * 
 	 * @param blind The big blind.
@@ -198,7 +197,7 @@ public class Player {
 	 * @return The cloned player.
 	 */
 	public Player publicClone() {
-		Player clone = new Player(name, cash, null);
+		Player clone = new Player(name, cash, null, chair);
 		clone.hasCards = hasCards;
 		clone.bet = bet;
 		clone.action = action;
@@ -258,6 +257,15 @@ public class Player {
 				throw new IllegalArgumentException("Invalid number of cards");
 			}
 		}
+	}
+
+	/**
+	 * Terry: set method for cash allos reinit for mutiple simulation.
+	 * 
+	 * @param cash - the cas
+	 */
+	public void setCash(int cash) {
+		this.cash = cash;
 	}
 
 	/**

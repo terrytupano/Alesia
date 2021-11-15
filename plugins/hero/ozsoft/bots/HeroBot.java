@@ -36,14 +36,12 @@ public class HeroBot extends Bot {
 
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
-		Hero.simulationPlayer = playerName;
-		for (PlayerAction act : allowedActions) {
-			String sensor = act.getName().toLowerCase();
-			if (act instanceof AllInAction)
-				sensor = "raise.allin";
+		pokerSimulator.sensorStatus.put("call", true);
+		pokerSimulator.sensorStatus.put("raise", true);
+		pokerSimulator.sensorStatus.put("pot", true);
+		pokerSimulator.sensorStatus.put("allIn", true);
+		pokerSimulator.sensorStatus.put("raise.slider", true);
 
-			pokerSimulator.sensorStatus.put(sensor, true);
-		}
 		// pokerSimulator.setHeroChips(players.in);
 		pokerSimulator.setCallValue(currentBet);
 		if (allowedActions.contains(PlayerAction.CHECK))
@@ -54,13 +52,12 @@ public class HeroBot extends Bot {
 		// FIXME: temporal
 		pokerSimulator.setRaiseValue(minBet * 2);
 		int actV = (int) villans.stream().filter(p -> p.hasCards()).count();
-		// int actV = villans.size() - ((int) foldV);
-		pokerSimulator.setNunOfPlayers(actV + 1);
+		pokerSimulator.setNunOfOpponets(actV);
 		pokerSimulator.setTablePosition(dealer, actV);
 
 		long t1 = System.currentTimeMillis();
 		pokerSimulator.runSimulation();
-		TrooperAction act = trooper.getSimulationAction(client);
+		TrooperAction act = trooper.getSimulationAction(positiveEvent);
 		statistics.addValue(System.currentTimeMillis() - t1);
 
 		PlayerAction action = null;
@@ -89,7 +86,7 @@ public class HeroBot extends Bot {
 	public void messageReceived(String message) {
 		super.messageReceived(message);
 		if (message.equals(Table.RESTAR)) {
-//		System.out.println("Avg descition method: "+statistics.getMean());	
+			// System.out.println("Avg descition method: "+statistics.getMean());
 		}
 	}
 	@Override

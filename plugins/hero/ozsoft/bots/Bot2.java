@@ -100,7 +100,7 @@ public abstract class Bot2 implements Client {
 		 */
 		if (message.startsWith("PlayerName=")) {
 			this.playerName = message.split("[=]")[1];
-			this.preflopCardsModel = new PreflopCardsModel("original");
+			this.preflopCardsModel = new PreflopCardsModel("pokerStar");
 			session = "" + System.currentTimeMillis();
 		}
 

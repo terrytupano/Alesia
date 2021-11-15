@@ -49,7 +49,7 @@ public class PreflopCardsModel {
 	 * new instance loaded with the values setted in <b>original<b> range name
 	 */
 	public PreflopCardsModel() {
-		this("original");
+		this("pokerStar");
 	}
 
 	/**

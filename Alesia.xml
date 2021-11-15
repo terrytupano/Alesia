@@ -27,7 +27,7 @@
   <bluffUpperBound type="TextComponentState" text="200" caretPosition="3"/>
   <table.parameters type="ComboBoxState" selectedIndex="0"/>
   <PokerSimulator.HelperFilter type="ComboBoxState" selectedIndex="5"/>
-  <plugins.hero.utils.PreFlopCardsPanel.rangeComboBox type="ComboBoxState" selectedIndex="3"/>
+  <plugins.hero.utils.PreFlopCardsPanel.rangeComboBox type="ComboBoxState" selectedIndex="2"/>
   <oddCalculation type="ComboBoxState" selectedIndex="1"/>
   <postflopAmmoControl type="ComboBoxState" selectedIndex="0"/>
   <SensorPanel.filter type="ComboBoxState" selectedIndex="13"/>

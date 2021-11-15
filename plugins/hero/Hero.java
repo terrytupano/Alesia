@@ -50,18 +50,19 @@ public class Hero extends TPlugin {
 	 */
 	private static Date startDate = null;
 	public static TrooperPanel trooperPanel;
-	private HeroPanel heroPanel;
 	private static Trooper activeTrooper;
+	/** in simualtion envioremet, this is the current instance of Table. */
+	public static Table simulationTable;
+	private HeroPanel heroPanel;
 	private GameSimulatorPanel simulatorPanel;
+
 	private SensorsArray sensorsArray;
 
 	public Hero() {
 		dateFormat = DateFormat.getDateTimeInstance();
 		heroLogger = Logger.getLogger("Hero");
 		TActionsFactory.insertActions(this);
-
 		Alesia.getInstance().openDB("hero");
-
 	}
 
 	/**
@@ -72,15 +73,16 @@ public class Hero extends TPlugin {
 	 */
 	public static boolean allowSimulationGUIUpdate() {
 		// enviorement is NOT in simulation?
-		if(simulationPlayer == null)
+		if (Hero.simulationTable == null)
 			return true;
-		
+
 		// never log in simulationSpeed <= 10;
-		if (Hero.simulationSpeed == Table.RUN_BACKGROUND)
+		if (Hero.simulationTable.getSpeed() == Table.RUN_BACKGROUND)
 			return false;
 
 		// in simulation eviorement, update panel only for hero when the speed is not 0
-		if (Hero.simulationSpeed < Table.RUN_INTERACTIVE_LOG && !"Hero".equals(Hero.simulationPlayer))
+		if (Hero.simulationTable.getSpeed() < Table.RUN_INTERACTIVE_LOG
+				|| !"Hero".equals(Hero.simulationTable.getActor().getName()))
 			return false;
 
 		// the speed is correct and the current player is Hero
@@ -116,7 +118,6 @@ public class Hero extends TPlugin {
 	public static Date getStartDate() {
 		return startDate;
 	}
-
 	public static Tesseract getTesseract() {
 		// TODO: no visible performance improve by setting every sensor with his own teseract instance
 		Tesseract iTesseract = new Tesseract(); // JNA Interface Mapping
@@ -131,6 +132,7 @@ public class Hero extends TPlugin {
 		// iTesseract.setOcrEngineMode(0); // Run Tesseract only - fastest
 		return iTesseract;
 	}
+
 	/**
 	 * parse the variable <code>table.parameters</code> inserting in the <code>values</code> hastable:
 	 * <li><code>table.buyIn</code>
@@ -194,19 +196,19 @@ public class Hero extends TPlugin {
 	}
 
 	@org.jdesktop.application.Action
-	public void preFlopCardsRange(ActionEvent event) {
-		// this method is called by #savePreflopRange
-		PreFlopCardsPanel panel = new PreFlopCardsPanel();
-		Alesia.getInstance().getMainPanel().setContentPanel(panel);
-	}
-
-	@org.jdesktop.application.Action
 	public void pauseTrooper(ActionEvent event) {
 		if (activeTrooper != null) {
 			boolean pause = !activeTrooper.isPaused();
 			TActionsFactory.getAbstractButton(event).setIcon(TUIUtils.getSmallFontIcon(pause ? '\ue037' : '\ue034'));
 			activeTrooper.pause(pause);
 		}
+	}
+
+	@org.jdesktop.application.Action
+	public void preFlopCardsRange(ActionEvent event) {
+		// this method is called by #savePreflopRange
+		PreFlopCardsPanel panel = new PreFlopCardsPanel();
+		Alesia.getInstance().getMainPanel().setContentPanel(panel);
 	}
 
 	@org.jdesktop.application.Action
@@ -225,135 +227,6 @@ public class Hero extends TPlugin {
 		TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 840 600 /mov 532 41");
 		isTestMode = false;
 		return start(event);
-	}
-
-	// @org.jdesktop.application.Action(block = BlockingScope.COMPONENT)
-	// @org.jdesktop.application.Action(block = BlockingScope.WINDOW)
-	@org.jdesktop.application.Action
-	public Task startSimulation(ActionEvent event) {
-		try {
-			// check max task
-			if (!Alesia.getInstance().taskManager.suporMoreTask()) {
-				Alesia.showNotification("hero.msg03", "");
-				return null;
-			}
-			// check for hero client
-			if (SimulatorClient.find("name = ?", "Hero") == null) {
-				Alesia.showNotification("hero.msg01", "");
-				return null;
-			}
-			// check min num of players
-			if (SimulatorClient.count("isActive = ?", true) != 4) {
-				Alesia.showNotification("hero.msg02", "4");
-				return null;
-			}
-
-			Map<String, Object> values = trooperPanel.getValues();
-			LazyList<SimulatorClient> clients = SimulatorClient.findAll();
-
-			int buyIn = ((Double) values.get("table.buyIn")).intValue();
-			int bb = ((Double) values.get("table.bigBlid")).intValue();
-			Table table = new Table(TableType.NO_LIMIT, buyIn, bb);
-			for (SimulatorClient client : clients) {
-				if (client.getBoolean("isActive")) {
-					String name = client.getString("playerName");
-					String bCls = client.getString("client");
-					Class cls = Class.forName("plugins.hero.ozsoft.bots." + bCls);
-					// Constructor cons = cls.getConstructor(String.class);
-					// Bot bot = (Bot) cons.newInstance(name);
-					Bot bot = (Bot) cls.newInstance();
-					bot.messageReceived("PlayerName=" + name);
-					PokerSimulator simulator = new PokerSimulator();
-					Trooper trooper = new Trooper(null, simulator);
-					bot.setPokerSimulator(simulator, trooper);
-					Player p = new Player(name, buyIn, bot);
-					table.addPlayer(p);
-					if ("Hero".equals(name))
-						simulatorPanel.updatePokerSimulator(simulator);
-				}
-			}
-			startDate = new Date();
-			simulationSpeed = Table.RUN_INTERACTIVE_NO_LOG;
-			table.setSpeed(simulationSpeed);
-			table.setSimulationsHand(100000);
-			table.whenPlayerLose(true, Table.RESTAR);
-			table.whenPlayerLose(false, Table.RESTAR);
-
-			TableDialog dialog = new TableDialog(table);
-
-			// WARNING: this method is overrided!!!
-			dialog.setVisible(true);
-
-			return table;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	/** in simualtion envioremet, this is the speed of the simulation. -1 mean no simulation eviorement. real live */
-	private static int simulationSpeed = -1;
-
-	/** in simualtion envioremet, this is the current player that muss decide or act */
-	public static String simulationPlayer;
-
-	@org.jdesktop.application.Action
-	public void stopTrooper(ActionEvent event) {
-		if (activeTrooper != null) {
-			activeTrooper.cancelTrooper(true);
-			trooperPanel.setAllEnabledBut(true, new String[0]);
-			// TActionsFactory.getAction("pauseTrooper").putValue(Action.SMALL_ICON,
-			// TUIUtils.getSmallFontIcon('\ue037'));// :
-			activeTrooper = null; // '\ue034'));
-		}
-	}
-
-	@org.jdesktop.application.Action
-	public void testAreas(ActionEvent event) {
-		if (activeTrooper == null)
-			sensorsArray.testAreas();
-	}
-
-	@org.jdesktop.application.Action
-	public Task testTrooper(ActionEvent event) {
-		isTestMode = true;
-		return start(event);
-	}
-
-	@org.jdesktop.application.Action
-	public void uoAEvaluator(ActionEvent event) {
-		UoAPanel aPanel = new UoAPanel();
-		Alesia.getInstance().getMainPanel().setContentPanel(aPanel);
-	}
-
-	private void initTrooperEnviorement() {
-		// dont put isTestMode = false; HERE !!!!!!!!!!!!!!!!!
-		simulationPlayer = null;
-		simulationSpeed = -1;
-		startDate = new Date();
-		shapeAreas = new ShapeAreas(Hero.tableFile);
-		shapeAreas.read();
-		sensorsArray = new SensorsArray();
-		sensorsArray.setShapeAreas(shapeAreas);
-		heroPanel.updateSensorsArray(sensorsArray);
-		trooperPanel = heroPanel.getTrooperPanel();
-	}
-
-	private Task start(ActionEvent event) {
-		WebLookAndFeel.setForceSingleEventsThread(false);
-		initTrooperEnviorement();
-		activeTrooper = new Trooper(sensorsArray, sensorsArray.getPokerSimulator());
-		PropertyChangeListener tl = new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent evt) {
-				if (Trooper.PROP_DONE.equals(evt.getPropertyName())) {
-					// WebLookAndFeel.setForceSingleEventsThread(true);
-				}
-			}
-		};
-		// t.getPokerSimulator().setParameter();
-		activeTrooper.addPropertyChangeListener(tl);
-		trooperPanel.setAllEnabledBut(false, "pauseTrooper", "stopTrooper");
-		return activeTrooper;
 	}
 
 	@org.jdesktop.application.Action
@@ -388,5 +261,126 @@ public class Hero extends TPlugin {
 
 		rangePanel.getPreflopCardsRange().saveInDB(nam_desc[0], nam_desc[1]);
 		preFlopCardsRange(null);
+	}
+
+	// @org.jdesktop.application.Action(block = BlockingScope.COMPONENT)
+	// @org.jdesktop.application.Action(block = BlockingScope.WINDOW)
+	@org.jdesktop.application.Action
+	public Task startSimulation(ActionEvent event) {
+		try {
+			// check max task
+			if (!Alesia.getInstance().taskManager.suporMoreTask()) {
+				Alesia.showNotification("hero.msg03", "");
+				return null;
+			}
+			// check for hero client
+			if (SimulatorClient.find("name = ?", "Hero") == null) {
+				Alesia.showNotification("hero.msg01", "");
+				return null;
+			}
+			// check min num of players
+			if (SimulatorClient.count("isActive = ?", true) < 2) {
+				Alesia.showNotification("hero.msg02");
+				return null;
+			}
+
+			Map<String, Object> values = trooperPanel.getValues();
+			LazyList<SimulatorClient> clients = SimulatorClient.findAll().orderBy("chair");
+
+			int buyIn = ((Double) values.get("table.buyIn")).intValue();
+			int bb = ((Double) values.get("table.bigBlid")).intValue();
+			simulationTable = new Table(TableType.NO_LIMIT, buyIn, bb);
+			for (SimulatorClient client : clients) {
+				if (client.getBoolean("isActive")) {
+					String name = client.getString("playerName");
+					String bCls = client.getString("client");
+					Class cls = Class.forName("plugins.hero.ozsoft.bots." + bCls);
+					// Constructor cons = cls.getConstructor(String.class);
+					// Bot bot = (Bot) cons.newInstance(name);
+					Bot bot = (Bot) cls.newInstance();
+					bot.messageReceived("PlayerName=" + name);
+					PokerSimulator simulator = new PokerSimulator();
+					Trooper trooper = new Trooper(null, simulator);
+					bot.setPokerSimulator(simulator, trooper);
+					Player p = new Player(name, buyIn, bot, client.getInteger("chair"));
+					simulationTable.addPlayer(p);
+					if ("Hero".equals(name))
+						simulatorPanel.updatePokerSimulator(simulator);
+				}
+			}
+			startDate = new Date();
+			simulationTable.setSpeed(Table.RUN_INTERACTIVE_LOG);
+			simulationTable.setSimulationsHand(100000);
+			simulationTable.whenPlayerLose(true, Table.RESTAR);
+			simulationTable.whenPlayerLose(false, Table.RESTAR);
+
+			TableDialog dialog = new TableDialog(simulationTable);
+
+			// WARNING: this method is overrided!!!
+			dialog.setVisible(true);
+
+			return simulationTable;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	@org.jdesktop.application.Action
+	public void stopTrooper(ActionEvent event) {
+		if (activeTrooper != null) {
+			activeTrooper.cancelTrooper(true);
+			trooperPanel.setAllEnabledBut(true, new String[0]);
+			// TActionsFactory.getAction("pauseTrooper").putValue(Action.SMALL_ICON,
+			// TUIUtils.getSmallFontIcon('\ue037'));// :
+			activeTrooper = null; // '\ue034'));
+		}
+	}
+
+	@org.jdesktop.application.Action
+	public void testAreas(ActionEvent event) {
+		if (activeTrooper == null)
+			sensorsArray.testAreas();
+	}
+
+	@org.jdesktop.application.Action
+	public Task testTrooper(ActionEvent event) {
+		isTestMode = true;
+		return start(event);
+	}
+
+	@org.jdesktop.application.Action
+	public void uoAEvaluator(ActionEvent event) {
+		UoAPanel aPanel = new UoAPanel();
+		Alesia.getInstance().getMainPanel().setContentPanel(aPanel);
+	}
+
+	private void initTrooperEnviorement() {
+		// dont put isTestMode = false; HERE !!!!!!!!!!!!!!!!!
+		simulationTable = null;
+		startDate = new Date();
+		shapeAreas = new ShapeAreas(Hero.tableFile);
+		shapeAreas.read();
+		sensorsArray = new SensorsArray();
+		sensorsArray.setShapeAreas(shapeAreas);
+		heroPanel.updateSensorsArray(sensorsArray);
+		trooperPanel = heroPanel.getTrooperPanel();
+	}
+
+	private Task start(ActionEvent event) {
+		WebLookAndFeel.setForceSingleEventsThread(false);
+		initTrooperEnviorement();
+		activeTrooper = new Trooper(sensorsArray, sensorsArray.getPokerSimulator());
+		PropertyChangeListener tl = new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				if (Trooper.PROP_DONE.equals(evt.getPropertyName())) {
+					// WebLookAndFeel.setForceSingleEventsThread(true);
+				}
+			}
+		};
+		// t.getPokerSimulator().setParameter();
+		activeTrooper.addPropertyChangeListener(tl);
+		trooperPanel.setAllEnabledBut(false, "pauseTrooper", "stopTrooper");
+		return activeTrooper;
 	}
 }

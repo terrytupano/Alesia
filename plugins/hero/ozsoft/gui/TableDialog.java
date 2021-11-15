@@ -92,9 +92,14 @@ public class TableDialog extends JDialog implements Client {
 		this.table = table;
 		this.players = table.getPlayers();
 		playerPanels = new HashMap<String, PlayerPanel>();
+		
+		// players positions in table
+		 Hashtable<Integer, PlayerPanel> chairs = new Hashtable<>();
+
 		for (Player player : players) {
 			PlayerPanel panel = new PlayerPanel();
 			playerPanels.put(player.getName(), panel);
+			chairs.put(player.getChair(), panel);
 		}
 
 		// the player "Hero" allwais the test subject. this element is handled by this class but the
@@ -135,28 +140,38 @@ public class TableDialog extends JDialog implements Client {
 		jp.add(stepButton);
 		controlPanel.add(jp, BorderLayout.EAST);
 
-		// remove temporaly from list
-		PlayerPanel heroPanel = playerPanels.remove("Hero");
-
 		// set ui components
-		FormLayout layout = new FormLayout("center:pref, 3dlu, center:pref, 3dlu, center:pref",
-				"center:pref, 3dlu, center:pref, 3dlu, center:pref, 3dlu, fill:100dlu");
-		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DLU2);
-		ArrayList<PlayerPanel> playerP = new ArrayList<>(playerPanels.values());
-		builder.nextColumn(2);
-		builder.append(playerP.get(0));
+		FormLayout layout = new FormLayout("center:90dlu, center:90dlu, center:90dlu, center:90dlu",
+				"center:pref, 3dlu, center:pref, 3dlu, center:pref, 3dlu, center:pref, 3dlu, fill:80dlu");
+//		PanelBuilder builder = new PanelBuilder(layout, new FormDebugPanel());
+		 PanelBuilder builder = new PanelBuilder(layout);
+		 
+//		ArrayList<PlayerPanel> playerP = new ArrayList<>(playerPanels.values());
+		builder.nextColumn();
+		builder.add(chairs.get(3));
+		builder.nextColumn();
+		builder.add(chairs.get(4));
 		builder.nextLine(2);
-		builder.append(playerP.get(1));
-		builder.append(boardPanel);
-		builder.append(playerP.get(2));
-		builder.nextLine(2);
-		builder.nextColumn(2);
-		builder.append(heroPanel);
-		builder.nextLine(2);
-		builder.append(controlPanel, 5);
 
-		// reinsert in list
-		playerPanels.put("Hero", heroPanel);
+		builder.add(chairs.get(2));
+		builder.nextColumn(2);
+		builder.add(boardPanel, CC.rchw(3, 2, 3,2));
+		builder.nextColumn();
+		builder.add(chairs.get(5));
+		builder.nextLine(2);
+
+		builder.add(chairs.get(1));
+		builder.nextColumn(3);
+		builder.add(chairs.get(6));
+		builder.nextLine(2);
+
+		builder.nextColumn();
+		builder.add(chairs.get(0));
+		builder.nextColumn();
+		builder.add(chairs.get(7));
+
+		builder.nextLine(2);
+		builder.add(controlPanel, CC.rcw(9, 1, 4));
 
 		JPanel contentPane = builder.build();
 		contentPane.setOpaque(true);
@@ -166,7 +181,7 @@ public class TableDialog extends JDialog implements Client {
 		// Show the frame.
 		setResizable(false);
 		pack();
-		setLocation(660, 95);
+		setLocation(660, 75);
 		// setLocationRelativeTo(null);
 		// setVisible(true);
 	}
@@ -270,7 +285,7 @@ public class TableDialog extends JDialog implements Client {
 	@Override
 	public void setVisible(boolean b) {
 		// only show this dialo when the table speed value is >0. this allow doinbackground show the dialog
-		if (table.getSpeed() == Table.RUN_BACKGROUND)
+		if (table.getSpeed() > Table.RUN_BACKGROUND)
 			super.setVisible(b);
 		else {
 			TTaskMonitor ttm = new TTaskMonitor(table, false);

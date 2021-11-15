@@ -5,6 +5,8 @@ import java.util.*;
 import org.apache.commons.lang3.*;
 import org.apache.commons.math3.stat.descriptive.*;
 
+import plugins.hero.ozsoft.*;
+
 /**
  * encapsulate all player information. this class collect the necesary information to make a wild guess over the
  * villans.
@@ -26,8 +28,7 @@ public class GamePlayer {
 	private double prevValue;
 	private boolean isActive;
 	private int activeCounter, totalMeasuremet;
-	private double chips;
-	private double bigBlind;
+	private double chips, bigBlind, buyIn;
 
 	public GamePlayer(int playerId) {
 		this.playerId = playerId;
@@ -85,8 +86,27 @@ public class GamePlayer {
 	public void readSensors(SensorsArray sensorsArray) {
 		isActive = false;
 		totalMeasuremet++;
-		bigBlind = sensorsArray.getPokerSimulator().bigBlind;
 		String ssPrefix = (playerId == 0) ? "hero" : "villan" + playerId;
+
+		// in simulation enviorement, retrive data direct from Table instance inf Hero
+		if (Hero.simulationTable != null) {
+			Player p = Hero.simulationTable.getPlayers().get(playerId);
+			bigBlind = Hero.simulationTable.bigBlind;
+			buyIn = Hero.simulationTable.buyIn;
+			chips = p.getCash();
+			name = p.getName();
+			isActive = p.hasCards();
+			if (isActive) {
+				activeCounter++;
+			} else {
+				activeCounter--;
+				activeCounter = activeCounter < 0 ? 0 : activeCounter;
+			}
+			performMeasure();
+			return;
+		}
+		bigBlind = sensorsArray.getPokerSimulator().bigBlind;
+		buyIn = sensorsArray.getPokerSimulator().buyIn;
 
 		// first step: read only card1 and card2 sensor.
 		List<ScreenSensor> list = sensorsArray.getSensors(ssPrefix + ".card");
@@ -115,7 +135,11 @@ public class GamePlayer {
 		// both values must be available to continue the process
 		if (chips == -1 || name == null)
 			return;
+		
+		performMeasure();
+	}
 
+	private void performMeasure() {
 		// new player ??
 		if (!oldName.equals(name)) {
 			int diff = (StringUtils.difference(oldName, name).length() / Math.max(oldName.length(), name.length()))
@@ -129,11 +153,8 @@ public class GamePlayer {
 
 		// an the beginning of the record process, set the buyIN as basic anc compute the average winnigs/lose
 		if (prevValue == -1) {
-			double buyIn = sensorsArray.getPokerSimulator().buyIn;
-			double bb = sensorsArray.getPokerSimulator().bigBlind;
-
 			// +/-10 BB mean the player is a new player
-			double win = bb * 10;
+			double win = bigBlind * 10;
 			if ((chips < buyIn - win) || (chips > buyIn + win)) {
 				double diff = chips - buyIn;
 				bettingPattern.addValue(diff);
@@ -146,22 +167,6 @@ public class GamePlayer {
 			oldName = name;
 			return;
 		}
-
-		// at this point, all is set to start/continue the record process
-
-		// name = name == null ? prefix : name;
-		// if (!(name.equals(prefix) || name.equals(oldName))) {
-		// if (!oldName.equals(name)) {
-		// oldName = name;
-		// bettingPattern.clear();
-		// prevValue = -1;
-		// Game gh = Game.findFirst("NAME = ? AND TABLEPARAMS = ?", name,
-		// Hero.pokerSimulator.getTableParameters());
-		// if (gh != null) {
-		// bettingPattern = (DescriptiveStatistics) TResources
-		// .getObjectFromByteArray(gh.getBytes("BEATTIN_PATTERN"));
-		// }
-		// }
 
 		// negative for betting, positive for winnigs (don.t record 0 value because affect statistical values)
 		if (chips - prevValue != 0)
@@ -200,9 +205,11 @@ public class GamePlayer {
 	}
 
 	public double getTau() {
-		return ((int) (activeCounter/(double) totalMeasuremet) *100) / 100;
+//		return activeCounter / (double) totalMeasuremet;
+		double val =(int) (activeCounter / (double) totalMeasuremet * 100) / 100.0;
+		return val;
 	}
-	
+
 	public long getN() {
 		return bettingPattern.getN();
 	}

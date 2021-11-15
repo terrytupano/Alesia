@@ -83,9 +83,6 @@ public class Table extends Task {
 	/** Table type (poker variant). */
 	private final TableType tableType;
 
-	/** The size of the big blind. */
-	private final int bigBlind;
-
 	/** The players at the table. */
 	private final List<Player> players;
 
@@ -124,21 +121,24 @@ public class Table extends Task {
 	/** num of current plyed hands */
 	private int numOfHand;
 
-	private int buyIn;
+	public int buyIn, bigBlind;
 	private Player heroPlayer;
 	private boolean paused;
 	private int speed;
 	private int simulationsHand;
 	private String actionWhenHeroLose = GAME_OVER;
 	private String actionWhenVillanLose = DO_NOTHING;
+	
+	/**current capacity of the table*/
+	public static final int CAPACITY = 8;
 
 	public Table(TableType type, int buyIn, int bigBlind) {
 		super(Alesia.getInstance());
 		this.tableType = type;
 		this.bigBlind = bigBlind;
 		this.buyIn = buyIn;
-		players = new ArrayList<Player>();
-		activePlayers = new ArrayList<Player>();
+		players = new ArrayList<Player>(CAPACITY);
+		activePlayers = new ArrayList<Player>(CAPACITY);
 		deck = new UoADeck();
 		pots = new ArrayList<Pot>();
 		board = new UoAHand();
@@ -154,7 +154,10 @@ public class Table extends Task {
 	public void addPlayer(Player player) {
 		players.add(player);
 	}
+
 	public List<Player> getPlayers() {
+//		ArrayList<Player> tmp = new ArrayList<>();
+//		players.forEach(p -> tmp.add(p.publicClone()));
 		return players;
 	}
 	public int getSimulationsHand() {
@@ -778,6 +781,15 @@ public class Table extends Task {
 		}
 		notifyPlayersUpdated(false);
 		notifyMessage("Hand: %d, %s is the dealer.", numOfHand, dealer);
+	}
+
+	/**
+	 * return a copy of the current player (the player in turn)
+	 * 
+	 * @return the current player
+	 */
+	public Player getActor() {
+		return actor.publicClone();
 	}
 	/**
 	 * Rotates the position of the player in turn (the actor).

@@ -8,8 +8,10 @@ import org.apache.commons.math3.distribution.*;
 import org.apache.commons.math3.stat.descriptive.*;
 import org.jdesktop.application.*;
 
+import com.javaflair.pokerprophesier.api.adapter.*;
+
 import core.*;
-import core.datasource.model.*;
+import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.bots.*;
 import plugins.hero.utils.*;
 
@@ -67,26 +69,34 @@ public class Trooper extends Task {
 	private double playUntil;
 	private long playTime;
 	private Hashtable<String, PreflopCardsModel> preFlopCardsDist;
-
 	private String subObtimalDist;
+	private Properties positiveEvent;
+	private int numOfVillans;
+	private int villansBeacon;
+	private GameRecorder gameRecorder;
 
 	public Trooper(SensorsArray array, PokerSimulator pokerSimulator) {
 		super(Alesia.getInstance());
 		this.availableActions = new ArrayList<>();
 		this.pokerSimulator = pokerSimulator;
 		if (array != null) {
+			// live
 			this.sensorsArray = array;
 			this.robotActuator = new RobotActuator();
 			this.pokerSimulator = sensorsArray.getPokerSimulator();
+			this.numOfVillans = sensorsArray.getVillans();
+			this.gameRecorder = new GameRecorder(numOfVillans);
+		} else {
+			// simulation
+			this.numOfVillans = Table.CAPACITY - 1;
 		}
+		this.gameRecorder = new GameRecorder(numOfVillans);
 		this.outGameStats = new DescriptiveStatistics(10);
 		// this.pokerSimulator = sensorsArray.getPokerSimulator();
 		this.handsCounter = 0;
 		this.playUntil = 0;
-
+		this.positiveEvent = new Properties();
 		this.villansBeacon = 0;
-		this.NumOfVillans = sensorsArray == null ? 3 : sensorsArray.getVillans();
-		gameRecorder = new GameRecorder(NumOfVillans);
 
 		// load all preflop ranges
 		this.preFlopCardsDist = new Hashtable<>();
@@ -108,17 +118,19 @@ public class Trooper extends Task {
 	 * 
 	 * @return the action to execute
 	 */
-	public TrooperAction getSimulationAction(SimulatorClient client) {
+	public TrooperAction getSimulationAction(Properties properties) {
+		this.positiveEvent = properties;
 		playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
 		clearEnviorement();
-
-		// in simulation envioremet, simulation variables are updated direct from the passed argument
-		Map<String, Object> m = client.getAttributes2();
-		parameters.putAll(m);
 		decide();
+		// simulate a number of reads. the idea is that in real live fight, hero soll habe already information about
+		// some of the villans
+		if ("Hero".equals(Hero.simulationTable.getActor().getName())) {
+			for (int i = 0; i < 6; i++)
+				readPlayerStat();
+		}
 		return act();
 	}
-
 	public boolean isPaused() {
 		return paused;
 	}
@@ -127,6 +139,36 @@ public class Trooper extends Task {
 		this.paused = pause;
 		setVariableAndLog(STATUS, paused ? "Trooper paused" : "Trooper resumed");
 	}
+
+	/**
+	 * read one unit of information. This method is intented to retrive information from the enviorement in small amount
+	 * to avoid exces of time comsumption.
+	 * 
+	 */
+	public void readPlayerStat() {
+		gameRecorder.getGamePlayer(villansBeacon).readSensors(sensorsArray);
+		villansBeacon++;
+		String asse = "<html><table border=\"0\", cellspacing=\"0\"><assesment></table></html>";
+		String tmp = "";
+		List<GamePlayer> list = gameRecorder.getPlayers();
+		if (list.size() > 0) {
+			for (GamePlayer gp : list) {
+				String rowsty = gp.isActive() ? "" : "style=\"color:#808080\"";
+				tmp += "<tr " + rowsty + "><td>" + gp.getId() + " " + gp.getName() + "</td><td>" + gp.getChips()
+						+ "</td><td>" + gp.getTau() + "</td><td>" + gp.getMean() + "</td><td>"
+						+ gp.getStandardDeviation() + "</td></tr>";
+			}
+			asse = asse.replace("<assesment>", tmp);
+		} else
+			asse = "Unknow";
+		// pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
+		pokerSimulator.setVariable("trooper.Assesment", asse);
+
+		if (villansBeacon > numOfVillans) {
+			villansBeacon = 0;
+		}
+	}
+
 	/**
 	 * this method check the oportunity parameter and act accordinly. when Hero is in range of the parameter
 	 * <code>oppLowerBound</code> and the hero cards are in range of the preflop card distribution named
@@ -141,36 +183,61 @@ public class Trooper extends Task {
 
 		String txt = null;
 
-		// TEMP: implementation of bluffUpperBound is suspended. The direct selection of the preflop distribution take
-		// control of the preflop frecuence (5% card selection ist direct correlate with 5% bluff frecuence).
-		// TODO: this decition is BIAS and maybe muss be controled randomly
-		// if (chips > 0 && chips < BUPB && bluffP <= p) {
-
-		// Preflop
+		// Preflop: the direct selection of the preflop distribution
+		// take control of the preflop card distributions (5% card selection ist direct correlate with 5% bluff
+		// frecuence).
+		// TODO: this decition is predictable and easy exploitable after a few hands. maybe muss be controled randomly
 		if (pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
-			PreflopCardsModel opppcs = preFlopCardsDist.get("oportunity");
-			if (opppcs.containsHand(pokerSimulator.holeCards)) {
-				txt = "Current Hole cards in oportunity range.";
-			}
+			// PreflopCardsModel opppcs = preFlopCardsDist.get("oportunity");
+			// if (opppcs.containsHand(pokerSimulator.holeCards)) {
+			// txt = "Current Hole cards in oportunity range.";
+			// }
 		}
 
 		// posflop
 		if (pokerSimulator.currentRound >= PokerSimulator.FLOP_CARDS_DEALT) {
+			// SIMMULATION MEASUREMENT: rankBehind: measure the ralation bettwen the rankBehind value and winnnigs: the
+			// ideas is find the +EV for the max number of behind cards
+			int val = (int) pokerSimulator.uoAEvaluation.get("rankBehind");
+			if (val < 20) {
+				int x = -1, y = -1, z = -1;
+				if (pokerSimulator.currentRound == PokerSimulator.FLOP_CARDS_DEALT)
+					x = val;
+				if (pokerSimulator.currentRound == PokerSimulator.TURN_CARD_DEALT)
+					y = val;
+				if (pokerSimulator.currentRound == PokerSimulator.RIVER_CARD_DEALT)
+					z = val;
+				positiveEvent.put("value", "(" + x + ", " + y + ", " + z + ")");
+				positiveEvent.put("name", "rankBehind");
+				txt = "Measuring ...";
+			}
+
 			if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
 				txt = "Is the Nuts.";
 
 			double minWin = Integer.parseInt(parameters.get("oppLowerBound").toString()) / 100d;
-			if (pokerSimulator.winProb_n >= minWin) {
-				txt = String.format("%1.3f >= %1.3f", pokerSimulator.winProb_n, minWin);
+			// if (pokerSimulator.winProb_n >= minWin) {
+			if (pokerSimulator.winProb_n > 0.5) {
+				// txt = String.format("%1.3f >= %1.3f", pokerSimulator.winProb_n, minWin);
+
+				// SIMMULATION MEASUREMENT: oppLowerBound: event measure the win probability on every street.
+				// positiveEvent.put("name", "oppLowerBound");
+				// int val = (int) (pokerSimulator.winProb_n * 10);
+				// int x = 0, y = 0, z = 0;
+				// if (pokerSimulator.currentRound == PokerSimulator.FLOP_CARDS_DEALT)
+				// x = val;
+				// if (pokerSimulator.currentRound == PokerSimulator.TURN_CARD_DEALT)
+				// y = val;
+				// if (pokerSimulator.currentRound == PokerSimulator.RIVER_CARD_DEALT)
+				// z = val;
+				// positiveEvent.put("value", "(" + x + ", " + y + ", " + z + ")");
 			}
 		}
 
 		if (txt != null) {
-			setVariableAndLog(EXPLANATION, "--- OPPORTUNITY DETECTED " + txt + " ---");
+			setVariableAndLog(EXPLANATION, "--- OPORTUNITY DETECTED " + txt + " ---");
 			availableActions.clear();
 			subObtimalDist = "UniformReal";
-			// double[] bv = getOportunityAvg();
-			// double oppavg = bv[0];
 			loadActions(pokerSimulator.heroChips);
 
 			// to this point, if availableactions are empty, means hero is responding a extreme hihgt raise. that mean
@@ -188,8 +255,11 @@ public class Trooper extends Task {
 	 * 
 	 */
 	private void clearEnviorement() {
-		if (sensorsArray != null)
+		if (sensorsArray != null) {
 			sensorsArray.clearEnviorement();
+			// in no simulation enviorement oppLowerBound is cleaned.
+			positiveEvent.clear();
+		}
 		maxRekonAmmo = -1;
 		currentHandCost = 0;
 		oportinity = false;
@@ -404,7 +474,6 @@ public class Trooper extends Task {
 		availableActions.removeIf(ta -> ta.expectedValue < 0);
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 	}
-
 	/**
 	 * Set the action based on the starting hand distribution. This method set the global variable {@link #maxRekonAmmo}
 	 * this method allwais select the less cost action. The general idea here is try to put the trooper in folp, so the
@@ -458,7 +527,6 @@ public class Trooper extends Task {
 		String txt1 = String.format(txt + " %7.2f = %7.2f + %7.2f * %1.3f", maxRekonAmmo, base, band, ev);
 		setVariableAndLog(EXPLANATION, txt1);
 	}
-
 	private void setVariableAndLog(String key, Object value) {
 		if (!Hero.allowSimulationGUIUpdate())
 			return;
@@ -586,42 +654,6 @@ public class Trooper extends Task {
 		}
 		setVariableAndLog(EXPLANATION, "Can.t reach the main gametable.");
 		return false;
-	}
-
-	private int NumOfVillans;
-	private int villansBeacon;
-	private GameRecorder gameRecorder;
-
-	/**
-	 * read one unit of information. This method is intented to retrive information from the enviorement in small amount
-	 * to avoid exces of time comsumption.
-	 * 
-	 */
-	public void readPlayerStat() {
-		// gamers information
-		if (sensorsArray != null)
-			gameRecorder.getGamePlayer(villansBeacon).readSensors(sensorsArray);
-		// TODO: implement simulation game recorder
-		villansBeacon++;
-		String asse = "<html><table border=\"0\", cellspacing=\"0\"><assesment></table></html>";
-		String tmp = "";
-		List<GamePlayer> list = gameRecorder.getPlayers();
-		if (list.size() > 0) {
-			for (GamePlayer gp : list) {
-				String rowsty = gp.isActive() ? "" : "style=\"color:#808080\"";
-				tmp += "<tr " + rowsty + "><td>" + gp.getId() + " " + gp.getName() + "</td><td>" + gp.getChips()
-						+ "</td><td>" + gp.getTau() + "</td><td>" + gp.getMean() + "</td><td>"
-						+ gp.getStandardDeviation() + "</td></tr>";
-			}
-			asse = asse.replace("<assesment>", tmp);
-		} else
-			asse = "Unknow";
-		// pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
-		pokerSimulator.setVariable("trooper.Assesment", asse);
-
-		if (villansBeacon > NumOfVillans) {
-			villansBeacon = 0;
-		}
 	}
 
 	/**

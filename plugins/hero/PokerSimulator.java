@@ -11,6 +11,7 @@ import javax.swing.*;
 import core.*;
 import gui.*;
 import plugins.hero.UoAHandEval.*;
+import plugins.hero.utils.*;
 
 /**
  * 
@@ -55,7 +56,7 @@ public class PokerSimulator {
 	// TODO: all heromax chips related muss be tracked by the correct instance of {@link GameRecorder}
 	public double heroChips, heroChipsMax;
 	public double callValue, raiseValue, potValue, prevPotValue;
-	public int numSimPlayers;
+	public int opponents;
 	public int currentRound = NO_CARDS_DEALT;
 	public double buyIn, smallBlind, bigBlind;
 	public final UoAHand communityCards = new UoAHand();
@@ -185,10 +186,10 @@ public class PokerSimulator {
 	 * 
 	 * @param holeCards - Hole Cards
 	 * @param communityCards - Comunity cards
-	 * @param opponents - number of opponents
+	 * @param opponents - number of players ONLY VILLANS
 	 * @return properties
 	 */
-	public static Properties getEvaluation(UoAHand holeCards, UoAHand communityCards) {
+	public static Properties getEvaluation(UoAHand holeCards, UoAHand communityCards, int opponents, int tau) {
 		UoAHandEvaluator evaluator = new UoAHandEvaluator();
 		UoAHand allCards = new UoAHand(holeCards + " " + communityCards);
 		int handRank = UoAHandEvaluator.rankHand(allCards);
@@ -209,7 +210,7 @@ public class PokerSimulator {
 			ArrayList<UoAHand> behind = new ArrayList<>();
 			int[][] rowcol = evaluator.getRanks(new UoAHand(communityCards));
 			for (int i = 0; i < 52; i++) {
-				for (int j = i; j < 52; j++) {
+				for (int j = i; j < 52; j++) { // <--- only triangular superior values
 					UoAHand hand = new UoAHand((new UoACard(i)).toString() + " " + (new UoACard(j)).toString());
 					// don.t include hands where hero hat one or both cards
 					if (hand.getCardIndex(1) == holeCards.getCardIndex(1)
@@ -244,10 +245,20 @@ public class PokerSimulator {
 			prp.put("rankBehind", behind.size());
 			prp.put("rankBehind%", ((int) ((behind.size() / (total * 1.0)) * 10000)) / 100.0);
 			prp.put("rankBehindList", behind);
+			
+			List<UoAHand> rList = reWeight(behind, tau);
+			prp.put("reWeightList", rList);
+
+			// winning probabilities: compute the probabilities based on the reWeight list
+//			int t = ahead.size() + tied.size() + rList.size();
+			int t = ahead.size() + tied.size() + behind.size();
+			double winProb_n = Math.pow((ahead.size() + tied.size()) / (double) t, opponents);
+			prp.put("winProb", winProb_n);
+
 		}
 
 		// invoque getHandPotential and add gobal variable to the list
-		Properties psp2 = PokerSimulator.getHandPotential(holeCards, communityCards, 1);
+		Properties psp2 = PokerSimulator.getHandPotential(holeCards, communityCards, opponents);
 		psp2.forEach((key, val) -> prp.put(key, val));
 
 		// aditional computation tested hand: Hole cards: Ac Ad Comunity cards: Qs 9d As
@@ -265,6 +276,48 @@ public class PokerSimulator {
 		// is not take into acount
 
 		return prp;
+	}
+
+	/** Static reference to the standar PF cards model for performance purpose */
+	private static PreflopCardsModel preflopCardsModel = new PreflopCardsModel("pokerStar");
+
+	/**
+	 * this method reweight a list of posibles villans hole cards. the
+	 * 
+	 * @param model - model for comparation
+	 * @param cards - list of posibles hole cards
+	 * @return only cards whit weight = 1.0;
+	 */
+	private static List<UoAHand> reWeight(List<UoAHand> hands, int tau) {
+		preflopCardsModel.setPercentage(tau);
+		ArrayList<UoAHand> dangerHands = new ArrayList<>();
+		for (UoAHand hand : hands) {
+			if (preflopCardsModel.containsHand(hand))
+				dangerHands.add(hand);
+		}
+		return dangerHands;
+	}
+
+	private static List<UoAHand> reweight(double mean, double variance, Hashtable<UoAHand, Double> hands) {
+		ArrayList<UoAHand> dangerHands = new ArrayList<>();
+		/* interpolate in the range mean +- variance. */
+		double low_wt = 0.01;
+		double high_wt = 1.0;
+		Set<UoAHand> hands2 = hands.keySet();
+		for (UoAHand hand : hands2) {
+			double EHS = hands.get(hand);
+			// EHS = HS_n + (1 - HS_n) x Ppot
+			double reweight = (EHS - mean + variance) / (2 * variance);
+			/* Assign low weights below (mean-variance). */
+			// if(reweight<low_wt)
+			// reweight = low_wt;
+			/* Assign high weights above (mean+variance). */
+			if (reweight > high_wt)
+				dangerHands.add(hand);
+			// reweight = high_wt;
+			// weight[subcase] = weight[subcase]*reweight
+		}
+		return dangerHands;
 	}
 
 	/**
@@ -319,15 +372,12 @@ public class PokerSimulator {
 	 * @param ourcards - my current hole cards
 	 * @param boardcards - the current flop. this method will throw an exception if the current street is not flop
 	 * 
-	 * @return new double[]{Ppot, Npot, winProb};
+	 * @return Properties with list of values
 	 */
-	private static Properties getHandPotential(UoAHand ourcards, UoAHand boardcards, int opponents) {
+	private static Properties getHandPotential(UoAHand ourcards, UoAHand boardcards, int oppenents) {
 		UoAHand iBoard = new UoAHand();
 		int iterations = 100000;
 		int ahead = 0, tied = 0, behind = 0;
-
-		// TODO: this method muss count most probable villans hand and top villan hands ?????????? or better work
-		// arround whit oponent modelint implementation
 
 		// Hand potential array, each index represents ahead, tied, and behind.
 		int HP[][] = new int[3][3];
@@ -362,10 +412,10 @@ public class PokerSimulator {
 			for (int b = 0; b < boardcards.size(); b++)
 				iBoard.addCard(boardcards.getCard(b + 1).getIndex());
 			// board in in flop state: deal turn
-			if (boardcards.size() == 3)
+			if (iBoard.size() == 3)
 				iBoard.addCard(deck.deal().getIndex());
 			// board in in turn state: deal river
-			if (boardcards.size() == 4)
+			if (iBoard.size() == 4)
 				iBoard.addCard(deck.deal().getIndex());
 			int myRank = evaluator.rankHand(ourcards.getCard(1), ourcards.getCard(2), iBoard);
 			int villanRank = evaluator.rankHand(villan.getCard(1), villan.getCard(2), iBoard);
@@ -379,30 +429,29 @@ public class PokerSimulator {
 				HP[index][2] += 1;
 				behind++;
 			}
-
 		}
 		/* Ppot: were behind but moved ahead. */
-		// double Ppot = (HP[behind][ahead] + HP[behind][tied] / 2 + HP[tied][ahead] / 2) / (HPTotal[behind] +
-		// HPTotal[tied]);
+		// Ppot=(HP[behind][ahead] + HP[behind][tied] / 2 + HP[tied][ahead] / 2) / (HPTotal[behind] + HPTotal[tied]);
 		double Ppot = (HP[2][0] + HP[2][1] / 2d + HP[1][0] / 2d) / (double) (HPTotal[2] + HPTotal[1]);
 
 		/* Npot: were ahead but fell behind. */
 		double Npot = (HP[0][2] + HP[1][2] / 2d + HP[0][1] / 2d) / (double) (HPTotal[0] + HPTotal[1]);
 
 		// HandStrength: chance that our hand is better than a random hand.
-		double HS_n = Math.pow((ahead + tied / 2d) / (double) (ahead + tied + behind), opponents);
+		double HS_n = Math.pow((ahead + tied / 2d) / (double) (ahead + tied + behind), oppenents);
 
 		// winning probabilities ?!?!?!?!?!?
-		double winProb_n = Math.pow((ahead + tied) / (double) iterations, opponents);
+//		double winProb_n = Math.pow((ahead + tied) / (double) iterations, oppenents);
 
 		Properties prp = new Properties();
 		prp.put("PPot", Ppot);
 		prp.put("NPot", Npot);
-		prp.put("winProb", winProb_n);
+//		prp.put("winProb", winProb_n);
 		prp.put("HS", HS_n);
 
 		return prp;
 	}
+
 	public void cleanReport() {
 		variableList.keySet().forEach(key -> variableList.put(key, ""));
 		variableList.put(STATUS, STATUS_OK);
@@ -416,7 +465,7 @@ public class PokerSimulator {
 	 */
 	public void clearEnviorement() {
 		currentRound = NO_CARDS_DEALT;
-		this.numSimPlayers = -1;
+		this.opponents = -1;
 		holeCards.makeEmpty();
 		communityCards.makeEmpty();
 		// 190831: ya el sistema se esta moviendo. por lo menos hace fold !!!! :D estoy en el salon de clases del campo
@@ -536,7 +585,7 @@ public class PokerSimulator {
 		currentRound = currentHand.size();
 
 		uoAEvaluation.clear();
-		uoAEvaluation.putAll(getEvaluation(holeCards, communityCards));
+		uoAEvaluation.putAll(getEvaluation(holeCards, communityCards, opponents,-1));
 		Ppot = (double) uoAEvaluation.get("PPot");
 		Npot = (double) uoAEvaluation.get("NPot");
 		winProb_n = (double) uoAEvaluation.get("winProb");
@@ -552,14 +601,16 @@ public class PokerSimulator {
 				+ " Position " + tablePosition;
 		variableList.put("simulator.Table values", txt);
 		variableList.put("simulator.Simulator values",
-				"Round " + streetNames.get(currentRound) + " Players " + numSimPlayers);
-		
-		Hero.heroLogger.info("Table values: " + variableList.get("simulator.Table values"));
-		Hero.heroLogger.info("Troper probability: " + variableList.get("simulator.Troper probability"));
-		Hero.heroLogger.info("Trooper Current hand: " + variableList.get("simulator.Trooper Current hand"));
-		Hero.heroLogger.info("Simulator values: " + variableList.get("simulator.Simulator values"));
+				"Round " + streetNames.get(currentRound) + " Opponents " + opponents);
 
-		variableList.put(STATUS, STATUS_OK);		
+		if (Hero.allowSimulationGUIUpdate()) {
+			Hero.heroLogger.info("Table values: " + variableList.get("simulator.Table values"));
+			Hero.heroLogger.info("Troper probability: " + variableList.get("simulator.Troper probability"));
+			Hero.heroLogger.info("Trooper Current hand: " + variableList.get("simulator.Trooper Current hand"));
+			Hero.heroLogger.info("Simulator values: " + variableList.get("simulator.Simulator values"));
+		}
+
+		variableList.put(STATUS, STATUS_OK);
 		updateReport();
 	}
 
@@ -584,8 +635,14 @@ public class PokerSimulator {
 		if (heroChips > heroChipsMax)
 			heroChipsMax = heroChips;
 	}
-	public void setNunOfPlayers(int p) {
-		this.numSimPlayers = p;
+
+	/**
+	 * set the current number of opponents ONLY VILLANS
+	 * 
+	 * @param opp - # of opponents
+	 */
+	public void setNunOfOpponets(int opp) {
+		this.opponents = opp;
 	}
 	public void setPotValue(double potValue) {
 		this.prevPotValue = this.potValue;
