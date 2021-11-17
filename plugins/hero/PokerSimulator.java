@@ -36,19 +36,21 @@ public class PokerSimulator {
 	private static NumberFormat percentageFormat = NumberFormat.getPercentInstance();
 	private static DecimalFormat twoDigitFormat = new DecimalFormat("#0.00");
 
+	/** Static reference to the standar PF cards model for performance purpose */
+	private static PreflopCardsModel preflopCardsModel = new PreflopCardsModel("pokerStar");
 	/**
 	 * temporal storage for the incoming cards (simulator)
 	 */
 	public final Hashtable<String, String> cardsBuffer;
+
 	/**
 	 * enable/disable status for readed sensors.
 	 */
 	public final Hashtable<String, Boolean> sensorStatus;
-
 	private TreeMap<String, Object> variableList;
 	private JLabel reportJLabel;
-	private TUIPanel reportPanel;
 
+	private TUIPanel reportPanel;
 	/**
 	 * ............
 	 */
@@ -63,9 +65,10 @@ public class PokerSimulator {
 	public final UoAHand holeCards = new UoAHand();
 	public final UoAHand currentHand = new UoAHand();
 	public int tablePosition;
-	public final Properties uoAEvaluation = new Properties();
 
+	public final Properties uoAEvaluation = new Properties();
 	private ActionsBarChart actionsBarChart;
+
 	// private long lastStepMillis;
 	private Hashtable<Integer, String> streetNames = new Hashtable<>();
 
@@ -187,6 +190,8 @@ public class PokerSimulator {
 	 * @param holeCards - Hole Cards
 	 * @param communityCards - Comunity cards
 	 * @param opponents - number of players ONLY VILLANS
+	 * @param tau - value for tau variable
+	 * 
 	 * @return properties
 	 */
 	public static Properties getEvaluation(UoAHand holeCards, UoAHand communityCards, int opponents, int tau) {
@@ -205,9 +210,10 @@ public class PokerSimulator {
 		// board evaluation
 		if (communityCards.size() > 0) {
 			int total = 0;
-			ArrayList<UoAHand> ahead = new ArrayList<>();
-			ArrayList<UoAHand> tied = new ArrayList<>();
-			ArrayList<UoAHand> behind = new ArrayList<>();
+			ArrayList<UoAHand> ahead = new ArrayList<>(52 * 52);
+			ArrayList<UoAHand> tied = new ArrayList<>(52 * 52);
+			ArrayList<UoAHand> behind = new ArrayList<>(52 * 52);
+			ArrayList<UoAHand> all = new ArrayList<>(52 * 52);
 			int[][] rowcol = evaluator.getRanks(new UoAHand(communityCards));
 			for (int i = 0; i < 52; i++) {
 				for (int j = i; j < 52; j++) { // <--- only triangular superior values
@@ -221,6 +227,7 @@ public class PokerSimulator {
 					}
 					if (rowcol[i][j] > 0) {
 						total++;
+						all.add(hand);
 						if (handRank > rowcol[i][j])
 							ahead.add(hand);
 
@@ -245,21 +252,22 @@ public class PokerSimulator {
 			prp.put("rankBehind", behind.size());
 			prp.put("rankBehind%", ((int) ((behind.size() / (total * 1.0)) * 10000)) / 100.0);
 			prp.put("rankBehindList", behind);
-			
-			List<UoAHand> rList = reWeight(behind, tau);
-			prp.put("reWeightList", rList);
+
+			// re weight the behind list acordint to toau parameter
+
+			Hashtable<String, Double> rWeight = getReWeight(all, tau);
+			prp.put("reWeightList", rWeight);
+
+			// invoque getHandPotential and add retrived values to the list
+			Properties psp2 = PokerSimulator.getHandPotential(holeCards, communityCards, opponents, rWeight);
+			psp2.forEach((key, val) -> prp.put(key, val));
 
 			// winning probabilities: compute the probabilities based on the reWeight list
-//			int t = ahead.size() + tied.size() + rList.size();
-			int t = ahead.size() + tied.size() + behind.size();
-			double winProb_n = Math.pow((ahead.size() + tied.size()) / (double) t, opponents);
+			// int t = ahead.size() + tied.size() + rList.size();
+			// int t = ahead.size() + tied.size() + behind.size();
+			double winProb_n = Math.pow((ahead.size() + tied.size()) / (double) total, opponents);
 			prp.put("winProb", winProb_n);
-
 		}
-
-		// invoque getHandPotential and add gobal variable to the list
-		Properties psp2 = PokerSimulator.getHandPotential(holeCards, communityCards, opponents);
-		psp2.forEach((key, val) -> prp.put(key, val));
 
 		// aditional computation tested hand: Hole cards: Ac Ad Comunity cards: Qs 9d As
 
@@ -278,48 +286,6 @@ public class PokerSimulator {
 		return prp;
 	}
 
-	/** Static reference to the standar PF cards model for performance purpose */
-	private static PreflopCardsModel preflopCardsModel = new PreflopCardsModel("pokerStar");
-
-	/**
-	 * this method reweight a list of posibles villans hole cards. the
-	 * 
-	 * @param model - model for comparation
-	 * @param cards - list of posibles hole cards
-	 * @return only cards whit weight = 1.0;
-	 */
-	private static List<UoAHand> reWeight(List<UoAHand> hands, int tau) {
-		preflopCardsModel.setPercentage(tau);
-		ArrayList<UoAHand> dangerHands = new ArrayList<>();
-		for (UoAHand hand : hands) {
-			if (preflopCardsModel.containsHand(hand))
-				dangerHands.add(hand);
-		}
-		return dangerHands;
-	}
-
-	private static List<UoAHand> reweight(double mean, double variance, Hashtable<UoAHand, Double> hands) {
-		ArrayList<UoAHand> dangerHands = new ArrayList<>();
-		/* interpolate in the range mean +- variance. */
-		double low_wt = 0.01;
-		double high_wt = 1.0;
-		Set<UoAHand> hands2 = hands.keySet();
-		for (UoAHand hand : hands2) {
-			double EHS = hands.get(hand);
-			// EHS = HS_n + (1 - HS_n) x Ppot
-			double reweight = (EHS - mean + variance) / (2 * variance);
-			/* Assign low weights below (mean-variance). */
-			// if(reweight<low_wt)
-			// reweight = low_wt;
-			/* Assign high weights above (mean+variance). */
-			if (reweight > high_wt)
-				dangerHands.add(hand);
-			// reweight = high_wt;
-			// weight[subcase] = weight[subcase]*reweight
-		}
-		return dangerHands;
-	}
-
 	/**
 	 * return the string representation of a list of cards
 	 * 
@@ -332,20 +298,6 @@ public class PokerSimulator {
 		cards.forEach(c -> sb.append(c.toString() + " "));
 		return sb.toString().trim();
 	}
-
-	// /**
-	// * check whether is an oportunity. An oportunity is present when the current street is {@link #FLOP_CARDS_DEALT}
-	// or
-	// * futher and the following conditions is found:
-	// * <li>Heros hand muss be >= to the hand setted in {@link #oppMostProbHand} gobal variable
-	// * <li>The hand is a set (both card in heros.s hands participate in the action)
-	// * <li>OR the hand is the nut
-	// *
-	// * @return a text explain what oportunity is detected or <code>null</code> if no oportunity are present
-	// */
-	// public String isOportunity() {
-
-	// TODO: reevaluate this method. compute the bluf probability. especialy istheNut()
 
 	/**
 	 * String representation of a list of {@link UoACard}
@@ -374,13 +326,14 @@ public class PokerSimulator {
 	 * 
 	 * @return Properties with list of values
 	 */
-	private static Properties getHandPotential(UoAHand ourcards, UoAHand boardcards, int oppenents) {
+	private static Properties getHandPotential(UoAHand ourcards, UoAHand boardcards, int oppenents,
+			Hashtable<String, Double> reWeight) {
 		UoAHand iBoard = new UoAHand();
 		int iterations = 100000;
-		int ahead = 0, tied = 0, behind = 0;
+		double ahead = 0, tied = 0, behind = 0;
 
 		// Hand potential array, each index represents ahead, tied, and behind.
-		int HP[][] = new int[3][3];
+		double HP[][] = new double [3][3];
 		int HPTotal[] = new int[3];
 		UoAHand villan = new UoAHand(); // two cards for each villans
 		UoAHandEvaluator evaluator = new UoAHandEvaluator();
@@ -419,15 +372,27 @@ public class PokerSimulator {
 				iBoard.addCard(deck.deal().getIndex());
 			int myRank = evaluator.rankHand(ourcards.getCard(1), ourcards.getCard(2), iBoard);
 			int villanRank = evaluator.rankHand(villan.getCard(1), villan.getCard(2), iBoard);
+			double weight = reWeight.getOrDefault(villan.toString(), PreflopCardsModel.lowerBound);
+			if(weight != PreflopCardsModel.lowerBound) {
+//				System.out.println("PokerSimulator.getHandPotential()");
+			}
+			weight = 1.0;
 			if (myRank > villanRank) {
-				HP[index][0] += 1;
-				ahead++;
+				HP[index][0] += weight;
+				ahead += weight;
 			} else if (myRank == villanRank) {
-				HP[index][1] += 1;
-				tied++;
+				HP[index][1] += weight;
+				tied += weight;
 			} else {
-				HP[index][2] += 1;
-				behind++;
+				HP[index][2] += weight;
+				behind += weight;
+			}
+			//
+			String[] rcards = {"Jc 4h", "Ac Jc", "5h 2h", "6s 5s", "5s 5h", "5s 3s", "Ac Qd", "7s 5s", "Qs Ts"};
+			for (String rcard : rcards) {
+				if(rcard.equals(villan.toString().trim())) {
+//					System.out.println("%7s %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f", weight, );
+				}
 			}
 		}
 		/* Ppot: were behind but moved ahead. */
@@ -450,6 +415,59 @@ public class PokerSimulator {
 		prp.put("HS", HS_n);
 
 		return prp;
+	}
+
+	// /**
+	// * check whether is an oportunity. An oportunity is present when the current street is {@link #FLOP_CARDS_DEALT}
+	// or
+	// * futher and the following conditions is found:
+	// * <li>Heros hand muss be >= to the hand setted in {@link #oppMostProbHand} gobal variable
+	// * <li>The hand is a set (both card in heros.s hands participate in the action)
+	// * <li>OR the hand is the nut
+	// *
+	// * @return a text explain what oportunity is detected or <code>null</code> if no oportunity are present
+	// */
+	// public String isOportunity() {
+
+	// TODO: reevaluate this method. compute the bluf probability. especialy istheNut()
+
+	private static List<UoAHand> reweight(double mean, double variance, Hashtable<UoAHand, Double> hands) {
+		ArrayList<UoAHand> dangerHands = new ArrayList<>();
+		/* interpolate in the range mean +- variance. */
+		double low_wt = 0.01;
+		double high_wt = 1.0;
+		Set<UoAHand> hands2 = hands.keySet();
+		for (UoAHand hand : hands2) {
+			double EHS = hands.get(hand);
+			// EHS = HS_n + (1 - HS_n) x Ppot
+			double reweight = (EHS - mean + variance) / (2 * variance);
+			/* Assign low weights below (mean-variance). */
+			// if(reweight<low_wt)
+			// reweight = low_wt;
+			/* Assign high weights above (mean+variance). */
+			if (reweight > high_wt)
+				dangerHands.add(hand);
+			// reweight = high_wt;
+			// weight[subcase] = weight[subcase]*reweight
+		}
+		return dangerHands;
+	}
+
+	/**
+	 * this method reweight a list of posibles villans hole cards. the
+	 * 
+	 * @param cards - list of hole cards marked as Behind
+	 * @param tau - tau parameter read form {@link GameRecorder}
+	 * @return {@link Hashtable} with the hands weight
+	 */
+	private static Hashtable<String, Double> getReWeight(List<UoAHand> hands, int tau) {
+		preflopCardsModel.setPercentage(tau);
+		Hashtable<String, Double> dangerHands = new Hashtable();
+		for (UoAHand hand : hands) {
+			if (preflopCardsModel.containsHand(hand))
+				dangerHands.put(hand.toString(), preflopCardsModel.getNormalizedEV(hand));
+		}
+		return dangerHands;
 	}
 
 	public void cleanReport() {
@@ -585,7 +603,7 @@ public class PokerSimulator {
 		currentRound = currentHand.size();
 
 		uoAEvaluation.clear();
-		uoAEvaluation.putAll(getEvaluation(holeCards, communityCards, opponents,-1));
+		uoAEvaluation.putAll(getEvaluation(holeCards, communityCards, opponents, 100));
 		Ppot = (double) uoAEvaluation.get("PPot");
 		Npot = (double) uoAEvaluation.get("NPot");
 		winProb_n = (double) uoAEvaluation.get("winProb");

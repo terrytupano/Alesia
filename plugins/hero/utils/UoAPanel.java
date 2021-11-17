@@ -136,7 +136,7 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 		console.append("Hole cards: " + holeCards + " Comunity cards: " + comunityCards + "\n");
 
 		long t = System.currentTimeMillis();
-		Properties properties = PokerSimulator.getEvaluation(new UoAHand(holeCards), new UoAHand(comunityCards), 1, 30);
+		Properties properties = PokerSimulator.getEvaluation(new UoAHand(holeCards), new UoAHand(comunityCards), 1, 100);
 		// Add Chen score
 		properties.put("Chen Score", PokerSimulator.getChenScore(new UoAHand(holeCards)));
 

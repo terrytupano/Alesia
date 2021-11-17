@@ -31,8 +31,8 @@ public class PreFlopCardsPanel extends TUIPanel {
 		this.preflopsComboBox = new WebComboBox(PreflopCardsModel.getPreflopList());
 		TUIUtils.setDimensionForTextComponent(preflopsComboBox, 40);
 		preflopsComboBox.addActionListener(evt -> loadFromDB());
-//		ResourceMap r = Alesia.getInstance().getContext().getResourceManager().getResourceMap();
-//		r.injectComponent(this);
+		// ResourceMap r = Alesia.getInstance().getContext().getResourceManager().getResourceMap();
+		// r.injectComponent(this);
 		preflopCardsModel = new PreflopCardsModel();
 		WebPanel panel = new WebPanel(new VerticalFlowLayout());
 		panel.add(createRangePanel());
@@ -123,7 +123,10 @@ public class PreFlopCardsPanel extends TUIPanel {
 				boolean isSel = preflopCardsModel.isSelected(card);
 				cardButtons[i][j].setBorder(new LineBorder(isSel ? SELECTED_BORDER : UNSELECTED_BORDER));
 				cardButtons[i][j].setBackground(isSel ? SELECTED_COLOR : UNSELECTED_COLOR);
-				cardButtons[i][j].setToolTipText("" + preflopCardsModel.getEV(card));
+				double ev = preflopCardsModel.getEV(card);
+				double nev = preflopCardsModel.getNormalizedEV(card);
+				String tt = String.format("EV: %1.2f nEV: %1.2f", ev, nev);
+				cardButtons[i][j].setToolTipText(tt);
 			}
 		}
 	}
@@ -139,10 +142,10 @@ public class PreFlopCardsPanel extends TUIPanel {
 			preflopCardsModel = new PreflopCardsModel();
 		}
 
-		// setvalueisadjusting = true avoid actionperformed invocation. this is becaus during 
-//		slider.setValueIsAdjusting(true);
+		// setvalueisadjusting = true avoid actionperformed invocation. this is becaus during
+		// slider.setValueIsAdjusting(true);
 		slider.setValue(preflopCardsModel.getPercentage());
-//		slider.setValueIsAdjusting(false);
+		// slider.setValueIsAdjusting(false);
 		// slider.setLabelTable(labels);
 		updateCardsButtons();
 	}

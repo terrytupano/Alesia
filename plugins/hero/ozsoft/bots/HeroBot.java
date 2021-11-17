@@ -50,7 +50,8 @@ public class HeroBot extends Bot {
 		pokerSimulator.setPotValue(pot);
 		pokerSimulator.setHeroChips(player.getCash());
 		// FIXME: temporal
-		pokerSimulator.setRaiseValue(minBet * 2);
+		pokerSimulator.setRaiseValue(currentBet * 2);
+		System.out.println("minBet = "+ minBet + " currentBet = " + (currentBet*2));
 		int actV = (int) villans.stream().filter(p -> p.hasCards()).count();
 		pokerSimulator.setNunOfOpponets(actV);
 		pokerSimulator.setTablePosition(dealer, actV);

@@ -21,6 +21,8 @@ import plugins.hero.UoAHandEval.*;
  * @author Radu Murzea
  */
 public class PreflopCardsModel {
+	/** Constant to compute weight factor in pokersimulator */
+	public static final double lowerBound = 0.01;
 	/**
 	 * Contains the names of all hand types. They are split among 13 lines and 13 columns. In order to work with them
 	 * easier, there are some patterns to their arrangements. For example: the pocket pairs run along the main diagonal.
@@ -44,14 +46,13 @@ public class PreflopCardsModel {
 	private int percentage;
 	private String rangeName;
 	private LazyList<PreflopCards> preflopCards;
-
+	private double upperBound, delta;
 	/**
 	 * new instance loaded with the values setted in <b>original<b> range name
 	 */
 	public PreflopCardsModel() {
 		this("pokerStar");
 	}
-
 	/**
 	 * new instace. the argumetn rangeName is name of a new oer existent preflop rage. if the DB dont contain such
 	 * preflop range, this instance will create a fresh copy of preflopt list stored in <b>original</b>
@@ -62,11 +63,18 @@ public class PreflopCardsModel {
 		this.rangeName = rangeName;
 		this.preflopCards = PreflopCards.where("rangeName = '" + rangeName + "' ORDER BY ev DESC");
 		if (preflopCards.size() == 0) {
-			this.preflopCards = PreflopCards.where("rangeName = 'original' ORDER BY ev DESC");
-			preflopCards.forEach(card -> card.set("rangeName", rangeName, "description", rangeName, "percentage", 0,
-					"selected", false, "wins", 0, "hands", 0, "ev", 0.0));
+			throw new IllegalArgumentException("Range name " + rangeName + " Not found.");
+			// this.preflopCards = PreflopCards.where("rangeName = 'original' ORDER BY ev DESC");
+			// preflopCards.forEach(card -> card.set("rangeName", rangeName, "description", rangeName, "percentage", 0,
+			// "selected", false, "wins", 0, "hands", 0, "ev", 0.0));
 		}
 		this.percentage = preflopCards.get(0).getInteger("percentage");
+		upperBound = preflopCards.stream().mapToDouble(pfc -> pfc.getDouble("ev")).max().getAsDouble();
+		// delta with inverted sing
+		delta = -1.0 * preflopCards.stream().mapToDouble(pfc -> pfc.getDouble("ev")).min().getAsDouble();
+		delta += PreflopCardsModel.lowerBound;
+		// function displacement
+		upperBound = upperBound + delta;
 	}
 
 	/**
@@ -86,19 +94,6 @@ public class PreflopCardsModel {
 	}
 
 	/**
-	 * peform {@link #containsHand(UoACard, UoACard)} wrapping first, the incomint arguments
-	 * 
-	 * @param holeCards - the hero hole cards
-	 * 
-	 * @return true if the specified hand is selected in this range, false otherwise.
-	 */
-	public boolean containsHand(HoleCards holeCards) {
-		String c1 = holeCards.getFirstCard().toString().replace("*", "");
-		String c2 = holeCards.getSecondCard().toString().replace("*", "");
-		return containsHand(new UoACard(c1), new UoACard(c2));
-	}
-
-	/**
 	 * Tells if the hand composed of the two specified cards is selected in this range. The order in which you specify
 	 * the cards is not relevant.
 	 * 
@@ -107,19 +102,9 @@ public class PreflopCardsModel {
 	 * 
 	 * @return true if the specified hand is selected in this range, false otherwise.
 	 */
-	public boolean containsHand(UoACard c1, UoACard c2) {
-		String card = getStringCard(c1, c2);
+	public boolean containsHand(UoAHand hand) {
+		String card = getStringCard(hand);
 		return isSelected(card);
-	}
-
-	/**
-	 * perform {@link #containsHand(UoACard, UoACard)} whit the first 2 cards of this Hand. (in theory, the hole hand)
-	 * 
-	 * @param aHand - hand
-	 * @return true if the specified hand is selected in this range, false otherwise.
-	 */
-	public boolean containsHand(UoAHand aHand) {
-		return containsHand(aHand.getCard(1), aHand.getCard(2));
 	}
 
 	/**
@@ -147,6 +132,41 @@ public class PreflopCardsModel {
 	}
 
 	/**
+	 * return the stored EV from the cards pass as argument.
+	 * 
+	 * @param cards - cards in preflop format (AA, AKs, ...)
+	 * 
+	 * @return the expected value
+	 */
+	public double getEV(String cards) {
+		PreflopCards element = preflopCards.stream().filter(pfr -> pfr.getString("card").equals(cards)).findFirst()
+				.get();
+		double ev = element.getDouble("ev");
+		return ev;
+	}
+
+	public double getEV(UoAHand hand) {
+		return getEV(getStringCard(hand));
+	}
+
+	/**
+	 * return the Normalized EV
+	 * 
+	 * @param cards - the Hole cards
+	 * 
+	 * @return ev in [1,0] range
+	 */
+	public double getNormalizedEV(UoAHand hand) {
+		return getNormalizedEV(getStringCard(hand));
+	}
+
+	public double getNormalizedEV(String cards) {
+		double ev = getEV(cards);
+		double nev = (ev + delta) / upperBound;
+		return nev;
+	}
+
+	/**
 	 * Returns the percentage of this range.
 	 * 
 	 * @return the percentage of this range.
@@ -164,9 +184,10 @@ public class PreflopCardsModel {
 	 * 
 	 * @return the strin representation
 	 */
-	public String getStringCard(UoACard card1, UoACard card2) {
+	public String getStringCard(UoAHand hand) {
 		int rbig, rsmall;
-
+		UoACard card1 = hand.getCard(1);
+		UoACard card2 = hand.getCard(2);
 		if (card2.getRank() > card1.getRank()) {
 			rbig = card2.getRank();
 			rsmall = card1.getRank();
@@ -226,6 +247,7 @@ public class PreflopCardsModel {
 			range.insert();
 		}
 	}
+
 	/**
 	 * Sets a new percentage for this range. This will overwrite only the cards inside of the selection. Cards outside
 	 * of the specify procet, remaind equal.
@@ -250,7 +272,6 @@ public class PreflopCardsModel {
 		for (int i = 0; i < set; i++)
 			preflopCards.get(i).setBoolean("selected", true);
 	}
-
 	/**
 	 * used for statistics purporse. this method update the <code>winnings</code> and <code>ev</code> fields
 	 * preflopscards file.
@@ -259,8 +280,8 @@ public class PreflopCardsModel {
 	 * @param card2 - preflop card 2
 	 * @param ammount - normaly +1 or -1 to update the count and ev
 	 */
-	public void updateCoordenates(UoACard card1, UoACard card2, int ammount) {
-		String card = getStringCard(card1, card2);
+	public void updateCoordenates(UoAHand hand, int ammount) {
+		String card = getStringCard(hand);
 		PreflopCards range = PreflopCards.findOrCreateIt("rangeName", rangeName, "card", card);
 		range.set("rangeName", rangeName);
 		range.set("card", card);
@@ -276,30 +297,5 @@ public class PreflopCardsModel {
 		range.setDouble("ev", winD / handsD);
 
 		range.save();
-	}
-
-	/**
-	 * call {@link #getEV(String)} parsing the string representation from this hand
-	 * 
-	 * @param aHand - a hand contain hole cards
-	 * 
-	 * @return ev
-	 */
-	public double getEV(UoAHand aHand) {
-		return getEV(getStringCard(aHand.getCard(1), aHand.getCard(2)));
-	}
-
-	/**
-	 * return the stored EV from the cards pass as argument.
-	 * 
-	 * @param cards - cards in preflop format (AA, AKs, ...)
-	 * 
-	 * @return the expected value
-	 */
-	public double getEV(String cards) {
-		PreflopCards element = preflopCards.stream().filter(pfr -> pfr.getString("card").equals(cards)).findFirst()
-				.get();
-		double ev = ((int) (element.getDouble("ev") * 10000)) / 10000d;
-		return ev;
 	}
 }

@@ -27,7 +27,7 @@ public class GamePlayer {
 	private int playerId;
 	private double prevValue;
 	private boolean isActive;
-	private int activeCounter, totalMeasuremet;
+	private int tauCounter, totalTauCounter;
 	private double chips, bigBlind, buyIn;
 
 	public GamePlayer(int playerId) {
@@ -85,7 +85,6 @@ public class GamePlayer {
 	 */
 	public void readSensors(SensorsArray sensorsArray) {
 		isActive = false;
-		totalMeasuremet++;
 		String ssPrefix = (playerId == 0) ? "hero" : "villan" + playerId;
 
 		// in simulation enviorement, retrive data direct from Table instance inf Hero
@@ -95,29 +94,36 @@ public class GamePlayer {
 			buyIn = Hero.simulationTable.buyIn;
 			chips = p.getCash();
 			name = p.getName();
-			isActive = p.hasCards();
-			if (isActive) {
-				activeCounter++;
-			} else {
-				activeCounter--;
-				activeCounter = activeCounter < 0 ? 0 : activeCounter;
+			// active player or not
+			int cnt = p.hasCards() ? 1 : -1;
+			// only count on preflop and flop
+			if (Hero.simulationTable.getCurrentRound() <= PokerSimulator.FLOP_CARDS_DEALT) {
+				totalTauCounter += cnt;
+				tauCounter = tauCounter < 0 ? 0 : tauCounter;
 			}
 			performMeasure();
 			return;
 		}
+		
 		bigBlind = sensorsArray.getPokerSimulator().bigBlind;
 		buyIn = sensorsArray.getPokerSimulator().buyIn;
 
 		// first step: read only card1 and card2 sensor.
 		List<ScreenSensor> list = sensorsArray.getSensors(ssPrefix + ".card");
 		sensorsArray.readSensors(false, list);
-		if (sensorsArray.isActive(playerId)) {
-			activeCounter++;
-		} else {
-			activeCounter--;
-			activeCounter = activeCounter < 0 ? 0 : activeCounter;
-			return;
+		updateActiveCounter();
+		// active player or not
+		int cnt = sensorsArray.isActive(playerId) ? 1 : -1;
+		// only count on preflop and flop
+		if (sensorsArray.getPokerSimulator().currentRound <= PokerSimulator.FLOP_CARDS_DEALT) {
+			totalTauCounter += cnt;
+			tauCounter = tauCounter < 0 ? 0 : tauCounter;
 		}
+		
+		// in real live battle, the player muss be active to continue
+		if(!sensorsArray.isActive(playerId))
+			return;
+		
 		isActive = true;
 		list = sensorsArray.getSensors(ssPrefix);
 		sensorsArray.readSensors(true, list);
@@ -135,10 +141,13 @@ public class GamePlayer {
 		// both values must be available to continue the process
 		if (chips == -1 || name == null)
 			return;
-		
+
 		performMeasure();
 	}
 
+	private void updateActiveCounter() {
+
+	}
 	private void performMeasure() {
 		// new player ??
 		if (!oldName.equals(name)) {
@@ -205,8 +214,8 @@ public class GamePlayer {
 	}
 
 	public double getTau() {
-//		return activeCounter / (double) totalMeasuremet;
-		double val =(int) (activeCounter / (double) totalMeasuremet * 100) / 100.0;
+		// return activeCounter / (double) totalMeasuremet;
+		double val = (int) (tauCounter / (double) totalTauCounter * 100) / 100.0;
 		return val;
 	}
 

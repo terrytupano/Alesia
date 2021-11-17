@@ -94,6 +94,8 @@ public class Table extends Task {
 
 	/** The community cards on the board. */
 	private final UoAHand board;
+	
+	private boolean holeCardsDealed;
 
 	/** The current dealer position. */
 	private int dealerPosition;
@@ -264,6 +266,7 @@ public class Table extends Task {
 			cs.add(deck.deal());
 			player.setCards(cs);
 		}
+		holeCardsDealed = true;
 		notifyPlayersUpdated(false);
 		notifyMessage("%s deals the hole cards.", dealer);
 	}
@@ -742,10 +745,19 @@ public class Table extends Task {
 	}
 
 	/**
+	 * return the current round expresed in cards numbers. 2 = preflop, 5 = Flop, 6 = Turn, 7 = River
+	 * 
+	 * @return # of dealed cards
+	 */
+	public int getCurrentRound() {
+		return board.size() + (holeCardsDealed == true ? 2 : 0);
+	}
+	/**
 	 * Resets the game for a new hand.
 	 */
 	private void resetHand() {
 		// Clear the board.
+		holeCardsDealed = false;
 		board.makeEmpty();
 		pots.clear();
 		notifyBoardUpdated();

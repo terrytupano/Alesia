@@ -20,7 +20,7 @@
   <availableActions type="TextComponentState" text="*all" caretPosition="4"/>
   <play.maxRaise type="TextComponentState" text="4" caretPosition="1"/>
   <table.bigBlid type="TextComponentState" text="2000" caretPosition="4"/>
-  <play.time type="TextComponentState" text="0" caretPosition="0"/>
+  <play.time type="TextComponentState" text="0" caretPosition="1"/>
   <play.until type="TextComponentState" text="0.6" caretPosition="3"/>
   <test type="TextComponentState" text="02+01 preflop" caretPosition="13"/>
   <preflopCards type="ComboBoxState" selectedIndex="3"/>

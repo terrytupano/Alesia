@@ -493,7 +493,7 @@ public class Trooper extends Task {
 		if (maxRekonAmmo == -1) {
 			maxRekonAmmo = base + (band * ev);
 		}
-
+implement simulation to check if hero kan detect tau, mean and sd correctly
 		String txt = "Preflop Ok.";
 		if (!pfcm.containsHand(pokerSimulator.holeCards)) {
 			txt = "Preflop not Ok.";
