@@ -35,6 +35,9 @@ public class GamePlayer {
 		this.prevValue = -1;
 		this.bettingPattern = new DescriptiveStatistics(100);
 		this.chips = 0.0;
+		// initial stimation for tau parameter: 30%
+		this.tauCounter = 30;
+		this.totalTauCounter = 100;
 	}
 
 	public String getDesignation() {
@@ -95,16 +98,18 @@ public class GamePlayer {
 			chips = p.getCash();
 			name = p.getName();
 			// active player or not
-			int cnt = p.hasCards() ? 1 : -1;
+			int cnt = p.hasCards() ? 1 : 0;
+			isActive = p.hasCards();
 			// only count on preflop and flop
-			if (Hero.simulationTable.getCurrentRound() <= PokerSimulator.FLOP_CARDS_DEALT) {
-				totalTauCounter += cnt;
-				tauCounter = tauCounter < 0 ? 0 : tauCounter;
+			if (Hero.simulationTable.getCurrentRound() == PokerSimulator.FLOP_CARDS_DEALT) {
+				totalTauCounter++;
+				tauCounter += cnt;
+//				tauCounter = tauCounter <=0 ? 0 : tauCounter;
 			}
 			performMeasure();
 			return;
 		}
-		
+
 		bigBlind = sensorsArray.getPokerSimulator().bigBlind;
 		buyIn = sensorsArray.getPokerSimulator().buyIn;
 
@@ -113,17 +118,17 @@ public class GamePlayer {
 		sensorsArray.readSensors(false, list);
 		updateActiveCounter();
 		// active player or not
-		int cnt = sensorsArray.isActive(playerId) ? 1 : -1;
+		int cnt = sensorsArray.isActive(playerId) ? 1 : 0;
 		// only count on preflop and flop
 		if (sensorsArray.getPokerSimulator().currentRound <= PokerSimulator.FLOP_CARDS_DEALT) {
-			totalTauCounter += cnt;
-			tauCounter = tauCounter < 0 ? 0 : tauCounter;
+			totalTauCounter++;
+			tauCounter += cnt;
 		}
-		
+
 		// in real live battle, the player muss be active to continue
-		if(!sensorsArray.isActive(playerId))
+		if (!sensorsArray.isActive(playerId))
 			return;
-		
+
 		isActive = true;
 		list = sensorsArray.getSensors(ssPrefix);
 		sensorsArray.readSensors(true, list);
@@ -213,10 +218,14 @@ public class GamePlayer {
 		return mean;
 	}
 
-	public double getTau() {
-		// return activeCounter / (double) totalMeasuremet;
-		double val = (int) (tauCounter / (double) totalTauCounter * 100) / 100.0;
-		return val;
+	/**
+	 * return the measured <code>tau </code> value
+	 * 
+	 * @return tau [0,100] range (%)
+	 */
+	public int getTau() {
+		double val = tauCounter / (double) totalTauCounter;
+		return (int) (val * 100);
 	}
 
 	public long getN() {

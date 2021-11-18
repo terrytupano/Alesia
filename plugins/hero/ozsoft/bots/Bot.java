@@ -144,6 +144,11 @@ public abstract class Bot implements Client {
 		Alesia.getInstance().openDB("hero");
 		SimulatorStatistic statistic = SimulatorStatistic.findOrInit("name", positiveEvent.get("name"), "value",
 				positiveEvent.get("value"));
+		// change the name to *name when many boot update the same name, value pair.
+		String pname = statistic.getString("player") == null ? playerName : statistic.getString("player");
+		if (!playerName.equals(pname))
+			pname = "*" + playerName;
+		statistic.set("player", pname);
 		double hands = statistic.getDouble("hands") == null ? 0 : statistic.getDouble("hands");
 		statistic.set("hands", ++hands);
 		double wins = statistic.getDouble("wins") == null ? 0 : statistic.getDouble("wins");
@@ -151,6 +156,7 @@ public abstract class Bot implements Client {
 		statistic.set("wins", wins);
 		double bb = wins / (bigBlind * 1.0);
 		statistic.set("ratio", bb / (hands * 1.0));
+		statistic.setString("aditionalValue", positiveEvent.get("aditionalValue"));
 		statistic.save();
 	}
 }

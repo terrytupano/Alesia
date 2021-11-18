@@ -333,7 +333,7 @@ public class PokerSimulator {
 		double ahead = 0, tied = 0, behind = 0;
 
 		// Hand potential array, each index represents ahead, tied, and behind.
-		double HP[][] = new double [3][3];
+		double HP[][] = new double[3][3];
 		int HPTotal[] = new int[3];
 		UoAHand villan = new UoAHand(); // two cards for each villans
 		UoAHandEvaluator evaluator = new UoAHandEvaluator();
@@ -373,8 +373,8 @@ public class PokerSimulator {
 			int myRank = evaluator.rankHand(ourcards.getCard(1), ourcards.getCard(2), iBoard);
 			int villanRank = evaluator.rankHand(villan.getCard(1), villan.getCard(2), iBoard);
 			double weight = reWeight.getOrDefault(villan.toString(), PreflopCardsModel.lowerBound);
-			if(weight != PreflopCardsModel.lowerBound) {
-//				System.out.println("PokerSimulator.getHandPotential()");
+			if (weight != PreflopCardsModel.lowerBound) {
+				// System.out.println("PokerSimulator.getHandPotential()");
 			}
 			weight = 1.0;
 			if (myRank > villanRank) {
@@ -390,8 +390,8 @@ public class PokerSimulator {
 			//
 			String[] rcards = {"Jc 4h", "Ac Jc", "5h 2h", "6s 5s", "5s 5h", "5s 3s", "Ac Qd", "7s 5s", "Qs Ts"};
 			for (String rcard : rcards) {
-				if(rcard.equals(villan.toString().trim())) {
-//					System.out.println("%7s %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f", weight, );
+				if (rcard.equals(villan.toString().trim())) {
+					// System.out.println("%7s %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f", weight, );
 				}
 			}
 		}
@@ -406,12 +406,12 @@ public class PokerSimulator {
 		double HS_n = Math.pow((ahead + tied / 2d) / (double) (ahead + tied + behind), oppenents);
 
 		// winning probabilities ?!?!?!?!?!?
-//		double winProb_n = Math.pow((ahead + tied) / (double) iterations, oppenents);
+		// double winProb_n = Math.pow((ahead + tied) / (double) iterations, oppenents);
 
 		Properties prp = new Properties();
 		prp.put("PPot", Ppot);
 		prp.put("NPot", Npot);
-//		prp.put("winProb", winProb_n);
+		// prp.put("winProb", winProb_n);
 		prp.put("HS", HS_n);
 
 		return prp;
@@ -604,10 +604,11 @@ public class PokerSimulator {
 
 		uoAEvaluation.clear();
 		uoAEvaluation.putAll(getEvaluation(holeCards, communityCards, opponents, 100));
-		Ppot = (double) uoAEvaluation.get("PPot");
-		Npot = (double) uoAEvaluation.get("NPot");
-		winProb_n = (double) uoAEvaluation.get("winProb");
-		HS_n = (double) uoAEvaluation.get("HS");
+		// WARNING: theses values ARE NOT available in preflop
+		Ppot = (double) uoAEvaluation.getOrDefault("PPot", 0.0);
+		Npot = (double) uoAEvaluation.getOrDefault("NPot", 0.0);
+		winProb_n = (double) uoAEvaluation.getOrDefault("winProb", 0.0);
+		HS_n = (double) uoAEvaluation.getOrDefault("HS", 0.0);
 
 		/**
 		 * update the simulation result to the console

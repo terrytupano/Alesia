@@ -122,13 +122,13 @@ public class Trooper extends Task {
 		this.positiveEvent = properties;
 		playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
 		clearEnviorement();
-		decide();
 		// simulate a number of reads. the idea is that in real live fight, hero soll habe already information about
 		// some of the villans
 		if ("Hero".equals(Hero.simulationTable.getActor().getName())) {
 			for (int i = 0; i < 6; i++)
 				readPlayerStat();
 		}
+		decide();
 		return act();
 	}
 	public boolean isPaused() {
@@ -145,11 +145,11 @@ public class Trooper extends Task {
 	 * to avoid exces of time comsumption.
 	 * 
 	 */
-	public void readPlayerStat() {
+	private void readPlayerStat() {
 		gameRecorder.getGamePlayer(villansBeacon).readSensors(sensorsArray);
 		villansBeacon++;
 		String asse = "<html><table border=\"0\", cellspacing=\"0\"><assesment></table></html>";
-		String tmp = "";
+		String tmp = "", tmpSim = "";
 		List<GamePlayer> list = gameRecorder.getPlayers();
 		if (list.size() > 0) {
 			for (GamePlayer gp : list) {
@@ -157,12 +157,19 @@ public class Trooper extends Task {
 				tmp += "<tr " + rowsty + "><td>" + gp.getId() + " " + gp.getName() + "</td><td>" + gp.getChips()
 						+ "</td><td>" + gp.getTau() + "</td><td>" + gp.getMean() + "</td><td>"
 						+ gp.getStandardDeviation() + "</td></tr>";
+				// simulation
+				tmpSim += gp.getId() + " " + gp.getName() + " " + gp.getChips() + " " + gp.getTau() + " " + gp.getMean()
+						+ " " + gp.getStandardDeviation() + "\n";
 			}
 			asse = asse.replace("<assesment>", tmp);
 		} else
 			asse = "Unknow";
-		// pokerSimulator.setVariable("trooper.Assesment", sb.substring(0, sb.length() - 4));
 		pokerSimulator.setVariable("trooper.Assesment", asse);
+
+		// simulation measurement: hero store the assesment to check if hero can correctly determine tau, mean und SD
+		positiveEvent.put("name", "assesment");
+		positiveEvent.put("value", Hero.simulationTable.getActor().getName());
+		positiveEvent.put("aditionalValue", tmpSim);
 
 		if (villansBeacon > numOfVillans) {
 			villansBeacon = 0;
@@ -198,19 +205,19 @@ public class Trooper extends Task {
 		if (pokerSimulator.currentRound >= PokerSimulator.FLOP_CARDS_DEALT) {
 			// SIMMULATION MEASUREMENT: rankBehind: measure the ralation bettwen the rankBehind value and winnnigs: the
 			// ideas is find the +EV for the max number of behind cards
-			int val = (int) pokerSimulator.uoAEvaluation.get("rankBehind");
-			if (val < 20) {
-				int x = -1, y = -1, z = -1;
-				if (pokerSimulator.currentRound == PokerSimulator.FLOP_CARDS_DEALT)
-					x = val;
-				if (pokerSimulator.currentRound == PokerSimulator.TURN_CARD_DEALT)
-					y = val;
-				if (pokerSimulator.currentRound == PokerSimulator.RIVER_CARD_DEALT)
-					z = val;
-				positiveEvent.put("value", "(" + x + ", " + y + ", " + z + ")");
-				positiveEvent.put("name", "rankBehind");
-				txt = "Measuring ...";
-			}
+			// int val = (int) pokerSimulator.uoAEvaluation.get("rankBehind");
+			// if (val < 20) {
+			// int x = -1, y = -1, z = -1;
+			// if (pokerSimulator.currentRound == PokerSimulator.FLOP_CARDS_DEALT)
+			// x = val;
+			// if (pokerSimulator.currentRound == PokerSimulator.TURN_CARD_DEALT)
+			// y = val;
+			// if (pokerSimulator.currentRound == PokerSimulator.RIVER_CARD_DEALT)
+			// z = val;
+			// positiveEvent.put("value", "(" + x + ", " + y + ", " + z + ")");
+			// positiveEvent.put("name", "rankBehind");
+			// txt = "Measuring ...";
+			// }
 
 			if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
 				txt = "Is the Nuts.";
@@ -257,7 +264,6 @@ public class Trooper extends Task {
 	private void clearEnviorement() {
 		if (sensorsArray != null) {
 			sensorsArray.clearEnviorement();
-			// in no simulation enviorement oppLowerBound is cleaned.
 			positiveEvent.clear();
 		}
 		maxRekonAmmo = -1;
@@ -474,6 +480,7 @@ public class Trooper extends Task {
 		availableActions.removeIf(ta -> ta.expectedValue < 0);
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 	}
+	private int preflopSimulationProcent = -1;
 	/**
 	 * Set the action based on the starting hand distribution. This method set the global variable {@link #maxRekonAmmo}
 	 * this method allwais select the less cost action. The general idea here is try to put the trooper in folp, so the
@@ -485,18 +492,31 @@ public class Trooper extends Task {
 		double pfband = ((Number) parameters.get("reconnBand")).doubleValue();
 		double base = pokerSimulator.bigBlind * pfBase;
 		double band = pokerSimulator.bigBlind * pfband;
-
-		// maxreconammo = base + (inversion * ev)
 		String rName = (String) parameters.get("preflopCards");
 		PreflopCardsModel pfcm = preFlopCardsDist.get(rName);
-		double ev = pfcm.getEV(pokerSimulator.holeCards);
-		if (maxRekonAmmo == -1) {
-			maxRekonAmmo = base + (band * ev);
+
+		// simulation: to check if hero can detect tau, mean and sd correctly
+		if (!Hero.simulationTable.getActor().getName().equals("hero") && preflopSimulationProcent == -1) {
+			// use the char value to compute the %.
+			preflopSimulationProcent = Hero.simulationTable.getActor().getChair() * 10;
+			// for hero 100%
+			preflopSimulationProcent = preflopSimulationProcent == 0 ? 100 : preflopSimulationProcent;
+			pfcm.setPercentage(preflopSimulationProcent);
+			// positiveEvent.put("name", "tauMeasurement");
+			System.out.println(Hero.simulationTable.getActor().getName() + " = "+preflopSimulationProcent);
+			// positiveEvent.put("value", "% set at " + preflopSimulationProcent);
 		}
-implement simulation to check if hero kan detect tau, mean and sd correctly
+
 		String txt = "Preflop Ok.";
 		if (!pfcm.containsHand(pokerSimulator.holeCards)) {
 			txt = "Preflop not Ok.";
+			return;
+		}
+
+		// maxreconammo = base + (inversion * ev)
+		double ev = pfcm.getEV(pokerSimulator.holeCards);
+		if (maxRekonAmmo == -1) {
+			maxRekonAmmo = base + (band * ev);
 		}
 
 		double call = pokerSimulator.callValue;
