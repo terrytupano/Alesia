@@ -567,6 +567,11 @@ public class PokerSimulator {
 		return sensorStatus.getOrDefault(sensor, false);
 	}
 
+	private int tau;
+
+	public void setTau(int tau) {
+		this.tau = tau;
+	}
 	/**
 	 * perform the PokerProphesier simulation. Call this method when all the cards on the table has been setted using
 	 * {@link #addCard(String, String)} this method will create the {@link HoleCards} and the {@link CommunityCards} (if
@@ -603,19 +608,20 @@ public class PokerSimulator {
 		currentRound = currentHand.size();
 
 		uoAEvaluation.clear();
-		uoAEvaluation.putAll(getEvaluation(holeCards, communityCards, opponents, 100));
+		uoAEvaluation.putAll(getEvaluation(holeCards, communityCards, opponents, tau));
+
 		// WARNING: theses values ARE NOT available in preflop
 		Ppot = (double) uoAEvaluation.getOrDefault("PPot", 0.0);
 		Npot = (double) uoAEvaluation.getOrDefault("NPot", 0.0);
 		winProb_n = (double) uoAEvaluation.getOrDefault("winProb", 0.0);
 		HS_n = (double) uoAEvaluation.getOrDefault("HS", 0.0);
 
-		/**
-		 * update the simulation result to the console
-		 */
-		variableList.put("simulator.Troper probability", percentageFormat.format(winProb_n));
-		variableList.put("simulator.Trooper Current hand", uoAEvaluation.get("name"));
-		variableList.put("simulator.Table cards", currentHand.toString());
+		// update the simulation result to the console
+		variableList.put("simulator.Troper Min tau Value", tau);
+		variableList.put("simulator.Trooper Current hand",
+				percentageFormat.format(winProb_n) + " " + uoAEvaluation.get("name"));
+		variableList.put("simulator.Table cards",
+				"hole " + holeCards.toString() + " Comunity " + communityCards + " Current " + currentHand.toString());
 		String txt = "Amunitions " + heroChips + " Pot " + potValue + " Call " + callValue + " Raise " + raiseValue
 				+ " Position " + tablePosition;
 		variableList.put("simulator.Table values", txt);

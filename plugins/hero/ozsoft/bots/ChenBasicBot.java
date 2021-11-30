@@ -68,11 +68,6 @@ public class ChenBasicBot extends Bot {
 	}
 
 	@Override
-	public void actorRotated(Player actor) {
-		// Not implemented.
-	}
-
-	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		PlayerAction action = null;
 		if (allowedActions.size() == 1) {

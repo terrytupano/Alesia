@@ -33,12 +33,6 @@ import plugins.hero.ozsoft.actions.*;
 public class DummyBot extends Bot {
 
 	@Override
-	public void actorRotated(Player actor) {
-		// Not implemented.
-	}
-
-
-	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		if (allowedActions.contains(PlayerAction.CHECK)) {
 			return PlayerAction.CHECK;
@@ -47,11 +41,8 @@ public class DummyBot extends Bot {
 		}
 	}
 
-
 	@Override
 	public void handStarted(Player dealer) {
 		// TODO Auto-generated method stub
-		
 	}
-
 }

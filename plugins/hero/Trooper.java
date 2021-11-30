@@ -85,7 +85,6 @@ public class Trooper extends Task {
 			this.robotActuator = new RobotActuator();
 			this.pokerSimulator = sensorsArray.getPokerSimulator();
 			this.numOfVillans = sensorsArray.getVillans();
-			this.gameRecorder = new GameRecorder(numOfVillans);
 		} else {
 			// simulation
 			this.numOfVillans = Table.CAPACITY - 1;
@@ -122,12 +121,11 @@ public class Trooper extends Task {
 		this.positiveEvent = properties;
 		playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
 		clearEnviorement();
-		// simulate a number of reads. the idea is that in real live fight, hero soll habe already information about
-		// some of the villans
-		if ("Hero".equals(Hero.simulationTable.getActor().getName())) {
-			for (int i = 0; i < 6; i++)
-				readPlayerStat();
-		}
+
+		// for simulation purpose, allays read the assesment
+		for (int i = 0; i < Table.CAPACITY; i++)
+			readPlayerStat();
+		
 		decide();
 		return act();
 	}
@@ -149,7 +147,9 @@ public class Trooper extends Task {
 		gameRecorder.getGamePlayer(villansBeacon).readSensors(sensorsArray);
 		villansBeacon++;
 		String asse = "<html><table border=\"0\", cellspacing=\"0\"><assesment></table></html>";
-		String tmp = "", tmpSim = "";
+		String tmp = "<tr><td>Name</td><td>Chips</td><td>Tau</td><td>Mean</td><td>SD</td></tr>";
+
+		String tmpSim = "";
 		List<GamePlayer> list = gameRecorder.getPlayers();
 		if (list.size() > 0) {
 			for (GamePlayer gp : list) {
@@ -159,7 +159,7 @@ public class Trooper extends Task {
 						+ gp.getStandardDeviation() + "</td></tr>";
 				// simulation
 				tmpSim += gp.getId() + " " + gp.getName() + " " + gp.getChips() + " " + gp.getTau() + " " + gp.getMean()
-						+ " " + gp.getStandardDeviation() + "\n";
+						+ " " + gp.getVariance() + "\n";
 			}
 			asse = asse.replace("<assesment>", tmp);
 		} else
@@ -195,10 +195,10 @@ public class Trooper extends Task {
 		// frecuence).
 		// TODO: this decition is predictable and easy exploitable after a few hands. maybe muss be controled randomly
 		if (pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
-			// PreflopCardsModel opppcs = preFlopCardsDist.get("oportunity");
-			// if (opppcs.containsHand(pokerSimulator.holeCards)) {
-			// txt = "Current Hole cards in oportunity range.";
-			// }
+			PreflopCardsModel opppcs = preFlopCardsDist.get("oportunity");
+			if (opppcs.containsHand(pokerSimulator.holeCards)) {
+				txt = "Current Hole cards in oportunity range.";
+			}
 		}
 
 		// posflop
@@ -222,7 +222,7 @@ public class Trooper extends Task {
 			if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
 				txt = "Is the Nuts.";
 
-			double minWin = Integer.parseInt(parameters.get("oppLowerBound").toString()) / 100d;
+			// double minWin = Integer.parseInt(parameters.get("oppLowerBound").toString()) / 100d;
 			// if (pokerSimulator.winProb_n >= minWin) {
 			if (pokerSimulator.winProb_n > 0.5) {
 				// txt = String.format("%1.3f >= %1.3f", pokerSimulator.winProb_n, minWin);
@@ -497,15 +497,15 @@ public class Trooper extends Task {
 
 		// simulation: to check if hero can detect tau, mean and sd correctly
 		if (!Hero.simulationTable.getActor().getName().equals("hero") && preflopSimulationProcent == -1) {
-			// use the char value to compute the %.
+			// use the chair value to compute the %.
 			preflopSimulationProcent = Hero.simulationTable.getActor().getChair() * 10;
 			// for hero 100%
 			preflopSimulationProcent = preflopSimulationProcent == 0 ? 100 : preflopSimulationProcent;
-			pfcm.setPercentage(preflopSimulationProcent);
 			// positiveEvent.put("name", "tauMeasurement");
-			System.out.println(Hero.simulationTable.getActor().getName() + " = "+preflopSimulationProcent);
+			System.out.println(Hero.simulationTable.getActor().getName() + " = " + preflopSimulationProcent);
 			// positiveEvent.put("value", "% set at " + preflopSimulationProcent);
 		}
+		pfcm.setPercentage(preflopSimulationProcent);
 
 		String txt = "Preflop Ok.";
 		if (!pfcm.containsHand(pokerSimulator.holeCards)) {
@@ -728,6 +728,7 @@ public class Trooper extends Task {
 			// only for visula purporse
 			sensorsArray.read(SensorsArray.TYPE_NUMBERS);
 			setVariableAndLog(STATUS, "Reading CARDS ...");
+			pokerSimulator.setTau(getMinActiveTau());
 			sensorsArray.read(SensorsArray.TYPE_CARDS);
 			availableActions.clear();
 			setVariableAndLog(STATUS, "Deciding ...");
@@ -736,6 +737,17 @@ public class Trooper extends Task {
 			act();
 		}
 		return null;
+	}
+
+	/**
+	 * return the minimun Tau value of all active villans
+	 * 
+	 * @return min tau value
+	 */
+	public int getMinActiveTau() {
+		List<GamePlayer> list = gameRecorder.getPlayers();
+		int tau = list.stream().filter(p -> p.isActive()).mapToInt(p -> p.getTau()).min().orElse(100);
+		return tau;
 	}
 
 	/**

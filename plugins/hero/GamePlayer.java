@@ -26,7 +26,7 @@ public class GamePlayer {
 	private DescriptiveStatistics bettingPattern;
 	private int playerId;
 	private double prevValue;
-	private boolean isActive;
+	private boolean isActive, flopMeasured;
 	private int tauCounter, totalTauCounter;
 	private double chips, bigBlind, buyIn;
 
@@ -35,9 +35,9 @@ public class GamePlayer {
 		this.prevValue = -1;
 		this.bettingPattern = new DescriptiveStatistics(100);
 		this.chips = 0.0;
-		// initial stimation for tau parameter: 30%
-		this.tauCounter = 30;
-		this.totalTauCounter = 100;
+		// initial stimation for tau parameter: 50%
+		this.tauCounter = 8;
+		this.totalTauCounter = 16;
 	}
 
 	public String getDesignation() {
@@ -97,14 +97,20 @@ public class GamePlayer {
 			buyIn = Hero.simulationTable.buyIn;
 			chips = p.getCash();
 			name = p.getName();
+
 			// active player or not
-			int cnt = p.hasCards() ? 1 : 0;
 			isActive = p.hasCards();
-			// only count on preflop and flop
-			if (Hero.simulationTable.getCurrentRound() == PokerSimulator.FLOP_CARDS_DEALT) {
-				totalTauCounter++;
+
+			// ensure flop count only once
+			if (Hero.simulationTable.getCurrentRound() != PokerSimulator.FLOP_CARDS_DEALT)
+				flopMeasured = false;
+
+			// only count flop
+			if (!flopMeasured && Hero.simulationTable.getCurrentRound() == PokerSimulator.FLOP_CARDS_DEALT) {
+				int cnt = p.hasCards() ? 1 : 0;
+				totalTauCounter += 1;
 				tauCounter += cnt;
-//				tauCounter = tauCounter <=0 ? 0 : tauCounter;
+				flopMeasured = true;
 			}
 			performMeasure();
 			return;
@@ -116,13 +122,12 @@ public class GamePlayer {
 		// first step: read only card1 and card2 sensor.
 		List<ScreenSensor> list = sensorsArray.getSensors(ssPrefix + ".card");
 		sensorsArray.readSensors(false, list);
-		updateActiveCounter();
-		// active player or not
-		int cnt = sensorsArray.isActive(playerId) ? 1 : 0;
+
 		// only count on preflop and flop
-		if (sensorsArray.getPokerSimulator().currentRound <= PokerSimulator.FLOP_CARDS_DEALT) {
-			totalTauCounter++;
-			tauCounter += cnt;
+		if (sensorsArray.getPokerSimulator().currentRound == PokerSimulator.FLOP_CARDS_DEALT) {
+			tauCounter += sensorsArray.isActive(playerId) ? 1 : -1;;
+			tauCounter = tauCounter <= 10 ? 10 : tauCounter;
+			tauCounter = tauCounter > 100 ? 100 : tauCounter;
 		}
 
 		// in real live battle, the player muss be active to continue
@@ -150,9 +155,6 @@ public class GamePlayer {
 		performMeasure();
 	}
 
-	private void updateActiveCounter() {
-
-	}
 	private void performMeasure() {
 		// new player ??
 		if (!oldName.equals(name)) {
@@ -213,7 +215,8 @@ public class GamePlayer {
 	 */
 	public double getMean() {
 		double mean = bettingPattern.getMean();
-		mean = mean / bigBlind;
+		// mean = mean / bigBlind;
+		// mean = ((int) (mean * 100)) / 100.0;
 		mean = ((int) (mean * 100)) / 100.0;
 		return mean;
 	}
@@ -224,17 +227,26 @@ public class GamePlayer {
 	 * @return tau [0,100] range (%)
 	 */
 	public int getTau() {
-		double val = tauCounter / (double) totalTauCounter;
-		return (int) (val * 100);
+		 double val = tauCounter / (double) totalTauCounter;
+		 return (int) (val * 100);
+//		return tauCounter;
 	}
 
 	public long getN() {
 		return bettingPattern.getN();
 	}
 
+	public double getVariance() {
+		double var = bettingPattern.getVariance();
+		// var = var / bigBlind;
+		// var = ((int) (var * 100)) / 100.0;
+		var = ((int) (var * 100)) / 100.0;
+		return var;
+	}
+
 	public double getStandardDeviation() {
 		double var = bettingPattern.getStandardDeviation();
-		var = var / bigBlind;
+		// var = var / bigBlind;
 		var = ((int) (var * 100)) / 100.0;
 		return var;
 	}

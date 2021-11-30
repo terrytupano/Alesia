@@ -80,6 +80,9 @@ public class Table extends Task {
 	/** Restart the hole table. */
 	public static final String RESTAR = "reStar";
 
+	/**current capacity of the table*/
+	public static final int CAPACITY = 8;
+
 	/** Table type (poker variant). */
 	private final TableType tableType;
 
@@ -91,10 +94,10 @@ public class Table extends Task {
 
 	/** The deck of cards. */
 	private final UoADeck deck;
-
+	
 	/** The community cards on the board. */
 	private final UoAHand board;
-	
+
 	private boolean holeCardsDealed;
 
 	/** The current dealer position. */
@@ -111,7 +114,6 @@ public class Table extends Task {
 
 	/** The minimum bet in the current hand. */
 	private int minBet;
-
 	/** The current bet in the current hand. */
 	private int bet;
 	/** All pots in the current hand (main pot and any side pots). */
@@ -120,19 +122,17 @@ public class Table extends Task {
 	private Player lastBettor;
 	/** Number of raises in the current betting round. */
 	private int raises;
+
 	/** num of current plyed hands */
 	private int numOfHand;
-
 	public int buyIn, bigBlind;
 	private Player heroPlayer;
 	private boolean paused;
 	private int speed;
 	private int simulationsHand;
 	private String actionWhenHeroLose = GAME_OVER;
-	private String actionWhenVillanLose = DO_NOTHING;
 	
-	/**current capacity of the table*/
-	public static final int CAPACITY = 8;
+	private String actionWhenVillanLose = DO_NOTHING;
 
 	public Table(TableType type, int buyIn, int bigBlind) {
 		super(Alesia.getInstance());
@@ -157,14 +157,36 @@ public class Table extends Task {
 		players.add(player);
 	}
 
+	/**
+	 * return a copy of the current player (the player in turn)
+	 * 
+	 * @return the current player
+	 */
+	public Player getActor() {
+		return actor.publicClone();
+	}
+	/**
+	 * return the current round expresed in cards numbers. 2 = preflop, 5 = Flop, 6 = Turn, 7 = River
+	 * 
+	 * @return # of dealed cards
+	 */
+	public int getCurrentRound() {
+		return board.size() + (holeCardsDealed == true ? 2 : 0);
+	}
+	public int getNumOfHand() {
+		return numOfHand;
+	}
+
 	public List<Player> getPlayers() {
 //		ArrayList<Player> tmp = new ArrayList<>();
 //		players.forEach(p -> tmp.add(p.publicClone()));
 		return players;
 	}
+
 	public int getSimulationsHand() {
 		return simulationsHand;
 	}
+
 	public int getSpeed() {
 		return speed;
 	}
@@ -404,7 +426,6 @@ public class Table extends Task {
 		notifyBoardUpdated();
 		notifyPlayersUpdated(false);
 	}
-
 	/**
 	 * Performs the showdown.
 	 */
@@ -575,7 +596,6 @@ public class Table extends Task {
 			// throw new IllegalStateException("Incorrect pot division!");
 		}
 	}
-
 	/**
 	 * Returns the allowed actions of a specific player.
 	 * 
@@ -624,6 +644,7 @@ public class Table extends Task {
 		}
 		return totalPot;
 	}
+
 	/**
 	 * Notifies clients that the board has been updated.
 	 */
@@ -633,6 +654,7 @@ public class Table extends Task {
 			player.getClient().boardUpdated(board, bet, pot);
 		}
 	}
+
 	/**
 	 * Notifies listeners with a custom game message.
 	 * 
@@ -645,7 +667,6 @@ public class Table extends Task {
 			player.getClient().messageReceived(message);
 		}
 	}
-
 	/**
 	 * Notifies clients that a player has acted.
 	 */
@@ -743,15 +764,6 @@ public class Table extends Task {
 		notifyBoardUpdated();
 		notifyPlayerActed();
 	}
-
-	/**
-	 * return the current round expresed in cards numbers. 2 = preflop, 5 = Flop, 6 = Turn, 7 = River
-	 * 
-	 * @return # of dealed cards
-	 */
-	public int getCurrentRound() {
-		return board.size() + (holeCardsDealed == true ? 2 : 0);
-	}
 	/**
 	 * Resets the game for a new hand.
 	 */
@@ -796,14 +808,6 @@ public class Table extends Task {
 	}
 
 	/**
-	 * return a copy of the current player (the player in turn)
-	 * 
-	 * @return the current player
-	 */
-	public Player getActor() {
-		return actor.publicClone();
-	}
-	/**
 	 * Rotates the position of the player in turn (the actor).
 	 */
 	private void rotateActor() {
@@ -813,7 +817,7 @@ public class Table extends Task {
 			player.getClient().actorRotated(actor);
 		}
 	}
-
+	
 	@Override
 	protected Object doInBackground() throws Exception {
 		try {
