@@ -6,8 +6,6 @@ import java.util.logging.*;
 
 import javax.swing.*;
 
-import org.slf4j.*;
-
 import com.alee.managers.plugin.*;
 import com.alee.managers.plugin.data.*;
 import com.alee.utils.*;
@@ -78,7 +76,8 @@ public class TPluginManager extends PluginManager<TPlugin> {
 				return plugin;
 			}
 		} catch (final IOException e) {
-			LoggerFactory.getLogger(PluginManager.class).error("Unable to read plugin information", e);
+			Alesia.logger.log(Level.SEVERE, "Unable to read plugin information", e);			
+//			LoggerFactory.getLogger(PluginManager.class).error("Unable to read plugin information", e);
 		}
 		return null;
 	}

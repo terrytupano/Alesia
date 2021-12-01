@@ -8,8 +8,6 @@ import org.apache.commons.math3.distribution.*;
 import org.apache.commons.math3.stat.descriptive.*;
 import org.jdesktop.application.*;
 
-import com.javaflair.pokerprophesier.api.adapter.*;
-
 import core.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.bots.*;

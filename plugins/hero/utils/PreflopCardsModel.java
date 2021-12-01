@@ -4,8 +4,6 @@ import java.util.*;
 
 import org.javalite.activejdbc.*;
 
-import com.javaflair.pokerprophesier.api.card.*;
-
 import core.*;
 import core.datasource.model.*;
 import plugins.hero.UoAHandEval.*;

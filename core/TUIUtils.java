@@ -18,13 +18,13 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.Action;
 import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.table.*;
-import javax.swing.table.TableColumn;
 import javax.swing.text.*;
 import javax.swing.text.html.*;
 
@@ -54,7 +54,6 @@ import com.alee.utils.swing.*;
 import dev.utils.*;
 import gui.*;
 import gui.wlaf.*;
-import javafx.scene.control.*;
 
 /**
  * static methods for grapichal user interfaces utils

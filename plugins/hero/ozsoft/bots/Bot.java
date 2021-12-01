@@ -3,12 +3,11 @@ package plugins.hero.ozsoft.bots;
 
 import java.util.*;
 
-import com.javaflair.pokerprophesier.api.card.*;
-
 import core.*;
 import core.datasource.model.*;
 import plugins.hero.*;
 import plugins.hero.UoAHandEval.*;
+import plugins.hero.UoALoky.handranking.*;
 import plugins.hero.ozsoft.*;
 
 /**
