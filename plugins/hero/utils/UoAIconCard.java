@@ -17,7 +17,6 @@ public class UoAIconCard extends JLabel {
 	private UoACard uoACard;
 
 	public UoAIconCard(UoACard card) {
-		this.uoACard = card;
 		setOpaque(true);
 		setBackground(Color.gray);
 		// small card size
@@ -29,9 +28,16 @@ public class UoAIconCard extends JLabel {
 		return uoACard;
 	}
 
+	/**
+	 * set a new {@link UoACard} for this ui element.
+	 * 
+	 * @param card the new card for this UI or null for no card
+	 */
 	public void setUoACard(UoACard card) {
 		this.uoACard = card;
-		if (card.getIndex() > -1) {
+		if (card == null)
+			this.uoACard = new UoACard();
+		if (uoACard.getIndex() > -1) {
 			setIcon(TResources.getIcon("cards/" + card.toString()));
 		} else {
 			setIcon(null);

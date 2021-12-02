@@ -6,6 +6,7 @@ import org.javalite.activejdbc.*;
 
 import core.*;
 import core.datasource.model.*;
+import plugins.hero.*;
 import plugins.hero.UoAHandEval.*;
 
 /**
@@ -19,8 +20,6 @@ import plugins.hero.UoAHandEval.*;
  * @author Radu Murzea
  */
 public class PreflopCardsModel {
-	/** Constant to compute weight factor in pokersimulator */
-	public static final double lowerBound = 0.01;
 	/**
 	 * Contains the names of all hand types. They are split among 13 lines and 13 columns. In order to work with them
 	 * easier, there are some patterns to their arrangements. For example: the pocket pairs run along the main diagonal.
@@ -70,7 +69,7 @@ public class PreflopCardsModel {
 		upperBound = preflopCards.stream().mapToDouble(pfc -> pfc.getDouble("ev")).max().getAsDouble();
 		// delta with inverted sing
 		delta = -1.0 * preflopCards.stream().mapToDouble(pfc -> pfc.getDouble("ev")).min().getAsDouble();
-		delta += PreflopCardsModel.lowerBound;
+		delta += PokerSimulator.lowerBound;
 		// function displacement
 		upperBound = upperBound + delta;
 	}
@@ -148,19 +147,30 @@ public class PreflopCardsModel {
 	}
 
 	/**
-	 * return the Normalized EV
+	 * perform {@link #getNormalizedEV(UoAHand)}
 	 * 
-	 * @param cards - the Hole cards
+	 * @see #getNormalizedEV(String)
 	 * 
-	 * @return ev in [1,0] range
 	 */
 	public double getNormalizedEV(UoAHand hand) {
 		return getNormalizedEV(getStringCard(hand));
 	}
 
+	/**
+	 * if the cards are in selection range, this metod will return the Normalized EV. if the cards are not in selection range, this metod return 
+	 * {@link #lowerBound}
+	 * 
+	 * @param cards - cards in {@link PreflopCardsModel} format
+	 * 
+	 * @return EV in [1,0] range
+	 */
 	public double getNormalizedEV(String cards) {
-		double ev = getEV(cards);
-		double nev = (ev + delta) / upperBound;
+		double nev = PokerSimulator.lowerBound;
+		if (isSelected(cards)) {
+			double ev = getEV(cards);
+			nev = (ev + delta) / upperBound;
+		}
+		// System.out.println("PreflopCardsModel.getNormalizedEV()");
 		return nev;
 	}
 

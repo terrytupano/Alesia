@@ -165,9 +165,11 @@ public class Trooper extends Task {
 		pokerSimulator.setVariable("trooper.Assesment", asse);
 
 		// simulation measurement: hero store the assesment to check if hero can correctly determine tau, mean und SD
-		positiveEvent.put("name", "assesment");
-		positiveEvent.put("value", Hero.simulationTable.getActor().getName());
-		positiveEvent.put("aditionalValue", tmpSim);
+		if(Hero.simulationTable != null ) {
+			positiveEvent.put("name", "assesment");
+			positiveEvent.put("value", Hero.simulationTable.getActor().getName());
+			positiveEvent.put("aditionalValue", tmpSim);
+		}
 
 		if (villansBeacon > numOfVillans) {
 			villansBeacon = 0;

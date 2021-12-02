@@ -25,6 +25,7 @@ import marvin.plugin.*;
 import marvin.util.*;
 import net.sourceforge.tess4j.util.*;
 import plugins.hero.*;
+import plugins.hero.test.*;
 
 public class TCVUtils {
 

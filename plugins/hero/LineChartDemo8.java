@@ -42,7 +42,7 @@ public class LineChartDemo8 extends JDialog {
 		JFreeChart jFreeChart = ChartFactory.createLineChart("Line Chart Demo 8", "Category", "Count",
 				paramCategoryDataset, PlotOrientation.VERTICAL, true, true, false);
 		CategoryPlot categoryPlot = (CategoryPlot) jFreeChart.getPlot();
-		SymbolAxis symbolAxis = new SymbolAxis("Group", new String[] { "A", "B", "C", "D", "E", "F" });
+		SymbolAxis symbolAxis = new SymbolAxis("Average Backroll", new String[] { "A", "B", "C", "D", "E", "F" });
 		categoryPlot.setRangeAxis(symbolAxis);
 		ChartUtilities.applyCurrentTheme(jFreeChart);
 		LineAndShapeRenderer lineAndShapeRenderer = (LineAndShapeRenderer) categoryPlot.getRenderer();

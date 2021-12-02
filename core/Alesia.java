@@ -200,35 +200,6 @@ public class Alesia extends Application {
 	}
 
 	/**
-	 * try to connect to local database. this method determine if an instance of this app is already running. in this
-	 * case, send {@link TPreferences#REQUEST_MAXIMIZE} message throwout internal comunication file (_.properties file)
-	 * to signal active instance to display main frame and this execution ends
-	 * 
-	 */
-	private void connectToLocalDB() {
-		// System.getProperties().put("connectTimeout", 10 * 1000);
-		// System.getProperties().put("socketTimeout", 10 * 1000);
-		try {
-			Alesia.logger.info("Connecting to local database ...");
-			Properties activeprp = getDBProperties();
-
-			// set the produccion connection data to the sytem variables for activejdbc use
-			// (only local database)
-			String ae = activeprp.getProperty("active_env");
-			System.setProperty("active_env", ae);
-			System.setProperty("activejdbc.url", activeprp.getProperty(ae + ".url"));
-			System.setProperty("activejdbc.user", activeprp.getProperty(ae + ".username"));
-			System.setProperty("activejdbc.password", activeprp.getProperty(ae + ".password"));
-			System.setProperty("activejdbc.driver", activeprp.getProperty(ae + ".driver"));
-			openDB();
-		} catch (Exception e) {
-			e.printStackTrace();
-			ExceptionDialog.showDialog(e);
-			System.exit(-1);
-		}
-	}
-
-	/**
 	 * Look in the Alesia.properties file, look for the property "Alesia.database.file.name" and load an return the list
 	 * of all prperties found in that file. This file contain all data base connection information.
 	 * 

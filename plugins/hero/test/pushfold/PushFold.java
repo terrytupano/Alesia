@@ -1,10 +1,12 @@
-package plugins.hero.utils;
+package plugins.hero.test.pushfold;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
 import javax.swing.*;
+
+import plugins.hero.utils.*;
 
 public class PushFold {
 	// User selections

@@ -7,9 +7,9 @@ import org.jfree.chart.*;
 import org.jfree.chart.axis.*;
 import org.jfree.chart.plot.*;
 import org.jfree.chart.renderer.xy.*;
-import org.jfree.chart.ui.*;
 import org.jfree.data.category.*;
 import org.jfree.data.statistics.*;
+import org.jfree.ui.*;
 
 import core.*;
 
@@ -59,6 +59,7 @@ public class ActionsBarChart {
 
 	public void setCategoryMarker(TrooperAction action) {
 		CategoryPlot categoryPlot = (CategoryPlot) chart.getPlot();
+		categoryPlot.setBackgroundPaint(null);
 		categoryPlot.clearDomainMarkers();
 		if (action == null)
 			return;
@@ -66,7 +67,7 @@ public class ActionsBarChart {
 		CategoryMarker categoryMarker = new CategoryMarker(cat);
 		categoryMarker.setPaint(Color.BLUE);
 		categoryMarker.setAlpha(0.3F);
-//		categoryPlot.addDomainMarker(categoryMarker, Layer.FOREGROUND);
+		categoryPlot.addDomainMarker(categoryMarker, Layer.FOREGROUND);
 	}
 
 	public void setTitle(String title) {

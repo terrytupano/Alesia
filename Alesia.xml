@@ -4,7 +4,7 @@
   <UserLogIn.rememberUser type="ButtonState" selected="true"/>
   <logging.level type="ComboBoxState" selectedIndex="3"/>
   <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
-  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="2"/>
+  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="0"/>
   <reconnBand type="TextComponentState" text="10" caretPosition="2"/>
   <tDistributionRange type="ComboBoxState" selectedIndex="4"/>
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
@@ -30,7 +30,7 @@
   <plugins.hero.utils.PreFlopCardsPanel.rangeComboBox type="ComboBoxState" selectedIndex="3"/>
   <oddCalculation type="ComboBoxState" selectedIndex="1"/>
   <postflopAmmoControl type="ComboBoxState" selectedIndex="0"/>
-  <SensorPanel.filter type="ComboBoxState" selectedIndex="13"/>
+  <SensorPanel.filter type="ComboBoxState" selectedIndex="11"/>
   <reconnBase type="TextComponentState" text="1" caretPosition="1"/>
   <bigBlindFactor type="ComboBoxState" selectedIndex="5"/>
   <FlickaDockablePane type="DockablePaneState">
@@ -46,7 +46,7 @@
   <plugins.hero.PreFlopCardsRangePanel.rangeComboBox type="ComboBoxState" selectedIndex="0"/>
   <preflopStrategy type="ComboBoxState" selectedIndex="0"/>
   <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>
-  <TWebFrame type="WindowState" location="0,40" size="547,735" state="0"/>
+  <TWebFrame type="WindowState" location="0,40" size="540,735" state="0"/>
   <takeOpportunity type="ButtonState" selected="true"/>
   <smallBlid type="string"></smallBlid>
   <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>
