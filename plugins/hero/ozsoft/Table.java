@@ -58,10 +58,6 @@ public class Table extends Task {
 	/** Whether players will always call the showdown, or fold when no chance. */
 	private static final boolean ALWAYS_CALL_SHOWDOWN = false;
 
-	/** valid action when a villan or hero loose the battle */
-	/** End the simulation. */
-	public static final String GAME_OVER = "gameOver";
-
 	/** simulation running mode */
 	public static final int RUN_BACKGROUND = 0;
 
@@ -71,17 +67,27 @@ public class Table extends Task {
 	/** simulation running mode */
 	public static final int RUN_INTERACTIVE_LOG = 50;
 
-	/** Refill the player chips artificialy allowing the simulation to continue */
+	/** valid action when a villan or hero loose the battle: End the simulation. */
+	public static final String GAME_OVER = "gameOver";
+
+	/**
+	 * valid action when a villan or hero loose the battle: Refill the player chips artificialy allowing the simulation
+	 * to continue
+	 */
 	public static final String REFILL = "refill";
 
-	/** The simulation continue to the end. */
+	/** valid action when a villan or hero loose the battle: The simulation continue to the end. */
 	public static final String DO_NOTHING = "doNothing";
 
-	/** Restart the hole table. */
+	/** valid action when a villan or hero loose the battle: Restart the hole table. */
 	public static final String RESTAR = "reStar";
 
-	/**current capacity of the table*/
+	/** current capacity of the table */
 	public static final int CAPACITY = 8;
+
+	/** min num of player for {@link #DO_NOTHING} action. */
+	// private static int MIN_PLAYERS = 1 + (CAPACITY / 2);
+	private static int MIN_PLAYERS = 5;
 
 	/** Table type (poker variant). */
 	private final TableType tableType;
@@ -94,7 +100,7 @@ public class Table extends Task {
 
 	/** The deck of cards. */
 	private final UoADeck deck;
-	
+
 	/** The community cards on the board. */
 	private final UoAHand board;
 
@@ -130,9 +136,7 @@ public class Table extends Task {
 	private boolean paused;
 	private int speed;
 	private int simulationsHand;
-	private String actionWhenHeroLose = GAME_OVER;
-	
-	private String actionWhenVillanLose = DO_NOTHING;
+	private String whenPlayerLose = DO_NOTHING;
 
 	public Table(TableType type, int buyIn, int bigBlind) {
 		super(Alesia.getInstance());
@@ -178,8 +182,8 @@ public class Table extends Task {
 	}
 
 	public List<Player> getPlayers() {
-//		ArrayList<Player> tmp = new ArrayList<>();
-//		players.forEach(p -> tmp.add(p.publicClone()));
+		// ArrayList<Player> tmp = new ArrayList<>();
+		// players.forEach(p -> tmp.add(p.publicClone()));
 		return players;
 	}
 
@@ -223,15 +227,10 @@ public class Table extends Task {
 	/**
 	 * set the action that the simulation will perform if a player loose the battle.
 	 * 
-	 * @param forHero - <code>true</code> if the action is intended for Hero <code>false</code> the action is for any
-	 *        villan.
 	 * @param action - action to perform
 	 */
-	public void whenPlayerLose(boolean forHero, String action) {
-		if (forHero)
-			this.actionWhenHeroLose = action;
-		else
-			this.actionWhenVillanLose = action;
+	public void whenPlayerLose(String action) {
+		this.whenPlayerLose = action;
 	}
 
 	/**
@@ -817,7 +816,7 @@ public class Table extends Task {
 			player.getClient().actorRotated(actor);
 		}
 	}
-	
+
 	@Override
 	protected Object doInBackground() throws Exception {
 		try {
@@ -844,14 +843,32 @@ public class Table extends Task {
 				// action to take when any player is out of the battle. this is intendet to keep the simulation alive.
 				// if the player is hero, the action GAME_OVER can take place. but if not, only refill or do_nothis are
 				// available
+				// tmp player count
+				int actp = 0;
+				for (Player player : players) {
+					if (player.getCash() >= bigBlind) {
+						actp++;
+					}
+				}
+				if (DO_NOTHING.equals(whenPlayerLose) && actp < MIN_PLAYERS) {
+					String msg = "Hand: " + numOfHand
+							+ ": the table has less players that allow. Restartting the hole table.";
+					notifyMessage(msg);
+					for (Player player2 : players) {
+						player2.resetHand();
+						player2.setCash(buyIn);
+					}
+				}
+
+				// when a single player loose
 				for (Player player : players) {
 					if (player.getCash() < bigBlind) {
 						// when is Hero, end the simulation??
-						if (player.getName().equals("Hero") && GAME_OVER.equals(actionWhenHeroLose)) {
+						if (player.getName().equals("Hero") && GAME_OVER.equals(whenPlayerLose)) {
 							endedByHero = true;
 							break;
 						}
-						if (REFILL.equals(actionWhenHeroLose) || REFILL.equals(actionWhenVillanLose)) {
+						if (REFILL.equals(whenPlayerLose)) {
 							String msg = "Hand # " + numOfHand + ": " + player.getName()
 									+ " lost the battle. Refilling cash " + buyIn;
 							notifyMessage(msg);
@@ -859,7 +876,8 @@ public class Table extends Task {
 							player.resetHand();
 							player.setCash(buyIn);
 						}
-						if (RESTAR.equals(actionWhenHeroLose) || RESTAR.equals(actionWhenVillanLose)) {
+
+						if (RESTAR.equals(whenPlayerLose)) {
 							String msg = "Hand: " + numOfHand + ": " + player.getName()
 									+ " lost the battle. Restartting the hole table.";
 							notifyMessage(msg);
@@ -871,12 +889,14 @@ public class Table extends Task {
 					}
 				}
 
+				// DONT MOVE. actions alter player.s cash
 				int noOfActivePlayers = 0;
 				for (Player player : players) {
 					if (player.getCash() >= bigBlind) {
 						noOfActivePlayers++;
 					}
 				}
+
 				if (noOfActivePlayers > 1) {
 					playHand();
 					firePropertyChange(PROP_MESSAGE, numOfHand, "# of Players: " + noOfActivePlayers + " played Hands: "

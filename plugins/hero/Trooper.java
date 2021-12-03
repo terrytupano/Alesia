@@ -164,13 +164,6 @@ public class Trooper extends Task {
 			asse = "Unknow";
 		pokerSimulator.setVariable("trooper.Assesment", asse);
 
-		// simulation measurement: hero store the assesment to check if hero can correctly determine tau, mean und SD
-		if(Hero.simulationTable != null ) {
-			positiveEvent.put("name", "assesment");
-			positiveEvent.put("value", Hero.simulationTable.getActor().getName());
-			positiveEvent.put("aditionalValue", tmpSim);
-		}
-
 		if (villansBeacon > numOfVillans) {
 			villansBeacon = 0;
 		}
@@ -480,6 +473,8 @@ public class Trooper extends Task {
 		availableActions.removeIf(ta -> ta.expectedValue < 0);
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 	}
+	
+	/**global variable for test tau parameter*/
 	private int preflopSimulationProcent = -1;
 	/**
 	 * Set the action based on the starting hand distribution. This method set the global variable {@link #maxRekonAmmo}
@@ -504,8 +499,8 @@ public class Trooper extends Task {
 			// positiveEvent.put("name", "tauMeasurement");
 			System.out.println(Hero.simulationTable.getActor().getName() + " = " + preflopSimulationProcent);
 			// positiveEvent.put("value", "% set at " + preflopSimulationProcent);
+			pfcm.setPercentage(preflopSimulationProcent);
 		}
-		pfcm.setPercentage(preflopSimulationProcent);
 
 		String txt = "Preflop Ok.";
 		if (!pfcm.containsHand(pokerSimulator.holeCards)) {

@@ -311,8 +311,7 @@ public class Hero extends TPlugin {
 			startDate = new Date();
 			simulationTable.setSpeed(Table.RUN_INTERACTIVE_LOG);
 			simulationTable.setSimulationsHand(100000);
-			simulationTable.whenPlayerLose(true, Table.RESTAR);
-			simulationTable.whenPlayerLose(false, Table.RESTAR);
+			simulationTable.whenPlayerLose(Table.DO_NOTHING);
 
 			TableDialog dialog = new TableDialog(simulationTable);
 

@@ -3,6 +3,9 @@ package plugins.hero.ozsoft.bots;
 
 import java.util.*;
 
+import org.apache.poi.hssf.util.*;
+import org.javalite.activejdbc.*;
+
 import core.*;
 import core.datasource.model.*;
 import plugins.hero.*;
@@ -91,8 +94,7 @@ public abstract class Bot implements Client {
 
 		if (message.contains("is the dealer.")) {
 			matchCost = 0;
-			// playerWins = 0;
-			// hands++;
+			handsCounter++;
 		}
 
 		if (message.contains("Flop.") || message.contains("Turn.") || message.contains("River.")) {
@@ -100,13 +102,17 @@ public abstract class Bot implements Client {
 		}
 
 		if (message.contains("Restartting the hole table.")) {
-			// saveObservations();
-			// hands = 0;
+			backrollSnapSchot();
+			handsCounter = 1;
 			street = 0;
 			prevCash = buyIn;
 		}
 
 	}
+
+	/** internal hands counter */
+	private int handsCounter;
+
 	@Override
 	public void playerActed(Player player) {
 		if (playerName.equals(player.getName())) {
@@ -133,6 +139,32 @@ public abstract class Bot implements Client {
 		this.trooper = trooper;
 	}
 
+	private void backrollSnapSchot() {
+		Alesia.getInstance().openDB("hero");
+		String nam = "Bankroll";
+		String sessionID = "" + System.currentTimeMillis();
+		LazyList<SimulatorStatistic> last = SimulatorStatistic
+				.where("name = ? AND player = ? AND value < ?", nam, playerName, sessionID).orderBy("name, value DESC")
+				.limit(1);
+		SimulatorStatistic statistic;
+		if (last.size() == 0) {
+			statistic = SimulatorStatistic.create("name", nam, "value", sessionID);
+		} else {
+			statistic = last.get(0);
+			statistic.set("value", sessionID);
+		}
+		statistic.set("player", playerName);
+		int hands = handsCounter + (statistic.getInteger("hands") == null ? 0 : statistic.getInteger("hands"));
+		statistic.set("hands", hands);
+		double wins = statistic.getDouble("wins") == null ? 0 : statistic.getDouble("wins");
+		wins = wins + player.getCash() - buyIn;
+		statistic.set("wins", wins);
+		double bb = wins / (bigBlind * 1.0);
+		statistic.set("ratio", bb / (hands * 1.0));
+		statistic.setString("aditionalValue", positiveEvent.get("aditionalValue"));
+		statistic.insert();
+	}
+
 	/**
 	 * save the the values of global variables {@link #wins} and {@link Hand}
 	 */
@@ -140,15 +172,18 @@ public abstract class Bot implements Client {
 		// save observations only when the event apperar
 		if (positiveEvent.size() == 0)
 			return;
+
 		Alesia.getInstance().openDB("hero");
 		SimulatorStatistic statistic = SimulatorStatistic.findOrInit("name", positiveEvent.get("name"), "value",
 				positiveEvent.get("value"));
+
 		// change the name to *name when many boot update the same name, value pair.
-		String pname = statistic.getString("player") == null ? playerName : statistic.getString("player");
-		if (!playerName.equals(pname))
-			pname = "*" + playerName;
-		statistic.set("player", pname);
-		double hands = statistic.getDouble("hands") == null ? 0 : statistic.getDouble("hands");
+		// String pname = statistic.getString("player") == null ? playerName : statistic.getString("player");
+		// if (!playerName.equals(pname))
+		// pname = "*" + playerName;
+
+		statistic.set("player", playerName);
+		int hands = statistic.getInteger("hands") == null ? 0 : statistic.getInteger("hands");
 		statistic.set("hands", ++hands);
 		double wins = statistic.getDouble("wins") == null ? 0 : statistic.getDouble("wins");
 		wins = wins + player.getCash() - prevCash;

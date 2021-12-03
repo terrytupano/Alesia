@@ -210,6 +210,8 @@ public class PokerSimulator {
 			result.put("bestOf5Cards", evaluator.getBest5CardHand(allCards));
 		}
 
+		double Ppot, Npot, HS_n, winProb_n;
+
 		// board evaluation
 		if (communityCards.size() > 0) {
 			int total = 0;
@@ -257,7 +259,7 @@ public class PokerSimulator {
 			result.put("rankBehindList", behindList);
 
 			// winning probabilities
-			double winProb_n = Math.pow((aheadList.size() + tiedList.size()) / (double) total, opponents);
+			winProb_n = Math.pow((aheadList.size() + tiedList.size()) / (double) total, opponents);
 			result.put("winProb", winProb_n);
 
 			/**
@@ -331,6 +333,9 @@ public class PokerSimulator {
 					iBoard.addCard(deck.deal().getIndex());
 				int myRank = evaluator.rankHand(holeCards.getCard(1), holeCards.getCard(2), iBoard);
 				int villanRank = evaluator.rankHand(villan.getCard(1), villan.getCard(2), iBoard);
+				
+				follow the opponent modeling paper: 1 for in card selection range , 0.01 when not !!!!!!!!!!!!!!!
+				
 //				double weight = rWeight.getOrDefault(villan, PokerSimulator.lowerBound);
 //				double weight = preflopCardsModel.getNormalizedEV(villan);
 				double weight = 1;
@@ -348,14 +353,14 @@ public class PokerSimulator {
 			/* Ppot: were behind but moved ahead. */
 			// Ppot=(HP[behind][ahead] + HP[behind][tied] / 2 + HP[tied][ahead] / 2) / (HPTotal[behind] +
 			// HPTotal[tied]);
-			double Ppot = (HP[2][0] + HP[2][1] / 2d + HP[1][0] / 2d) / (double) (HPTotal[2] + HPTotal[1]);
+		 Ppot = (HP[2][0] + HP[2][1] / 2d + HP[1][0] / 2d) / (double) (HPTotal[2] + HPTotal[1]);
 
 			/* Npot: were ahead but fell behind. */
-			double Npot = (HP[0][2] + HP[1][2] / 2d + HP[0][1] / 2d) / (double) (HPTotal[0] + HPTotal[1]);
+			 Npot = (HP[0][2] + HP[1][2] / 2d + HP[0][1] / 2d) / (double) (HPTotal[0] + HPTotal[1]);
 
 			// HandStrength: chance that our hand is better than a random hand.
-			double HS_n = Math.pow((ahead + tied / 2d) / (double) (ahead + tied + behind), opponents);
-
+			 HS_n = Math.pow((ahead + tied / 2d) / (double) (ahead + tied + behind), opponents);
+			
 			result.put("PPot", Ppot);
 			result.put("NPot", Npot);
 			result.put("HS", HS_n);
@@ -368,6 +373,47 @@ public class PokerSimulator {
 		if (allCards.size() > 2 && (double) result.get("rankBehind%") == 0)
 			result.put("isTheNut", true);
 
+		/**
+		 * Compute the EV for all actions inside of the global variable {@link #availableActions}. after this method, the
+		 * list contain only the actions with +EV. *
+		 * <p>
+		 * to comply with rule 1, this method retrive his probability from {@link PokerSimulator#getProbability()
+		 * 
+		 * <h5>MoP page 54</h5>
+		 * 
+		 */
+
+		// TODO: check Poker Expected Value (EV) Formula: EV = (%W * $W) – (%L * $L)
+		// https://www.splitsuit.com/simple-poker-expected-value-formula
+
+		// ammo control
+		// EHS = HSn + (1 - HSn) x Ppot
+		// double EHS = pokerSimulator.HS_n + (1 - pokerSimulator.HS_n) * pokerSimulator.Ppot;
+		// double ammo = EHS * pokerSimulator.heroChips;
+		// ammo= HSn * pot + ((1 - HSn) x Ppot * chip) <<<<<<<<<
+		double HSnC = (1 - HS_n);
+		double ammo = HS_n * potValue
+				+ HSnC * Ppot * heroChips;
+		String txt1 = String.format("%7.2f = %1.3f * %7.2f  + (%1.3f * %1.3f * %7.2f)", ammo, S_n,
+				potValue, HSnC, Ppot, heroChips);
+		setVariableAndLog(EXPLANATION, txt1);
+
+		// no calculation for 0 values
+		if (ammo == 0 || winProb_n == 0) {
+			availableActions.clear();
+			Hero.heroLogger.info(
+					String.format("No posible decision for values prob = %1.3f or amunitions = %7.2f", winProb_n, ammo));
+		} else  {
+			for (TrooperAction act : availableActions) {
+				double ev = (winProb_n * ammo) - act.amount;
+				act.expectedValue = ev;
+			}
+			// remove all negative values
+			availableActions.removeIf(ta -> ta.expectedValue < 0);
+			// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
+		}
+
+		
 		// TODO: getSignificantCard()
 		// upperbound opponent hand probability: this value refleck the fack that the vas mayority of case, the
 		// computation dont need to compute using the full range of card. e.g it is improbable that an some point, a
