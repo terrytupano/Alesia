@@ -48,7 +48,7 @@ public class GameSimulatorPanel extends TUIFormPanel {
 		wtp.add(pockerSimulatorPanel, "PockerSimulator");
 
 		setBodyComponent(wtp);
-		setFooterActions("startSimulation");
+		setFooterActions("backrollHistory", "startSimulation");
 		registreSettings();
 	}
 

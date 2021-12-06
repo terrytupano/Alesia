@@ -3,7 +3,6 @@ package plugins.hero.ozsoft.bots;
 
 import java.util.*;
 
-import org.apache.poi.hssf.util.*;
 import org.javalite.activejdbc.*;
 
 import core.*;
@@ -45,6 +44,9 @@ public abstract class Bot implements Client {
 	protected SimulatorClient client;
 
 	private int prevCash;
+	
+	protected String bankRollDescription;
+	
 	@Override
 	public void actorRotated(Player actor) {
 		// TODO Auto-generated method stub
@@ -161,7 +163,7 @@ public abstract class Bot implements Client {
 		statistic.set("wins", wins);
 		double bb = wins / (bigBlind * 1.0);
 		statistic.set("ratio", bb / (hands * 1.0));
-		statistic.setString("aditionalValue", positiveEvent.get("aditionalValue"));
+		statistic.setString("aditionalValue", bankRollDescription);
 		statistic.insert();
 	}
 

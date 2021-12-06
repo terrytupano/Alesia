@@ -34,6 +34,7 @@ public class CardsPanel extends JPanel {
 		// panel with all cards
 		WebPanel cardsPanel = new WebPanel();
 		cardsPanel.setLayout(new GridLayout(4, 13, 5, 5));
+		cardsPanel.setBorder(new TitledBorder("Deck"));
 		for (int j = 0; j < 52; j++) {
 			UoAIconCard card = new UoAIconCard(new UoACard(j));
 			card.addMouseListener(mouseListener);

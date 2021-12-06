@@ -30,6 +30,7 @@ import com.alee.utils.*;
 
 import core.*;
 import core.datasource.model.*;
+import gui.*;
 import net.sourceforge.tess4j.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.bots.*;
@@ -340,6 +341,14 @@ public class Hero extends TPlugin {
 	public void testAreas(ActionEvent event) {
 		if (activeTrooper == null)
 			sensorsArray.testAreas();
+	}
+
+	@org.jdesktop.application.Action
+	public void backrollHistory(ActionEvent event) {
+		LineChartDemo6 chart = new LineChartDemo6();
+		chart.pack();
+		chart.setLocationRelativeTo(null);
+		chart.setVisible(true);
 	}
 
 	@org.jdesktop.application.Action

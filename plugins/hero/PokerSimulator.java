@@ -43,7 +43,7 @@ public class PokerSimulator {
 	 */
 	public final Hashtable<String, String> cardsBuffer;
 
-	/** Constant min weight factor*/
+	/** Constant min weight factor */
 	public static final double lowerBound = 0.01;
 
 	/**
@@ -188,16 +188,19 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * return a {@link Properties} object fill whit all data obtains using methods in {@link UoAHandEvaluator}.
+	 * return a {@link Properties} object filled whit all values obtained from diverses evaluations algorithms.
 	 * 
 	 * @param holeCards - Hole Cards
 	 * @param communityCards - Comunity cards
 	 * @param opponents - number of players ONLY VILLANS
 	 * @param tau - value for tau variable
+	 * @param heroChips - hero chips
+	 * @param potValue - pot
 	 * 
 	 * @return properties
 	 */
-	public static Properties getEvaluation(UoAHand holeCards, UoAHand communityCards, int opponents, int tau) {
+	public static Properties getEvaluation(UoAHand holeCards, UoAHand communityCards, int opponents, int tau,
+			double heroChips, double potValue) {
 		UoAHandEvaluator evaluator = new UoAHandEvaluator();
 		UoAHand allCards = new UoAHand(holeCards + " " + communityCards);
 		int handRank = UoAHandEvaluator.rankHand(allCards);
@@ -210,7 +213,7 @@ public class PokerSimulator {
 			result.put("bestOf5Cards", evaluator.getBest5CardHand(allCards));
 		}
 
-		double Ppot, Npot, HS_n, winProb_n;
+		double Ppot = 0, Npot = 0, HS_n = 0, winProb_n = 0;
 
 		// board evaluation
 		if (communityCards.size() > 0) {
@@ -264,15 +267,11 @@ public class PokerSimulator {
 
 			/**
 			 * reweight a list of posibles villans hole cards. the new weight is based on the normalized EV obtain form
-			 * preprolpacardsmodel. if a card is outside range, weight = 0
+			 * preprolpacardsmodel. if a card is outside range, weight = 0 Hashtable<UoAHand, Double> rWeight = new
+			 * Hashtable<>(); preflopCardsModel.setPercentage(tau); for (UoAHand hand : behindList) { if
+			 * (preflopCardsModel.containsHand(hand)) rWeight.put(hand, preflopCardsModel.getNormalizedEV(hand)); }
+			 * result.put("reWeightList", rWeight);
 			 */
-			Hashtable<UoAHand, Double> rWeight = new Hashtable<>();
-			preflopCardsModel.setPercentage(tau);
-			for (UoAHand hand : behindList) {
-				if (preflopCardsModel.containsHand(hand))
-					rWeight.put(hand, preflopCardsModel.getNormalizedEV(hand));
-			}
-			result.put("reWeightList", rWeight);
 
 			/**
 			 * Hand Potential algorithm based on "Opponent Modeling in Poker", Darse Billings, Denis Papp, Jonathan
@@ -283,14 +282,10 @@ public class PokerSimulator {
 			 * note: The hand strength calculation is with respect to one opponent but can be extrapolated to multiple
 			 * opponents by raising it to the power of the number of active opponents.
 			 */
-
-			// Properties psp2 = PokerSimulator.getHandPotential(holeCards, communityCards, opponents, rWeight);
-			// psp2.forEach((key, val) -> prp.put(key, val));
-
 			// set the tau value to compute re weight
 			preflopCardsModel.setPercentage(tau);
 			UoAHand iBoard = new UoAHand();
-			int iterations = 100000;
+			int iterations = 10000;
 			double ahead = 0, tied = 0, behind = 0;
 
 			// Hand potential array, each index represents ahead, tied, and behind.
@@ -333,12 +328,11 @@ public class PokerSimulator {
 					iBoard.addCard(deck.deal().getIndex());
 				int myRank = evaluator.rankHand(holeCards.getCard(1), holeCards.getCard(2), iBoard);
 				int villanRank = evaluator.rankHand(villan.getCard(1), villan.getCard(2), iBoard);
-				
-				follow the opponent modeling paper: 1 for in card selection range , 0.01 when not !!!!!!!!!!!!!!!
-				
-//				double weight = rWeight.getOrDefault(villan, PokerSimulator.lowerBound);
-//				double weight = preflopCardsModel.getNormalizedEV(villan);
-				double weight = 1;
+
+				// following the opponent modeling paper: 1 for in card selection range , 0.01 when not !!!!!!!!!!!!!!!
+//				double weight = 1;
+				 double weight = preflopCardsModel.containsHand(villan) ? 1.0 : 0.01;
+				// double weight = rWeight.getOrDefault(villan, PokerSimulator.lowerBound);
 				if (myRank > villanRank) {
 					HP[index][0] += weight;
 					ahead += weight;
@@ -353,38 +347,31 @@ public class PokerSimulator {
 			/* Ppot: were behind but moved ahead. */
 			// Ppot=(HP[behind][ahead] + HP[behind][tied] / 2 + HP[tied][ahead] / 2) / (HPTotal[behind] +
 			// HPTotal[tied]);
-		 Ppot = (HP[2][0] + HP[2][1] / 2d + HP[1][0] / 2d) / (double) (HPTotal[2] + HPTotal[1]);
+			Ppot = (HP[2][0] + HP[2][1] / 2d + HP[1][0] / 2d) / (double) (HPTotal[2] + HPTotal[1]);
 
 			/* Npot: were ahead but fell behind. */
-			 Npot = (HP[0][2] + HP[1][2] / 2d + HP[0][1] / 2d) / (double) (HPTotal[0] + HPTotal[1]);
+			Npot = (HP[0][2] + HP[1][2] / 2d + HP[0][1] / 2d) / (double) (HPTotal[0] + HPTotal[1]);
 
 			// HandStrength: chance that our hand is better than a random hand.
-			 HS_n = Math.pow((ahead + tied / 2d) / (double) (ahead + tied + behind), opponents);
-			
+			HS_n = Math.pow((ahead + tied / 2d) / (double) (ahead + tied + behind), opponents);
+
 			result.put("PPot", Ppot);
 			result.put("NPot", Npot);
 			result.put("HS", HS_n);
 		}
 
-		// aditional computation tested hand: Hole cards: Ac Ad Comunity cards: Qs 9d As
+		//
+		String[] rcards = {"Jc 4h", "Ac Jc", "5h 2h", "6s 5s", "5s 5h", "5s 3s", "Ac Qd", "7s 5s", "Qs Ts"};
+		for (String rcard : rcards) {
+			// if (rcard.equals(villan.toString().trim())) {
+			// // System.out.println("%7s %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f", weight, );
+			// }
+		}
 
 		// is the nuts: hero can loose
 		result.put("isTheNut", false);
 		if (allCards.size() > 2 && (double) result.get("rankBehind%") == 0)
 			result.put("isTheNut", true);
-
-		/**
-		 * Compute the EV for all actions inside of the global variable {@link #availableActions}. after this method, the
-		 * list contain only the actions with +EV. *
-		 * <p>
-		 * to comply with rule 1, this method retrive his probability from {@link PokerSimulator#getProbability()
-		 * 
-		 * <h5>MoP page 54</h5>
-		 * 
-		 */
-
-		// TODO: check Poker Expected Value (EV) Formula: EV = (%W * $W) – (%L * $L)
-		// https://www.splitsuit.com/simple-poker-expected-value-formula
 
 		// ammo control
 		// EHS = HSn + (1 - HSn) x Ppot
@@ -392,28 +379,12 @@ public class PokerSimulator {
 		// double ammo = EHS * pokerSimulator.heroChips;
 		// ammo= HSn * pot + ((1 - HSn) x Ppot * chip) <<<<<<<<<
 		double HSnC = (1 - HS_n);
-		double ammo = HS_n * potValue
-				+ HSnC * Ppot * heroChips;
-		String txt1 = String.format("%7.2f = %1.3f * %7.2f  + (%1.3f * %1.3f * %7.2f)", ammo, S_n,
-				potValue, HSnC, Ppot, heroChips);
-		setVariableAndLog(EXPLANATION, txt1);
+		double ammo = HS_n * potValue + (HSnC * Ppot * heroChips);
+		String txt1 = String.format("%7.2f = %1.3f * %7.2f  + (%1.3f * %1.3f * %7.2f)", ammo, HS_n, potValue, HSnC,
+				Ppot, heroChips);
+		result.put("ammoControl", txt1);
+		result.put("ammunitions", ammo);
 
-		// no calculation for 0 values
-		if (ammo == 0 || winProb_n == 0) {
-			availableActions.clear();
-			Hero.heroLogger.info(
-					String.format("No posible decision for values prob = %1.3f or amunitions = %7.2f", winProb_n, ammo));
-		} else  {
-			for (TrooperAction act : availableActions) {
-				double ev = (winProb_n * ammo) - act.amount;
-				act.expectedValue = ev;
-			}
-			// remove all negative values
-			availableActions.removeIf(ta -> ta.expectedValue < 0);
-			// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
-		}
-
-		
 		// TODO: getSignificantCard()
 		// upperbound opponent hand probability: this value refleck the fack that the vas mayority of case, the
 		// computation dont need to compute using the full range of card. e.g it is improbable that an some point, a
@@ -449,125 +420,6 @@ public class PokerSimulator {
 		hs = hs.replace(',', ' ');
 		return hs.substring(1, hs.length() - 1);
 	}
-
-	/**
-	 * Hand Potential algorithm based on "Opponent Modeling in Poker", Darse Billings, Denis Papp, Jonathan Schaeffer,
-	 * Duane SzafronPoker. page 7.
-	 * <p>
-	 * this method compute and return a the <code>PPot</code> and <code>NPot</code> in array format.
-	 * 
-	 * note: The hand strength calculation is with respect to one opponent but can be extrapolated to multiple opponents
-	 * by raising it to the power of the number of active opponents.
-	 * 
-	 * @param ourcards - my current hole cards
-	 * @param boardcards - the current flop. this method will throw an exception if the current street is not flop
-	 * 
-	 * @return Properties with list of values
-	 */
-	private static Properties getHandPotential(UoAHand ourcards, UoAHand boardcards, int oppenents,
-			Hashtable<String, Double> reWeight) {
-		UoAHand iBoard = new UoAHand();
-		int iterations = 100000;
-		double ahead = 0, tied = 0, behind = 0;
-
-		// Hand potential array, each index represents ahead, tied, and behind.
-		double HP[][] = new double[3][3];
-		int HPTotal[] = new int[3];
-		UoAHand villan = new UoAHand(); // two cards for each villans
-		UoAHandEvaluator evaluator = new UoAHandEvaluator();
-		int ourrank = evaluator.rankHand(ourcards.getCard(1), ourcards.getCard(2), boardcards);
-
-		// Consider all two card combinations of the remaining cards for the opponent.
-		UoADeck deck = new UoADeck();
-		int index = 0;
-		for (int i = 0; i < iterations; i++) {
-			deck.reset();
-			deck.shuffle();
-			deck.extractHand(ourcards);
-			deck.extractHand(boardcards);
-
-			villan.makeEmpty();
-			villan.addCard(deck.deal().getIndex());
-			villan.addCard(deck.deal().getIndex());
-			int opprank = evaluator.rankHand(villan.getCard(1), villan.getCard(2), boardcards);
-			if (ourrank > opprank)
-				index = 0; // ahead
-			else if (ourrank == opprank)
-				index = 1;// tied
-			else
-				index = 2; // behind
-			HPTotal[index] += 1;
-
-			/* All possible board cards to come. */
-			iBoard.makeEmpty();
-			for (int b = 0; b < boardcards.size(); b++)
-				iBoard.addCard(boardcards.getCard(b + 1).getIndex());
-			// board in in flop state: deal turn
-			if (iBoard.size() == 3)
-				iBoard.addCard(deck.deal().getIndex());
-			// board in in turn state: deal river
-			if (iBoard.size() == 4)
-				iBoard.addCard(deck.deal().getIndex());
-			int myRank = evaluator.rankHand(ourcards.getCard(1), ourcards.getCard(2), iBoard);
-			int villanRank = evaluator.rankHand(villan.getCard(1), villan.getCard(2), iBoard);
-			// double weight = reWeight.getOrDefault(villan.toString(), PreflopCardsModel.lowerBound);
-			// if (weight != PreflopCardsModel.lowerBound) {
-			// // System.out.println("PokerSimulator.getHandPotential()");
-			// }
-			double weight = 1.0;
-			if (myRank > villanRank) {
-				HP[index][0] += weight;
-				ahead += weight;
-			} else if (myRank == villanRank) {
-				HP[index][1] += weight;
-				tied += weight;
-			} else {
-				HP[index][2] += weight;
-				behind += weight;
-			}
-			//
-			String[] rcards = {"Jc 4h", "Ac Jc", "5h 2h", "6s 5s", "5s 5h", "5s 3s", "Ac Qd", "7s 5s", "Qs Ts"};
-			for (String rcard : rcards) {
-				if (rcard.equals(villan.toString().trim())) {
-					// System.out.println("%7s %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f", weight, );
-				}
-			}
-		}
-		/* Ppot: were behind but moved ahead. */
-		// Ppot=(HP[behind][ahead] + HP[behind][tied] / 2 + HP[tied][ahead] / 2) / (HPTotal[behind] + HPTotal[tied]);
-		double Ppot = (HP[2][0] + HP[2][1] / 2d + HP[1][0] / 2d) / (double) (HPTotal[2] + HPTotal[1]);
-
-		/* Npot: were ahead but fell behind. */
-		double Npot = (HP[0][2] + HP[1][2] / 2d + HP[0][1] / 2d) / (double) (HPTotal[0] + HPTotal[1]);
-
-		// HandStrength: chance that our hand is better than a random hand.
-		double HS_n = Math.pow((ahead + tied / 2d) / (double) (ahead + tied + behind), oppenents);
-
-		// winning probabilities ?!?!?!?!?!?
-		// double winProb_n = Math.pow((ahead + tied) / (double) iterations, oppenents);
-
-		Properties result = new Properties();
-		result.put("PPot", Ppot);
-		result.put("NPot", Npot);
-		// prp.put("winProb", winProb_n);
-		result.put("HS", HS_n);
-
-		return result;
-	}
-
-	// /**
-	// * check whether is an oportunity. An oportunity is present when the current street is {@link #FLOP_CARDS_DEALT}
-	// or
-	// * futher and the following conditions is found:
-	// * <li>Heros hand muss be >= to the hand setted in {@link #oppMostProbHand} gobal variable
-	// * <li>The hand is a set (both card in heros.s hands participate in the action)
-	// * <li>OR the hand is the nut
-	// *
-	// * @return a text explain what oportunity is detected or <code>null</code> if no oportunity are present
-	// */
-	// public String isOportunity() {
-
-	// TODO: reevaluate this method. compute the bluf probability. especialy istheNut()
 
 	private static List<UoAHand> reweight(double mean, double variance, Hashtable<UoAHand, Double> hands) {
 		ArrayList<UoAHand> dangerHands = new ArrayList<>();
@@ -729,7 +581,7 @@ public class PokerSimulator {
 		currentRound = currentHand.size();
 
 		uoAEvaluation.clear();
-		uoAEvaluation.putAll(getEvaluation(holeCards, communityCards, opponents, tau));
+		uoAEvaluation.putAll(getEvaluation(holeCards, communityCards, opponents, tau, heroChips, potValue));
 
 		// WARNING: theses values ARE NOT available in preflop
 		Ppot = (double) uoAEvaluation.getOrDefault("PPot", 0.0);

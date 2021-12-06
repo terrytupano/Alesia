@@ -106,6 +106,7 @@ public class Alesia extends Application {
 	 * this method is intentet for javaLite imeplementation. this method relly in the javaLite internal storage that
 	 * determine if the connection name is aready opened. if is opened, just attach to the invoker thread
 	 */
+	@Deprecated
 	public void openDB() {
 		if (alesiaDB == null)
 			alesiaDB = new DB("AlesiaDatabase");

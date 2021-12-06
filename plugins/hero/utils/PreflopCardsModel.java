@@ -94,8 +94,7 @@ public class PreflopCardsModel {
 	 * Tells if the hand composed of the two specified cards is selected in this range. The order in which you specify
 	 * the cards is not relevant.
 	 * 
-	 * @param c1 the first card
-	 * @param c2 the second card
+	 * @param hand 2 cards hand
 	 * 
 	 * @return true if the specified hand is selected in this range, false otherwise.
 	 */

@@ -123,7 +123,7 @@ public class Trooper extends Task {
 		// for simulation purpose, allays read the assesment
 		for (int i = 0; i < Table.CAPACITY; i++)
 			readPlayerStat();
-		
+
 		decide();
 		return act();
 	}
@@ -441,40 +441,60 @@ public class Trooper extends Task {
 	 * 
 	 */
 	private void potOdd() {
-		double prob = pokerSimulator.winProb_n;
-
 		// TODO: check Poker Expected Value (EV) Formula: EV = (%W * $W) – (%L * $L)
 		// https://www.splitsuit.com/simple-poker-expected-value-formula
 
-		// ammo control
-		// EHS = HSn + (1 - HSn) x Ppot
-		// double EHS = pokerSimulator.HS_n + (1 - pokerSimulator.HS_n) * pokerSimulator.Ppot;
-		// double ammo = EHS * pokerSimulator.heroChips;
-		// ammo= HSn * pot + ((1 - HSn) x Ppot * chip) <<<<<<<<<
-		double HSnC = (1 - pokerSimulator.HS_n);
-		double ammo = pokerSimulator.HS_n * pokerSimulator.potValue
-				+ HSnC * pokerSimulator.Ppot * pokerSimulator.heroChips;
-		String txt1 = String.format("%7.2f = %1.3f * %7.2f  + (%1.3f * %1.3f * %7.2f)", ammo, pokerSimulator.HS_n,
-				pokerSimulator.potValue, HSnC, pokerSimulator.Ppot, pokerSimulator.heroChips);
-		setVariableAndLog(EXPLANATION, txt1);
-
 		// no calculation for 0 values
-		if (ammo == 0 || prob == 0) {
+		double ammo = (double) pokerSimulator.uoAEvaluation.get("ammunitions");
+		if (ammo == 0 || pokerSimulator.winProb_n == 0) {
 			availableActions.clear();
-			Hero.heroLogger.info(
-					String.format("No posible decision for values prob = %1.3f or amunitions = %7.2f", prob, ammo));
+			Hero.heroLogger.info(String.format("No posible decision for values prob = %1.3f or amunitions = %7.2f",
+					pokerSimulator.winProb_n, ammo));
 			return;
 		}
+
 		for (TrooperAction act : availableActions) {
-			double ev = (prob * ammo) - act.amount;
+			double ev = (pokerSimulator.winProb_n * ammo) - act.amount;
 			act.expectedValue = ev;
 		}
 		// remove all negative values
 		availableActions.removeIf(ta -> ta.expectedValue < 0);
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
+
+		// double prob = pokerSimulator.winProb_n;
+		//
+		// // TODO: check Poker Expected Value (EV) Formula: EV = (%W * $W) – (%L * $L)
+		// // https://www.splitsuit.com/simple-poker-expected-value-formula
+		//
+		// // ammo control
+		// // EHS = HSn + (1 - HSn) x Ppot
+		// // double EHS = pokerSimulator.HS_n + (1 - pokerSimulator.HS_n) * pokerSimulator.Ppot;
+		// // double ammo = EHS * pokerSimulator.heroChips;
+		// // ammo= HSn * pot + ((1 - HSn) x Ppot * chip) <<<<<<<<<
+		// double HSnC = (1 - pokerSimulator.HS_n);
+		// double ammo = pokerSimulator.HS_n * pokerSimulator.potValue
+		// + HSnC * pokerSimulator.Ppot * pokerSimulator.heroChips;
+		// String txt1 = String.format("%7.2f = %1.3f * %7.2f + (%1.3f * %1.3f * %7.2f)", ammo, pokerSimulator.HS_n,
+		// pokerSimulator.potValue, HSnC, pokerSimulator.Ppot, pokerSimulator.heroChips);
+		// setVariableAndLog(EXPLANATION, txt1);
+		//
+		// // no calculation for 0 values
+		// if (ammo == 0 || prob == 0) {
+		// availableActions.clear();
+		// Hero.heroLogger.info(
+		// String.format("No posible decision for values prob = %1.3f or amunitions = %7.2f", prob, ammo));
+		// return;
+		// }
+		// for (TrooperAction act : availableActions) {
+		// double ev = (prob * ammo) - act.amount;
+		// act.expectedValue = ev;
+		// }
+		// // remove all negative values
+		// availableActions.removeIf(ta -> ta.expectedValue < 0);
+		// // 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 	}
-	
-	/**global variable for test tau parameter*/
+
+	/** global variable for test tau parameter */
 	private int preflopSimulationProcent = -1;
 	/**
 	 * Set the action based on the starting hand distribution. This method set the global variable {@link #maxRekonAmmo}
@@ -489,16 +509,18 @@ public class Trooper extends Task {
 		double band = pokerSimulator.bigBlind * pfband;
 		String rName = (String) parameters.get("preflopCards");
 		PreflopCardsModel pfcm = preFlopCardsDist.get(rName);
+		// 211205: the first real simulation, analisis and result: hero must play with 50% preflop card selection !!! :D
 
 		// simulation: to check if hero can detect tau, mean and sd correctly
 		if (!Hero.simulationTable.getActor().getName().equals("hero") && preflopSimulationProcent == -1) {
 			// use the chair value to compute the %.
-			preflopSimulationProcent = Hero.simulationTable.getActor().getChair() * 10;
-			// for hero 100%
-			preflopSimulationProcent = preflopSimulationProcent == 0 ? 100 : preflopSimulationProcent;
-			// positiveEvent.put("name", "tauMeasurement");
-			System.out.println(Hero.simulationTable.getActor().getName() + " = " + preflopSimulationProcent);
-			// positiveEvent.put("value", "% set at " + preflopSimulationProcent);
+//			preflopSimulationProcent = Hero.simulationTable.getActor().getChair() * 10;
+//			// for hero 100%
+//			preflopSimulationProcent = preflopSimulationProcent == 0 ? 100 : preflopSimulationProcent;
+//			// positiveEvent.put("name", "tauMeasurement");
+//			System.out.println(Hero.simulationTable.getActor().getName() + " = " + preflopSimulationProcent);
+//			// positiveEvent.put("value", "% set at " + preflopSimulationProcent);
+			preflopSimulationProcent = 50;
 			pfcm.setPercentage(preflopSimulationProcent);
 		}
 
@@ -717,13 +739,11 @@ public class Trooper extends Task {
 			}
 
 			// at this point i must decide and act
+			pokerSimulator.setTau(getMinActiveTau());
 			setVariableAndLog(STATUS, "Reading NUMBERS ...");
-			// read first the numbers to update the dashboard whit the numerical values. this allow me some time to
-			// inspect.
-			// only for visula purporse
+			// MANDATORY ORDEN FIRST NUMBER AND THEN CARDS
 			sensorsArray.read(SensorsArray.TYPE_NUMBERS);
 			setVariableAndLog(STATUS, "Reading CARDS ...");
-			pokerSimulator.setTau(getMinActiveTau());
 			sensorsArray.read(SensorsArray.TYPE_CARDS);
 			availableActions.clear();
 			setVariableAndLog(STATUS, "Deciding ...");

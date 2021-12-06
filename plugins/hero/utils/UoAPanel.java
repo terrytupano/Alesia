@@ -11,6 +11,7 @@
 package plugins.hero.utils;
 
 import java.awt.event.*;
+import java.text.*;
 import java.util.*;
 
 import com.alee.laf.text.*;
@@ -42,16 +43,15 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 		// JPanel cardsPanel2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		// cardsPanel2.add(cardsPanel);
 
-		FormLayout layout = new FormLayout("pref:grow, 3dlu, pref:grow",
-				"p, 3dlu, p, 3dlu, p, 3dlu, fill:pref:grow");
+		FormLayout layout = new FormLayout("pref:grow, 3dlu, pref:grow", "p, 3dlu, fill:pref:grow");
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DLU2);
 
-		builder.append(TUIUtils.getTitleLabel("Single Hand simulation",
-				"Select the hole card an the comunity cards. press <b>Evaluate hand</b> when ready"), 3);
-		builder.nextLine(2);
+//		builder.append(TUIUtils.getTitleLabel("Single Hand simulation",
+//				"Select the hole card an the comunity cards. press <b>Evaluate hand</b> when ready"), 3);
+//		builder.nextLine(2);
 		builder.append(cardsPanel);
-		builder.nextLine(2);
-		builder.append(TUIUtils.getTitleLabel("Evaluation Result", ""), 3);
+//		builder.nextLine(2);
+//		builder.append(TUIUtils.getTitleLabel("Evaluation Result", ""), 3);
 		builder.nextLine(2);
 		builder.append(TUIUtils.getSmartScroller(console), 3);
 
@@ -81,14 +81,15 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 
 		console.append("Hole cards: " + myHole + " Comunity cards: " + comunity + "\n");
 		int tau = (Integer) parms.get("tau");
-		
+
 		long t = System.currentTimeMillis();
-		Properties properties = PokerSimulator.getEvaluation(myHole, comunity, 1, tau);
+		Properties properties = PokerSimulator.getEvaluation(myHole, comunity, 1, tau, 10000, 1000);
 		// Add Chen score
 		properties.put("Chen Score", PokerSimulator.getChenScore(myHole));
 
 		// to sort the list
 		TreeMap<Object, Object> tm = new TreeMap<>(properties);
+//		DecimalFormat probFormat = new DecimalFormat("#0.000");
 
 		// all elements instance of List are array of cards. override this property
 		Set keys = tm.keySet();
