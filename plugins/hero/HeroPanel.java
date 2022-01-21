@@ -12,13 +12,16 @@ package plugins.hero;
 
 import java.awt.*;
 
+import com.alee.extended.layout.*;
 import com.alee.laf.panel.*;
 import com.alee.laf.tabbedpane.*;
 import com.alee.managers.settings.*;
 
+import core.datasource.model.*;
+import gui.*;
 import gui.console.*;
 
-public class HeroPanel extends WebPanel {
+public class HeroPanel extends TUIFormPanel {
 
 	private TrooperPanel trooperPanel;
 	private SensorArrayPanel sensorArrayPanel;
@@ -26,21 +29,27 @@ public class HeroPanel extends WebPanel {
 	private WebTabbedPane wtp;
 
 	public HeroPanel() {
-		super(new BorderLayout());
+
 		this.sensorArrayPanel = new SensorArrayPanel();
-		this.trooperPanel = new TrooperPanel(true);
+		SimulatorClient model = SimulatorClient.findFirst("playerName = ?", "Hero");
+		this.trooperPanel = new TrooperPanel(model);
+		TableParametersPanel tablePanel = new TableParametersPanel();
+		WebPanel params = new WebPanel();
+		params.setLayout(new VerticalFlowLayout());
+		params.add(trooperPanel);
+		params.add(tablePanel);
 		this.pockerSimulatorPanel = new WebPanel(new BorderLayout());
 		// pockerSimulatorPanel.setMessage("hero.msg01");
 		wtp = new WebTabbedPane();
-		wtp.add(trooperPanel, "Trooper parameters");
+		wtp.add(params, "Trooper parameters");
 		wtp.add(sensorArrayPanel, "Sensor Array");
 		wtp.add(pockerSimulatorPanel, "Pocker Simulator");
 		wtp.add(new ConsolePanel(Hero.heroLogger), "Log console");
 		// wtp.add(TCVUtils.createImagesPanel(Hero.preparedCards), "Cards");
 
 		wtp.registerSettings(new Configuration<TabbedPaneState>("HeroPanel.tabbedPanel"));
-
-		add(wtp, BorderLayout.CENTER);
+		addToolBarActions("runTrooper", "testTrooper", "stopTrooper", "pauseTrooper");
+		setBodyComponent(wtp);		
 	}
 
 	public TrooperPanel getTrooperPanel() {

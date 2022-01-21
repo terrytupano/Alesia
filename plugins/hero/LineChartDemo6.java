@@ -31,9 +31,11 @@ public class LineChartDemo6 extends JDialog {
 		LazyList<SimulatorClient> clients = SimulatorClient.findAll();
 		for (SimulatorClient client : clients) {
 			String pName = client.getString("playerName");
-			XYSeries xYSeries = new XYSeries(pName);
 			LazyList<SimulatorStatistic> statistics = SimulatorStatistic.find("name = ? AND player = ?", "Bankroll",
 					pName);
+			// retrive the first element of the statistical series and append the aditional value field
+			String av = statistics.size() > 0 ? statistics.get(0).getString("aditionalValue") : "";
+			XYSeries xYSeries = new XYSeries(pName + "\n(" + av + ")");
 			xYSeriesCollection.addSeries(xYSeries);
 			for (SimulatorStatistic sts : statistics) {
 				xYSeries.add(sts.getInteger("hands"), sts.getDouble("wins"));

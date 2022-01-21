@@ -25,13 +25,14 @@ public class RaceRecord extends TUIFormPanel {
 		// EVENT components:
 		if (mode == EVENT || mode == FULL) {
 			addInputComponent(TUIUtils.getWebDateField(model, listPanel.getColumnMetadata().get("redate")), true, true);
-			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("rerace")), true,
-					true);
+			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("rerace")),
+					true, true);
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("redistance")),
 					true, true);
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("reracetime")),
 					true, true);
-			addInputComponent(TUIUtils.getWebTextField(model, listPanel.getColumnMetadata().get("reserie")), true, true);
+			addInputComponent(TUIUtils.getWebTextField(model, listPanel.getColumnMetadata().get("reserie")), true,
+					true);
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("repartial1")),
 					true, true);
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("repartial2")),
@@ -46,8 +47,9 @@ public class RaceRecord extends TUIFormPanel {
 
 		// BASIC components:
 		if (mode == BASIC || mode == FULL) {
-			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("restar_lane")),
-					true, true);
+			addInputComponent(
+					TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("restar_lane")), true,
+					true);
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("reend_pos")),
 					true, true);
 			TEntry[] ele = Flicka.getElemets("rehorse", "tentry.none");
@@ -57,13 +59,13 @@ public class RaceRecord extends TUIFormPanel {
 			jcb = TUIUtils.getTWebComboBox("ttrejockey", ele, model.get("rejockey"));
 			addInputComponent("rejockey", jcb, true, true);
 			addInputComponent(
-					TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("rejockey_weight")), false,
-					true);
+					TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("rejockey_weight")),
+					false, true);
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("rerating")),
 					false, true);
 			addInputComponent(TUIUtils.getWebTextField(model, listPanel.getColumnMetadata().get("reobs")), false, true);
-			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("recps")), false,
-					true);
+			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("recps")),
+					false, true);
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("redividend")),
 					false, false);
 			addInputComponent(TUIUtils.getWebTextField(model, listPanel.getColumnMetadata().get("retrainer")), false,

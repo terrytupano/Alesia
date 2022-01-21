@@ -9,6 +9,7 @@ import org.apache.commons.math3.stat.descriptive.*;
 import org.jdesktop.application.*;
 
 import core.*;
+import core.datasource.model.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.bots.*;
 import plugins.hero.utils.*;
@@ -68,7 +69,7 @@ public class Trooper extends Task {
 	private long playTime;
 	private Hashtable<String, PreflopCardsModel> preFlopCardsDist;
 	private String subObtimalDist;
-	private Properties positiveEvent;
+	private SimulatorClient simulatorClient;;
 	private int numOfVillans;
 	private int villansBeacon;
 	private GameRecorder gameRecorder;
@@ -92,7 +93,7 @@ public class Trooper extends Task {
 		// this.pokerSimulator = sensorsArray.getPokerSimulator();
 		this.handsCounter = 0;
 		this.playUntil = 0;
-		this.positiveEvent = new Properties();
+		this.simulatorClient = null;
 		this.villansBeacon = 0;
 
 		// load all preflop ranges
@@ -111,12 +112,14 @@ public class Trooper extends Task {
 
 	/**
 	 * link between {@link HeroBot} an this instance. this method perfom all the decitions and return the action that he
-	 * want to execute
+	 * want to execute in simulation eviorement.
 	 * 
-	 * @return the action to execute
+	 * @param client - instace of {@link SimulatorClient} whit all simulation parameters
+	 * 
+	 * @return the action to perform
 	 */
-	public TrooperAction getSimulationAction(Properties properties) {
-		this.positiveEvent = properties;
+	public TrooperAction getSimulationAction(SimulatorClient client) {
+		this.simulatorClient = client;
 		playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
 		clearEnviorement();
 
@@ -257,7 +260,7 @@ public class Trooper extends Task {
 	private void clearEnviorement() {
 		if (sensorsArray != null) {
 			sensorsArray.clearEnviorement();
-			positiveEvent.clear();
+			simulatorClient = null;
 		}
 		maxRekonAmmo = -1;
 		currentHandCost = 0;
@@ -354,8 +357,8 @@ public class Trooper extends Task {
 			te.setValue(probabilities[i]);
 		}
 
-		// action selecction range acording tDistributionRange parameter
-		int actran = Integer.parseInt(parameters.get("tDistributionRange").toString());
+		// action selecction range acording tau parameter
+		int actran = Integer.parseInt(parameters.get("tau").toString());
 		int ele = 99;
 		while ((ele < mode - actran) || (ele > mode + actran)) {
 			ele = (int) tdist.sample();
@@ -494,8 +497,6 @@ public class Trooper extends Task {
 		// // 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 	}
 
-	/** global variable for test tau parameter */
-	private int preflopSimulationProcent = -1;
 	/**
 	 * Set the action based on the starting hand distribution. This method set the global variable {@link #maxRekonAmmo}
 	 * this method allwais select the less cost action. The general idea here is try to put the trooper in folp, so the
@@ -509,25 +510,27 @@ public class Trooper extends Task {
 		double band = pokerSimulator.bigBlind * pfband;
 		String rName = (String) parameters.get("preflopCards");
 		PreflopCardsModel pfcm = preFlopCardsDist.get(rName);
-		// 211205: the first real simulation, analisis and result: hero must play with 50% preflop card selection !!! :D
 
-		// simulation: to check if hero can detect tau, mean and sd correctly
-		if (!Hero.simulationTable.getActor().getName().equals("hero") && preflopSimulationProcent == -1) {
-			// use the chair value to compute the %.
-//			preflopSimulationProcent = Hero.simulationTable.getActor().getChair() * 10;
-//			// for hero 100%
-//			preflopSimulationProcent = preflopSimulationProcent == 0 ? 100 : preflopSimulationProcent;
-//			// positiveEvent.put("name", "tauMeasurement");
-//			System.out.println(Hero.simulationTable.getActor().getName() + " = " + preflopSimulationProcent);
-//			// positiveEvent.put("value", "% set at " + preflopSimulationProcent);
-			preflopSimulationProcent = 50;
-			pfcm.setPercentage(preflopSimulationProcent);
-		}
+		// 211205: the first real simulation, analisis and result: hero must play with 50% preflop card selection !!! :D
+		int tau = 50;
+
+		// in Simulation eviorement: set the tau parameter if apply
+		if (simulatorClient != null && simulatorClient.getInteger("tau") != null)
+			tau = simulatorClient.getInteger("tau");
+
+		pfcm.setPercentage(tau);
 
 		String txt = "Preflop Ok.";
+		boolean stricPreflop = true;
+
+		// in Simulation eviorement: set the strictPreflop parameter if apply
+		if (simulatorClient != null && simulatorClient.getInteger("stricPreflop") != null)
+			stricPreflop = simulatorClient.getBoolean("stricPreflop");
+
 		if (!pfcm.containsHand(pokerSimulator.holeCards)) {
-			txt = "Preflop not Ok.";
-			return;
+			txt = "Preflop not in range.";
+			if (stricPreflop)
+				return;
 		}
 
 		// maxreconammo = base + (inversion * ev)
@@ -739,7 +742,7 @@ public class Trooper extends Task {
 			}
 
 			// at this point i must decide and act
-			pokerSimulator.setTau(getMinActiveTau());
+			pokerSimulator.tau = getMinActiveTau();
 			setVariableAndLog(STATUS, "Reading NUMBERS ...");
 			// MANDATORY ORDEN FIRST NUMBER AND THEN CARDS
 			sensorsArray.read(SensorsArray.TYPE_NUMBERS);

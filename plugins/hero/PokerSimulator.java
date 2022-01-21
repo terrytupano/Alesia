@@ -68,6 +68,7 @@ public class PokerSimulator {
 	public final UoAHand holeCards = new UoAHand();
 	public final UoAHand currentHand = new UoAHand();
 	public int tablePosition;
+	public int tau;
 
 	public final Properties uoAEvaluation = new Properties();
 	private ActionsBarChart actionsBarChart;
@@ -329,9 +330,11 @@ public class PokerSimulator {
 				int myRank = evaluator.rankHand(holeCards.getCard(1), holeCards.getCard(2), iBoard);
 				int villanRank = evaluator.rankHand(villan.getCard(1), villan.getCard(2), iBoard);
 
-				// following the opponent modeling paper: 1 for in card selection range , 0.01 when not !!!!!!!!!!!!!!!
-//				double weight = 1;
-				 double weight = preflopCardsModel.containsHand(villan) ? 1.0 : 0.01;
+				// following the opponent modeling paper: 1 for in card selection range , 0.01 when not
+				// *** test purpose ***
+				double weight = 1;
+				// double weight = preflopCardsModel.containsHand(villan) ? 1.0 : 0.01;
+
 				// double weight = rWeight.getOrDefault(villan, PokerSimulator.lowerBound);
 				if (myRank > villanRank) {
 					HP[index][0] += weight;
@@ -540,11 +543,6 @@ public class PokerSimulator {
 		return sensorStatus.getOrDefault(sensor, false);
 	}
 
-	private int tau;
-
-	public void setTau(int tau) {
-		this.tau = tau;
-	}
 	/**
 	 * perform the PokerProphesier simulation. Call this method when all the cards on the table has been setted using
 	 * {@link #addCard(String, String)} this method will create the {@link HoleCards} and the {@link CommunityCards} (if

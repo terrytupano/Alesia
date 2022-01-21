@@ -134,24 +134,6 @@ public class Hero extends TPlugin {
 		return iTesseract;
 	}
 
-	/**
-	 * parse the variable <code>table.parameters</code> inserting in the <code>values</code> hastable:
-	 * <li><code>table.buyIn</code>
-	 * <li><code>table.bigBlid</code>
-	 * <li><code>table.smallBlid</code>
-	 * <li><code>table.currency</code> (simbol if its present of "" if not)
-	 * 
-	 * @param values - values
-	 */
-	public static void parseTableParameters(Map<String, Object> values) {
-		String[] tparms = values.get("table.parameters").toString().split("[,]");
-		values.put("table.buyIn", new Double(tparms[0]));
-		values.put("table.bigBlid", new Double(tparms[1]));
-		values.put("table.smallBlid", new Double(tparms[2]));
-		// simbol if its present of "" if not
-		values.put("table.currency", tparms.length > 3 ? tparms[3] : "");
-	}
-
 	@Deprecated
 	public static String parseToUnicode(String hand) {
 		String uni = new String(hand);

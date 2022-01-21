@@ -38,20 +38,8 @@ public class HeroBot extends Bot {
 		pokerSimulator.setTablePosition(dealer, actV);
 
 		long t1 = System.currentTimeMillis();
-
-		// simulation: set tau = 100 for all eben chair,
-		int tau = 0;
-		if (player.getChair() % 2 == 0) {
-			tau = 100;
-			pokerSimulator.setTau(tau);
-		} else {
-			tau = trooper.getMinActiveTau();
-			pokerSimulator.setTau(tau);
-		}
-		bankRollDescription = "tau = " + tau;
-		
 		pokerSimulator.runSimulation();
-		TrooperAction act = trooper.getSimulationAction(positiveEvent);
+		TrooperAction act = trooper.getSimulationAction(simulatorClient);
 		statistics.addValue(System.currentTimeMillis() - t1);
 
 		PlayerAction action = null;

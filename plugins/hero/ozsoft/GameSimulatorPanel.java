@@ -8,6 +8,7 @@
 package plugins.hero.ozsoft;
 
 import java.awt.*;
+import java.beans.*;
 
 import com.alee.laf.panel.*;
 import com.alee.laf.tabbedpane.*;
@@ -16,19 +17,23 @@ import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.*;
 
 import core.*;
+import core.datasource.model.*;
 import gui.*;
 import plugins.hero.*;
 import plugins.hero.utils.*;
 
-public class GameSimulatorPanel extends TUIFormPanel {
+public class GameSimulatorPanel extends TUIFormPanel implements PropertyChangeListener {
 
 	private SimulatorClientList clientList;
 	private TrooperPanel trooperPanel;
 	private WebPanel pockerSimulatorPanel;
 
 	public GameSimulatorPanel() {
-		trooperPanel = new TrooperPanel(false);
+		trooperPanel = new TrooperPanel(new SimulatorClient());
 		clientList = new SimulatorClientList();
+
+		clientList.getWebTable().addPropertyChangeListener(this);
+
 		this.pockerSimulatorPanel = new WebPanel(new BorderLayout());
 
 		// trooper panel + list of Clients
@@ -53,6 +58,8 @@ public class GameSimulatorPanel extends TUIFormPanel {
 	}
 
 	public TrooperPanel getTrooperPanel() {
+		// TODO: implement a property cahge listener to recive all changes from input components. and remove this shitty
+		// method and related
 		return trooperPanel;
 	}
 
@@ -61,5 +68,12 @@ public class GameSimulatorPanel extends TUIFormPanel {
 		pockerSimulatorPanel.removeAll();
 		pockerSimulatorPanel.add(simulator.getReportPanel(), BorderLayout.CENTER);
 		setVisible(true);
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent evt) {
+		if (TUIListPanel.MODEL_SELECTED.equals(evt.getPropertyName())) {
+
+		}
 	}
 }

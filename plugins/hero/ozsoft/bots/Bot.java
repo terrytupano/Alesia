@@ -32,7 +32,9 @@ public abstract class Bot implements Client {
 	protected int buyIn;
 	protected String playerName;
 	protected UoAHand myHole, communityHand, hand;
-	protected Properties positiveEvent = new Properties();
+	
+	// TODO: delete
+	protected Properties simulationParams = new Properties(); 
 
 	/** poker street. preFlop=0, Flop=1 ... */
 	protected int street = 0;
@@ -40,8 +42,8 @@ public abstract class Bot implements Client {
 	/** keep track the current match cost. the cumulative cost of all actions */
 	protected int matchCost = 0;
 
-	/** stored parameters for this bot */
-	protected SimulatorClient client;
+	/** stored simulation parameters for this bot */
+	protected SimulatorClient simulatorClient;
 
 	private int prevCash;
 	
@@ -78,6 +80,7 @@ public abstract class Bot implements Client {
 		 */
 		if (message.startsWith("PlayerName=")) {
 			this.playerName = message.split("[=]")[1];
+			simulatorClient = SimulatorClient.findFirst("playerName = ?", playerName);
 		}
 
 		if (message.contains("wins ")) {
@@ -89,8 +92,8 @@ public abstract class Bot implements Client {
 
 			}
 			// update Stats for all players
-			saveObservations();
-			positiveEvent.clear();
+//			saveObservations();
+			simulationParams.clear();
 			prevCash = player.getCash();
 		}
 
@@ -141,6 +144,9 @@ public abstract class Bot implements Client {
 		this.trooper = trooper;
 	}
 
+	/**
+	 * 
+	 */
 	private void backrollSnapSchot() {
 		Alesia.getInstance().openDB("hero");
 		String nam = "Bankroll";
@@ -172,12 +178,12 @@ public abstract class Bot implements Client {
 	 */
 	private void saveObservations() {
 		// save observations only when the event apperar
-		if (positiveEvent.size() == 0)
+		if (simulationParams.size() == 0)
 			return;
 
 		Alesia.getInstance().openDB("hero");
-		SimulatorStatistic statistic = SimulatorStatistic.findOrInit("name", positiveEvent.get("name"), "value",
-				positiveEvent.get("value"));
+		SimulatorStatistic statistic = SimulatorStatistic.findOrInit("name", simulationParams.get("name"), "value",
+				simulationParams.get("value"));
 
 		// change the name to *name when many boot update the same name, value pair.
 		// String pname = statistic.getString("player") == null ? playerName : statistic.getString("player");
@@ -192,7 +198,7 @@ public abstract class Bot implements Client {
 		statistic.set("wins", wins);
 		double bb = wins / (bigBlind * 1.0);
 		statistic.set("ratio", bb / (hands * 1.0));
-		statistic.setString("aditionalValue", positiveEvent.get("aditionalValue"));
+		statistic.setString("aditionalValue", simulationParams.get("aditionalValue"));
 		statistic.save();
 	}
 }
