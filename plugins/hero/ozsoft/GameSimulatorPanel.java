@@ -10,6 +10,8 @@ package plugins.hero.ozsoft;
 import java.awt.*;
 import java.beans.*;
 
+import javax.swing.*;
+
 import com.alee.laf.panel.*;
 import com.alee.laf.tabbedpane.*;
 import com.jgoodies.forms.builder.*;
@@ -26,14 +28,16 @@ public class GameSimulatorPanel extends TUIFormPanel implements PropertyChangeLi
 
 	private SimulatorClientList clientList;
 	private TrooperPanel trooperPanel;
-	private WebPanel pockerSimulatorPanel;
+	private WebPanel pockerSimulatorPanel, trooperPanelContainer;
 
 	public GameSimulatorPanel() {
 		trooperPanel = new TrooperPanel(new SimulatorClient());
+		TUIUtils.setEnabled(trooperPanel, false);
+
+		trooperPanelContainer = new WebPanel();
+		trooperPanelContainer.add(trooperPanel);
 		clientList = new SimulatorClientList();
-
-		clientList.getWebTable().addPropertyChangeListener(this);
-
+		clientList.addPropertyChangeListener(TUIListPanel.MODEL_SELECTED, this);
 		this.pockerSimulatorPanel = new WebPanel(new BorderLayout());
 
 		// trooper panel + list of Clients
@@ -42,25 +46,20 @@ public class GameSimulatorPanel extends TUIFormPanel implements PropertyChangeLi
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DLU2);
 		builder.append(TUIUtils.getTitleLabel("Trooper panel", "trooper configuration parameters"), 5);
 		builder.nextLine(2);
-		builder.append(trooperPanel, 5);
+		builder.append(trooperPanelContainer, 5);
 		builder.nextLine(2);
 		builder.append(TUIUtils.getTitleLabel("Players", "Select the number and type of players"), 5);
 		builder.nextLine(2);
 		builder.append(clientList, 5);
 
+		JPanel panel = builder.getPanel();
 		WebTabbedPane wtp = new WebTabbedPane();
-		wtp.add(builder.getPanel(), "Simulation parameters");
+		wtp.add(panel, "Simulation parameters");
 		wtp.add(pockerSimulatorPanel, "PockerSimulator");
 
 		setBodyComponent(wtp);
 		setFooterActions("backrollHistory", "startSimulation");
 		registreSettings();
-	}
-
-	public TrooperPanel getTrooperPanel() {
-		// TODO: implement a property cahge listener to recive all changes from input components. and remove this shitty
-		// method and related
-		return trooperPanel;
 	}
 
 	public void updatePokerSimulator(PokerSimulator simulator) {
@@ -73,7 +72,18 @@ public class GameSimulatorPanel extends TUIFormPanel implements PropertyChangeLi
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		if (TUIListPanel.MODEL_SELECTED.equals(evt.getPropertyName())) {
-
+			trooperPanelContainer.setVisible(false);
+			trooperPanelContainer.removeAll();
+			SimulatorClient model = (SimulatorClient) evt.getNewValue();
+			boolean ena = true;
+			if (model == null) {
+				model = new SimulatorClient();
+				ena = false;
+			}
+			trooperPanel = new TrooperPanel(model);
+			TUIUtils.setEnabled(trooperPanel, ena);
+			trooperPanelContainer.add(trooperPanel);
+			trooperPanelContainer.setVisible(true);
 		}
 	}
 }

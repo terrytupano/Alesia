@@ -11,7 +11,6 @@
 package plugins.hero.utils;
 
 import java.awt.event.*;
-import java.text.*;
 import java.util.*;
 
 import com.alee.laf.text.*;

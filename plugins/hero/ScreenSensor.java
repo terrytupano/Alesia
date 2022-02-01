@@ -10,6 +10,7 @@ import javax.swing.*;
 import com.alee.utils.*;
 
 import core.*;
+import core.datasource.model.*;
 import net.sourceforge.tess4j.*;
 import net.sourceforge.tess4j.util.*;
 import plugins.hero.utils.*;
@@ -69,7 +70,8 @@ public class ScreenSensor extends JPanel {
 		double ratio = (float) shape.bounds.width / (float) shape.bounds.height;
 		add(imageLabel, ratio > 2 ? BorderLayout.NORTH : BorderLayout.WEST);
 		add(dataLabel, BorderLayout.CENTER);
-
+		SimulatorClient params = SimulatorClient.findFirst("playerName = ?", "Hero");
+		this.currencySymbol = params.getString("currency");
 		this.iTesseract = Hero.getTesseract();
 		clearEnviorement();
 		update();
@@ -472,8 +474,6 @@ public class ScreenSensor extends JPanel {
 		capturedImage = null;
 		lastOcrImage = null;
 		setEnabled(false);
-		Map<String, Object> vals = Hero.trooperPanel.getValues();
-		this.currencySymbol = vals.get("table.currency").toString();
 		repaint();
 	}
 }

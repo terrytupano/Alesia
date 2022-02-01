@@ -30,7 +30,6 @@ import com.alee.utils.*;
 
 import core.*;
 import core.datasource.model.*;
-import gui.*;
 import net.sourceforge.tess4j.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.bots.*;
@@ -50,11 +49,10 @@ public class Hero extends TPlugin {
 	 * update every time the action {@link #runTrooper(ActionEvent)} is performed
 	 */
 	private static Date startDate = null;
-	public static TrooperPanel trooperPanel;
 	private static Trooper activeTrooper;
 	/** in simualtion envioremet, this is the current instance of Table. */
 	public static Table simulationTable;
-	private HeroPanel heroPanel;
+	private static HeroPanel heroPanel;
 	private GameSimulatorPanel simulatorPanel;
 
 	private SensorsArray sensorsArray;
@@ -151,7 +149,7 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public void gameSimulator(ActionEvent event) {
 		this.simulatorPanel = new GameSimulatorPanel();
-		trooperPanel = simulatorPanel.getTrooperPanel();
+		// trooperPanel = simulatorPanel.getTrooperPanel();
 		Alesia.getInstance().getMainPanel().setContentPanel(simulatorPanel);
 	}
 
@@ -168,7 +166,6 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public void heroPanel(ActionEvent event) {
 		heroPanel = new HeroPanel();
-		trooperPanel = heroPanel.getTrooperPanel();
 		Alesia.getInstance().getMainPanel().setContentPanel(heroPanel);
 		// temp: change the main frame using this coordenates: 0,40 547,735
 		// temporal: must be loaded from troperPanel
@@ -267,12 +264,11 @@ public class Hero extends TPlugin {
 				return null;
 			}
 
-			Map<String, Object> values = trooperPanel.getValues();
 			LazyList<SimulatorClient> clients = SimulatorClient.findAll().orderBy("chair");
-
-			int buyIn = ((Double) values.get("table.buyIn")).intValue();
-			int bb = ((Double) values.get("table.bigBlid")).intValue();
-			simulationTable = new Table(TableType.NO_LIMIT, buyIn, bb);
+			SimulatorClient hero = SimulatorClient.findFirst("payerName = ?", "Hero");
+			int buy = hero.getDouble("buyIn").intValue();
+			int bb = hero.getDouble("bigBlind").intValue();
+			simulationTable = new Table(TableType.NO_LIMIT, buy, bb);
 			for (SimulatorClient client : clients) {
 				if (client.getBoolean("isActive")) {
 					String name = client.getString("playerName");
@@ -285,7 +281,7 @@ public class Hero extends TPlugin {
 					PokerSimulator simulator = new PokerSimulator();
 					Trooper trooper = new Trooper(null, simulator);
 					bot.setPokerSimulator(simulator, trooper);
-					Player p = new Player(name, buyIn, bot, client.getInteger("chair"));
+					Player p = new Player(name, buy, bot, client.getInteger("chair"));
 					simulationTable.addPlayer(p);
 					if ("Hero".equals(name))
 						simulatorPanel.updatePokerSimulator(simulator);
@@ -312,7 +308,7 @@ public class Hero extends TPlugin {
 	public void stopTrooper(ActionEvent event) {
 		if (activeTrooper != null) {
 			activeTrooper.cancelTrooper(true);
-			trooperPanel.setAllEnabledBut(true, new String[0]);
+			heroPanel.setAllEnabledBut(true, new String[0]);
 			// TActionsFactory.getAction("pauseTrooper").putValue(Action.SMALL_ICON,
 			// TUIUtils.getSmallFontIcon('\ue037'));// :
 			activeTrooper = null; // '\ue034'));
@@ -354,7 +350,6 @@ public class Hero extends TPlugin {
 		sensorsArray = new SensorsArray();
 		sensorsArray.setShapeAreas(shapeAreas);
 		heroPanel.updateSensorsArray(sensorsArray);
-		trooperPanel = heroPanel.getTrooperPanel();
 	}
 
 	private Task start(ActionEvent event) {
@@ -370,7 +365,7 @@ public class Hero extends TPlugin {
 		};
 		// t.getPokerSimulator().setParameter();
 		activeTrooper.addPropertyChangeListener(tl);
-		trooperPanel.setAllEnabledBut(false, "pauseTrooper", "stopTrooper");
+		heroPanel.setAllEnabledBut(false, "pauseTrooper", "stopTrooper");
 		return activeTrooper;
 	}
 }

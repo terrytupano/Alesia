@@ -85,8 +85,13 @@ public class TActionsFactory {
 		return l;
 	}
 
+	/**
+	 * general property fired when a action is perfored (button click)
+	 */
+	public static String ACTION_PERFORMED = "actionPerformed";
+	
 	private static void disposeDialog(TUIFormPanel tuifp, ApplicationAction action) {
-		tuifp.putClientProperty("actionPerformed", action);
+		tuifp.putClientProperty(ACTION_PERFORMED, action);
 		Window root = SwingUtilities.getWindowAncestor(tuifp);
 		if (root instanceof JDialog) {
 			((JDialog) root).dispose();
@@ -158,6 +163,17 @@ public class TActionsFactory {
 	 */
 	@Action
 	public void acept(ActionEvent event) {
+		AbstractButton src = (AbstractButton) event.getSource();
+		ApplicationAction me = (ApplicationAction) src.getAction();
+		TUIFormPanel cnt = SwingUtils.getFirstParent((JComponent) src, TUIFormPanel.class);
+		boolean val = ((TUIFormPanel) cnt).validateFields();
+		if (val) {
+			disposeDialog(cnt, me);
+		}
+	}
+
+	@Action
+	public void update(ActionEvent event) {
 		AbstractButton src = (AbstractButton) event.getSource();
 		ApplicationAction me = (ApplicationAction) src.getAction();
 		TUIFormPanel cnt = SwingUtils.getFirstParent((JComponent) src, TUIFormPanel.class);
@@ -250,7 +266,7 @@ public class TActionsFactory {
 		TUIFormPanel tuifp = tuilp.getTUIFormPanel(me);
 		WebDialog dlg = tuifp.createDialog(false);
 		dlg.setVisible(true);
-		ApplicationAction aa = (ApplicationAction) tuifp.getClientProperty("actionPerformed");
+		ApplicationAction aa = (ApplicationAction) tuifp.getClientProperty(ACTION_PERFORMED);
 		if (aa != null && aa.getName().equals("acept")) {
 			tuifp.getModel().insert();
 			tuilp.freshen();
@@ -265,7 +281,7 @@ public class TActionsFactory {
 		TUIFormPanel tuifp = tuilp.getTUIFormPanel(me);
 		WebDialog dlg = tuifp.createDialog(false);
 		dlg.setVisible(true);
-		ApplicationAction aa = (ApplicationAction) tuifp.getClientProperty("actionPerformed");
+		ApplicationAction aa = (ApplicationAction) tuifp.getClientProperty(ACTION_PERFORMED);
 		if (aa != null && aa.getName().equals("acept")) {
 			tuifp.getModel().save();
 			tuilp.freshen();

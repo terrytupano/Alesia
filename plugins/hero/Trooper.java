@@ -58,7 +58,7 @@ public class Trooper extends Task {
 	private long time1;
 	private DescriptiveStatistics outGameStats;
 	private boolean paused = false;
-	private Map<String, Object> parameters;
+	private SimulatorClient parameter;
 	long stepMillis;
 	// This variable is ONLY used and cleaned by ensuregametable method
 	private String lastHoleCards = "";
@@ -181,7 +181,7 @@ public class Trooper extends Task {
 	 * @return <code>true</code> for oportunity, <code>false</code> oetherwise
 	 */
 	private boolean checkOpportunities() {
-		if ((boolean) parameters.get("takeOpportunity") == false)
+		if (parameter.getBoolean("takeOpportunity") == false)
 			return false;
 
 		String txt = null;
@@ -271,7 +271,7 @@ public class Trooper extends Task {
 		outGameStats.addValue(tt);
 		time1 = System.currentTimeMillis();
 		// read troper variables again
-		this.parameters = Hero.trooperPanel.getValues();
+		parameter = SimulatorClient.findFirst("playername = ?", "Hero");		
 		Hero.heroLogger.fine("Game play time average=" + TStringUtils.formatSpeed((long) outGameStats.getMean()));
 	}
 
@@ -358,11 +358,13 @@ public class Trooper extends Task {
 		}
 
 		// action selecction range acording tau parameter
-		int actran = Integer.parseInt(parameters.get("tau").toString());
-		int ele = 99;
-		while ((ele < mode - actran) || (ele > mode + actran)) {
-			ele = (int) tdist.sample();
-		}
+		// int actran = Integer.parseInt(parameters.get("tau").toString());
+		// int ele = 99;
+		// while ((ele < mode - actran) || (ele > mode + actran)) {
+		// ele = (int) tdist.sample();
+		// }
+		
+		int ele = (int) tdist.sample();
 		TrooperAction selact = actProb.elementAt(ele).getKey();
 		pokerSimulator.setActionsData(selact, actProb);
 		return selact;
@@ -504,11 +506,11 @@ public class Trooper extends Task {
 	 */
 	private void setPreflopActions() {
 		availableActions.clear();
-		double pfBase = ((Number) parameters.get("reconnBase")).doubleValue();
-		double pfband = ((Number) parameters.get("reconnBand")).doubleValue();
+		double pfBase = parameter.getDouble("reconnBase");
+		double pfband = parameter.getDouble("reconnBand");
 		double base = pokerSimulator.bigBlind * pfBase;
 		double band = pokerSimulator.bigBlind * pfband;
-		String rName = (String) parameters.get("preflopCards");
+		String rName = parameter.getString("preflopCards");
 		PreflopCardsModel pfcm = preFlopCardsDist.get(rName);
 
 		// 211205: the first real simulation, analisis and result: hero must play with 50% preflop card selection !!! :D
@@ -521,15 +523,15 @@ public class Trooper extends Task {
 		pfcm.setPercentage(tau);
 
 		String txt = "Preflop Ok.";
-		boolean stricPreflop = true;
+		boolean strictPreflop = true;
 
 		// in Simulation eviorement: set the strictPreflop parameter if apply
-		if (simulatorClient != null && simulatorClient.getInteger("stricPreflop") != null)
-			stricPreflop = simulatorClient.getBoolean("stricPreflop");
+		if (simulatorClient != null && simulatorClient.getBoolean("strictPreflop") != null)
+			strictPreflop = simulatorClient.getBoolean("strictPreflop");
 
 		if (!pfcm.containsHand(pokerSimulator.holeCards)) {
 			txt = "Preflop not in range.";
-			if (stricPreflop)
+			if (strictPreflop)
 				return;
 		}
 
@@ -635,12 +637,12 @@ public class Trooper extends Task {
 				// clicked and hero return
 
 				// play time
-				double ptd = Double.parseDouble(parameters.get("play.time").toString());
+				double ptd = parameter.getDouble("playTime");
 				long playtimeParm = (long) (ptd * 3600 * 1000);
 				playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
 
 				// play until parameter
-				double playUntilParm = Double.parseDouble(parameters.get("play.until").toString());
+				double playUntilParm = parameter.getDouble("playUntil");
 				// read hero chips. this avoid false tropper dismist after all in or bluff (hero chips was very low at
 				// that point)
 				sensorsArray.readSensors(true, sensorsArray.getSensors("hero.chips"));
@@ -715,11 +717,8 @@ public class Trooper extends Task {
 
 	@Override
 	protected Object doInBackground() throws Exception {
-
-		// Alesia.getInstance().openDB("hero");
-
+		Alesia.getInstance().openDB("hero");
 		clearEnviorement();
-
 		while (!isCancelled()) {
 			if (paused) {
 				Thread.sleep(100);
@@ -741,8 +740,10 @@ public class Trooper extends Task {
 				return null;
 			}
 
+			// TODO: used for reweight. not implemented
+			pokerSimulator.stimatedVillanTau = getMinActiveTau();
+
 			// at this point i must decide and act
-			pokerSimulator.tau = getMinActiveTau();
 			setVariableAndLog(STATUS, "Reading NUMBERS ...");
 			// MANDATORY ORDEN FIRST NUMBER AND THEN CARDS
 			sensorsArray.read(SensorsArray.TYPE_NUMBERS);

@@ -29,31 +29,24 @@ public class HeroPanel extends TUIFormPanel {
 	private WebTabbedPane wtp;
 
 	public HeroPanel() {
-
 		this.sensorArrayPanel = new SensorArrayPanel();
 		SimulatorClient model = SimulatorClient.findFirst("playerName = ?", "Hero");
 		this.trooperPanel = new TrooperPanel(model);
-		TableParametersPanel tablePanel = new TableParametersPanel();
+		trooperPanel.setFooterActions("update");
+
 		WebPanel params = new WebPanel();
-		params.setLayout(new VerticalFlowLayout());
+		params.setLayout(new VerticalFlowLayout(true, false));
 		params.add(trooperPanel);
-		params.add(tablePanel);
 		this.pockerSimulatorPanel = new WebPanel(new BorderLayout());
-		// pockerSimulatorPanel.setMessage("hero.msg01");
 		wtp = new WebTabbedPane();
 		wtp.add(params, "Trooper parameters");
 		wtp.add(sensorArrayPanel, "Sensor Array");
 		wtp.add(pockerSimulatorPanel, "Pocker Simulator");
 		wtp.add(new ConsolePanel(Hero.heroLogger), "Log console");
-		// wtp.add(TCVUtils.createImagesPanel(Hero.preparedCards), "Cards");
 
 		wtp.registerSettings(new Configuration<TabbedPaneState>("HeroPanel.tabbedPanel"));
 		addToolBarActions("runTrooper", "testTrooper", "stopTrooper", "pauseTrooper");
-		setBodyComponent(wtp);		
-	}
-
-	public TrooperPanel getTrooperPanel() {
-		return trooperPanel;
+		setBodyComponent(wtp);
 	}
 
 	/**

@@ -8,7 +8,11 @@ import java.util.stream.*;
 
 import javax.swing.*;
 
+import com.javaflair.pokerprophesier.api.adapter.*;
+import com.javaflair.pokerprophesier.api.card.*;
+
 import core.*;
+import core.datasource.model.*;
 import gui.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.utils.*;
@@ -68,7 +72,8 @@ public class PokerSimulator {
 	public final UoAHand holeCards = new UoAHand();
 	public final UoAHand currentHand = new UoAHand();
 	public int tablePosition;
-	public int tau;
+
+	public int stimatedVillanTau;
 
 	public final Properties uoAEvaluation = new Properties();
 	private ActionsBarChart actionsBarChart;
@@ -86,10 +91,11 @@ public class PokerSimulator {
 		streetNames.put(TURN_CARD_DEALT, "Turn");
 		streetNames.put(RIVER_CARD_DEALT, "River");
 
-		Map<String, Object> values = Hero.trooperPanel.getValues();
-		this.buyIn = ((Double) values.get("table.buyIn")).intValue();
-		this.bigBlind = ((Double) values.get("table.bigBlid")).intValue();
-		this.smallBlind = ((Double) values.get("table.smallBlid")).intValue();
+		// retrive tablesparameters direct from database
+		SimulatorClient hero = SimulatorClient.findFirst("playerName = ?", "Hero");
+		this.buyIn = hero.getDouble("buyIn");
+		this.bigBlind = hero.getDouble("bigBlind");
+		this.smallBlind = hero.getDouble("smallBlind");
 
 		this.heroChipsMax = -1;
 		this.prevPotValue = -1;
@@ -107,8 +113,6 @@ public class PokerSimulator {
 		jp.add(reportJLabel, BorderLayout.CENTER);
 		jp.add(actionsBarChart.getChartPanel(), BorderLayout.SOUTH);
 		reportPanel.setBodyComponent(jp);
-
-		// clearEnviorement();
 	}
 
 	/**
@@ -194,13 +198,13 @@ public class PokerSimulator {
 	 * @param holeCards - Hole Cards
 	 * @param communityCards - Comunity cards
 	 * @param opponents - number of players ONLY VILLANS
-	 * @param tau - value for tau variable
+	 * @param sVillanTau - stimated value for tau variable (villan)
 	 * @param heroChips - hero chips
 	 * @param potValue - pot
 	 * 
 	 * @return properties
 	 */
-	public static Properties getEvaluation(UoAHand holeCards, UoAHand communityCards, int opponents, int tau,
+	public static Properties getEvaluation(UoAHand holeCards, UoAHand communityCards, int opponents, int sVillanTau,
 			double heroChips, double potValue) {
 		UoAHandEvaluator evaluator = new UoAHandEvaluator();
 		UoAHand allCards = new UoAHand(holeCards + " " + communityCards);
@@ -284,7 +288,7 @@ public class PokerSimulator {
 			 * opponents by raising it to the power of the number of active opponents.
 			 */
 			// set the tau value to compute re weight
-			preflopCardsModel.setPercentage(tau);
+			preflopCardsModel.setPercentage(sVillanTau);
 			UoAHand iBoard = new UoAHand();
 			int iterations = 10000;
 			double ahead = 0, tied = 0, behind = 0;
@@ -364,12 +368,12 @@ public class PokerSimulator {
 		}
 
 		//
-		String[] rcards = {"Jc 4h", "Ac Jc", "5h 2h", "6s 5s", "5s 5h", "5s 3s", "Ac Qd", "7s 5s", "Qs Ts"};
-		for (String rcard : rcards) {
-			// if (rcard.equals(villan.toString().trim())) {
-			// // System.out.println("%7s %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f", weight, );
-			// }
-		}
+		// String[] rcards = {"Jc 4h", "Ac Jc", "5h 2h", "6s 5s", "5s 5h", "5s 3s", "Ac Qd", "7s 5s", "Qs Ts"};
+		// for (String rcard : rcards) {
+		// if (rcard.equals(villan.toString().trim())) {
+		// // System.out.println("%7s %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f", weight, );
+		// }
+		// }
 
 		// is the nuts: hero can loose
 		result.put("isTheNut", false);
@@ -579,7 +583,8 @@ public class PokerSimulator {
 		currentRound = currentHand.size();
 
 		uoAEvaluation.clear();
-		uoAEvaluation.putAll(getEvaluation(holeCards, communityCards, opponents, tau, heroChips, potValue));
+		uoAEvaluation
+				.putAll(getEvaluation(holeCards, communityCards, opponents, stimatedVillanTau, heroChips, potValue));
 
 		// WARNING: theses values ARE NOT available in preflop
 		Ppot = (double) uoAEvaluation.getOrDefault("PPot", 0.0);
@@ -588,7 +593,7 @@ public class PokerSimulator {
 		HS_n = (double) uoAEvaluation.getOrDefault("HS", 0.0);
 
 		// update the simulation result to the console
-		variableList.put("simulator.Troper Min tau Value", tau);
+		variableList.put("simulator.Troper stimated villan tau Value", stimatedVillanTau);
 		variableList.put("simulator.Trooper Current hand",
 				percentageFormat.format(winProb_n) + " " + uoAEvaluation.get("name"));
 		variableList.put("simulator.Table cards",

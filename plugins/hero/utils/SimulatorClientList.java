@@ -22,7 +22,7 @@ import gui.*;
 public class SimulatorClientList extends TUIListPanel {
 
 	public SimulatorClientList() {
-		addToolBarActions("newModel", "editModel", "deleteModel");
+//		addToolBarActions("newModel", "editModel", "deleteModel");
 		setColumns("playerName;client;preflopCards;isActive");
 		// setIconParameters("0;gender-;rehorsegender");
 	}

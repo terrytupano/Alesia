@@ -6,8 +6,6 @@ import java.util.*;
 
 import javax.swing.*;
 
-import plugins.hero.utils.*;
-
 public class PushFold {
 	// User selections
 	private String selectedHand;
