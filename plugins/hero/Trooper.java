@@ -119,6 +119,7 @@ public class Trooper extends Task {
 	 * @return the action to perform
 	 */
 	public TrooperAction getSimulationAction(SimulatorClient client) {
+		Alesia.getInstance().openDB("hero");
 		this.simulatorClient = client;
 		playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
 		clearEnviorement();
@@ -531,8 +532,10 @@ public class Trooper extends Task {
 
 		if (!pfcm.containsHand(pokerSimulator.holeCards)) {
 			txt = "Preflop not in range.";
-			if (strictPreflop)
+			if (strictPreflop) {
+				setVariableAndLog(EXPLANATION, txt);
 				return;
+			}
 		}
 
 		// maxreconammo = base + (inversion * ev)

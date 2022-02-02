@@ -31,6 +31,7 @@ public class GameSimulatorPanel extends TUIFormPanel implements PropertyChangeLi
 	private WebPanel pockerSimulatorPanel, trooperPanelContainer;
 
 	public GameSimulatorPanel() {
+//		SimulatorClient hero = SimulatorClient.findFirst("playerName = ?", "Hero");
 		trooperPanel = new TrooperPanel(new SimulatorClient());
 		TUIUtils.setEnabled(trooperPanel, false);
 

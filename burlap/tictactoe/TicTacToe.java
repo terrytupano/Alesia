@@ -1,9 +1,5 @@
 package burlap.tictactoe;
 
-import burlap.mdp.core.*;
-import burlap.mdp.core.state.*;
-import burlap.mdp.singleagent.model.*;
-
 public class TicTacToe {
 
 	/**

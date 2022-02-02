@@ -148,6 +148,7 @@ public class Hero extends TPlugin {
 
 	@org.jdesktop.application.Action
 	public void gameSimulator(ActionEvent event) {
+		
 		this.simulatorPanel = new GameSimulatorPanel();
 		// trooperPanel = simulatorPanel.getTrooperPanel();
 		Alesia.getInstance().getMainPanel().setContentPanel(simulatorPanel);
@@ -265,7 +266,7 @@ public class Hero extends TPlugin {
 			}
 
 			LazyList<SimulatorClient> clients = SimulatorClient.findAll().orderBy("chair");
-			SimulatorClient hero = SimulatorClient.findFirst("payerName = ?", "Hero");
+			SimulatorClient hero = SimulatorClient.findFirst("playerName = ?", "Hero");
 			int buy = hero.getDouble("buyIn").intValue();
 			int bb = hero.getDouble("bigBlind").intValue();
 			simulationTable = new Table(TableType.NO_LIMIT, buy, bb);

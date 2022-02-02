@@ -3,7 +3,6 @@ package plugins.hero;
 import java.beans.*;
 import java.util.*;
 
-import org.apache.poi.hwpf.model.types.*;
 import org.javalite.activejdbc.*;
 
 import com.alee.laf.combobox.*;
@@ -20,7 +19,7 @@ import plugins.hero.utils.*;
  * Pannel with all configuration parameters for the trooper.
  * 
  * @author terry
- *
+ * 
  */
 public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener {
 
@@ -44,10 +43,12 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		addInputComponent(TUIUtils.getNumericTextField("oppLowerBound", model, columns), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("playTime", model, columns), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("playUntil", model, columns), false, true);
-
+		String tparm = null;
 		String c = model.getString("currency");
-		String tparm = model.getString("buyIn") + "," + model.getString("bigBlind") + ","
-				+ model.getString("smallBlind") + ("".equals(c.trim()) ? "" : "," + c);
+		if (c != null) {
+			tparm = model.getString("buyIn") + "," + model.getString("bigBlind") + "," + model.getString("smallBlind")
+					+ ("".equals(c.trim()) ? "" : "," + c);
+		}
 		addInputComponent(TUIUtils.getTWebComboBox("tableParameters", "table.parameters0", tparm));
 
 		FormLayout layout = new FormLayout("left:pref, 3dlu, left:pref, 7dlu, left:pref, 3dlu, left:pref");
@@ -58,13 +59,13 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		builder.nextLine();
 		builder.append(TStringUtils.getString("tableParameters"), getInputComponent("tableParameters"), 5);
 		builder.nextLine();
-		builder.append("Preflop cards", getInputComponent("preflopCards"));
-		builder.append("Tau", getInputComponent("tau"));
+		builder.append(TStringUtils.getString("preflopCards"), getInputComponent("preflopCards"));
+		builder.append(TStringUtils.getString("tau"), getInputComponent("tau"));
 		builder.nextLine();
-		builder.append("Reconn: Base", getInputComponent("reconnBase"));
-		builder.append("Reconn: Band", getInputComponent("reconnBand"));
+		builder.append(TStringUtils.getString("reconnBase"), getInputComponent("reconnBase"));
+		builder.append(TStringUtils.getString("reconnBand"), getInputComponent("reconnBand"));
 		builder.nextLine();
-		builder.append("oppLowerBound", getInputComponent("oppLowerBound"));
+		builder.append(TStringUtils.getString("oppLowerBound"), getInputComponent("oppLowerBound"));
 		builder.nextLine();
 		builder.append(getInputComponent("takeOpportunity"));
 		builder.append(getInputComponent("strictPreflop"));
@@ -73,20 +74,22 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 
 	@Override
 	public Map<String, Object> getValues() {
-
-		// parse tableparameters to oll implementation format
+		// parse tableparameters
 		Map values = super.getValues();
 		String[] tparms = values.get("tableParameters").toString().split("[,]");
-		values.put("table.buyIn", new Double(tparms[0]));
-		values.put("table.bigBlid", new Double(tparms[1]));
-		values.put("table.smallBlid", new Double(tparms[2]));
+		values.put("buyIn", new Double(tparms[0]));
+		values.put("bigBlind", new Double(tparms[1]));
+		values.put("smallBlind", new Double(tparms[2]));
 		// simbol if its present of "" if not
-		values.put("table.currency", tparms.length > 3 ? tparms[3] : "");
-		return super.getValues();
+		values.put("currency", tparms.length > 3 ? tparms[3] : "");
+		return values;
 	}
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		System.out.println(evt);
+		Object act = evt.getNewValue();
+		if (TActionsFactory.ACTION_PERFORMED.equals(evt.getPropertyName()) && act != null) {
+			getModel().save();
+		}
 	}
 }

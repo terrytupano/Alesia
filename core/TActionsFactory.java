@@ -91,6 +91,8 @@ public class TActionsFactory {
 	public static String ACTION_PERFORMED = "actionPerformed";
 	
 	private static void disposeDialog(TUIFormPanel tuifp, ApplicationAction action) {
+		// force firepropoertychangelister
+		tuifp.putClientProperty(ACTION_PERFORMED, null);
 		tuifp.putClientProperty(ACTION_PERFORMED, action);
 		Window root = SwingUtilities.getWindowAncestor(tuifp);
 		if (root instanceof JDialog) {
