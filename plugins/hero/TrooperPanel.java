@@ -40,7 +40,7 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		addInputComponent(TUIUtils.getNumericTextField("reconnBase", model, columns), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("reconnBand", model, columns), false, true);
 		addInputComponent(TUIUtils.getWebCheckBox("takeOpportunity", model.getBoolean("takeOpportunity")));
-		addInputComponent(TUIUtils.getNumericTextField("oppLowerBound", model, columns), false, true);
+		addInputComponent(TUIUtils.getNumericTextField("phi", model, columns), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("playTime", model, columns), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("playUntil", model, columns), false, true);
 		String tparm = null;
@@ -65,7 +65,7 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		builder.append(TStringUtils.getString("reconnBase"), getInputComponent("reconnBase"));
 		builder.append(TStringUtils.getString("reconnBand"), getInputComponent("reconnBand"));
 		builder.nextLine();
-		builder.append(TStringUtils.getString("oppLowerBound"), getInputComponent("oppLowerBound"));
+		builder.append(TStringUtils.getString("phi"), getInputComponent("phi"));
 		builder.nextLine();
 		builder.append(getInputComponent("takeOpportunity"));
 		builder.append(getInputComponent("strictPreflop"));

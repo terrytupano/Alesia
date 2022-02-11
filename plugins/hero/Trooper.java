@@ -175,9 +175,9 @@ public class Trooper extends Task {
 
 	/**
 	 * this method check the oportunity parameter and act accordinly. when Hero is in range of the parameter
-	 * <code>oppLowerBound</code> and the hero cards are in range of the preflop card distribution named
-	 * <b>oportunity</b> this method will return <code>true</code> and override the main variable
-	 * {@link #availableActions} and set only raise all actions for hero to take the oportunity
+	 * <code>phi</code> and the hero cards are in range of the preflop card distribution named <b>oportunity</b> this
+	 * method will return <code>true</code> and override the main variable {@link #availableActions} and set only raise
+	 * all actions for hero to take the oportunity
 	 * 
 	 * @return <code>true</code> for oportunity, <code>false</code> oetherwise
 	 */
@@ -200,47 +200,17 @@ public class Trooper extends Task {
 
 		// posflop
 		if (pokerSimulator.currentRound >= PokerSimulator.FLOP_CARDS_DEALT) {
-			// SIMMULATION MEASUREMENT: rankBehind: measure the ralation bettwen the rankBehind value and winnnigs: the
-			// ideas is find the +EV for the max number of behind cards
-			// int val = (int) pokerSimulator.uoAEvaluation.get("rankBehind");
-			// if (val < 20) {
-			// int x = -1, y = -1, z = -1;
-			// if (pokerSimulator.currentRound == PokerSimulator.FLOP_CARDS_DEALT)
-			// x = val;
-			// if (pokerSimulator.currentRound == PokerSimulator.TURN_CARD_DEALT)
-			// y = val;
-			// if (pokerSimulator.currentRound == PokerSimulator.RIVER_CARD_DEALT)
-			// z = val;
-			// positiveEvent.put("value", "(" + x + ", " + y + ", " + z + ")");
-			// positiveEvent.put("name", "rankBehind");
-			// txt = "Measuring ...";
-			// }
+			int phi = parameter.getInteger("phi");
+			double rb = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
+			if (rb <= phi)
+				txt = "rankBehind <= " + phi + " %";
 
 			if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
 				txt = "Is the Nuts.";
-
-			// double minWin = Integer.parseInt(parameters.get("oppLowerBound").toString()) / 100d;
-			// if (pokerSimulator.winProb_n >= minWin) {
-			if (pokerSimulator.winProb_n > 0.5) {
-				// txt = String.format("%1.3f >= %1.3f", pokerSimulator.winProb_n, minWin);
-
-				// SIMMULATION MEASUREMENT: oppLowerBound: event measure the win probability on every street.
-				// positiveEvent.put("name", "oppLowerBound");
-				// int val = (int) (pokerSimulator.winProb_n * 10);
-				// int x = 0, y = 0, z = 0;
-				// if (pokerSimulator.currentRound == PokerSimulator.FLOP_CARDS_DEALT)
-				// x = val;
-				// if (pokerSimulator.currentRound == PokerSimulator.TURN_CARD_DEALT)
-				// y = val;
-				// if (pokerSimulator.currentRound == PokerSimulator.RIVER_CARD_DEALT)
-				// z = val;
-				// positiveEvent.put("value", "(" + x + ", " + y + ", " + z + ")");
-			}
 		}
 
 		if (txt != null) {
 			setVariableAndLog(EXPLANATION, "--- OPORTUNITY DETECTED " + txt + " ---");
-			availableActions.clear();
 			subObtimalDist = "UniformReal";
 			loadActions(pokerSimulator.heroChips);
 
@@ -272,7 +242,7 @@ public class Trooper extends Task {
 		outGameStats.addValue(tt);
 		time1 = System.currentTimeMillis();
 		// read troper variables again
-		parameter = SimulatorClient.findFirst("playername = ?", "Hero");		
+		parameter = SimulatorClient.findFirst("playername = ?", "Hero");
 		Hero.heroLogger.fine("Game play time average=" + TStringUtils.formatSpeed((long) outGameStats.getMean()));
 	}
 
@@ -364,7 +334,7 @@ public class Trooper extends Task {
 		// while ((ele < mode - actran) || (ele > mode + actran)) {
 		// ele = (int) tdist.sample();
 		// }
-		
+
 		int ele = (int) tdist.sample();
 		TrooperAction selact = actProb.elementAt(ele).getKey();
 		pokerSimulator.setActionsData(selact, actProb);
