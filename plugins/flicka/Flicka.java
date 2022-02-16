@@ -123,7 +123,7 @@ public class Flicka extends TPlugin {
 		dockablePane.registerSettings(
 				new com.alee.managers.settings.Configuration<DockablePaneState>("FlickaDockablePane"));
 
-		Alesia.getInstance().getMainPanel().setContentPanel(dockablePane);
+		Alesia.getInstance().getMainPanel().showPanel(dockablePane);
 	}
 
 	/**

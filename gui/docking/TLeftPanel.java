@@ -19,10 +19,10 @@ public class TLeftPanel extends WebPanel {
 	public static Dimension colapsedDim = new Dimension(48, -1);
 	public static Dimension expandedDim = new Dimension(142, -1);
 	ActionMap actionMap;
-	private DockingContainer container;
+	private TDockingContainer container;
 	private ArrayList<WebButton> buttons;
 
-	public TLeftPanel(DockingContainer container) {
+	public TLeftPanel(TDockingContainer container) {
 		super(StyleId.of("LeftPanel"));
 		this.container = container;
 		// set preferred size first to allow compute golden ration for icons
@@ -74,8 +74,8 @@ public class TLeftPanel extends WebPanel {
 
 	@org.jdesktop.application.Action
 	public void settings(ActionEvent event) {
-		TSettingsPanel ts = new TSettingsPanel();
-		container.setContentPanel(ts);
+		HomePanel ts = new HomePanel();
+		container.showPanel(ts);
 	}
 
 	@org.jdesktop.application.Action

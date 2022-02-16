@@ -67,7 +67,7 @@ public class Alesia extends Application {
 
 	public TTaskManager taskManager;
 
-	private DockingContainer mainPanel;
+	private TDockingContainer mainPanel;
 	private DB alesiaDB;
 
 	private TPluginManager pluginManager;
@@ -77,7 +77,7 @@ public class Alesia extends Application {
 		return (Alesia) a;
 	}
 
-	public DockingContainer getMainPanel() {
+	public TDockingContainer getMainPanel() {
 		return mainPanel;
 	}
 
@@ -437,15 +437,14 @@ public class Alesia extends Application {
 		// requestAutentication();
 
 		// load left panel actions
-		mainPanel = new DockingContainer();
-		TLeftPanel leftPanel = mainPanel.getLeftPanel();
+		mainPanel = new TDockingContainer();
+		HomePanel homePanel = mainPanel.getHomePanel();
 		ArrayList<DetectedPlugin<TPlugin>> dplist = new ArrayList<>(pluginManager.getDetectedPlugins());
 		ArrayList<Action> alist = new ArrayList<>();
 		for (DetectedPlugin<TPlugin> dp : dplist) {
 			alist.addAll(dp.getPlugin().getUI(TPluginManager.leftPanelUI));
 		}
-		leftPanel.appendActions((Action[]) alist.toArray(new Action[alist.size()]));
-
+		homePanel.setActions(alist);
 		Alesia.getInstance().getMainFrame().setContentPane(mainPanel);
 	}
 

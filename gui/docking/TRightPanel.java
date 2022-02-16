@@ -40,7 +40,7 @@ public class TRightPanel extends WebPanel implements FocusListener {
 	}
 	public void setActions(Action invoker, Action... actions) {
 		titleLable.setText((String) invoker.getValue(Action.NAME));
-		ArrayList<WebButton> lst = DockingContainer.createNavButtons(null, "RightPanelButton", TUIUtils.H2_Font, actions);
+		ArrayList<WebButton> lst = TDockingContainer.createNavButtons(null, "RightPanelButton", TUIUtils.H2_Font, actions);
 		WebPanel jp = new WebPanel(StyleId.of("RightPanel"));
 		jp.setLayout(new VerticalFlowLayout());
 		JComponent gf = null;

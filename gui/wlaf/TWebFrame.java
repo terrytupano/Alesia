@@ -26,6 +26,11 @@ public class TWebFrame extends WebFrame {
 	private ComponentTransition transitionPanel;
 	private JComponent splashPanel, contentPanel;
 	private JLabel splashIncrementLabel;
+	private Icon splashIcon;
+	private String splashTitleText;
+	private Font splashTitleFont;
+	private String splashSubtitleText;
+	private Font splashSubtitleFont;
 
 	public TWebFrame() {
 		super();
@@ -67,31 +72,6 @@ public class TWebFrame extends WebFrame {
 	}
 
 	/**
-	 * Return a {@link Rectangle} center on this frame {@link GraphicsConfiguration} and size based on factor f
-	 * 
-	 * @param factor - size factor
-	 * @return bounds
-	 */
-	public Rectangle getBoundByFactor(double factor) {
-		return getBoundByFactor(factor, factor);
-	}
-
-	/**
-	 * Return a {@link Rectangle} center on this frame {@link GraphicsConfiguration} and size based on the sith and
-	 * height arguments.
-	 * 
-	 * @param withFactor - width factor
-	 * @param heightFactor - height factor
-	 * @return center rectangle
-	 */
-	public Rectangle getBoundByFactor(double withFactor, double heightFactor) {
-		Rectangle gcr = getGraphicsConfiguration().getBounds();
-		Rectangle rr = new Rectangle(0, 0, (int) (gcr.width * withFactor), (int) (gcr.height * heightFactor));
-		center(gcr, rr);
-		return rr;
-	}
-
-	/**
 	 * center the r2 rectangle based on r1 coordenates
 	 * 
 	 * @param r1 - base rectangle
@@ -108,13 +88,6 @@ public class TWebFrame extends WebFrame {
 		TWebFrame.center(r1, r2);
 		return new Point(r2.x - (r2.width), r2.y - (r2.height / 2));
 	}
-
-	public void setContent(JComponent c) {
-		this.contentPanel = c;
-		splashPanel.setPreferredSize(contentPanel.getPreferredSize());
-		transitionPanel.setContent(contentPanel);
-	}
-
 	/**
 	 * Calc new rectangle resulting that is centered based on src rectangle
 	 * 
@@ -132,18 +105,70 @@ public class TWebFrame extends WebFrame {
 		dest.y -= hy;
 		return dest;
 	}
+	private static Font getFont(final int style, final float size) {
+		return (new JLabel()).getFont().deriveFont(style, size);
+	}
+	/**
+	 * Return a {@link Rectangle} center on this frame {@link GraphicsConfiguration} and size based on factor f
+	 * 
+	 * @param factor - size factor
+	 * @return bounds
+	 */
+	public Rectangle getBoundByFactor(double factor) {
+		return getBoundByFactor(factor, factor);
+	}
+	/**
+	 * Return a {@link Rectangle} center on this frame {@link GraphicsConfiguration} and size based on the sith and
+	 * height arguments.
+	 * 
+	 * @param withFactor - width factor
+	 * @param heightFactor - height factor
+	 * @return center rectangle
+	 */
+	public Rectangle getBoundByFactor(double withFactor, double heightFactor) {
+		Rectangle gcr = getGraphicsConfiguration().getBounds();
+		Rectangle rr = new Rectangle(0, 0, (int) (gcr.width * withFactor), (int) (gcr.height * heightFactor));
+		center(gcr, rr);
+		return rr;
+	}
+	public Icon getSplashIcon() {
+		return splashIcon;
+	}
 
+	public String getSplashSubtitleText() {
+		return splashSubtitleText;
+	}
+	public String getSplashTitleText() {
+		return splashTitleText;
+	}
 	/**
 	 * @return the transitionPanel
 	 */
 	public ComponentTransition getTransitionPanel() {
 		return transitionPanel;
 	}
-	private Icon splashIcon;
-	private String splashTitleText;
-	private Font splashTitleFont;
-	private String splashSubtitleText;
-	private Font splashSubtitleFont;
+
+	public void setContent(JComponent c) {
+		this.contentPanel = c;
+		splashPanel.setPreferredSize(contentPanel.getPreferredSize());
+		transitionPanel.setContent(contentPanel);
+	}
+
+	public void setSplashIcon(Icon splashIcon) {
+		this.splashIcon = splashIcon;
+	}
+
+	public void setSplashIncrementText(String text) {
+		splashIncrementLabel.setText(text);
+	}
+
+	public void setSplashSubtitleText(String splashSubtitleText) {
+		this.splashSubtitleText = splashSubtitleText;
+	}
+
+	public void setSplashTitleText(String splashTitleText) {
+		this.splashTitleText = splashTitleText;
+	}
 
 	private JComponent buildSplash() {
 		JLabel splashTitleLabel;
@@ -172,44 +197,14 @@ public class TWebFrame extends WebFrame {
 		bui.add(splashIncrementLabel, cc.xy(2, 6));
 		return bui.getPanel();
 	}
-	public Icon getSplashIcon() {
-		return splashIcon;
-	}
-	public void setSplashIncrementText(String text) {
-		splashIncrementLabel.setText(text);
-	}
-
-	public void setSplashIcon(Icon splashIcon) {
-		this.splashIcon = splashIcon;
-	}
-
-	public String getSplashTitleText() {
-		return splashTitleText;
-	}
-
-	public void setSplashTitleText(String splashTitleText) {
-		this.splashTitleText = splashTitleText;
-	}
-
-	public String getSplashSubtitleText() {
-		return splashSubtitleText;
-	}
-
-	public void setSplashSubtitleText(String splashSubtitleText) {
-		this.splashSubtitleText = splashSubtitleText;
-	}
-
-	private Font getSplashTitleFont() {
-//		return (this.splashTitleFont != null) ? this.splashTitleFont : getFont(Font.PLAIN, 72);
-		return (this.splashTitleFont != null) ? this.splashTitleFont : new Font("MagistralC",Font.PLAIN, 72);
-	}
 
 	private Font getSplashSubitleFont() {
 		return (this.splashSubtitleFont != null) ? this.splashSubtitleFont : getFont(Font.PLAIN, 24);
 	}
 
-	private static Font getFont(final int style, final float size) {
-		return (new JLabel()).getFont().deriveFont(style, size);
+	private Font getSplashTitleFont() {
+//		return (this.splashTitleFont != null) ? this.splashTitleFont : getFont(Font.PLAIN, 72);
+		return (this.splashTitleFont != null) ? this.splashTitleFont : new Font("MagistralC",Font.PLAIN, 72);
 	}
 
 	private Color getSplashTitleForeground() {

@@ -186,28 +186,27 @@ public class Trooper extends Task {
 			return false;
 
 		String txt = null;
-
-		// Preflop: the direct selection of the preflop distribution
-		// take control of the preflop card distributions (5% card selection ist direct correlate with 5% bluff
-		// frecuence).
+		int phi = parameter.getInteger("phi");
+		
+		// 220215: 2 result from simulation: 2%
 		// TODO: this decition is predictable and easy exploitable after a few hands. maybe muss be controled randomly
 		if (pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
 			PreflopCardsModel opppcs = preFlopCardsDist.get("oportunity");
+			opppcs.setPercentage(phi);
 			if (opppcs.containsHand(pokerSimulator.holeCards)) {
 				txt = "Current Hole cards in oportunity range.";
 			}
 		}
 
 		// posflop
-		if (pokerSimulator.currentRound >= PokerSimulator.FLOP_CARDS_DEALT) {
-			int phi = parameter.getInteger("phi");
-			double rb = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
-			if (rb <= phi)
-				txt = "rankBehind <= " + phi + " %";
-
-			if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
-				txt = "Is the Nuts.";
-		}
+//		if (pokerSimulator.currentRound >= PokerSimulator.FLOP_CARDS_DEALT) {
+//			double rb = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
+//			if (rb <= phi)
+//				txt = "rankBehind <= " + phi + " %";
+//
+//			if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
+//				txt = "Is the Nuts.";
+//		}
 
 		if (txt != null) {
 			setVariableAndLog(EXPLANATION, "--- OPORTUNITY DETECTED " + txt + " ---");

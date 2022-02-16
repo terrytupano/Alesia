@@ -67,6 +67,7 @@ public class TUIUtils {
 	public static final int V_GAP = 4;
 	public static final Font H1_Font = UIManager.getFont("Label.font").deriveFont(20l);
 	public static final Font H2_Font = UIManager.getFont("Label.font").deriveFont(16l);
+	public static final Color ACCENT_COLOR = new Color(17, 48, 68);
 
 	/**
 	 * copiado de <code>Color.brighter()</code> pero con el factor modificado para obtener un mejor degradado

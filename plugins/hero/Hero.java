@@ -151,7 +151,7 @@ public class Hero extends TPlugin {
 		
 		this.simulatorPanel = new GameSimulatorPanel();
 		// trooperPanel = simulatorPanel.getTrooperPanel();
-		Alesia.getInstance().getMainPanel().setContentPanel(simulatorPanel);
+		Alesia.getInstance().getMainPanel().showPanel(simulatorPanel);
 	}
 
 	@Override
@@ -167,7 +167,7 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public void heroPanel(ActionEvent event) {
 		heroPanel = new HeroPanel();
-		Alesia.getInstance().getMainPanel().setContentPanel(heroPanel);
+		Alesia.getInstance().getMainPanel().showPanel(heroPanel);
 		// temp: change the main frame using this coordenates: 0,40 547,735
 		// temporal: must be loaded from troperPanel
 		// tableFile = new File("plugins/hero/resources/ps-main table.ppt");
@@ -189,7 +189,7 @@ public class Hero extends TPlugin {
 	public void preFlopCardsRange(ActionEvent event) {
 		// this method is called by #savePreflopRange
 		PreFlopCardsPanel panel = new PreFlopCardsPanel();
-		Alesia.getInstance().getMainPanel().setContentPanel(panel);
+		Alesia.getInstance().getMainPanel().showPanel(panel);
 	}
 
 	@org.jdesktop.application.Action
@@ -339,7 +339,7 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public void uoAEvaluator(ActionEvent event) {
 		UoAPanel aPanel = new UoAPanel();
-		Alesia.getInstance().getMainPanel().setContentPanel(aPanel);
+		Alesia.getInstance().getMainPanel().showPanel(aPanel);
 	}
 
 	private void initTrooperEnviorement() {

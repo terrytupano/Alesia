@@ -481,8 +481,9 @@ public class TStringUtils {
 		Font f = HTMLUtils.getDefaultTextFont();
 		String name = f.getFamily();
 		int siz = f.getSize();
-		String patt = "<html><p style='font-family: " + name + "; font-size: 15;'><title></p>"
-				+ "<p style='font-family: " + name + "; font-size: " + siz + ";'><message></html>";
+		String patt = "<html><p style='font-family: " + name + "; font-size: 15; color: "
+				+ ColorUtils.toHex(TUIUtils.ACCENT_COLOR) + ";'><title></p>" + "<p style='font-family: " + name
+				+ "; font-size: " + siz + ";'><message></html>";
 		String msg = patt.replace("<title>", title);
 		msg = msg.replace("<message>", message);
 		return msg;
