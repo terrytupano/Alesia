@@ -3,15 +3,9 @@ package gui.wlaf;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
-import java.util.concurrent.*;
 
 import javax.swing.*;
 
-import org.jdesktop.core.animation.timing.*;
-import org.jdesktop.swing.animation.timing.sources.*;
-
-import com.alee.extended.transition.*;
-import com.alee.extended.transition.effects.fade.*;
 import com.alee.laf.rootpane.*;
 import com.alee.laf.window.*;
 import com.alee.managers.settings.*;
@@ -22,9 +16,7 @@ import core.*;
 
 public class TWebFrame extends WebFrame {
 
-	private static Animator frameAnimator;
-	private ComponentTransition transitionPanel;
-	private JComponent splashPanel, contentPanel;
+	private JComponent splashPanel;
 	private JLabel splashIncrementLabel;
 	private Icon splashIcon;
 	private String splashTitleText;
@@ -34,39 +26,25 @@ public class TWebFrame extends WebFrame {
 
 	public TWebFrame() {
 		super();
-		transitionPanel = new ComponentTransition();
-		transitionPanel.setTransitionEffect(new FadeTransitionEffect());
 		setSplashTitleText(Alesia.getInstance().getResourceMap().getString("name"));
 		setSplashSubtitleText(Alesia.getInstance().getResourceMap().getString("description"));
 		splashIncrementLabel = new JLabel("xxx");
-		
+
 		// waitComponent = new WaitPanel();
 		splashPanel = buildSplash();
-		transitionPanel.setContent(splashPanel);
-		setContentPane(transitionPanel);
+		setContentPane(splashPanel);
 
 		setTitle(TStringUtils.getString("title"));
 		Vector v = new Vector();
 		v.add(TResources.getIcon("Alesia", 16).getImage());
 		v.add(TResources.getIcon("Alesia", 32).getImage());
 		setIconImages(v);
-
-		// TODO: comented due ps problems. fix
-		// setSize(new Dimension(800, 600));
-		// setLocationRelativeTo(null);
-
 		WindowAdapter ad = new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
 				Alesia.getInstance().exit();
 			}
 		};
 		addWindowListener(ad);
-
-		SwingTimerTimingSource ts = new SwingTimerTimingSource();
-		AnimatorBuilder.setDefaultTimingSource(ts);
-		frameAnimator = new AnimatorBuilder().setDuration(250, TimeUnit.MILLISECONDS).build();
-		// ts.init();
-
 		registerSettings(new Configuration<WindowState>("TWebFrame"));
 
 	}
@@ -141,18 +119,6 @@ public class TWebFrame extends WebFrame {
 	public String getSplashTitleText() {
 		return splashTitleText;
 	}
-	/**
-	 * @return the transitionPanel
-	 */
-	public ComponentTransition getTransitionPanel() {
-		return transitionPanel;
-	}
-
-	public void setContent(JComponent c) {
-		this.contentPanel = c;
-		splashPanel.setPreferredSize(contentPanel.getPreferredSize());
-		transitionPanel.setContent(contentPanel);
-	}
 
 	public void setSplashIcon(Icon splashIcon) {
 		this.splashIcon = splashIcon;
@@ -181,7 +147,7 @@ public class TWebFrame extends WebFrame {
 		} else {
 			splashTitleLabel = null;
 		}
-		
+
 		JLabel splashSubtitleLabel = null;
 		if (this.splashSubtitleText != null) {
 			splashSubtitleLabel = new JLabel(this.splashSubtitleText);
@@ -203,8 +169,8 @@ public class TWebFrame extends WebFrame {
 	}
 
 	private Font getSplashTitleFont() {
-//		return (this.splashTitleFont != null) ? this.splashTitleFont : getFont(Font.PLAIN, 72);
-		return (this.splashTitleFont != null) ? this.splashTitleFont : new Font("MagistralC",Font.PLAIN, 72);
+		// return (this.splashTitleFont != null) ? this.splashTitleFont : getFont(Font.PLAIN, 72);
+		return (this.splashTitleFont != null) ? this.splashTitleFont : new Font("MagistralC", Font.PLAIN, 72);
 	}
 
 	private Color getSplashTitleForeground() {

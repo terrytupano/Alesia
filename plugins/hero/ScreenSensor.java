@@ -140,7 +140,7 @@ public class ScreenSensor extends JPanel {
 		if (Hero.isTestMode) {
 			// from the ppt file background
 			ImageIcon ii = sensorsArray.getSensorDisposition().getBackgroundImage();
-			BufferedImage bgimage = ImageUtils.getBufferedImage(ii);
+			BufferedImage bgimage = ImageUtils.copyToBufferedImage(ii);
 			capturedImage = bgimage.getSubimage(bou.x, bou.y, bou.width, bou.height);
 		} else {
 			// from the screen

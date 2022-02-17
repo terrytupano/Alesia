@@ -98,7 +98,7 @@ public class Flicka extends TPlugin {
 	@org.jdesktop.application.Action
 	public void flicka(ActionEvent event) {
 		WebDockablePane dockablePane = new WebDockablePane();
-		dockablePane.setSidebarVisibility(SidebarVisibility.never);
+		dockablePane.setSidebarButtonVisibility(SidebarButtonVisibility.never);
 
 		WebDockableFrame DBE = getWebDockableFrame(new DBExplorer(), "Flicka RESLR explorer", "DBExplorer");
 		DBE.setPosition(CompassDirection.west);

@@ -22,7 +22,6 @@ import com.jgoodies.forms.layout.*;
 
 import core.*;
 import dev.utils.*;
-import gui.html.*;
 import gui.wlaf.*;
 
 /**
@@ -477,10 +476,10 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 
 		// }
 		// html text
-		if (jcmp instanceof HTMLEditor) {
-			val = ((HTMLEditor) jcmp).getText();
-			return val;
-		}
+		// if (jcmp instanceof HTMLEditor) {
+		// val = ((HTMLEditor) jcmp).getText();
+		// return val;
+		// }
 		// boolean
 		if (jcmp instanceof JCheckBox) {
 			val = new Boolean(((JCheckBox) jcmp).isSelected());

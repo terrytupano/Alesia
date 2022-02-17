@@ -25,6 +25,7 @@ import java.util.List;
 
 import javax.swing.*;
 
+import com.alee.api.resource.*;
 import com.alee.extended.layout.*;
 import com.alee.laf.button.*;
 import com.alee.laf.text.*;
@@ -86,15 +87,17 @@ public class TableDialog extends JDialog implements Client {
 		// cache all cards
 		List<File> files = FileUtils.findFilesRecursively("plugins/hero/resources/playCards", f -> true);
 		for (File file : files) {
-			cardsBuffer.put(file.getName().substring(0, file.getName().length() - 4), ImageUtils.getImageIcon(file));
+			FileResource resource = new FileResource(file);
+			cardsBuffer.put(file.getName().substring(0, file.getName().length() - 4),
+					ImageUtils.loadImageIcon(resource));
 		}
 		boardPanel = new BoardPanel();
 		this.table = table;
 		this.players = table.getPlayers();
 		playerPanels = new HashMap<String, PlayerPanel>();
-		
+
 		// players positions in table
-		 Hashtable<Integer, PlayerPanel> chairs = new Hashtable<>();
+		Hashtable<Integer, PlayerPanel> chairs = new Hashtable<>();
 
 		for (Player player : players) {
 			PlayerPanel panel = new PlayerPanel();
@@ -143,10 +146,10 @@ public class TableDialog extends JDialog implements Client {
 		// set ui components
 		FormLayout layout = new FormLayout("center:90dlu, center:90dlu, center:90dlu, center:90dlu",
 				"center:pref, 3dlu, center:pref, 3dlu, center:pref, 3dlu, center:pref, 3dlu, fill:80dlu");
-//		PanelBuilder builder = new PanelBuilder(layout, new FormDebugPanel());
-		 PanelBuilder builder = new PanelBuilder(layout);
-		 
-//		ArrayList<PlayerPanel> playerP = new ArrayList<>(playerPanels.values());
+		// PanelBuilder builder = new PanelBuilder(layout, new FormDebugPanel());
+		PanelBuilder builder = new PanelBuilder(layout);
+
+		// ArrayList<PlayerPanel> playerP = new ArrayList<>(playerPanels.values());
 		builder.nextColumn();
 		builder.add(chairs.get(3));
 		builder.nextColumn();
@@ -155,7 +158,7 @@ public class TableDialog extends JDialog implements Client {
 
 		builder.add(chairs.get(2));
 		builder.nextColumn(2);
-		builder.add(boardPanel, CC.rchw(3, 2, 3,2));
+		builder.add(boardPanel, CC.rchw(3, 2, 3, 2));
 		builder.nextColumn();
 		builder.add(chairs.get(5));
 		builder.nextLine(2);

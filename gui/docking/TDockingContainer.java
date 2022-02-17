@@ -23,10 +23,12 @@ import javax.swing.border.*;
 
 import org.jdesktop.application.*;
 
-import com.alee.extended.layout.*;
 import com.alee.extended.panel.*;
 import com.alee.extended.statusbar.*;
 import com.alee.extended.transition.*;
+import com.alee.extended.transition.effects.*;
+import com.alee.extended.transition.effects.curtain.*;
+import com.alee.extended.transition.effects.slide.*;
 import com.alee.laf.button.*;
 import com.alee.laf.label.*;
 import com.alee.laf.panel.*;
@@ -38,16 +40,17 @@ import com.jgoodies.common.base.*;
 import core.*;
 import gui.*;
 
-public class TDockingContainer extends JPanel {
+public class TDockingContainer extends WebPanel {
 
 	private ComponentTransition transitionPanel;
 	private WebToolBar toolBar;
+	private SlideTransitionEffect effect;
 	private HomePanel homePanel;
 	private ApplicationAction home, previous, next;
 	private ActionMap myMap;
 	private boolean navAction;
-	private int currentComponent;
-	private Vector<JComponent> components;
+	private int cmpCounter;
+	private Vector<JComponent> cmpList;
 
 	public TDockingContainer() {
 		super(new BorderLayout());
@@ -57,18 +60,7 @@ public class TDockingContainer extends JPanel {
 		this.previous = (ApplicationAction) myMap.get("previous");
 		this.home = (ApplicationAction) myMap.get("home");
 		this.next = (ApplicationAction) myMap.get("next");
-		this.toolBar = new WebToolBar(StyleId.toolbarUndecorated);
-		TUIUtils.overRideIcons(16, Color.black, previous);
-		TUIUtils.overRideIcons(16, Color.black, home);
-		TUIUtils.overRideIcons(16, Color.black, next);
-		GroupPanel grp1 = new GroupPanel(new JButton(previous), new JButton(home), new JButton(next));
-		// SwingUtils.equalizeComponentsWidth(grp.getComponents());
-		toolBar.add(grp1);
-		// toolBar.add(ffGroup, ToolbarLayout.END);
-
-		// in future, minim, max and close
-		// WebButtonGroup ffGroup = getButtonGroup();
-		// toolBar.add(min, ToolbarLayout.END);
+		this.toolBar = TUIUtils.getWebToolBar(previous, home, next);
 
 		// staus bar
 		WebStatusBar statusBar = new WebStatusBar();
@@ -78,26 +70,31 @@ public class TDockingContainer extends JPanel {
 		statusBar.addToEnd(Alesia.getInstance().taskManager.getProgressBar());
 
 		transitionPanel = new ComponentTransition();
+		transitionPanel.setContent(TUIUtils.getBackgroundPanel());
 
-		this.components = new Vector();
-		this.currentComponent = -1;
+		// Transition effect
+		effect = new SlideTransitionEffect();
+		effect.setDirection(Direction.left);
+		effect.setType(SlideType.moveBoth);
+		effect.setSpeed(50);
+
+		// CurtainTransitionEffect effect = new CurtainTransitionEffect();
+		// effect.setDirection(com.alee.extended.transition.effects.Direction.down);
+		// effect.setType(CurtainType.fade);
+		// effect.setSpeed(9);
+
+		transitionPanel.setTransitionEffect(effect);
+
+		this.cmpList = new Vector();
+		this.cmpCounter = -1;
 		this.navAction = false;
 		sincronizeNavigation();
 		this.homePanel = new HomePanel();
 
 		add(toolBar, BorderLayout.NORTH);
+		add(transitionPanel, BorderLayout.CENTER);
 		add(statusBar, BorderLayout.SOUTH);
 		showPanel(homePanel);
-
-		// transitionPanel.setContent(rootWindow);
-		// transitionPanel.setContent(backgroundPanel);
-
-		// Transition effect
-		// final CurtainTransitionEffect effect = new CurtainTransitionEffect();
-		// effect.setDirection(com.alee.extended.transition.effects.Direction.down);
-		// effect.setType(CurtainType.fade);
-		// effect.setSpeed(9);
-		// transitionPanel.setTransitionEffect(effect);
 	}
 
 	public static ArrayList<WebButton> createNavButtons(Color toColor, String style, Font font, Action... actions) {
@@ -137,7 +134,7 @@ public class TDockingContainer extends JPanel {
 		btn.setIconTextGap(8);
 		btn.setVerticalAlignment(SwingConstants.TOP);
 		btn.setHorizontalAlignment(SwingConstants.LEFT);
-//		btn.setVerticalTextPosition(SwingConstants.TOP);
+		// btn.setVerticalTextPosition(SwingConstants.TOP);
 		return btn;
 	}
 	/**
@@ -192,45 +189,48 @@ public class TDockingContainer extends JPanel {
 
 	@org.jdesktop.application.Action
 	public void home(ActionEvent event) {
+		effect.setDirection(Direction.right);
 		showPanel(homePanel);
 	}
 
 	@org.jdesktop.application.Action
 	public void next(ActionEvent event) {
 		navAction = true;
-		remove(components.elementAt(currentComponent));
-		showPanel(components.elementAt(++currentComponent));
+		effect.setDirection(Direction.left);
+//		remove(cmpList.elementAt(cmpCounter));
+		showPanel(cmpList.elementAt(++cmpCounter));
 	}
 
 	@org.jdesktop.application.Action
 	public void previous(ActionEvent event) {
 		navAction = true;
-		remove(components.elementAt(currentComponent));
-		showPanel(components.elementAt(--currentComponent));
+		effect.setDirection(Direction.right);
+//		remove(cmpList.elementAt(cmpCounter));
+		showPanel(cmpList.elementAt(--cmpCounter));
 
 	}
 
-	public void showPanel(JComponent panel) {
+	public void showPanel(JComponent newComponent) {
 		if (!navAction) {
-			if (currentComponent > -1) {
-				remove(components.elementAt(currentComponent));
+			if (cmpCounter > -1) {
+				// TODO: comented beacuse the transision animation. temporal o definitive??
+				// transitionPanel.remove(cmpList.elementAt(cmpCounter));
 			}
 			// si se presiona otro enlace,
 			// se suprimen todos los elementos posteriores a la posicion actual
-			if ((currentComponent + 1) < components.size()) {
-				for (int i = (currentComponent + 1); i < components.size(); i++) {
-					components.remove(currentComponent + 1);
+			if ((cmpCounter + 1) < cmpList.size()) {
+				for (int i = (cmpCounter + 1); i < cmpList.size(); i++) {
+					cmpList.remove(cmpCounter + 1);
 				}
 			}
-			components.add(panel);
-			currentComponent = components.size() - 1;
+			cmpList.add(newComponent);
+			cmpCounter = cmpList.size() - 1;
 		}
 		navAction = false;
-		add(BorderLayout.CENTER, panel);
 		sincronizeNavigation();
 
 		// auto select listener for model select property
-		List<Container> cnts = SwingUtils.collectAllContainers(panel);
+		List<Container> cnts = SwingUtils.collectAllContainers(newComponent);
 		for (Container cnt : cnts) {
 			if (cnt instanceof TUIListPanel)
 				((TUIListPanel) cnt).init();
@@ -240,9 +240,7 @@ public class TDockingContainer extends JPanel {
 				addChangeListener(TUIListPanel.MODEL_SELECTED, pcl);
 			}
 		}
-
-		revalidate();
-		repaint();
+		transitionPanel.performTransition(newComponent);
 	}
 
 	/**
@@ -255,7 +253,7 @@ public class TDockingContainer extends JPanel {
 	 */
 	public void signalFreshgen(Class clazz) {
 		SwingUtilities.invokeLater(() -> {
-			Object cnt = SwingUtils.getFirst(components.elementAt(currentComponent), clazz);
+			Object cnt = SwingUtils.getFirst(cmpList.elementAt(cmpCounter), clazz);
 			Preconditions.checkArgument(cnt instanceof TUIListPanel, "the Class %s must be instance of TUIListPanel",
 					clazz.getName(), TUIListPanel.class.getName());
 			TUIListPanel tuilp = (TUIListPanel) cnt;
@@ -268,16 +266,13 @@ public class TDockingContainer extends JPanel {
 	 *
 	 */
 	private void sincronizeNavigation() {
-		// toolbar.setVisible(false);
 		next.setEnabled(true);
 		previous.setEnabled(true);
-		if (currentComponent + 1 == components.size()) {
+		if (cmpCounter + 1 == cmpList.size()) {
 			next.setEnabled(false);
 		}
-		if (currentComponent < 1) {
+		if (cmpCounter < 1) {
 			previous.setEnabled(false);
 		}
-		// toolbar.setVisible(true);
 	}
-
 }

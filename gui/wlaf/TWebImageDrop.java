@@ -85,6 +85,6 @@ public class TWebImageDrop extends WebImageDrop {
 	 * @param ii ImageIcon
 	 */
 	public void setImageIcon(ImageIcon ii) {
-		setImage(ImageUtils.getBufferedImage(ii));
+		setImage(ImageUtils.copyToBufferedImage(ii));
 	}
 }

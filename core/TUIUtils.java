@@ -25,6 +25,7 @@ import javax.swing.Action;
 import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.table.*;
+import javax.swing.table.TableColumn;
 import javax.swing.text.*;
 import javax.swing.text.html.*;
 
@@ -54,6 +55,7 @@ import com.alee.utils.swing.*;
 import dev.utils.*;
 import gui.*;
 import gui.wlaf.*;
+import javafx.scene.control.*;
 
 /**
  * static methods for grapichal user interfaces utils
@@ -436,7 +438,7 @@ public class TUIUtils {
 		jep.setEditable(false);
 		StyleSheet shee = new StyleSheet();
 		try {
-			shee.loadRules(new FileReader(TResources.getFile("HtmlEditor.css")), null);
+			// shee.loadRules(new FileReader(TResources.getFile("HtmlEditor.css")), null);
 		} catch (Exception e) {
 
 		}
@@ -597,20 +599,26 @@ public class TUIUtils {
 		setToolTip(ttn, jtf);
 		return jtf;
 	}
+
 	/**
-	 * barra de herramientas con formatos estandar
+	 * return standar implementation of toolbar
 	 * 
-	 * @return jtoolbar
-	 * 
-	 * @see {@link UIComponentPanel} for future toolbar implementation
+	 * @return
 	 */
-	public static WebToolBar getJToolBar() {
-		WebToolBar toolBar = new WebToolBar();
+	public static WebToolBar getWebToolBar() {
+		WebToolBar toolBar = new WebToolBar(StyleId.toolbarUndecorated);
 		// toolBar.setToolbarStyle(ToolbarStyle.attached);
 		toolBar.setFloatable(false);
-		toolBar.setRollover(true);
 		return toolBar;
+	}
 
+	public static WebToolBar getWebToolBar(Action... actions) {
+		WebToolBar toolBar = getWebToolBar();
+		for (Action action : actions) {
+			WebButton b = getWebButtonForToolBar(action);
+			toolBar.add(b);
+		}
+		return toolBar;
 	}
 
 	/**
@@ -634,22 +642,6 @@ public class TUIUtils {
 		int vpos = v == SwingConstants.TOP ? 0 : size - ii.getIconHeight();
 		g2d.drawImage(ii.getImage(), hpos, vpos, null);
 		return new ImageIcon(bi);
-	}
-	/**
-	 * create and return an ImageIcon that is result of drawing background icon <code>bi</code> of request size
-	 * <code>size</code> and and merging with the fornt icon <code>fi</code> with 0.6 of size
-	 * 
-	 * @param bi - background icon (big)
-	 * @param fi - foreground Icon (small)
-	 * @param size - return image size
-	 * 
-	 * @return merged icon
-	 */
-	public static ImageIcon getMergedIcon(String bi, String fi, int size) {
-		// TODO: draw an oval before small icon to create contrast between images
-		ImageIcon ii2 = TResources.getIcon(bi, size);
-		ImageIcon ii = TResources.getIcon(fi, (int) (size * 0.6));
-		return ImageUtils.mergeIcons(ii2, ii);
 	}
 
 	public static NumericTextField getNumericTextField(String field, Model model, Map<String, ColumnMetadata> columns) {
@@ -726,7 +718,7 @@ public class TUIUtils {
 		startPause.setSelectedIcon(TUIUtils.getSmallFontIcon('\ue037'));
 		if (action != null) {
 			startPause.setAction(action);
-			overRideToolBarButton(startPause);
+			// overRideToolBarButton(startPause);
 		} else {
 			startPause.setIcon(TUIUtils.getSmallFontIcon('\ue034'));
 		}
@@ -867,13 +859,17 @@ public class TUIUtils {
 	/**
 	 * create and return and {@link WebButton} with all settings stablisehd for toolbar
 	 * 
-	 * @param taa - action to set in the button
+	 * @param action - action to set in the button
 	 * @return button ready to set as toolbar button
 	 * @since 2.3
 	 */
 	public static WebButton getWebButtonForToolBar(Action action) {
-		WebButton button = new WebButton(action);
-		overRideToolBarButton(button);
+		overRideIcons(16, Color.BLACK, action);
+		WebButton button = new WebButton(StyleId.buttonHover, action);
+		// button.setRequestFocusEnabled(false);
+		// TooltipManager.setTooltip(jb, (String) taa.getValue(TAbstractAction.SHORT_DESCRIPTION), TooltipWay.down);
+		button.setText(null);
+		// button.setPreferredSize(new Dimension(46, 26));
 		return button;
 	}
 
@@ -1174,14 +1170,6 @@ public class TUIUtils {
 		}
 	}
 
-	public static void overRideToolBarButton(AbstractButton button) {
-		overRideIcons(16, null, button.getAction());
-		button.setRequestFocusEnabled(false);
-		// TooltipManager.setTooltip(jb, (String) taa.getValue(TAbstractAction.SHORT_DESCRIPTION), TooltipWay.down);
-		button.setText(null);
-		button.setPreferredSize(new Dimension(46, 26));
-	}
-
 	/**
 	 * establece dimenciones para los componentes. Si una instancia de <code>JTextField</code> sobrepasa las 30
 	 * columnas, no se modifica el ancho ya que se asume que se ve mejor. ademas, si componente de texto es menor a las
@@ -1280,8 +1268,8 @@ public class TUIUtils {
 		label.setSize(width, height);
 		BufferedImage bufImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2d = bufImage.createGraphics();
-		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+		// g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		// g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
 		label.print(g2d);
 		g2d.dispose();
 		return bufImage;

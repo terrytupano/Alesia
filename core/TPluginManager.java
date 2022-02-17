@@ -54,7 +54,7 @@ public class TPluginManager extends PluginManager<TPlugin> {
 			File fl = new File(file.getParent() + "/" + pluginLogo);
 			if (fl.exists()) {
 				inputStream = new FileInputStream(file);
-				logo = ImageUtils.loadImage(inputStream);
+				logo = ImageUtils.loadImageIcon(inputStream);
 			} else {
 				logo = null;
 			}

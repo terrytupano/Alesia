@@ -46,7 +46,7 @@ public class SensorArrayPanel extends TUIPanel {
 		sensorTypeComboBox.registerSettings(new Configuration<ComboBoxState>("SensorPanel.filter"));
 
 		addToolBarActions("testAreas");
-		getToolBarPanel().add(sensorTypeComboBox, imageTypeComboBox);
+		getToolBar().add(sensorTypeComboBox, imageTypeComboBox);
 
 		this.sensorsPanel = new WebPanel(new GridLayout(0, 2));
 		JScrollPane ajsp = new JScrollPane(sensorsPanel);

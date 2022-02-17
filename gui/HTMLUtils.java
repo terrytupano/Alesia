@@ -5,6 +5,7 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.text.html.*;
 
+import com.alee.api.resource.*;
 import com.alee.utils.*;
 
 import core.*;

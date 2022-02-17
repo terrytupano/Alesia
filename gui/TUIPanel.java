@@ -21,11 +21,11 @@ import javax.swing.border.*;
 
 import org.jdesktop.application.*;
 
-import com.alee.extended.layout.*;
 import com.alee.extended.panel.*;
 import com.alee.laf.button.*;
 import com.alee.laf.label.*;
 import com.alee.laf.panel.*;
+import com.alee.laf.toolbar.*;
 import com.alee.laf.window.*;
 import com.alee.managers.style.*;
 import com.jgoodies.common.base.*;
@@ -115,7 +115,7 @@ public class TUIPanel extends WebPanel {
 	private JPopupMenu popupMenu;
 	private Action doubleClickAction;
 
-	private WebPanel toolBarPanel;
+	private WebToolBar toolBar;
 
 	public TUIPanel() {
 		super(new BorderLayout());
@@ -124,16 +124,13 @@ public class TUIPanel extends WebPanel {
 		titleLabel.setFont(TUIUtils.H1_Font);
 		actionMap = Alesia.getInstance().getContext().getActionMap((TUIPanel) this);
 		this.treeDotButton = getTreeDotButton();
-
-		// temporal
-		this.toolBarPanel = new WebPanel(StyleId.panelTransparent);
-		toolBarPanel.setLayout(new LineLayout(LineLayout.HORIZONTAL, 0));
+		this.toolBar = TUIUtils.getWebToolBar();
 
 		// tilte label + 3dot button
 		this.titlePanel = new WebPanel(StyleId.panelTransparent);
 		titlePanel.setLayout(new BorderLayout());
 		// titlePanel.add(titleLabel, BorderLayout.CENTER);
-		titlePanel.add(toolBarPanel, BorderLayout.CENTER);
+		titlePanel.add(toolBar, BorderLayout.CENTER);
 		// titlePanel.add(treeDotButton, BorderLayout.EAST);
 
 		this.additionalInfo = TUIUtils.getJEditorPane(null, null);
@@ -160,7 +157,7 @@ public class TUIPanel extends WebPanel {
 	}
 
 	public void setAllEnabledBut(boolean enabled, String... names) {
-		Component[] cmps = toolBarPanel.getComponents();
+		Component[] cmps = toolBar.getComponents();
 		List<String> listNames = Arrays.asList(names);
 		for (Component cmp : cmps) {
 			if (cmp instanceof AbstractButton) {
@@ -200,8 +197,7 @@ public class TUIPanel extends WebPanel {
 			}
 			popupMenu.add(jmi);
 		}
-		toolBarPanel.add(wb);
-
+		toolBar.add(wb);
 	}
 
 	public void addToolBarActions(Action... actions) {
@@ -292,8 +288,8 @@ public class TUIPanel extends WebPanel {
 		return titleLabel.getText();
 	}
 
-	public WebPanel getToolBarPanel() {
-		return toolBarPanel;
+	public WebToolBar getToolBar() {
+		return toolBar;
 	}
 	public boolean isTitleVisible() {
 		return titleLabel.isVisible();
@@ -390,7 +386,7 @@ public class TUIPanel extends WebPanel {
 	 */
 	public void setMessage(String msgId, boolean visibleTB, Object... msgData) {
 		if (msgId == null) {
-			toolBarPanel.setVisible(true);
+			toolBar.setVisible(true);
 			remove(bodyMessageJComponent);
 			add(bodyJComponent, BorderLayout.CENTER);
 		} else {
@@ -399,7 +395,7 @@ public class TUIPanel extends WebPanel {
 			blkinfoLabel.setText(te.getMessage());
 			// blkinfoLabel.setVerticalTextPosition(JLabel.TOP);
 
-			toolBarPanel.setVisible(visibleTB);
+			toolBar.setVisible(visibleTB);
 			if (bodyJComponent != null)
 				remove(bodyJComponent);
 			add(bodyMessageJComponent, BorderLayout.CENTER);

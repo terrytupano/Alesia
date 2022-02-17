@@ -15,6 +15,8 @@ import java.awt.event.*;
 import java.beans.*;
 import java.util.List;
 
+import javax.swing.*;
+
 import org.jdesktop.application.*;
 
 import com.alee.laf.progressbar.*;
@@ -32,7 +34,10 @@ public class TTaskManager implements PropertyChangeListener {
 			progressBar = new WebProgressBar(0, poolSize);
 			progressBar.setStringPainted(true);
 			// Values updater
-			ComponentUpdater.install(progressBar, "", 1000, (evt) -> updateTaskBar());
+			Timer t = new Timer(1000, (evt) -> updateTaskBar());
+			t.setRepeats(true);
+			t.start();
+//			ComponentUpdater.install(progressBar, "", 1000, (evt) -> updateTaskBar());
 		}
 	}
 

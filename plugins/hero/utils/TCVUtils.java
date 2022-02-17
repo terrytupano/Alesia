@@ -422,7 +422,7 @@ public class TCVUtils {
 	public static BufferedImage paintBorder(BufferedImage image) {
 		int size = Integer.parseInt(parameteres.getProperty("borderSize", "6"));
 		Color color = TColorUtils.getOpaqueRGBColor(parameteres.getProperty("borderColor", "000000"));
-		BufferedImage newimagea = ImageUtils.copy(image);
+		BufferedImage newimagea = ImageUtils.copyToBufferedImage(image);
 		Graphics2D g2d = newimagea.createGraphics();
 		g2d.drawImage(image, 0, 0, null);
 		BasicStroke bs = new BasicStroke(size);

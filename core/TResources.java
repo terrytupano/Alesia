@@ -22,6 +22,7 @@ import java.util.zip.*;
 import javax.imageio.*;
 import javax.swing.*;
 
+import com.alee.api.resource.*;
 import com.jgoodies.common.base.*;
 
 public class TResources {
@@ -166,21 +167,20 @@ public class TResources {
 	 * @param fn - simple file name or qualify file name
 	 * @return File
 	 */
-	public static File getFile(String fn) {
-		File f = null;
+	public static FileResource getFile(String fn) {
 		// qualifyed file name
 		if (fn.startsWith("/")) {
-			return new File(USER_DIR + fn);
+			return new FileResource(new File(USER_DIR + fn));
 		} else {
 			// find the files on the resources
 			for (String path : resourcePath) {
-				f = new File(path + fn);
-				if (f.exists()) {
-					return f;
+				File file = new File(path + fn);
+				if (file.exists()) {
+					return new FileResource(file);
 				}
 			}
 		}
-		return f;
+		return null;
 	}
 
 	/**
@@ -260,28 +260,6 @@ public class TResources {
 			// try old names
 			return getIcon(in + "16");
 		}
-	}
-
-	/**
-	 * retorna <code>URL</code> de un archivo que se encuentre en la carpeta de docuementos. Si la instancia de
-	 * <code>new File(qn)</code> no es un archivo, se adiciona la extencion ".html" y se intenta de nuevo
-	 * 
-	 * @param qn - nombre calificado con extencion o sin ella para qn + ".html"
-	 * @return URL
-	 */
-	public static URL getURL(String qn) {
-		URL u = null;
-		try {
-			File f = getFile(qn);
-			if (!f.isFile()) {
-				qn = qn + ".html";
-				f = getFile(qn);
-			}
-			u = f.toURI().toURL();
-		} catch (Exception e) {
-
-		}
-		return u;
 	}
 
 	/**

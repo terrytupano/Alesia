@@ -34,10 +34,10 @@
   <reconnBase type="TextComponentState" text="1" caretPosition="1"/>
   <bigBlindFactor type="ComboBoxState" selectedIndex="5"/>
   <FlickaDockablePane type="DockablePaneState">
-    <root class="DockableList" id="EL-g2d81-dq29i-2TN45-B1pZJ-ID" size="670,634" orientation="horizontal">
+    <root class="DockableList" id="EL-g2d81-dq29i-2TN45-B1pZJ-ID" size="527,634" orientation="horizontal">
       <DockableFrame id="plugins.flicka.DBExplorer" size="447,61" state="docked" restoreState="docked"/>
       <DockableList id="EL-E84hJ-6qIE8-72kRW-Krnp4-ID" size="80,120" orientation="vertical">
-        <DockableContent id="dockablepane.content"/>
+        <DockableContent id="dockablepane.content" size="0,0"/>
         <DockableFrame id="plugins.flicka.PDistributionList" size="266,241" state="docked" restoreState="docked"/>
         <DockableFrame id="plugins.flicka.RaceList" size="144,214" state="docked" restoreState="docked"/>
       </DockableList>
@@ -46,7 +46,7 @@
   <plugins.hero.PreFlopCardsRangePanel.rangeComboBox type="ComboBoxState" selectedIndex="0"/>
   <preflopStrategy type="ComboBoxState" selectedIndex="0"/>
   <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>
-  <TWebFrame type="WindowState" location="14,40" size="547,569" state="0"/>
+  <TWebFrame type="WindowState" location="0,40" size="547,735" state="0"/>
   <takeOpportunity type="ButtonState" selected="true"/>
   <smallBlid type="string"></smallBlid>
   <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>

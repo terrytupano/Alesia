@@ -17,6 +17,7 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
+import javax.swing.*;
 import javax.swing.Action;
 
 import org.apache.commons.logging.impl.*;
@@ -44,13 +45,12 @@ import com.alee.managers.notification.*;
 import com.alee.managers.plugin.data.*;
 import com.alee.managers.settings.*;
 import com.alee.managers.style.*;
-import com.alee.skin.dark.*;
 import com.alee.utils.*;
-import com.alee.utils.CollectionUtils;
 
 import gui.*;
 import gui.docking.*;
 import gui.wlaf.*;
+import sun.swing.*;
 
 /**
  * Entrada aplicacion
@@ -125,7 +125,7 @@ public class Alesia extends Application {
 	 * @see #getDBProperties()
 	 */
 	public void openDB(String name) {
-//		if the database is allready open, do nothig
+		// if the database is allready open, do nothig
 		List<String> conNames = DB.getCurrrentConnectionNames();
 		if (conNames.contains(name))
 			return;
@@ -412,11 +412,8 @@ public class Alesia extends Application {
 		// load all actions into the application
 		new TActionsFactory();
 
-		// TODO: something happen whit the database connection. commented because until now i dont need it.
-		// connectToLocalDB();
-
-		newMsg = Applet.newAudioClip(TResources.getURL("newMsg.wav"));
-		errMsg = Applet.newAudioClip(TResources.getURL("errMsg.wav"));
+		newMsg = Applet.newAudioClip(getClass().getResource("/core/resources/newMsg.wav"));
+		errMsg = Applet.newAudioClip(getClass().getResource("/core/resources/errMsg.wav"));
 
 		// System.setProperty("org.apache.commons.logging.Log", Jdk14Logger.class.getName());
 
@@ -459,39 +456,30 @@ public class Alesia extends Application {
 	@Override
 	protected void startup() {
 		Alesia.logger.info("Starting Up ...");
-		// GenericStyle
-		// Configuring settings location
+
 		SettingsManager.setDefaultSettingsDir(FileUtils.getWorkingDirectoryPath());
 		SettingsManager.setDefaultSettingsGroup("Alesia");
 		SettingsManager.setSaveOnChange(true);
 
-		// Adding demo data aliases before styles using it are read
-		// XmlUtils.processAnnotations ( FeatureStateBackground.class );
-
-		// Installing Look and Feel
-		// WebLookAndFeel.setForceSingleEventsThread(true);
-
-		// alesia skin
-		// WebLookAndFeel.install(TSkin.class);
+//		WebLookAndFeel.setForceSingleEventsThread(true);
 		WebLookAndFeel.install();
-
-		// WebLookAndFeel.install();
-		// WebLookAndFeel.setDecorateFrames(true);
-		// WebLookAndFeel.setDecorateDialogs(true);
-
+		ProprietaryUtils.setupAATextInfo(UIManager.getDefaults());
 		// Saving skins for reference
-		skins = CollectionUtils.asList(StyleManager.getSkin(), new DarkSkin());
+		// skins = CollectionUtils.asList(StyleManager.getSkin(), new DarkSkin());
 
 		// Adding demo application skin extensions
 
 		// XmlSkinExtension dark = new XmlSkinExtension(TResourceUtils.getFile("dark.extension.xml"));
 		// XmlSkinExtension light = new XmlSkinExtension(TResourceUtils.getFile("light.extension.xml"));
-		StyleManager.addExtensions(new TXmlSkinExtension());
+		// StyleManager.addExtensions(new TXmlSkinExtension());
 
 		// TODO: no languaje manajer for now. still using old school i18n
 		// Configurting languages
 		// LanguageManager.addDictionary ( new Dictionary ( Alesia.class, "language/demo-language.xml" ) );
 		// LanguageManager.addLanguageListener ( new LanguageLocaleUpdater () );
+
+		// TODO: remove the antialaisin shint form the lookandfell
+		// UIDefaults defaults = UIManager.getDefaults();
 
 		mainFrame = new TWebFrame();
 		mainFrame.setVisible(true);

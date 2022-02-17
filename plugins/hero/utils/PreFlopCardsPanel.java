@@ -11,6 +11,7 @@ import com.alee.extended.layout.*;
 import com.alee.laf.combobox.*;
 import com.alee.laf.panel.*;
 import com.alee.managers.settings.*;
+import com.alee.managers.style.*;
 
 import core.*;
 import gui.*;
@@ -28,7 +29,7 @@ public class PreFlopCardsPanel extends TUIPanel {
 
 	public PreFlopCardsPanel() {
 		super();
-		this.preflopsComboBox = new WebComboBox(PreflopCardsModel.getPreflopList());
+		this.preflopsComboBox = new WebComboBox(StyleId.comboboxHover, PreflopCardsModel.getPreflopList());
 		TUIUtils.setDimensionForTextComponent(preflopsComboBox, 40);
 		preflopsComboBox.addActionListener(evt -> loadFromDB());
 		// ResourceMap r = Alesia.getInstance().getContext().getResourceManager().getResourceMap();
@@ -38,7 +39,7 @@ public class PreFlopCardsPanel extends TUIPanel {
 		panel.add(createRangePanel());
 		preflopsComboBox.registerSettings(new Configuration<ComboBoxState>(getClass().getName() + ".rangeComboBox"));
 		addToolBarActions("savePreflopRange");
-		getToolBarPanel().add(preflopsComboBox);
+		getToolBar().add(preflopsComboBox);
 		setBodyComponent(panel);
 	}
 
