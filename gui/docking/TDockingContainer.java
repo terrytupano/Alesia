@@ -23,17 +23,15 @@ import javax.swing.border.*;
 
 import org.jdesktop.application.*;
 
-import com.alee.extended.panel.*;
 import com.alee.extended.statusbar.*;
 import com.alee.extended.transition.*;
 import com.alee.extended.transition.effects.*;
-import com.alee.extended.transition.effects.curtain.*;
 import com.alee.extended.transition.effects.slide.*;
 import com.alee.laf.button.*;
 import com.alee.laf.label.*;
 import com.alee.laf.panel.*;
 import com.alee.laf.toolbar.*;
-import com.alee.managers.style.*;
+import com.alee.managers.style.*; 
 import com.alee.utils.*;
 import com.jgoodies.common.base.*;
 
@@ -111,12 +109,7 @@ public class TDockingContainer extends WebPanel {
 		}
 		return list;
 	}
-	public static GroupPanel getGroupPanel() {
-		GroupPanel bg = new GroupPanel();
-		CompoundBorder cb = new CompoundBorder(new EmptyBorder(2, 2, 2, 2), bg.getBorder());
-		bg.setBorder(cb);
-		return bg;
-	}
+
 	/**
 	 * create and return a especial instace of {@link WebButton}
 	 * 
@@ -137,6 +130,7 @@ public class TDockingContainer extends WebPanel {
 		// btn.setVerticalTextPosition(SwingConstants.TOP);
 		return btn;
 	}
+	
 	/**
 	 * Return a {@link JLabel} formatted to present warning message about problems with autorization for user
 	 * 

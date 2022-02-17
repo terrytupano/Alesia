@@ -601,27 +601,6 @@ public class TUIUtils {
 	}
 
 	/**
-	 * return standar implementation of toolbar
-	 * 
-	 * @return
-	 */
-	public static WebToolBar getWebToolBar() {
-		WebToolBar toolBar = new WebToolBar(StyleId.toolbarUndecorated);
-		// toolBar.setToolbarStyle(ToolbarStyle.attached);
-		toolBar.setFloatable(false);
-		return toolBar;
-	}
-
-	public static WebToolBar getWebToolBar(Action... actions) {
-		WebToolBar toolBar = getWebToolBar();
-		for (Action action : actions) {
-			WebButton b = getWebButtonForToolBar(action);
-			toolBar.add(b);
-		}
-		return toolBar;
-	}
-
-	/**
 	 * return the ImageIcon <code>src</code> with a mark which is a scaled instance of the icon file name
 	 * <code>mfn</code> draw over the source image.
 	 * 
@@ -727,6 +706,7 @@ public class TUIUtils {
 		return startPause;
 
 	}
+
 	public static WebToggleButton getStartPauseToggleButton(ActionListener actionListener) {
 		return getStartPauseToggleButton(null, actionListener);
 	}
@@ -737,7 +717,6 @@ public class TUIUtils {
 		Rectangle2D bounds = metrics.getStringBounds(str, null);
 		return (int) bounds.getHeight();
 	}
-
 	/**
 	 * TODO: temp move to laf xml file
 	 * 
@@ -1114,6 +1093,27 @@ public class TUIUtils {
 		jb.setText(null);
 		jb.setPreferredWidth(46);
 		return jb;
+	}
+
+	/**
+	 * return standar implementation of toolbar
+	 * 
+	 * @return
+	 */
+	public static WebToolBar getWebToolBar() {
+		WebToolBar toolBar = new WebToolBar(StyleId.toolbarUndecorated);
+		// toolBar.setToolbarStyle(ToolbarStyle.attached);
+		toolBar.setFloatable(false);
+		return toolBar;
+	}
+
+	public static WebToolBar getWebToolBar(Action... actions) {
+		WebToolBar toolBar = getWebToolBar();
+		for (Action action : actions) {
+			WebButton b = getWebButtonForToolBar(action);
+			toolBar.add(b);
+		}
+		return toolBar;
 	}
 
 	/**
