@@ -165,7 +165,7 @@ public class SensorsArray {
 	 *         screenSensors.get("binary.sensor" + i); onlist += ss.isEnabled() ? "" : i; } return onlist; }
 	 */
 
-	public ShapeAreas getSensorDisposition() {
+	public ShapeAreas getScreenAreas() {
 		return screenAreas;
 	}
 

@@ -12,9 +12,7 @@ package plugins.hero;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.beans.*;
 import java.io.*;
-import java.text.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -24,7 +22,6 @@ import javax.swing.Action;
 import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 
-import com.alee.laf.*;
 import com.alee.laf.button.*;
 import com.alee.utils.*;
 
@@ -39,27 +36,16 @@ import plugins.hero.utils.*;
 public class Hero extends TPlugin {
 
 	// protected static Tesseract iTesseract;
-	protected static Logger heroLogger;
-	protected static File tableFile;
+	protected static Logger heroLogger = Logger.getLogger("Hero");
 	protected static boolean isTestMode;
-	protected static ShapeAreas shapeAreas;
-	// protected static Hashtable<String, Object> trooperParameters;
-	private static DateFormat dateFormat;
-	/**
-	 * update every time the action {@link #runTrooper(ActionEvent)} is performed
-	 */
-	private static Date startDate = null;
-	private static Trooper activeTrooper;
-	/** in simualtion envioremet, this is the current instance of Table. */
 	public static Table simulationTable;
+	private static Trooper activeTrooper;
+
 	private static HeroPanel heroPanel;
 	private GameSimulatorPanel simulatorPanel;
-
 	private SensorsArray sensorsArray;
 
 	public Hero() {
-		dateFormat = DateFormat.getDateTimeInstance();
-		heroLogger = Logger.getLogger("Hero");
 		TActionsFactory.insertActions(this);
 		Alesia.getInstance().openDB("hero");
 	}
@@ -92,7 +78,7 @@ public class Hero extends TPlugin {
 		Action load = TActionsFactory.getAction("fileChooserOpen");
 		load.addPropertyChangeListener(evt -> {
 			if (evt.getPropertyName().equals(TActionsFactory.DATA_LOADED)) {
-				tableFile = (File) load.getValue(TActionsFactory.DATA_LOADED);
+				// tableFile = (File) load.getValue(TActionsFactory.DATA_LOADED);
 			}
 		});
 		return load;
@@ -114,9 +100,6 @@ public class Hero extends TPlugin {
 		return r;
 	}
 
-	public static Date getStartDate() {
-		return startDate;
-	}
 	public static Tesseract getTesseract() {
 		// TODO: no visible performance improve by setting every sensor with his own teseract instance
 		Tesseract iTesseract = new Tesseract(); // JNA Interface Mapping
@@ -142,13 +125,9 @@ public class Hero extends TPlugin {
 		return uni;
 	}
 
-	protected static String getSesionID() {
-		return dateFormat.format(startDate);
-	}
-
 	@org.jdesktop.application.Action
 	public void gameSimulator(ActionEvent event) {
-		
+
 		this.simulatorPanel = new GameSimulatorPanel();
 		// trooperPanel = simulatorPanel.getTrooperPanel();
 		Alesia.getInstance().getMainPanel().showPanel(simulatorPanel);
@@ -171,7 +150,6 @@ public class Hero extends TPlugin {
 		// temp: change the main frame using this coordenates: 0,40 547,735
 		// temporal: must be loaded from troperPanel
 		// tableFile = new File("plugins/hero/resources/ps-main table.ppt");
-		tableFile = new File("plugins/hero/resources/ps-10.ppt");
 		initTrooperEnviorement();
 		Alesia.getInstance().getMainFrame().setBounds(0, 40, 547, 735);
 	}
@@ -288,7 +266,6 @@ public class Hero extends TPlugin {
 						simulatorPanel.updatePokerSimulator(simulator);
 				}
 			}
-			startDate = new Date();
 			simulationTable.setSpeed(Table.RUN_INTERACTIVE_LOG);
 			simulationTable.setSimulationsHand(100000);
 			simulationTable.whenPlayerLose(Table.DO_NOTHING);
@@ -309,7 +286,7 @@ public class Hero extends TPlugin {
 	public void stopTrooper(ActionEvent event) {
 		if (activeTrooper != null) {
 			activeTrooper.cancelTrooper(true);
-			heroPanel.setAllEnabledBut(true, new String[0]);
+			// heroPanel.setAllEnabledBut(true, new String[0]);
 			// TActionsFactory.getAction("pauseTrooper").putValue(Action.SMALL_ICON,
 			// TUIUtils.getSmallFontIcon('\ue037'));// :
 			activeTrooper = null; // '\ue034'));
@@ -345,8 +322,8 @@ public class Hero extends TPlugin {
 	private void initTrooperEnviorement() {
 		// dont put isTestMode = false; HERE !!!!!!!!!!!!!!!!!
 		simulationTable = null;
-		startDate = new Date();
-		shapeAreas = new ShapeAreas(Hero.tableFile);
+		File tableFile = new File("plugins/hero/resources/ps-main table.ppt");
+		ShapeAreas shapeAreas = new ShapeAreas(tableFile);
 		shapeAreas.read();
 		sensorsArray = new SensorsArray();
 		sensorsArray.setShapeAreas(shapeAreas);
@@ -354,18 +331,17 @@ public class Hero extends TPlugin {
 	}
 
 	private Task start(ActionEvent event) {
-		WebLookAndFeel.setForceSingleEventsThread(false);
 		initTrooperEnviorement();
 		activeTrooper = new Trooper(sensorsArray, sensorsArray.getPokerSimulator());
-		PropertyChangeListener tl = new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent evt) {
-				if (Trooper.PROP_DONE.equals(evt.getPropertyName())) {
-					// WebLookAndFeel.setForceSingleEventsThread(true);
-				}
-			}
-		};
+//		PropertyChangeListener tl = new PropertyChangeListener() {
+//			public void propertyChange(PropertyChangeEvent evt) {
+//				if (Trooper.PROP_DONE.equals(evt.getPropertyName())) {
+//					 WebLookAndFeel.setForceSingleEventsThread(true);
+//				}
+//			}
+//		};
 		// t.getPokerSimulator().setParameter();
-		activeTrooper.addPropertyChangeListener(tl);
+//		activeTrooper.addPropertyChangeListener(tl);
 		heroPanel.setAllEnabledBut(false, "pauseTrooper", "stopTrooper");
 		return activeTrooper;
 	}

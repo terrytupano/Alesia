@@ -17,6 +17,7 @@ import com.alee.laf.panel.*;
 import com.alee.laf.tabbedpane.*;
 import com.alee.managers.settings.*;
 
+import core.*;
 import core.datasource.model.*;
 import gui.*;
 import gui.console.*;
@@ -45,6 +46,7 @@ public class HeroPanel extends TUIFormPanel {
 		wtp.add(new ConsolePanel(Hero.heroLogger), "Log console");
 
 		wtp.registerSettings(new Configuration<TabbedPaneState>("HeroPanel.tabbedPanel"));
+
 		addToolBarActions("runTrooper", "testTrooper", "stopTrooper", "pauseTrooper");
 		setBodyComponent(wtp);
 	}

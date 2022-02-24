@@ -8,6 +8,8 @@ import org.apache.commons.math3.distribution.*;
 import org.apache.commons.math3.stat.descriptive.*;
 import org.jdesktop.application.*;
 
+import com.javaflair.pokerprophesier.api.adapter.*;
+
 import core.*;
 import core.datasource.model.*;
 import plugins.hero.ozsoft.*;
@@ -81,7 +83,7 @@ public class Trooper extends Task {
 		if (array != null) {
 			// live
 			this.sensorsArray = array;
-			this.robotActuator = new RobotActuator();
+			this.robotActuator = new RobotActuator(sensorsArray.getScreenAreas());
 			this.pokerSimulator = sensorsArray.getPokerSimulator();
 			this.numOfVillans = sensorsArray.getVillans();
 		} else {
@@ -121,7 +123,7 @@ public class Trooper extends Task {
 	public TrooperAction getSimulationAction(SimulatorClient client) {
 		Alesia.getInstance().openDB("hero");
 		this.simulatorClient = client;
-		playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
+		playTime = System.currentTimeMillis() - startDate;
 		clearEnviorement();
 
 		// for simulation purpose, allays read the assesment
@@ -187,7 +189,7 @@ public class Trooper extends Task {
 
 		String txt = null;
 		int phi = parameter.getInteger("phi");
-		
+
 		// 220215: 2 result from simulation: 2%
 		// TODO: this decition is predictable and easy exploitable after a few hands. maybe muss be controled randomly
 		if (pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
@@ -199,14 +201,14 @@ public class Trooper extends Task {
 		}
 
 		// posflop
-//		if (pokerSimulator.currentRound >= PokerSimulator.FLOP_CARDS_DEALT) {
-//			double rb = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
-//			if (rb <= phi)
-//				txt = "rankBehind <= " + phi + " %";
-//
-//			if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
-//				txt = "Is the Nuts.";
-//		}
+		// if (pokerSimulator.currentRound >= PokerSimulator.FLOP_CARDS_DEALT) {
+		// double rb = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
+		// if (rb <= phi)
+		// txt = "rankBehind <= " + phi + " %";
+		//
+		// if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
+		// txt = "Is the Nuts.";
+		// }
 
 		if (txt != null) {
 			setVariableAndLog(EXPLANATION, "--- OPORTUNITY DETECTED " + txt + " ---");
@@ -611,7 +613,7 @@ public class Trooper extends Task {
 				// play time
 				double ptd = parameter.getDouble("playTime");
 				long playtimeParm = (long) (ptd * 3600 * 1000);
-				playTime = System.currentTimeMillis() - Hero.getStartDate().getTime();
+				playTime = System.currentTimeMillis() - startDate;
 
 				// play until parameter
 				double playUntilParm = parameter.getDouble("playUntil");
@@ -687,10 +689,13 @@ public class Trooper extends Task {
 		return act;
 	}
 
+	private long startDate;
+
 	@Override
 	protected Object doInBackground() throws Exception {
 		Alesia.getInstance().openDB("hero");
 		clearEnviorement();
+		startDate = System.currentTimeMillis();
 		while (!isCancelled()) {
 			if (paused) {
 				Thread.sleep(100);

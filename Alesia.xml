@@ -30,7 +30,7 @@
   <plugins.hero.utils.PreFlopCardsPanel.rangeComboBox type="ComboBoxState" selectedIndex="2"/>
   <oddCalculation type="ComboBoxState" selectedIndex="1"/>
   <postflopAmmoControl type="ComboBoxState" selectedIndex="0"/>
-  <SensorPanel.filter type="ComboBoxState" selectedIndex="7"/>
+  <SensorPanel.filter type="ComboBoxState" selectedIndex="13"/>
   <reconnBase type="TextComponentState" text="1" caretPosition="1"/>
   <bigBlindFactor type="ComboBoxState" selectedIndex="5"/>
   <FlickaDockablePane type="DockablePaneState">
