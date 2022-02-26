@@ -33,6 +33,7 @@ import org.javalite.activejdbc.*;
 import org.javalite.activejdbc.connection_config.*;
 import org.jdesktop.application.*;
 
+import com.alee.api.resource.*;
 import com.alee.extended.image.*;
 import com.alee.extended.layout.*;
 import com.alee.extended.panel.*;
@@ -45,6 +46,8 @@ import com.alee.managers.notification.*;
 import com.alee.managers.plugin.data.*;
 import com.alee.managers.settings.*;
 import com.alee.managers.style.*;
+import com.alee.skin.dark.*;
+import com.alee.skin.light.*;
 import com.alee.utils.*;
 
 import gui.*;
@@ -461,18 +464,15 @@ public class Alesia extends Application {
 		SettingsManager.setDefaultSettingsGroup("Alesia");
 		SettingsManager.setSaveOnChange(true);
 
-//		WebLookAndFeel.setForceSingleEventsThread(true);
-		WebLookAndFeel.install();
-		ProprietaryUtils.setupAATextInfo(UIManager.getDefaults());
-		// Saving skins for reference
-		// skins = CollectionUtils.asList(StyleManager.getSkin(), new DarkSkin());
+		// Process our custom alias first
+		XmlUtils.processAnnotations(GalaxyBackground.class);
 
-		// Adding demo application skin extensions
+		// Initializing L&F
+		WebLookAndFeel.install(WebLightSkin.class);
+		StyleManager.addExtensions(new XmlSkinExtension(new ClassResource(Alesia.class, "resources/SimpleExtension.xml")));
+//		ProprietaryUtils.setupAATextInfo(UIManager.getDefaults());
 
-		// XmlSkinExtension dark = new XmlSkinExtension(TResourceUtils.getFile("dark.extension.xml"));
-		// XmlSkinExtension light = new XmlSkinExtension(TResourceUtils.getFile("light.extension.xml"));
-		// StyleManager.addExtensions(new TXmlSkinExtension());
-
+		
 		// TODO: no languaje manajer for now. still using old school i18n
 		// Configurting languages
 		// LanguageManager.addDictionary ( new Dictionary ( Alesia.class, "language/demo-language.xml" ) );

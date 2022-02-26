@@ -156,8 +156,8 @@ public class PreflopCardsModel {
 	}
 
 	/**
-	 * if the cards are in selection range, this metod will return the Normalized EV. if the cards are not in selection range, this metod return 
-	 * {@link #lowerBound}
+	 * if the cards are in selection range, this metod will return the Normalized EV. if the cards are not in selection
+	 * range, this metod return {@link #lowerBound}
 	 * 
 	 * @param cards - cards in {@link PreflopCardsModel} format
 	 * 
@@ -267,12 +267,13 @@ public class PreflopCardsModel {
 			throw new IllegalArgumentException("percentage value must be between 0 and 100 inclusively");
 		}
 
-		// preflopRanges.forEach(pfr -> pfr.setBoolean("selected", false));
+		// clear all area. Test purpose to increase security in simulation entviorement
+		preflopCards.forEach(pfr -> pfr.setBoolean("selected", false));
 
 		// clear only the card that are in the old percentage range
-		int clear = (int) Math.round(168 * percentage / 100d);
-		for (int i = 0; i < clear; i++)
-			preflopCards.get(i).setBoolean("selected", false);
+		// int clear = (int) Math.round(168 * percentage / 100d);
+		// for (int i = 0; i < clear; i++)
+		// preflopCards.get(i).setBoolean("selected", false);
 
 		this.percentage = newPercentage;
 		int set = (int) Math.round(168 * percentage / 100d);

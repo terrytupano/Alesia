@@ -69,12 +69,12 @@ public class Trooper extends Task {
 	private double currentHandCost;
 	private double playUntil;
 	private long playTime;
-	private Hashtable<String, PreflopCardsModel> preFlopCardsDist;
 	private String subObtimalDist;
 	private SimulatorClient simulatorClient;;
 	private int numOfVillans;
 	private int villansBeacon;
 	private GameRecorder gameRecorder;
+	private PreflopCardsModel preflopCardsModel = new PreflopCardsModel("pokerStar");
 
 	public Trooper(SensorsArray array, PokerSimulator pokerSimulator) {
 		super(Alesia.getInstance());
@@ -99,12 +99,12 @@ public class Trooper extends Task {
 		this.villansBeacon = 0;
 
 		// load all preflop ranges
-		this.preFlopCardsDist = new Hashtable<>();
-		TEntry<String, String>[] tarr = PreflopCardsModel.getPreflopList();
-		for (TEntry<String, String> tEntry : tarr) {
-			String rName = tEntry.getKey();
-			preFlopCardsDist.put(rName, new PreflopCardsModel(rName));
-		}
+		// this.preFlopCardsDist = new Hashtable<>();
+		// TEntry<String, String>[] tarr = PreflopCardsModel.getPreflopList();
+		// for (TEntry<String, String> tEntry : tarr) {
+		// String rName = tEntry.getKey();
+		// preFlopCardsDist.put(rName, new PreflopCardsModel(rName));
+		// }
 	}
 
 	public void cancelTrooper(boolean interrupt) {
@@ -193,9 +193,8 @@ public class Trooper extends Task {
 		// 220215: 2 result from simulation: 2%
 		// TODO: this decition is predictable and easy exploitable after a few hands. maybe muss be controled randomly
 		if (pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
-			PreflopCardsModel opppcs = preFlopCardsDist.get("oportunity");
-			opppcs.setPercentage(phi);
-			if (opppcs.containsHand(pokerSimulator.holeCards)) {
+			preflopCardsModel.setPercentage(phi);
+			if (preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
 				txt = "Current Hole cards in oportunity range.";
 			}
 		}
@@ -482,17 +481,16 @@ public class Trooper extends Task {
 		double pfband = parameter.getDouble("reconnBand");
 		double base = pokerSimulator.bigBlind * pfBase;
 		double band = pokerSimulator.bigBlind * pfband;
-		String rName = parameter.getString("preflopCards");
-		PreflopCardsModel pfcm = preFlopCardsDist.get(rName);
 
-		// 211205: the first real simulation, analisis and result: hero must play with 50% preflop card selection !!! :D
-		int tau = 50;
+		// 211205: the first real simulation, analisis and result: 
+		// hero must play with 50% preflop card selection !!! :D
+		int tau = 10;
 
 		// in Simulation eviorement: set the tau parameter if apply
 		if (simulatorClient != null && simulatorClient.getInteger("tau") != null)
 			tau = simulatorClient.getInteger("tau");
 
-		pfcm.setPercentage(tau);
+		preflopCardsModel.setPercentage(tau);
 
 		String txt = "Preflop Ok.";
 		boolean strictPreflop = true;
@@ -501,7 +499,7 @@ public class Trooper extends Task {
 		if (simulatorClient != null && simulatorClient.getBoolean("strictPreflop") != null)
 			strictPreflop = simulatorClient.getBoolean("strictPreflop");
 
-		if (!pfcm.containsHand(pokerSimulator.holeCards)) {
+		if (!preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
 			txt = "Preflop not in range.";
 			if (strictPreflop) {
 				setVariableAndLog(EXPLANATION, txt);
@@ -510,7 +508,7 @@ public class Trooper extends Task {
 		}
 
 		// maxreconammo = base + (inversion * ev)
-		double ev = pfcm.getEV(pokerSimulator.holeCards);
+		double ev = preflopCardsModel.getEV(pokerSimulator.holeCards);
 		if (maxRekonAmmo == -1) {
 			maxRekonAmmo = base + (band * ev);
 		}

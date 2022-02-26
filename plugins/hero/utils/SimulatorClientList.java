@@ -23,7 +23,7 @@ public class SimulatorClientList extends TUIListPanel {
 
 	public SimulatorClientList() {
 //		addToolBarActions("newModel", "editModel", "deleteModel");
-		setColumns("playerName;client;preflopCards;isActive");
+		setColumns("playerName;chair;tau;phi");
 		// setIconParameters("0;gender-;rehorsegender");
 	}
 

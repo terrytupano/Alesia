@@ -6,38 +6,44 @@ import java.util.*;
 
 import javax.swing.*;
 
+import com.alee.extended.behavior.*;
+import com.alee.extended.layout.*;
+import com.alee.laf.label.*;
+import com.alee.laf.panel.*;
 import com.alee.laf.rootpane.*;
 import com.alee.laf.window.*;
 import com.alee.managers.settings.*;
-import com.jgoodies.forms.builder.*;
-import com.jgoodies.forms.layout.*;
+import com.alee.managers.style.*;
 
 import core.*;
 
 public class TWebFrame extends WebFrame {
 
 	private JComponent splashPanel;
-	private JLabel splashIncrementLabel;
-	private Icon splashIcon;
-	private String splashTitleText;
-	private Font splashTitleFont;
-	private String splashSubtitleText;
-	private Font splashSubtitleFont;
+	private WebLabel splashIncrementLabel;
 
 	public TWebFrame() {
 		super();
-		setSplashTitleText(Alesia.getInstance().getResourceMap().getString("name"));
-		setSplashSubtitleText(Alesia.getInstance().getResourceMap().getString("description"));
-		splashIncrementLabel = new JLabel("xxx");
+//		super(StyleId.of("galaxy"));
 
-		// waitComponent = new WaitPanel();
+		// StyleId.panelTransparent.set((JComponent) getContentPane());
+		// final WebPanel container = new WebPanel(StyleId.panelTransparent, new AlignLayout());
+		// add(container);
+		WebPanel container = new ImageBackground();
+		container.setLayout(new AlignLayout());
+		setContentPane(container);
+		
+		final ComponentMoveBehavior moveBehavior = new ComponentMoveBehavior(container);
+		moveBehavior.install();
+
 		splashPanel = buildSplash();
-		setContentPane(splashPanel);
+		container.add(splashPanel, SwingConstants.CENTER + "," + SwingConstants.CENTER);
 
 		setTitle(TStringUtils.getString("title"));
 		Vector v = new Vector();
-		v.add(TResources.getIcon("Alesia", 16).getImage());
-		v.add(TResources.getIcon("Alesia", 32).getImage());
+
+		v.add(TResources.getIcon("target-icon", 16).getImage());
+		v.add(TResources.getIcon("target-icon", 32).getImage());
 		setIconImages(v);
 		WindowAdapter ad = new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
@@ -46,7 +52,6 @@ public class TWebFrame extends WebFrame {
 		};
 		addWindowListener(ad);
 		registerSettings(new Configuration<WindowState>("TWebFrame"));
-
 	}
 
 	/**
@@ -109,85 +114,24 @@ public class TWebFrame extends WebFrame {
 		center(gcr, rr);
 		return rr;
 	}
-	public Icon getSplashIcon() {
-		return splashIcon;
-	}
-
-	public String getSplashSubtitleText() {
-		return splashSubtitleText;
-	}
-	public String getSplashTitleText() {
-		return splashTitleText;
-	}
-
-	public void setSplashIcon(Icon splashIcon) {
-		this.splashIcon = splashIcon;
-	}
 
 	public void setSplashIncrementText(String text) {
 		splashIncrementLabel.setText(text);
 	}
 
-	public void setSplashSubtitleText(String splashSubtitleText) {
-		this.splashSubtitleText = splashSubtitleText;
-	}
-
-	public void setSplashTitleText(String splashTitleText) {
-		this.splashTitleText = splashTitleText;
-	}
-
 	private JComponent buildSplash() {
-		JLabel splashTitleLabel;
-		if (this.splashTitleText != null) {
-			splashTitleLabel = new JLabel(this.splashTitleText);
-			splashTitleLabel.setFont(this.getSplashTitleFont());
-			splashTitleLabel.setForeground(this.getSplashTitleForeground());
-		} else if (this.splashIcon != null) {
-			splashTitleLabel = new JLabel(this.splashIcon);
-		} else {
-			splashTitleLabel = null;
-		}
+		WebLabel splashTitleLabel = new WebLabel(StyleId.labelShadow, TStringUtils.getString("name"), WebLabel.CENTER);
+		splashTitleLabel.setFont(new Font("MagistralC", Font.PLAIN, 50));
 
-		JLabel splashSubtitleLabel = null;
-		if (this.splashSubtitleText != null) {
-			splashSubtitleLabel = new JLabel(this.splashSubtitleText);
-			splashSubtitleLabel.setFont(this.getSplashSubitleFont());
-			splashSubtitleLabel.setForeground(this.isDarkBackground() ? Color.WHITE : Color.DARK_GRAY);
-		}
+		WebLabel splashSubtitleLabel = new WebLabel(StyleId.labelShadow, TStringUtils.getString("description"),
+				WebLabel.CENTER);
+		splashSubtitleLabel.setFont(getFont(Font.PLAIN, 15));
+		splashIncrementLabel = new WebLabel("---", WebLabel.CENTER);
 
-		FormLayout lay = new FormLayout("0:grow, center:pref, 0:grow", "0:g, p, 0, p, 0, p, 0:g");
-		PanelBuilder bui = new PanelBuilder(lay);
-		CellConstraints cc = new CellConstraints();
-		bui.add(splashTitleLabel, cc.xy(2, 2));
-		bui.add(splashSubtitleLabel, cc.xy(2, 4));
-		bui.add(splashIncrementLabel, cc.xy(2, 6));
-		return bui.getPanel();
+		WebPanel form = new WebPanel(StyleId.panelTransparent, new FormLayout(false, false, 10, 10));
+		form.add(splashTitleLabel, FormLayout.LINE);
+		form.add(splashSubtitleLabel, FormLayout.LINE);
+		form.add(splashIncrementLabel, FormLayout.LINE);
+		return form;
 	}
-
-	private Font getSplashSubitleFont() {
-		return (this.splashSubtitleFont != null) ? this.splashSubtitleFont : getFont(Font.PLAIN, 24);
-	}
-
-	private Font getSplashTitleFont() {
-		// return (this.splashTitleFont != null) ? this.splashTitleFont : getFont(Font.PLAIN, 72);
-		return (this.splashTitleFont != null) ? this.splashTitleFont : new Font("MagistralC", Font.PLAIN, 72);
-	}
-
-	private Color getSplashTitleForeground() {
-		return this.isDarkBackground() ? new Color(241, 241, 241) : new Color(100, 100, 100);
-	}
-	/**
-	 * TODO: move to colorutils
-	 * 
-	 * @return
-	 */
-	private boolean isDarkBackground() {
-		Color bg = getBackground();
-		if (bg == null)
-			bg = Color.WHITE;
-		final float[] hsbVals = new float[3];
-		Color.RGBtoHSB(bg.getRed(), bg.getGreen(), bg.getBlue(), hsbVals);
-		return hsbVals[2] < 0.8f;
-	}
-
 }

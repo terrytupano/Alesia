@@ -9,7 +9,6 @@ import javax.swing.*;
 import com.alee.extended.layout.*;
 import com.alee.extended.magnifier.*;
 import com.alee.laf.button.*;
-import com.alee.laf.label.*;
 import com.alee.laf.panel.*;
 import com.alee.managers.style.*;
 import com.alee.utils.*;

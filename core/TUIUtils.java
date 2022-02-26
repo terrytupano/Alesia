@@ -33,9 +33,11 @@ import org.apache.commons.text.*;
 import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 
+import com.alee.extended.button.*;
 import com.alee.extended.date.*;
 import com.alee.extended.filechooser.*;
 import com.alee.extended.image.*;
+import com.alee.extended.layout.*;
 import com.alee.extended.list.*;
 import com.alee.extended.panel.*;
 import com.alee.laf.*;
@@ -43,6 +45,7 @@ import com.alee.laf.button.*;
 import com.alee.laf.checkbox.*;
 import com.alee.laf.combobox.*;
 import com.alee.laf.label.*;
+import com.alee.laf.panel.*;
 import com.alee.laf.scroll.*;
 import com.alee.laf.text.*;
 import com.alee.laf.toolbar.*;
@@ -752,6 +755,15 @@ public class TUIUtils {
 		return tb;
 	}
 
+	public static WebPanel getTitlePanel(String constID) {
+		WebLabel tit = new WebLabel(StyleId.labelShadow, TStringUtils.getString(constID));
+		tit.changeFontSize(2);
+		WebLabel text = new WebLabel(TStringUtils.getString(constID+".tt"));
+		WebPanel panel = new WebPanel(StyleId.panelTransparent, new FormLayout(false, true, 10, 0));
+		panel.add(tit, FormLayout.LINE);
+		panel.add(text, FormLayout.LINE);
+		return panel;
+	}
 	/**
 	 * return a {@link WebLabel} whit html formated title/message elements
 	 * 
@@ -856,6 +868,13 @@ public class TUIUtils {
 		return getWebCheckBox(name, false);
 	}
 
+	public static WebSwitch getWebSwitch(String name, boolean selected) {
+		final WebSwitch wswitch = new WebSwitch(selected);
+		wswitch.setName(name);
+		wswitch.putClientProperty("settingsProcessor", new Configuration<ButtonState>(name));
+		return wswitch;
+	}
+	
 	public static WebCheckBox getWebCheckBox(String name, boolean selected) {
 		WebCheckBox jcb = new WebCheckBox(TStringUtils.getString(name));
 		jcb.setSelected(selected);

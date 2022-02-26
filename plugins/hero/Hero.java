@@ -127,7 +127,6 @@ public class Hero extends TPlugin {
 
 	@org.jdesktop.application.Action
 	public void gameSimulator(ActionEvent event) {
-
 		this.simulatorPanel = new GameSimulatorPanel();
 		// trooperPanel = simulatorPanel.getTrooperPanel();
 		Alesia.getInstance().getMainPanel().showPanel(simulatorPanel);

@@ -34,8 +34,8 @@
   <reconnBase type="TextComponentState" text="1" caretPosition="1"/>
   <bigBlindFactor type="ComboBoxState" selectedIndex="5"/>
   <FlickaDockablePane type="DockablePaneState">
-    <root class="DockableList" id="EL-g2d81-dq29i-2TN45-B1pZJ-ID" size="1362,643" orientation="horizontal">
-      <DockableFrame id="plugins.flicka.DBExplorer" size="625,61" state="docked" restoreState="docked"/>
+    <root class="DockableList" id="EL-g2d81-dq29i-2TN45-B1pZJ-ID" size="1002,634" orientation="horizontal">
+      <DockableFrame id="plugins.flicka.DBExplorer" size="487,61" state="docked" restoreState="docked"/>
       <DockableList id="EL-E84hJ-6qIE8-72kRW-Krnp4-ID" size="80,120" orientation="vertical">
         <DockableContent id="dockablepane.content" size="0,0"/>
         <DockableFrame id="plugins.flicka.PDistributionList" size="266,222" state="docked" restoreState="docked"/>
