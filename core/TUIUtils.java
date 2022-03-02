@@ -855,10 +855,18 @@ public class TUIUtils {
 	 * @since 2.3
 	 */
 	public static WebButton getWebButtonForToolBar(Action action) {
-		overRideIcons(16, Color.BLACK, action);
-		WebButton button = new WebButton(StyleId.buttonHover, action);
+		overRideIcons(16, action);
+		WebButton button = new WebButton(action);
 		// button.setRequestFocusEnabled(false);
 		// TooltipManager.setTooltip(jb, (String) taa.getValue(TAbstractAction.SHORT_DESCRIPTION), TooltipWay.down);
+		button.setText(null);
+		// button.setPreferredSize(new Dimension(46, 26));
+		return button;
+	}
+
+	public static WebToggleButton getWebToggleButtonForToolBar(Action action) {
+		overRideIcons(16, Color.BLACK, action);
+		WebToggleButton button = new WebToggleButton(StyleId.buttonHover, action);
 		button.setText(null);
 		// button.setPreferredSize(new Dimension(46, 26));
 		return button;
@@ -1104,7 +1112,7 @@ public class TUIUtils {
 	 * @since 2.3
 	 */
 	public static WebToggleButton getWebToggleButton(Action action) {
-		overRideIcons(16, null, action);
+		overRideIcons(16, action);
 		WebToggleButton jb = new WebToggleButton(StyleId.togglebutton, action);
 		// test: for toglebuttons, perform action performed over the action
 		// jb.addItemListener(
@@ -1151,6 +1159,10 @@ public class TUIUtils {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static void overRideIcons(int size, Action... actions) {
+		overRideIcons(size, Color.BLACK, actions);
 	}
 
 	/**

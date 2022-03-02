@@ -13,6 +13,8 @@ package plugins.hero;
 import java.awt.*;
 
 import com.alee.extended.layout.*;
+import com.alee.laf.button.*;
+import com.alee.laf.grouping.*;
 import com.alee.laf.panel.*;
 import com.alee.laf.tabbedpane.*;
 import com.alee.managers.settings.*;
@@ -45,8 +47,13 @@ public class HeroPanel extends TUIFormPanel {
 		wtp.add(new ConsolePanel(Hero.heroLogger), "Log console");
 
 		wtp.registerSettings(new Configuration<TabbedPaneState>("HeroPanel.tabbedPanel"));
-
-		addToolBarActions("runTrooper", "testTrooper", "stopTrooper", "pauseTrooper");
+		WebToggleButton play = TUIUtils.getWebToggleButton(TActionsFactory.getAction("runTrooper"));
+		WebToggleButton stop = TUIUtils.getWebToggleButton(TActionsFactory.getAction("stopTrooper"));
+		stop.setSelected(true);
+		WebToggleButton pause = TUIUtils.getWebToggleButton(TActionsFactory.getAction("pauseTrooper"));
+		GroupPane pane = new GroupPane(play, stop, pause);
+		getToolBar().add(pane);
+		addToolBarActions("testTrooper");
 		setBodyComponent(wtp);
 	}
 

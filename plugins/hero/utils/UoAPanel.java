@@ -23,12 +23,6 @@ import gui.*;
 import plugins.hero.*;
 import plugins.hero.UoAHandEval.*;
 
-/**
- * panel with UI components to test {@link UoAHandEvaluator} capabilities
- * 
- * @author terry
- *
- */
 public class UoAPanel extends TUIFormPanel implements ActionListener {
 
 	private CardsPanel cardsPanel;

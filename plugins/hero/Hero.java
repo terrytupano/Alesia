@@ -156,9 +156,9 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public void pauseTrooper(ActionEvent event) {
 		if (activeTrooper != null) {
-			boolean pause = !activeTrooper.isPaused();
-			TActionsFactory.getAbstractButton(event).setIcon(TUIUtils.getSmallFontIcon(pause ? '\ue037' : '\ue034'));
-			activeTrooper.pause(pause);
+//			boolean pause = !activeTrooper.isPaused();
+//			TActionsFactory.getAbstractButton(event).setIcon(TUIUtils.getSmallFontIcon(pause ? '\ue037' : '\ue034'));
+			activeTrooper.pause(true);
 		}
 	}
 

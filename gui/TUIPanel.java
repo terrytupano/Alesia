@@ -334,7 +334,7 @@ public class TUIPanel extends WebPanel {
 			allActions.add(act);
 
 			// TODO: this value muss kommt from look and feel file
-			TUIUtils.overRideIcons(16, null, act);
+			TUIUtils.overRideIcons(16, Color.BLACK, act);
 
 			WebButton wb = new WebButton(act);
 			// ApplicationAction aa = (ApplicationAction) act;

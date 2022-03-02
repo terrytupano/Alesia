@@ -25,7 +25,8 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		addPropertyChangeListener(TActionsFactory.ACTION_PERFORMED, this);
 		Map<String, ColumnMetadata> columns = SimulatorClient.getMetaModel().getColumnMetadata();
 		setModel(model);
-
+		// activeCaption
+		// desktop
 		// TODO: old parameter for triangular distribbution
 		// addInputComponent(TUIUtils.getTWebComboBox("tau", "tdisrange", model.get("tau")));
 
@@ -46,46 +47,47 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 			tparm = model.getString("buyIn") + "," + model.getString("bigBlind") + "," + model.getString("smallBlind")
 					+ ("".equals(c.trim()) ? "" : "," + c);
 		}
-		 addInputComponent(TUIUtils.getTWebComboBox("tableParameters", "table.parameters0", tparm));
-		 
-//		FormLayout layout = new FormLayout("left:pref:grow");
-//		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG);
-//		builder.append(TUIUtils.getTitlePanel("playTime"));
-//		builder.append(getInputComponent("playTime"));
-//		builder.append(TUIUtils.getTitlePanel("playUntil"));
-//		builder.append(getInputComponent("playUntil"));
-//		builder.append(TUIUtils.getTitlePanel("tableParameters"));
-//		builder.append(getInputComponent("tableParameters"));
-//		builder.append(TUIUtils.getTitlePanel("tau"));
-//		builder.append(getInputComponent("tau"));
-//		builder.append(TUIUtils.getTitlePanel("reconnBase"));
-//		builder.append(getInputComponent("reconnBase"));
-//		builder.append(TUIUtils.getTitlePanel("phi"));
-//		builder.append(getInputComponent("phi"));
-//		builder.append(TUIUtils.getTitlePanel("takeOpportunity"));
-//		builder.append(getInputComponent("takeOpportunity"));
-//		builder.append(TUIUtils.getTitlePanel("strictPreflop"));
-//		builder.append(getInputComponent("strictPreflop"));
+		addInputComponent(TUIUtils.getTWebComboBox("tableParameters", "table.parameters0", tparm));
 
-			FormLayout layout = new FormLayout("left:default:grow, 3dlu, left:default:grow, 3dlu, left:default:grow, 3dlu, left:default:grow");
-			DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG);
+		// FormLayout layout = new FormLayout("left:pref:grow");
+		// DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG);
+		// builder.append(TUIUtils.getTitlePanel("playTime"));
+		// builder.append(getInputComponent("playTime"));
+		// builder.append(TUIUtils.getTitlePanel("playUntil"));
+		// builder.append(getInputComponent("playUntil"));
+		// builder.append(TUIUtils.getTitlePanel("tableParameters"));
+		// builder.append(getInputComponent("tableParameters"));
+		// builder.append(TUIUtils.getTitlePanel("tau"));
+		// builder.append(getInputComponent("tau"));
+		// builder.append(TUIUtils.getTitlePanel("reconnBase"));
+		// builder.append(getInputComponent("reconnBase"));
+		// builder.append(TUIUtils.getTitlePanel("phi"));
+		// builder.append(getInputComponent("phi"));
+		// builder.append(TUIUtils.getTitlePanel("takeOpportunity"));
+		// builder.append(getInputComponent("takeOpportunity"));
+		// builder.append(TUIUtils.getTitlePanel("strictPreflop"));
+		// builder.append(getInputComponent("strictPreflop"));
 
-			builder.append(TStringUtils.getString("playTime"), getInputComponent("playTime"));
-			builder.append(TStringUtils.getString("playUntil"), getInputComponent("playUntil"));
-			builder.nextLine();
-			builder.append(TStringUtils.getString("tableParameters"), getInputComponent("tableParameters"), 5);
-			builder.nextLine();
-//			builder.append(TStringUtils.getString("preflopCards"), getInputComponent("preflopCards"));
-			builder.append(TStringUtils.getString("tau"), getInputComponent("tau"));
-			builder.nextLine();
-			builder.append(TStringUtils.getString("reconnBase"), getInputComponent("reconnBase"));
-			builder.append(TStringUtils.getString("reconnBand"), getInputComponent("reconnBand"));
-			builder.nextLine();
-			builder.append(TStringUtils.getString("phi"), getInputComponent("phi"));
-			builder.nextLine();
-			builder.append(getInputComponent("takeOpportunity"));
-			builder.append(getInputComponent("strictPreflop"));
-			setBodyComponent(builder.getPanel());
+		FormLayout layout = new FormLayout(
+				"left:default:grow, 3dlu, left:default:grow, 3dlu, left:default:grow, 3dlu, left:default:grow");
+		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG);
+
+		builder.append(TStringUtils.getString("playTime"), getInputComponent("playTime"));
+		builder.append(TStringUtils.getString("playUntil"), getInputComponent("playUntil"));
+		builder.nextLine();
+		builder.append(TStringUtils.getString("tableParameters"), getInputComponent("tableParameters"), 5);
+		builder.nextLine();
+		// builder.append(TStringUtils.getString("preflopCards"), getInputComponent("preflopCards"));
+		builder.append(TStringUtils.getString("tau"), getInputComponent("tau"));
+		builder.nextLine();
+		builder.append(TStringUtils.getString("reconnBase"), getInputComponent("reconnBase"));
+		builder.append(TStringUtils.getString("reconnBand"), getInputComponent("reconnBand"));
+		builder.nextLine();
+		builder.append(TStringUtils.getString("phi"), getInputComponent("phi"));
+		builder.nextLine();
+		builder.append(getInputComponent("takeOpportunity"));
+		builder.append(getInputComponent("strictPreflop"));
+		setBodyComponent(builder.getPanel());
 
 		setBodyComponent(builder.getPanel());
 
