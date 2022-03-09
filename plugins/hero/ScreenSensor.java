@@ -70,7 +70,7 @@ public class ScreenSensor extends JPanel {
 		double ratio = (float) shape.bounds.width / (float) shape.bounds.height;
 		add(imageLabel, ratio > 2 ? BorderLayout.NORTH : BorderLayout.WEST);
 		add(dataLabel, BorderLayout.CENTER);
-		SimulatorClient params = SimulatorClient.findFirst("playerName = ?", "Hero");
+		TrooperParameter params = TrooperParameter.findFirst("trooper = ?", "Hero");
 		this.currencySymbol = params.getString("currency");
 		this.iTesseract = Hero.getTesseract();
 		clearEnviorement();

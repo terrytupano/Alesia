@@ -15,7 +15,7 @@ import plugins.hero.ozsoft.actions.*;
  */
 public class HeroBot extends Bot {
 
-	private DescriptiveStatistics statistics;
+//	private DescriptiveStatistics statistics;
 
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
@@ -37,10 +37,10 @@ public class HeroBot extends Bot {
 		pokerSimulator.setNunOfOpponets(actV);
 		pokerSimulator.setTablePosition(dealer, actV);
 
-		long t1 = System.currentTimeMillis();
+//		long t1 = System.currentTimeMillis();
 		pokerSimulator.runSimulation();
-		TrooperAction act = trooper.getSimulationAction(simulatorClient);
-		statistics.addValue(System.currentTimeMillis() - t1);
+		TrooperAction act = trooperT.getSimulationAction(trooperParameter);
+//		statistics.addValue(System.currentTimeMillis() - t1);
 
 		PlayerAction action = null;
 		if (act.equals(TrooperAction.FOLD))
@@ -85,12 +85,6 @@ public class HeroBot extends Bot {
 		if (hand.getCard(5) != null)
 			pokerSimulator.cardsBuffer.put("river", hand.getCard(5).toString());
 		this.pot = pot + bet;
-	}
-
-	@Override
-	public void setPokerSimulator(PokerSimulator pokerSimulator, Trooper trooper) {
-		super.setPokerSimulator(pokerSimulator, trooper);
-		this.statistics = new DescriptiveStatistics(10);
 	}
 
 	@Override

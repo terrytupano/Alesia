@@ -69,7 +69,7 @@ public class Trooper extends Task {
 	private double playUntil;
 	private long playTime;
 	private String subObtimalDist;
-	private SimulatorClient simulatorClient;;
+	private TrooperParameter tropperParameter;;
 	private int numOfVillans;
 	private int villansBeacon;
 	private GameRecorder gameRecorder;
@@ -94,7 +94,7 @@ public class Trooper extends Task {
 		// this.pokerSimulator = sensorsArray.getPokerSimulator();
 		this.handsCounter = 0;
 		this.playUntil = 0;
-		this.simulatorClient = null;
+		this.tropperParameter = null;
 		this.villansBeacon = 0;
 
 		// load all preflop ranges
@@ -115,12 +115,12 @@ public class Trooper extends Task {
 	 * link between {@link HeroBot} an this instance. this method perfom all the decitions and return the action that he
 	 * want to execute in simulation eviorement.
 	 * 
-	 * @param client - instace of {@link SimulatorClient} whit all simulation parameters
+	 * @param tropperParameter - instace of {@link TrooperParameter} whit all simulation parameters
 	 * 
 	 * @return the action to perform
 	 */
-	public TrooperAction getSimulationAction(SimulatorClient client) {
-		this.simulatorClient = client;
+	public TrooperAction getSimulationAction(TrooperParameter tropperParameter) {
+		this.tropperParameter = tropperParameter;
 		playTime = System.currentTimeMillis() - startDate;
 		clearEnviorement();
 
@@ -182,13 +182,13 @@ public class Trooper extends Task {
 	 * @return <code>true</code> for oportunity, <code>false</code> oetherwise
 	 */
 	private boolean checkOpportunities() {
-		if (simulatorClient.getBoolean("takeOpportunity") == false)
+		if (tropperParameter.getBoolean("takeOpportunity") == false)
 			return false;
 
 		String txt = null;
-		int phi = simulatorClient.getInteger("phi");
+		int phi = tropperParameter.getInteger("phi");
 
-		// 220302: 100k simulations: 10% and 5%
+		// 220302: 100k simulations: 10% (best) and 5% (second)
 		if (pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
 			preflopCardsModel.setPercentage(phi);
 			if (preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
@@ -197,14 +197,15 @@ public class Trooper extends Task {
 		}
 
 		// posflop
-		// if (pokerSimulator.currentRound >= PokerSimulator.FLOP_CARDS_DEALT) {
-		// double rb = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
-		// if (rb <= phi)
-		// txt = "rankBehind <= " + phi + " %";
-		//
-		// if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
-		// txt = "Is the Nuts.";
-		// }
+		if (pokerSimulator.currentRound >= PokerSimulator.FLOP_CARDS_DEALT) {
+			int phi2 = tropperParameter.getInteger("phi2");
+			double rb = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
+			if (rb <= phi2)
+				txt = "rankBehind <= " + phi2 + " %";
+
+			if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
+				txt = "Is the Nuts.";
+		}
 
 		if (txt != null) {
 			setVariableAndLog(EXPLANATION, "--- OPORTUNITY DETECTED " + txt + " ---");
@@ -226,11 +227,13 @@ public class Trooper extends Task {
 	 * 
 	 */
 	private void clearEnviorement() {
+
+		// in simulation enviorement
 		if (sensorsArray != null) {
 			sensorsArray.clearEnviorement();
 			// read troper variables again (her because i can on the fly update
 			Alesia.getInstance().openDB("hero");
-			simulatorClient = SimulatorClient.findFirst("playername = ?", "Hero");
+			tropperParameter = TrooperParameter.findFirst("trooper = ?", "Hero");
 		}
 		maxRekonAmmo = -1;
 		currentHandCost = 0;
@@ -474,23 +477,23 @@ public class Trooper extends Task {
 	 */
 	private void setPreflopActions() {
 		availableActions.clear();
-		double pfBase = simulatorClient.getDouble("reconnBase");
-		double pfband = simulatorClient.getDouble("reconnBand");
+		double pfBase = tropperParameter.getDouble("reconnBase");
+		double pfband = tropperParameter.getDouble("reconnBand");
 		double base = pokerSimulator.bigBlind * pfBase;
 		double band = pokerSimulator.bigBlind * pfband;
 
-		// 220302: CURRENT SIMULATION TAU PARAMETER VARIATION STRICK PREPLOP; NO OPORTUNITY
+		// 220302: CURRENT SIMULATION TAU PARAMETER VARIATION (STRICK PREPLOP, NO OPORTUNITY)
 		// 211205: the first real simulation, analisis and result: 30%
 		// hero must play with 50% preflop card selection !!! :D
 		int tau = 10;
 
 		// in Simulation eviorement: set the tau parameter if apply
-		tau = simulatorClient.getInteger("tau");
+		tau = tropperParameter.getInteger("tau");
 
 		preflopCardsModel.setPercentage(tau);
 
 		String txt = "Preflop Ok.";
-		boolean strictPreflop = simulatorClient.getBoolean("strictPreflop");
+		boolean strictPreflop = tropperParameter.getBoolean("strictPreflop");
 
 		if (!preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
 			if (strictPreflop) {
@@ -601,12 +604,12 @@ public class Trooper extends Task {
 				// clicked and hero return
 
 				// play time
-				double ptd = simulatorClient.getDouble("playTime");
+				double ptd = tropperParameter.getDouble("playTime");
 				long playtimeParm = (long) (ptd * 3600 * 1000);
 				playTime = System.currentTimeMillis() - startDate;
 
 				// play until parameter
-				double playUntilParm = simulatorClient.getDouble("playUntil");
+				double playUntilParm = tropperParameter.getDouble("playUntil");
 				// read hero chips. this avoid false tropper dismist after all in or bluff (hero chips was very low at
 				// that point)
 				sensorsArray.readSensors(true, sensorsArray.getSensors("hero.chips"));

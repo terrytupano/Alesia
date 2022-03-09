@@ -23,10 +23,10 @@ import plugins.hero.utils.*;
  */
 public class TrooperPanel2 extends TUIFormPanel implements PropertyChangeListener {
 
-	public TrooperPanel2(SimulatorClient model) {
+	public TrooperPanel2(TrooperParameter model) {
 		addPropertyChangeListener(TActionsFactory.ACTION_PERFORMED, this);
 
-		Map<String, ColumnMetadata> columns = SimulatorClient.getMetaModel().getColumnMetadata();
+		Map<String, ColumnMetadata> columns = TrooperParameter.getMetaModel().getColumnMetadata();
 		setModel(model);
 
 		// TODO: old parameter for triangular distribbution

@@ -23,7 +23,7 @@ public class SimulatorClientList extends TUIListPanel {
 
 	public SimulatorClientList() {
 //		addToolBarActions("newModel", "editModel", "deleteModel");
-		setColumns("playerName;chair;tau;phi");
+		setColumns("trooper;chair;strictPreflop;tau;reconnBase;reconnBand;takeOpportunity;phi;phi2");
 		// setIconParameters("0;gender-;rehorsegender");
 	}
 
@@ -35,8 +35,8 @@ public class SimulatorClientList extends TUIListPanel {
 	@Override
 	public void init() {
 		// setMessage("flicka.msg01");
-		Function<String, List<Model>> funtion = (par -> SimulatorClient.findAll());
-		setDBParameters(funtion, SimulatorClient.getMetaModel().getColumnMetadata());
+		Function<String, List<Model>> funtion = (par -> TrooperParameter.findAll());
+		setDBParameters(funtion, TrooperParameter.getMetaModel().getColumnMetadata());
 		// getWebTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 	}
 }

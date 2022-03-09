@@ -852,7 +852,7 @@ public class Table extends Task {
 				}
 				if (DO_NOTHING.equals(whenPlayerLose) && actp < MIN_PLAYERS) {
 					String msg = "Hand: " + numOfHand
-							+ ": the table has less players that allow. Restartting the hole table.";
+							+ ", The table has less players that allow. Restartting the hole table.";
 					notifyMessage(msg);
 					for (Player player2 : players) {
 						player2.resetHand();

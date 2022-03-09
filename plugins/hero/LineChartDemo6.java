@@ -17,27 +17,27 @@ import plugins.hero.ozsoft.*;
 
 public class LineChartDemo6 extends JDialog {
 
-	public LineChartDemo6() {
+	public LineChartDemo6(String resultName) {
 		super(Alesia.getInstance().mainFrame);
-		JFreeChart jFreeChart = createChart(createDataset());
+		JFreeChart jFreeChart = createChart(createDataset(resultName));
 		JPanel jPanel = new ChartPanel(jFreeChart);
 		jPanel.setPreferredSize(new Dimension(1000, 600));
 		setContentPane(jPanel);
 	}
 
-	private static XYDataset createDataset() {
+	private static XYDataset createDataset(String resultName) {
 		XYSeriesCollection xYSeriesCollection = new XYSeriesCollection();
 		Alesia.getInstance().openDB("hero");
-		LazyList<SimulatorClient> clients = SimulatorClient.findAll();
-		for (SimulatorClient client : clients) {
-			String pName = client.getString("playerName");
-			LazyList<SimulatorStatistic> statistics = SimulatorStatistic.find("name = ? AND player = ?", "Bankroll",
+		LazyList<TrooperParameter> troopers = TrooperParameter.findAll();
+		for (TrooperParameter client : troopers) {
+			String pName = client.getString("trooper");
+			LazyList<SimulationResult> statistics = SimulationResult.find("name = ? AND trooper = ?", resultName,
 					pName);
 			// retrive the first element of the statistical series and append the aditional value field
 			String av = statistics.size() > 0 ? statistics.get(0).getString("aditionalValue") : "";
 			XYSeries xYSeries = new XYSeries(pName + "\n(" + av + ")");
 			xYSeriesCollection.addSeries(xYSeries);
-			for (SimulatorStatistic sts : statistics) {
+			for (SimulationResult sts : statistics) {
 				xYSeries.add(sts.getInteger("hands"), sts.getDouble("wins"));
 			}
 		}

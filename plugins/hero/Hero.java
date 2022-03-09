@@ -156,8 +156,8 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public void pauseTrooper(ActionEvent event) {
 		if (activeTrooper != null) {
-//			boolean pause = !activeTrooper.isPaused();
-//			TActionsFactory.getAbstractButton(event).setIcon(TUIUtils.getSmallFontIcon(pause ? '\ue037' : '\ue034'));
+			// boolean pause = !activeTrooper.isPaused();
+			// TActionsFactory.getAbstractButton(event).setIcon(TUIUtils.getSmallFontIcon(pause ? '\ue037' : '\ue034'));
 			activeTrooper.pause(true);
 		}
 	}
@@ -232,37 +232,34 @@ public class Hero extends TPlugin {
 				return null;
 			}
 			// check for hero client
-			if (SimulatorClient.find("name = ?", "Hero") == null) {
+			if (TrooperParameter.find("name = ?", "Hero") == null) {
 				Alesia.showNotification("hero.msg01", "");
 				return null;
 			}
 			// check min num of players
-			if (SimulatorClient.count("isActive = ?", true) < 2) {
+			if (TrooperParameter.count("isActive = ?", true) < 2) {
 				Alesia.showNotification("hero.msg02");
 				return null;
 			}
 
-			LazyList<SimulatorClient> clients = SimulatorClient.findAll().orderBy("chair");
-			SimulatorClient hero = SimulatorClient.findFirst("playerName = ?", "Hero");
+			LazyList<TrooperParameter> tparms = TrooperParameter.findAll().orderBy("chair");
+			TrooperParameter hero = TrooperParameter.findFirst("trooper = ?", "Hero");
 			int buy = hero.getDouble("buyIn").intValue();
 			int bb = hero.getDouble("bigBlind").intValue();
 			simulationTable = new Table(TableType.NO_LIMIT, buy, bb);
-			for (SimulatorClient client : clients) {
-				if (client.getBoolean("isActive")) {
-					String name = client.getString("playerName");
-					String bCls = client.getString("client");
+			for (TrooperParameter tparm : tparms) {
+				if (tparm.getBoolean("isActive")) {
+					String tName = tparm.getString("trooper");
+					String bCls = tparm.getString("client");
 					Class cls = Class.forName("plugins.hero.ozsoft.bots." + bCls);
 					// Constructor cons = cls.getConstructor(String.class);
 					// Bot bot = (Bot) cons.newInstance(name);
 					Bot bot = (Bot) cls.newInstance();
-					bot.messageReceived("PlayerName=" + name);
-					PokerSimulator simulator = new PokerSimulator();
-					Trooper trooper = new Trooper(null, simulator);
-					bot.setPokerSimulator(simulator, trooper);
-					Player p = new Player(name, buy, bot, client.getInteger("chair"));
+					PokerSimulator psim = bot.setPokerSimulator("PHI2 variation", tparm, "phi2");
+					Player p = new Player(tName, buy, bot, tparm.getInteger("chair"));
 					simulationTable.addPlayer(p);
-					if ("Hero".equals(name))
-						simulatorPanel.updatePokerSimulator(simulator);
+					if ("Hero".equals(tName))
+						simulatorPanel.updatePokerSimulator(psim);
 				}
 			}
 			simulationTable.setSpeed(Table.RUN_INTERACTIVE_LOG);
@@ -300,10 +297,18 @@ public class Hero extends TPlugin {
 
 	@org.jdesktop.application.Action
 	public void backrollHistory(ActionEvent event) {
-		LineChartDemo6 chart = new LineChartDemo6();
-		chart.pack();
-		chart.setLocationRelativeTo(null);
-		chart.setVisible(true);
+		LazyList<SimulationResult> results = SimulationResult.find("trooper = ? AND hands = ?", "Hero", 0);
+		ArrayList<String> names = new ArrayList<>();
+		results.forEach(sr-> names.add(sr.getString("name")));
+		String[] possibleValues = names.toArray(new String[0]);
+		Object selectedValue = JOptionPane.showInputDialog(Alesia.getInstance().mainFrame, "Choose one", "Input",
+				JOptionPane.INFORMATION_MESSAGE, null, possibleValues, possibleValues[0]);
+		if (selectedValue != null) {
+			LineChartDemo6 chart = new LineChartDemo6(selectedValue.toString());
+			chart.pack();
+			chart.setLocationRelativeTo(null);
+			chart.setVisible(true);
+		}
 	}
 
 	@org.jdesktop.application.Action
@@ -332,15 +337,15 @@ public class Hero extends TPlugin {
 	private Task start(ActionEvent event) {
 		initTrooperEnviorement();
 		activeTrooper = new Trooper(sensorsArray, sensorsArray.getPokerSimulator());
-//		PropertyChangeListener tl = new PropertyChangeListener() {
-//			public void propertyChange(PropertyChangeEvent evt) {
-//				if (Trooper.PROP_DONE.equals(evt.getPropertyName())) {
-//					 WebLookAndFeel.setForceSingleEventsThread(true);
-//				}
-//			}
-//		};
+		// PropertyChangeListener tl = new PropertyChangeListener() {
+		// public void propertyChange(PropertyChangeEvent evt) {
+		// if (Trooper.PROP_DONE.equals(evt.getPropertyName())) {
+		// WebLookAndFeel.setForceSingleEventsThread(true);
+		// }
+		// }
+		// };
 		// t.getPokerSimulator().setParameter();
-//		activeTrooper.addPropertyChangeListener(tl);
+		// activeTrooper.addPropertyChangeListener(tl);
 		heroPanel.setAllEnabledBut(false, "pauseTrooper", "stopTrooper");
 		return activeTrooper;
 	}

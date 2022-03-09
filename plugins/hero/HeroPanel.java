@@ -33,7 +33,7 @@ public class HeroPanel extends TUIFormPanel {
 
 	public HeroPanel() {
 		this.sensorArrayPanel = new SensorArrayPanel();
-		SimulatorClient model = SimulatorClient.findFirst("playerName = ?", "Hero");
+		TrooperParameter model = TrooperParameter.findFirst("trooper = ?", "Hero");
 		this.trooperPanel = new TrooperPanel(model);
 
 		WebPanel params = new WebPanel();

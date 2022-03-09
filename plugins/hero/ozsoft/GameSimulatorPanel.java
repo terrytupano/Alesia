@@ -31,8 +31,8 @@ public class GameSimulatorPanel extends TUIFormPanel implements PropertyChangeLi
 	private WebPanel pockerSimulatorPanel, trooperPanelContainer;
 
 	public GameSimulatorPanel() {
-//		SimulatorClient hero = SimulatorClient.findFirst("playerName = ?", "Hero");
-		trooperPanel = new TrooperPanel(new SimulatorClient());
+//		SimulatorClient hero = SimulatorClient.findFirst("trooper = ?", "Hero");
+		trooperPanel = new TrooperPanel(new TrooperParameter());
 		TUIUtils.setEnabled(trooperPanel, false);
 
 		trooperPanelContainer = new WebPanel();
@@ -75,10 +75,10 @@ public class GameSimulatorPanel extends TUIFormPanel implements PropertyChangeLi
 		if (TUIListPanel.MODEL_SELECTED.equals(evt.getPropertyName())) {
 			trooperPanelContainer.setVisible(false);
 			trooperPanelContainer.removeAll();
-			SimulatorClient model = (SimulatorClient) evt.getNewValue();
+			TrooperParameter model = (TrooperParameter) evt.getNewValue();
 			boolean ena = true;
 			if (model == null) {
-				model = new SimulatorClient();
+				model = new TrooperParameter();
 				ena = false;
 			}
 			trooperPanel = new TrooperPanel(model);

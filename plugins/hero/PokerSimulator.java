@@ -92,7 +92,7 @@ public class PokerSimulator {
 		streetNames.put(RIVER_CARD_DEALT, "River");
 
 		// retrive tablesparameters direct from database
-		SimulatorClient hero = SimulatorClient.findFirst("playerName = ?", "Hero");
+		TrooperParameter hero = TrooperParameter.findFirst("trooper = ?", "Hero");
 		this.buyIn = hero.getDouble("buyIn");
 		this.bigBlind = hero.getDouble("bigBlind");
 		this.smallBlind = hero.getDouble("smallBlind");

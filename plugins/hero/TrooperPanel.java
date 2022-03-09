@@ -21,9 +21,9 @@ import gui.*;
  */
 public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener {
 
-	public TrooperPanel(SimulatorClient model) {
+	public TrooperPanel(TrooperParameter model) {
 		addPropertyChangeListener(TActionsFactory.ACTION_PERFORMED, this);
-		Map<String, ColumnMetadata> columns = SimulatorClient.getMetaModel().getColumnMetadata();
+		Map<String, ColumnMetadata> columns = TrooperParameter.getMetaModel().getColumnMetadata();
 		setModel(model);
 		// activeCaption
 		// desktop
