@@ -351,12 +351,17 @@ public class PokerSimulator {
 					behind += weight;
 				}
 			}
-			/* Ppot: were behind but moved ahead. */
-			// Ppot=(HP[behind][ahead] + HP[behind][tied] / 2 + HP[tied][ahead] / 2) / (HPTotal[behind] +
 			// HPTotal[tied]);
+
+			/* Ppot: were behind but moved ahead. */
+			// Ppot = (HP[behind][ahead] + HP[behind][tied] / 2 + HP[tied][ahead]/2) / (HPTotal[behind] + HPTotal[tied])
 			Ppot = (HP[2][0] + HP[2][1] / 2d + HP[1][0] / 2d) / (double) (HPTotal[2] + HPTotal[1]);
+			if (Double.isNaN(Ppot))
+				Ppot = 1.0;
 
 			/* Npot: were ahead but fell behind. */
+			// Npot = (HP[ahead][behind] + HP[tied][behind] / 2 + HP[ahead][tied] / 2) / (HPTotal[ahead] +
+			// HPTotal[tied])
 			Npot = (HP[0][2] + HP[1][2] / 2d + HP[0][1] / 2d) / (double) (HPTotal[0] + HPTotal[1]);
 
 			// HandStrength: chance that our hand is better than a random hand.
@@ -385,9 +390,11 @@ public class PokerSimulator {
 		// double EHS = pokerSimulator.HS_n + (1 - pokerSimulator.HS_n) * pokerSimulator.Ppot;
 		// double ammo = EHS * pokerSimulator.heroChips;
 		// ammo= HSn * pot + ((1 - HSn) x Ppot * chip) <<<<<<<<<
-		double HSnC = (1 - HS_n);
-		double ammo = HS_n * potValue + (HSnC * Ppot * heroChips);
-		String txt1 = String.format("%7.2f = %1.3f * %7.2f  + (%1.3f * %1.3f * %7.2f)", ammo, HS_n, potValue, HSnC,
+//		double HSnC = (1 - HS_n);
+		make a copy of ammocontrol and testen in trooper
+		
+		double ammo = HS_n * potValue + (Ppot * heroChips);
+		String txt1 = String.format("%7.2f = %1.3f * %7.2f  + (%1.3f * %7.2f)", ammo, HS_n, potValue,
 				Ppot, heroChips);
 		result.put("ammoControl", txt1);
 		result.put("ammunitions", ammo);

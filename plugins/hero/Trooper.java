@@ -182,30 +182,46 @@ public class Trooper extends Task {
 	 * @return <code>true</code> for oportunity, <code>false</code> oetherwise
 	 */
 	private boolean checkOpportunities() {
-		if (tropperParameter.getBoolean("takeOpportunity") == false)
-			return false;
+		// if (tropperParameter.getBoolean("takeOpportunity") == false)
+		// return false;
 
 		String txt = null;
-		int phi = tropperParameter.getInteger("phi");
 
-		// 220302: 100k simulations: 10% (best) and 5% (second)
-		if (pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
+		int phi = tropperParameter.getInteger("phi");
+		if (phi > 0 && pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
 			preflopCardsModel.setPercentage(phi);
 			if (preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
 				txt = "Current Hole cards in oportunity range.";
 			}
 		}
 
-		// posflop
-		if (pokerSimulator.currentRound >= PokerSimulator.FLOP_CARDS_DEALT) {
-			int phi2 = tropperParameter.getInteger("phi2");
-			double rb = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
-			if (rb <= phi2)
+		// flop
+		int phi2 = tropperParameter.getInteger("phi2");
+		if (phi2 > 0 && pokerSimulator.currentRound == PokerSimulator.FLOP_CARDS_DEALT) {
+			double rankBehind = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
+			if (rankBehind <= phi2)
 				txt = "rankBehind <= " + phi2 + " %";
-
-			if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
-				txt = "Is the Nuts.";
 		}
+
+		// turn
+		int phi3 = tropperParameter.getInteger("phi3");
+		if (phi3 > 0 && pokerSimulator.currentRound == PokerSimulator.TURN_CARD_DEALT) {
+			double rankBehind = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
+			if (rankBehind <= phi3)
+				txt = "rankBehind <= " + phi3 + " %";
+		}
+
+		// river
+		int phi4 = tropperParameter.getInteger("phi4");
+		if (phi4 > 0 && pokerSimulator.currentRound == PokerSimulator.RIVER_CARD_DEALT) {
+			double rankBehind = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
+			if (rankBehind <= phi4)
+				txt = "rankBehind <= " + phi4 + " %";
+		}
+
+		// allways
+		if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
+			txt = "Is the Nuts.";
 
 		if (txt != null) {
 			setVariableAndLog(EXPLANATION, "--- OPORTUNITY DETECTED " + txt + " ---");

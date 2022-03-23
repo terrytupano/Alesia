@@ -46,7 +46,7 @@
   <plugins.hero.PreFlopCardsRangePanel.rangeComboBox type="ComboBoxState" selectedIndex="0"/>
   <preflopStrategy type="ComboBoxState" selectedIndex="0"/>
   <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>
-  <TWebFrame type="WindowState" location="0,40" size="547,735" state="0"/>
+  <TWebFrame type="WindowState" location="0,40" size="547,735" state="1"/>
   <takeOpportunity type="ButtonState" selected="true"/>
   <smallBlid type="string"></smallBlid>
   <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>

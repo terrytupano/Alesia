@@ -21,6 +21,7 @@ import javax.swing.Action;
 
 import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
+import org.jdesktop.application.Task.*;
 
 import com.alee.laf.button.*;
 import com.alee.utils.*;
@@ -221,9 +222,9 @@ public class Hero extends TPlugin {
 		preFlopCardsRange(null);
 	}
 
-	// @org.jdesktop.application.Action(block = BlockingScope.COMPONENT)
+	@org.jdesktop.application.Action(block = BlockingScope.ACTION)
 	// @org.jdesktop.application.Action(block = BlockingScope.WINDOW)
-	@org.jdesktop.application.Action
+	//@org.jdesktop.application.Action
 	public Task startSimulation(ActionEvent event) {
 		try {
 			// check max task
@@ -255,7 +256,7 @@ public class Hero extends TPlugin {
 					// Constructor cons = cls.getConstructor(String.class);
 					// Bot bot = (Bot) cons.newInstance(name);
 					Bot bot = (Bot) cls.newInstance();
-					PokerSimulator psim = bot.setPokerSimulator("PHI2 variation", tparm, "phi2");
+					PokerSimulator psim = bot.setPokerSimulator("phi4 inv. variation", tparm, "phi4");
 					Player p = new Player(tName, buy, bot, tparm.getInteger("chair"));
 					simulationTable.addPlayer(p);
 					if ("Hero".equals(tName))
