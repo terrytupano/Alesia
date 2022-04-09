@@ -386,13 +386,6 @@ public class PokerSimulator {
 			result.put("isTheNut", true);
 
 		// ammo control
-		// EHS = HSn + (1 - HSn) x Ppot
-		// double EHS = pokerSimulator.HS_n + (1 - pokerSimulator.HS_n) * pokerSimulator.Ppot;
-		// double ammo = EHS * pokerSimulator.heroChips;
-		// ammo= HSn * pot + ((1 - HSn) x Ppot * chip) <<<<<<<<<
-//		double HSnC = (1 - HS_n);
-		make a copy of ammocontrol and testen in trooper
-		
 		double ammo = HS_n * potValue + (Ppot * heroChips);
 		String txt1 = String.format("%7.2f = %1.3f * %7.2f  + (%1.3f * %7.2f)", ammo, HS_n, potValue,
 				Ppot, heroChips);

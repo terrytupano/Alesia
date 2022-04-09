@@ -35,7 +35,6 @@ import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.FormLayout;
 
 import core.*;
-import gui.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.actions.*;
@@ -48,6 +47,8 @@ import plugins.hero.ozsoft.actions.*;
  * @author Oscar Stigter
  */
 public class TableDialog extends JDialog implements Client {
+
+	private Table table;
 
 	/** The players at the table. */
 	private final List<Player> players;
@@ -65,7 +66,6 @@ public class TableDialog extends JDialog implements Client {
 	private String actorName;
 
 	private Client proxyClient;
-	private Table table;
 	private final WebTextArea outConsole;
 	private Player heroPlayer;
 
@@ -84,6 +84,7 @@ public class TableDialog extends JDialog implements Client {
 	 */
 	public TableDialog(Table table) {
 		super(Alesia.getInstance().mainFrame);
+		this.table = table;
 		// cache all cards
 		List<File> files = FileUtils.findFilesRecursively("plugins/hero/resources/playCards", f -> true);
 		for (File file : files) {
@@ -92,7 +93,6 @@ public class TableDialog extends JDialog implements Client {
 					ImageUtils.loadImageIcon(resource));
 		}
 		boardPanel = new BoardPanel();
-		this.table = table;
 		this.players = table.getPlayers();
 		playerPanels = new HashMap<String, PlayerPanel>();
 
@@ -136,11 +136,19 @@ public class TableDialog extends JDialog implements Client {
 
 		JPanel controlPanel = new JPanel(new BorderLayout(5, 5));
 		controlPanel.setOpaque(false);
+		// controlPanel.add(table.getControlPanel(), BorderLayout.NORTH);
 		controlPanel.add(TUIUtils.getSmartScroller(outConsole), BorderLayout.CENTER);
+
 		JPanel jp = new JPanel(new VerticalFlowLayout());
 		jp.setOpaque(false);
-		jp.add(TUIUtils.getStartPauseToggleButton(ap -> table.pause(!table.isPaused())));
-		jp.add(stepButton);
+		JToolBar tool = table.getControlPanel();
+		for (Component cmp : tool.getComponents()) {
+			JComponent jcmp = (JComponent) cmp;
+			jp.add(jcmp);
+		}
+
+		// jp.add(TUIUtils.getStartPauseToggleButton(ap -> table.pause(!table.isPaused())));
+		// jp.add(stepButton);
 		controlPanel.add(jp, BorderLayout.EAST);
 
 		// set ui components
@@ -215,14 +223,14 @@ public class TableDialog extends JDialog implements Client {
 		if (log)
 			outConsole.append(msg + "\n");
 
-		proxyClient.messageReceived(message);
-
 		// wait
 		try {
 			Thread.sleep(table.getSpeed());
 		} catch (Exception e) {
 			// do nothig
 		}
+
+		proxyClient.messageReceived(message);
 	}
 
 	@Override
@@ -285,16 +293,14 @@ public class TableDialog extends JDialog implements Client {
 		}
 	}
 
-	@Override
-	public void setVisible(boolean b) {
-		// only show this dialo when the table speed value is >0. this allow doinbackground show the dialog
-		if (table.getSpeed() > Table.RUN_BACKGROUND)
-			super.setVisible(b);
-		else {
-			TTaskMonitor ttm = new TTaskMonitor(table, false);
-			table.setInputBlocker(ttm);
-		}
-	}
+	/*
+	 * 
+	 * @Override public void setVisible(boolean b) { // only show this dialo when the table speed value is >0. this
+	 * allow doinbackground show the dialog if (table.getSpeed() > Table.RUN_BACKGROUND) super.setVisible(b); else {
+	 * TTaskMonitor ttm = new TTaskMonitor(table, false); table.setInputBlocker(ttm); } }
+	 * 
+	 */
+
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		// boardPanel.setMessage("Please select an action:");

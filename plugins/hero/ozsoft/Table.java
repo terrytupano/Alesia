@@ -34,11 +34,22 @@
 
 package plugins.hero.ozsoft;
 
+import java.awt.*;
+import java.awt.event.*;
 import java.util.*;
+import java.util.List;
+
+import javax.swing.*;
 
 import org.jdesktop.application.*;
 
+import com.alee.laf.checkbox.*;
+import com.alee.laf.combobox.*;
+import com.alee.laf.toolbar.*;
+import com.alee.managers.settings.*;
+
 import core.*;
+import dev.utils.*;
 import plugins.hero.UoAHandEval.*;
 import plugins.hero.ozsoft.actions.*;
 
@@ -57,15 +68,6 @@ public class Table extends Task {
 
 	/** Whether players will always call the showdown, or fold when no chance. */
 	private static final boolean ALWAYS_CALL_SHOWDOWN = false;
-
-	/** simulation running mode */
-	public static final int RUN_BACKGROUND = 0;
-
-	/** simulation running mode */
-	public static final int RUN_INTERACTIVE_NO_LOG = 10;
-
-	/** simulation running mode */
-	public static final int RUN_INTERACTIVE_LOG = 50;
 
 	/** valid action when a villan or hero loose the battle: End the simulation. */
 	public static final String GAME_OVER = "gameOver";
@@ -131,15 +133,17 @@ public class Table extends Task {
 
 	/** num of current plyed hands */
 	private int numOfHand;
-	public int buyIn, bigBlind;
-	private Player heroPlayer;
-	private boolean paused;
 	private int speed;
+	public int buyIn, bigBlind;
+	private boolean paused, pauseWhenHero;
 	private int simulationsHand;
 	private String whenPlayerLose = DO_NOTHING;
 
+	private WebToolBar toolBar;
+
 	public Table(TableType type, int buyIn, int bigBlind) {
 		super(Alesia.getInstance());
+		TActionsFactory.insertActions(this);
 		this.tableType = type;
 		this.bigBlind = bigBlind;
 		this.buyIn = buyIn;
@@ -148,8 +152,27 @@ public class Table extends Task {
 		deck = new UoADeck();
 		pots = new ArrayList<Pot>();
 		board = new UoAHand();
-		speed = RUN_INTERACTIVE_LOG;
 		simulationsHand = 100000;
+
+		// create control components
+		NumericTextField simHands = TUIUtils.getNumericTextField("simHands", "100000", 6, null);
+		WebCheckBox pauseCheckBox = TUIUtils.getWebCheckBox("Wenn Hero ist dran, pause");
+		pauseCheckBox.addActionListener(ap -> pauseWhenHero = pauseCheckBox.isSelected());
+		WebComboBox speedComboBox = TUIUtils.getTWebComboBox("speedComboBox", "sim.table.speed");
+		speedComboBox.addActionListener(
+				ap -> speed = Integer.parseInt(((TEntry) speedComboBox.getSelectedItem()).getKey().toString()));
+		WebComboBox actionComboBox = TUIUtils.getTWebComboBox("actionComboBox", "sim.table.actions");
+		actionComboBox.addActionListener(
+				ap -> whenPlayerLose = ((TEntry) actionComboBox.getSelectedItem()).getKey().toString());
+		// Alesia.getInstance().getContext().getActionMap(object);
+		toolBar = TUIUtils.getWebToolBar();
+		toolBar.add(actionComboBox, speedComboBox, simHands, pauseCheckBox);
+		// register settings
+		for (Component cmp : toolBar.getComponents()) {
+			JComponent jcmp = (JComponent) cmp;
+			Configuration cnf = (Configuration) jcmp.getClientProperty("settingsProcessor");
+			((SettingsMethods) jcmp).registerSettings(cnf);
+		}
 	}
 
 	/**
@@ -169,6 +192,11 @@ public class Table extends Task {
 	public Player getActor() {
 		return actor.publicClone();
 	}
+
+	public WebToolBar getControlPanel() {
+		return toolBar;
+	}
+
 	/**
 	 * return the current round expresed in cards numbers. 2 = preflop, 5 = Flop, 6 = Turn, 7 = River
 	 * 
@@ -180,7 +208,6 @@ public class Table extends Task {
 	public int getNumOfHand() {
 		return numOfHand;
 	}
-
 	public List<Player> getPlayers() {
 		// ArrayList<Player> tmp = new ArrayList<>();
 		// players.forEach(p -> tmp.add(p.publicClone()));
@@ -199,38 +226,15 @@ public class Table extends Task {
 		return paused;
 	}
 
+	@org.jdesktop.application.Action
+	public void pause(ActionEvent event) {
+		pause(true);
+		JToggleButton tb = (JToggleButton) event.getSource();
+		tb.setSelected(isPaused());
+	}
+
 	public void pause(boolean pause) {
 		this.paused = pause;
-	}
-
-	/**
-	 * set the number of simulations. 0 mean the simulation run forever until hero lose (setted in
-	 * {@link Table#whenPlayerLose(boolean, String)} method) or i press the cansel button in the UI interface.
-	 * 
-	 * @param simulationsHand - num of hands. see
-	 */
-	public void setSimulationsHand(int simulationsHand) {
-		this.simulationsHand = simulationsHand;
-	}
-
-	/**
-	 * set the speed for the simulation. this speed is the nummer of milliseconds bethween actions. 0 means this table
-	 * instance will not show the game flow, instead olny a dialog with the number of simulations performed
-	 * 
-	 * @param speed - speed in milliseconds
-	 */
-	public void setSpeed(int speed) {
-
-		this.speed = speed;
-	}
-
-	/**
-	 * set the action that the simulation will perform if a player loose the battle.
-	 * 
-	 * @param action - action to perform
-	 */
-	public void whenPlayerLose(String action) {
-		this.whenPlayerLose = action;
 	}
 
 	/**
@@ -333,6 +337,18 @@ public class Table extends Task {
 				// // Otherwise allow client to act.
 				Set<PlayerAction> allowedActions = getAllowedActions(actor);
 				action = actor.getClient().act(minBet, bet, allowedActions);
+
+				// ist hero, Pause
+				if ("Hero".equals(actor.getName()))
+					while (pauseWhenHero) {
+						try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+
 				// // Verify chosen action to guard against broken clients (accidental or on purpose).
 				// if (!allowedActions.contains(action)) {
 				// if (action instanceof BetAction && !allowedActions.contains(PlayerAction.BET)) {
@@ -547,7 +563,6 @@ public class Table extends Task {
 							} else {
 								potDivision.put(winner, potShare);
 							}
-
 						}
 					}
 					// Determine if we have any odd chips left in the pot.
@@ -565,7 +580,6 @@ public class Table extends Task {
 								oddChips--;
 							}
 						}
-
 					}
 					pot.clear();
 				}
@@ -820,9 +834,6 @@ public class Table extends Task {
 	@Override
 	protected Object doInBackground() throws Exception {
 		try {
-			// save heroPlayer for later comparation
-			this.heroPlayer = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
-
 			for (Player player : players) {
 				player.getClient().joinedTable(tableType, bigBlind, players);
 			}
@@ -899,8 +910,9 @@ public class Table extends Task {
 
 				if (noOfActivePlayers > 1) {
 					playHand();
+					Player hero = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
 					firePropertyChange(PROP_MESSAGE, numOfHand, "# of Players: " + noOfActivePlayers + " played Hands: "
-							+ numOfHand + " Hero Chips: " + heroPlayer.getCash());
+							+ numOfHand + " Hero Chips: " + hero.getCash());
 					if (simulationsHand > 0) {
 						double d = (numOfHand * 1.0) / (simulationsHand * 1.0);
 						firePropertyChange("progress", numOfHand, (int) (d * 100));

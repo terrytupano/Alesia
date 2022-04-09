@@ -69,7 +69,7 @@ public class Trooper extends Task {
 	private double playUntil;
 	private long playTime;
 	private String subObtimalDist;
-	private TrooperParameter tropperParameter;;
+	private TrooperParameter trooperParameter;;
 	private int numOfVillans;
 	private int villansBeacon;
 	private GameRecorder gameRecorder;
@@ -94,7 +94,7 @@ public class Trooper extends Task {
 		// this.pokerSimulator = sensorsArray.getPokerSimulator();
 		this.handsCounter = 0;
 		this.playUntil = 0;
-		this.tropperParameter = null;
+		this.trooperParameter = null;
 		this.villansBeacon = 0;
 
 		// load all preflop ranges
@@ -120,7 +120,7 @@ public class Trooper extends Task {
 	 * @return the action to perform
 	 */
 	public TrooperAction getSimulationAction(TrooperParameter tropperParameter) {
-		this.tropperParameter = tropperParameter;
+		this.trooperParameter = tropperParameter;
 		playTime = System.currentTimeMillis() - startDate;
 		clearEnviorement();
 
@@ -182,58 +182,55 @@ public class Trooper extends Task {
 	 * @return <code>true</code> for oportunity, <code>false</code> oetherwise
 	 */
 	private boolean checkOpportunities() {
-		// if (tropperParameter.getBoolean("takeOpportunity") == false)
-		// return false;
-
 		String txt = null;
-
-		int phi = tropperParameter.getInteger("phi");
-		if (phi > 0 && pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
-			preflopCardsModel.setPercentage(phi);
-			if (preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
-				txt = "Current Hole cards in oportunity range.";
-			}
-		}
-
-		// flop
-		int phi2 = tropperParameter.getInteger("phi2");
-		if (phi2 > 0 && pokerSimulator.currentRound == PokerSimulator.FLOP_CARDS_DEALT) {
-			double rankBehind = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
-			if (rankBehind <= phi2)
-				txt = "rankBehind <= " + phi2 + " %";
-		}
-
-		// turn
-		int phi3 = tropperParameter.getInteger("phi3");
-		if (phi3 > 0 && pokerSimulator.currentRound == PokerSimulator.TURN_CARD_DEALT) {
-			double rankBehind = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
-			if (rankBehind <= phi3)
-				txt = "rankBehind <= " + phi3 + " %";
-		}
-
-		// river
-		int phi4 = tropperParameter.getInteger("phi4");
-		if (phi4 > 0 && pokerSimulator.currentRound == PokerSimulator.RIVER_CARD_DEALT) {
-			double rankBehind = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
-			if (rankBehind <= phi4)
-				txt = "rankBehind <= " + phi4 + " %";
-		}
-
-		// allways
-		if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
-			txt = "Is the Nuts.";
-
-		if (txt != null) {
-			setVariableAndLog(EXPLANATION, "--- OPORTUNITY DETECTED " + txt + " ---");
-			subObtimalDist = "UniformReal";
-			loadActions(pokerSimulator.heroChips);
-
-			// to this point, if availableactions are empty, means hero is responding a extreme hihgt raise. that mean
-			// meybe
-			// hero is weak. at this point reise mean all in. (call actions is not considerer because is not oportuniti)
-			if (availableActions.size() == 0 && pokerSimulator.raiseValue >= 0)
-				availableActions.add(new TrooperAction("raise", pokerSimulator.raiseValue));
-		}
+		//
+		// int phi = trooperParameter.getInteger("phi");
+		// if (phi > 0 && pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
+		// preflopCardsModel.setPercentage(phi);
+		// if (preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
+		// txt = "Current Hole cards in oportunity range.";
+		// }
+		// }
+		//
+		// // flop
+		// int phi2 = trooperParameter.getInteger("phi2");
+		// if (phi2 > 0 && pokerSimulator.currentRound == PokerSimulator.FLOP_CARDS_DEALT) {
+		// double rankBehind = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
+		// if (rankBehind <= phi2)
+		// txt = "rankBehind <= " + phi2 + " %";
+		// }
+		//
+		// // turn
+		// int phi3 = trooperParameter.getInteger("phi3");
+		// if (phi3 > 0 && pokerSimulator.currentRound == PokerSimulator.TURN_CARD_DEALT) {
+		// double rankBehind = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
+		// if (rankBehind <= phi3)
+		// txt = "rankBehind <= " + phi3 + " %";
+		// }
+		//
+		// // river
+		// int phi4 = trooperParameter.getInteger("phi4");
+		// if (phi4 > 0 && pokerSimulator.currentRound == PokerSimulator.RIVER_CARD_DEALT) {
+		// double rankBehind = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
+		// if (rankBehind <= phi4)
+		// txt = "rankBehind <= " + phi4 + " %";
+		// }
+		//
+		// // allways
+		// if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
+		// txt = "Is the Nuts.";
+		//
+		// if (txt != null) {
+		// setVariableAndLog(EXPLANATION, "--- OPORTUNITY DETECTED " + txt + " ---");
+		// subObtimalDist = "UniformReal";
+		// loadActions(pokerSimulator.heroChips);
+		//
+		// // to this point, if availableactions are empty, means hero is responding a extreme hihgt raise. that mean
+		// // meybe
+		// // hero is weak. at this point reise mean all in. (call actions is not considerer because is not oportuniti)
+		// if (availableActions.size() == 0 && pokerSimulator.raiseValue >= 0)
+		// availableActions.add(new TrooperAction("raise", pokerSimulator.raiseValue));
+		// }
 
 		return txt != null;
 	}
@@ -249,7 +246,7 @@ public class Trooper extends Task {
 			sensorsArray.clearEnviorement();
 			// read troper variables again (her because i can on the fly update
 			Alesia.getInstance().openDB("hero");
-			tropperParameter = TrooperParameter.findFirst("trooper = ?", "Hero");
+			trooperParameter = TrooperParameter.findFirst("trooper = ?", "Hero");
 		}
 		maxRekonAmmo = -1;
 		currentHandCost = 0;
@@ -310,11 +307,10 @@ public class Trooper extends Task {
 	 * this method retrive the ammount of chips of all currentliy active villans. the 0 position is the amount of chips
 	 * computed and the index 1 is the number of active villans
 	 * 
-	 * @return - [total chips, num of villans] private double[] getOportunityAvg() { double[] rval = new double[2]; //
-	 *         FIXME: for simulation purpose, return my chips if (sensorsArray == null) { rval[0] =
-	 *         pokerSimulator.heroChips; rval[1] = 3; return rval; } List<GamePlayer> list = gameRecorder.getPlayers();
-	 *         for (GamePlayer gp : list) { if (gp.isActive() && gp.getId() > 0) { rval[0] += gp.getChips(); rval[1]++;
-	 *         } } rval[0] = rval[0] / rval[1]; return rval; }
+	 * TODO: maybe ammocontrol shoud control loadaction(ammo) instead loadaction(herrochips) make a comment !!!
+	 * 
+	 * NOTE: Die Liste von möglichen Aktions ist nach Wert der Aktion geordnet. das Verhältnis ist 1-1 doch ist es
+	 * wichtig die Werte gucken. das gibt mir ein Idee von zukünftige Aggression.
 	 */
 
 	private TrooperAction getSubOptimalAction() {
@@ -436,8 +432,16 @@ public class Trooper extends Task {
 		// TODO: check Poker Expected Value (EV) Formula: EV = (%W * $W) – (%L * $L)
 		// https://www.splitsuit.com/simple-poker-expected-value-formula
 
+		// TODO: emporal for simulation
+		double HS_n = (double) pokerSimulator.uoAEvaluation.get("HS");
+		double Ppot = (double) pokerSimulator.uoAEvaluation.get("PPot");
+		double alpha = trooperParameter.getDouble("alpha");
+		double zeta = trooperParameter.getDouble("zeta");
+
+		double ammo = (HS_n * pokerSimulator.potValue * alpha) + (Ppot * pokerSimulator.heroChips * zeta);
+
 		// no calculation for 0 values
-		double ammo = (double) pokerSimulator.uoAEvaluation.get("ammunitions");
+		// double ammo = (double) pokerSimulator.uoAEvaluation.get("ammunitions");
 		if (ammo == 0 || pokerSimulator.winProb_n == 0) {
 			availableActions.clear();
 			Hero.heroLogger.info(String.format("No posible decision for values prob = %1.3f or amunitions = %7.2f",
@@ -453,37 +457,6 @@ public class Trooper extends Task {
 		availableActions.removeIf(ta -> ta.expectedValue < 0);
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 
-		// double prob = pokerSimulator.winProb_n;
-		//
-		// // TODO: check Poker Expected Value (EV) Formula: EV = (%W * $W) – (%L * $L)
-		// // https://www.splitsuit.com/simple-poker-expected-value-formula
-		//
-		// // ammo control
-		// // EHS = HSn + (1 - HSn) x Ppot
-		// // double EHS = pokerSimulator.HS_n + (1 - pokerSimulator.HS_n) * pokerSimulator.Ppot;
-		// // double ammo = EHS * pokerSimulator.heroChips;
-		// // ammo= HSn * pot + ((1 - HSn) x Ppot * chip) <<<<<<<<<
-		// double HSnC = (1 - pokerSimulator.HS_n);
-		// double ammo = pokerSimulator.HS_n * pokerSimulator.potValue
-		// + HSnC * pokerSimulator.Ppot * pokerSimulator.heroChips;
-		// String txt1 = String.format("%7.2f = %1.3f * %7.2f + (%1.3f * %1.3f * %7.2f)", ammo, pokerSimulator.HS_n,
-		// pokerSimulator.potValue, HSnC, pokerSimulator.Ppot, pokerSimulator.heroChips);
-		// setVariableAndLog(EXPLANATION, txt1);
-		//
-		// // no calculation for 0 values
-		// if (ammo == 0 || prob == 0) {
-		// availableActions.clear();
-		// Hero.heroLogger.info(
-		// String.format("No posible decision for values prob = %1.3f or amunitions = %7.2f", prob, ammo));
-		// return;
-		// }
-		// for (TrooperAction act : availableActions) {
-		// double ev = (prob * ammo) - act.amount;
-		// act.expectedValue = ev;
-		// }
-		// // remove all negative values
-		// availableActions.removeIf(ta -> ta.expectedValue < 0);
-		// // 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 	}
 
 	/**
@@ -493,23 +466,17 @@ public class Trooper extends Task {
 	 */
 	private void setPreflopActions() {
 		availableActions.clear();
-		double pfBase = tropperParameter.getDouble("reconnBase");
-		double pfband = tropperParameter.getDouble("reconnBand");
-		double base = pokerSimulator.bigBlind * pfBase;
-		double band = pokerSimulator.bigBlind * pfband;
+		double base = pokerSimulator.bigBlind * trooperParameter.getDouble("reconnBase");
+		double band = pokerSimulator.bigBlind * trooperParameter.getDouble("reconnBand");
 
 		// 220302: CURRENT SIMULATION TAU PARAMETER VARIATION (STRICK PREPLOP, NO OPORTUNITY)
 		// 211205: the first real simulation, analisis and result: 30%
 		// hero must play with 50% preflop card selection !!! :D
-		int tau = 10;
-
-		// in Simulation eviorement: set the tau parameter if apply
-		tau = tropperParameter.getInteger("tau");
-
+		int tau = trooperParameter.getInteger("tau");
 		preflopCardsModel.setPercentage(tau);
 
 		String txt = "Preflop Ok.";
-		boolean strictPreflop = tropperParameter.getBoolean("strictPreflop");
+		boolean strictPreflop = trooperParameter.getBoolean("strictPreflop");
 
 		if (!preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
 			if (strictPreflop) {
@@ -620,12 +587,12 @@ public class Trooper extends Task {
 				// clicked and hero return
 
 				// play time
-				double ptd = tropperParameter.getDouble("playTime");
+				double ptd = trooperParameter.getDouble("playTime");
 				long playtimeParm = (long) (ptd * 3600 * 1000);
 				playTime = System.currentTimeMillis() - startDate;
 
 				// play until parameter
-				double playUntilParm = tropperParameter.getDouble("playUntil");
+				double playUntilParm = trooperParameter.getDouble("playUntil");
 				// read hero chips. this avoid false tropper dismist after all in or bluff (hero chips was very low at
 				// that point)
 				sensorsArray.readSensors(true, sensorsArray.getSensors("hero.chips"));

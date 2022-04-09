@@ -62,13 +62,10 @@ public class Hero extends TPlugin {
 		if (Hero.simulationTable == null)
 			return true;
 
-		// never log in simulationSpeed <= 10;
-		if (Hero.simulationTable.getSpeed() == Table.RUN_BACKGROUND)
-			return false;
-
+		// TODO: ---------------- remove
 		// in simulation eviorement, update panel only for hero when the speed is not 0
-		if (Hero.simulationTable.getSpeed() < Table.RUN_INTERACTIVE_LOG
-				|| !"Hero".equals(Hero.simulationTable.getActor().getName()))
+		// if (Hero.simulationTable.getSpeed() < 10 || !"Hero".equals(Hero.simulationTable.getActor().getName()))
+		if (!"Hero".equals(Hero.simulationTable.getActor().getName()))
 			return false;
 
 		// the speed is correct and the current player is Hero
@@ -224,7 +221,7 @@ public class Hero extends TPlugin {
 
 	@org.jdesktop.application.Action(block = BlockingScope.ACTION)
 	// @org.jdesktop.application.Action(block = BlockingScope.WINDOW)
-	//@org.jdesktop.application.Action
+	// @org.jdesktop.application.Action
 	public Task startSimulation(ActionEvent event) {
 		try {
 			// check max task
@@ -256,20 +253,15 @@ public class Hero extends TPlugin {
 					// Constructor cons = cls.getConstructor(String.class);
 					// Bot bot = (Bot) cons.newInstance(name);
 					Bot bot = (Bot) cls.newInstance();
-					PokerSimulator psim = bot.setPokerSimulator("phi4 inv. variation", tparm, "phi4");
+					PokerSimulator psim = bot.setPokerSimulator("Zeta variation", tparm, "zeta");
 					Player p = new Player(tName, buy, bot, tparm.getInteger("chair"));
 					simulationTable.addPlayer(p);
 					if ("Hero".equals(tName))
 						simulatorPanel.updatePokerSimulator(psim);
 				}
 			}
-			simulationTable.setSpeed(Table.RUN_INTERACTIVE_LOG);
-			simulationTable.setSimulationsHand(100000);
-			simulationTable.whenPlayerLose(Table.DO_NOTHING);
 
 			TableDialog dialog = new TableDialog(simulationTable);
-
-			// WARNING: this method is overrided!!!
 			dialog.setVisible(true);
 
 			return simulationTable;
@@ -300,7 +292,7 @@ public class Hero extends TPlugin {
 	public void backrollHistory(ActionEvent event) {
 		LazyList<SimulationResult> results = SimulationResult.find("trooper = ? AND hands = ?", "Hero", 0);
 		ArrayList<String> names = new ArrayList<>();
-		results.forEach(sr-> names.add(sr.getString("name")));
+		results.forEach(sr -> names.add(sr.getString("name")));
 		String[] possibleValues = names.toArray(new String[0]);
 		Object selectedValue = JOptionPane.showInputDialog(Alesia.getInstance().mainFrame, "Choose one", "Input",
 				JOptionPane.INFORMATION_MESSAGE, null, possibleValues, possibleValues[0]);

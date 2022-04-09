@@ -228,21 +228,6 @@ public class TUIUtils {
 		return jcbox;
 	}
 
-	/**
-	 * crea y retorna una instancia de <code>JComboBox</code> diseñada presentar una paleta de colores DESENTEEEEEEEEEEE
-	 * POR FAVOOOOOOORRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
-	 * 
-	 * 
-	 * @param tid - id para tooltip
-	 * @param col - color en formato <code>Integer.decode(Sttring)</code> (0xHexDigits 0XHexDigits #HexDigits)
-	 * 
-	 * @return selector de color
-	 */
-	public static JComboBox getColorJComboBox(String tid, Color col) {
-		ColorComboBox jcbox = new ColorComboBox(col);
-		setToolTip(tid, jcbox);
-		return jcbox;
-	}
 
 	/**
 	 * return a console style {@link WebEditorPane}
@@ -420,7 +405,7 @@ public class TUIUtils {
 	 * @param field - the field name
 	 * @param model - the Model
 	 * 
-	 * @return {@link WebComboBox}
+	 * @return {@link JCheckBox}
 	 */
 	public static JCheckBox getJCheckBox(String field, Model model) {
 		JCheckBox jcb = getJCheckBox(field, model.getBoolean(field));

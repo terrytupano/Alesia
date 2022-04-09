@@ -1,38 +1,46 @@
 <SettingsGroup id="SG-1kf5Q-Vyt4N-mPWYz-TaZ1E-ID" name="Alesia">
   <table.currency type="ComboBoxState" selectedIndex="2"/>
-  <decisionMethod type="ComboBoxState" selectedIndex="0"/>
-  <UserLogIn.rememberUser type="ButtonState" selected="true"/>
-  <logging.level type="ComboBoxState" selectedIndex="3"/>
-  <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
-  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="2"/>
-  <reconnBand type="TextComponentState" text="10" caretPosition="2"/>
+  <entry key="Wenn Hero ist dran, pause" type="ButtonState" selected="true"/>
+  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="0"/>
   <tDistributionRange type="ComboBoxState" selectedIndex="4"/>
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
   <SensorPanel.imageType type="ComboBoxState" selectedIndex="0"/>
-  <buyIn type="string"></buyIn>
-  <play.goal type="TextComponentState" text="300" caretPosition="3"/>
-  <table.smallBlid type="TextComponentState" text="1000" caretPosition="4"/>
   <preflopRekonAmmo.hand type="TextComponentState" text="10" caretPosition="2"/>
   <plugins.hero.utils.PreFlopCardsRangePanel.rangeComboBox type="ComboBoxState" selectedIndex="2"/>
+  <speedComboBox type="ComboBoxState" selectedIndex="0"/>
   <rememberUser type="string">admin</rememberUser>
-  <topUpperHand type="ComboBoxState" selectedIndex="0"/>
   <bigBlid type="string"></bigBlid>
-  <availableActions type="TextComponentState" text="*all" caretPosition="4"/>
-  <play.maxRaise type="TextComponentState" text="4" caretPosition="1"/>
   <table.bigBlid type="TextComponentState" text="2000" caretPosition="4"/>
   <play.time type="TextComponentState" text="0" caretPosition="1"/>
-  <play.until type="TextComponentState" text="0.6" caretPosition="3"/>
   <test type="TextComponentState" text="02+01 preflop" caretPosition="13"/>
   <preflopCards type="ComboBoxState" selectedIndex="3"/>
   <bluffUpperBound type="TextComponentState" text="200" caretPosition="3"/>
-  <table.parameters type="ComboBoxState" selectedIndex="0"/>
-  <PokerSimulator.HelperFilter type="ComboBoxState" selectedIndex="5"/>
   <plugins.hero.utils.PreFlopCardsPanel.rangeComboBox type="ComboBoxState" selectedIndex="2"/>
-  <oddCalculation type="ComboBoxState" selectedIndex="1"/>
   <postflopAmmoControl type="ComboBoxState" selectedIndex="0"/>
   <SensorPanel.filter type="ComboBoxState" selectedIndex="13"/>
   <reconnBase type="TextComponentState" text="1" caretPosition="1"/>
   <bigBlindFactor type="ComboBoxState" selectedIndex="5"/>
+  <actionComboBox type="ComboBoxState" selectedIndex="1"/>
+  <plugins.hero.PreFlopCardsRangePanel.rangeComboBox type="ComboBoxState" selectedIndex="0"/>
+  <preflopStrategy type="ComboBoxState" selectedIndex="0"/>
+  <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>
+  <smallBlid type="string"></smallBlid>
+  <table.buyIn type="TextComponentState" text="200000" caretPosition="6"/>
+  <decisionMethod type="ComboBoxState" selectedIndex="0"/>
+  <UserLogIn.rememberUser type="ButtonState" selected="true"/>
+  <logging.level type="ComboBoxState" selectedIndex="3"/>
+  <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
+  <reconnBand type="TextComponentState" text="10" caretPosition="2"/>
+  <buyIn type="string"></buyIn>
+  <play.goal type="TextComponentState" text="300" caretPosition="3"/>
+  <table.smallBlid type="TextComponentState" text="1000" caretPosition="4"/>
+  <topUpperHand type="ComboBoxState" selectedIndex="0"/>
+  <availableActions type="TextComponentState" text="*all" caretPosition="4"/>
+  <play.maxRaise type="TextComponentState" text="4" caretPosition="1"/>
+  <play.until type="TextComponentState" text="0.6" caretPosition="3"/>
+  <table.parameters type="ComboBoxState" selectedIndex="0"/>
+  <PokerSimulator.HelperFilter type="ComboBoxState" selectedIndex="5"/>
+  <oddCalculation type="ComboBoxState" selectedIndex="1"/>
   <FlickaDockablePane type="DockablePaneState">
     <root class="DockableList" id="EL-g2d81-dq29i-2TN45-B1pZJ-ID" size="1002,634" orientation="horizontal">
       <DockableFrame id="plugins.flicka.DBExplorer" size="487,61" state="docked" restoreState="docked"/>
@@ -43,14 +51,10 @@
       </DockableList>
     </root>
   </FlickaDockablePane>
-  <plugins.hero.PreFlopCardsRangePanel.rangeComboBox type="ComboBoxState" selectedIndex="0"/>
-  <preflopStrategy type="ComboBoxState" selectedIndex="0"/>
-  <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>
-  <TWebFrame type="WindowState" location="0,40" size="547,735" state="1"/>
+  <TWebFrame type="WindowState" location="0,40" size="547,735" state="0"/>
+  <simHands type="TextComponentState" text="100000" caretPosition="6"/>
   <takeOpportunity type="ButtonState" selected="true"/>
-  <smallBlid type="string"></smallBlid>
   <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>
   <bluff type="TextComponentState" text="200" caretPosition="3"/>
   <oppLowerBound type="TextComponentState" text="90" caretPosition="2"/>
-  <table.buyIn type="TextComponentState" text="200000" caretPosition="6"/>
 </SettingsGroup>

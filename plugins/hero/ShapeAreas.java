@@ -46,8 +46,10 @@ public class ShapeAreas {
 	public void read() {
 		try {
 
+			Properties privat = new Properties();
+			privat.load(new FileInputStream(new File("Private.properties")));
+			Biff8EncryptionKey.setCurrentUserPassword(privat.getProperty("hero.pptPasswort"));
 			FileInputStream fis = new FileInputStream(file);
-			Biff8EncryptionKey.setCurrentUserPassword("11043023");
 			HSLFSlideShow ppt = new HSLFSlideShow(new HSLFSlideShowImpl(fis));
 
 			// background. paste the image from clipboard genera an PNG image
