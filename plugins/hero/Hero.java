@@ -148,7 +148,7 @@ public class Hero extends TPlugin {
 		// temporal: must be loaded from troperPanel
 		// tableFile = new File("plugins/hero/resources/ps-main table.ppt");
 		initTrooperEnviorement();
-		Alesia.getInstance().getMainFrame().setBounds(0, 40, 547, 735);
+		Alesia.getInstance().getMainFrame().setBounds(10, 65, 620, 900);
 	}
 
 	@org.jdesktop.application.Action
@@ -180,7 +180,7 @@ public class Hero extends TPlugin {
 			return null;
 
 		}
-		TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 840 600 /mov 532 41");
+		TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 1200 1200 /mov 630 65 ");
 		isTestMode = false;
 		return start(event);
 	}
@@ -253,7 +253,7 @@ public class Hero extends TPlugin {
 					// Constructor cons = cls.getConstructor(String.class);
 					// Bot bot = (Bot) cons.newInstance(name);
 					Bot bot = (Bot) cls.newInstance();
-					PokerSimulator psim = bot.setPokerSimulator("Zeta variation", tparm, "zeta");
+					PokerSimulator psim = bot.setPokerSimulator("Beta variation", tparm, "beta");
 					Player p = new Player(tName, buy, bot, tparm.getInteger("chair"));
 					simulationTable.addPlayer(p);
 					if ("Hero".equals(tName))
@@ -319,7 +319,7 @@ public class Hero extends TPlugin {
 	private void initTrooperEnviorement() {
 		// dont put isTestMode = false; HERE !!!!!!!!!!!!!!!!!
 		simulationTable = null;
-		File tableFile = new File("plugins/hero/resources/ps-main table.ppt");
+		File tableFile = new File("plugins/hero/resources/ps-10-win11.ppt");
 		ShapeAreas shapeAreas = new ShapeAreas(tableFile);
 		shapeAreas.read();
 		sensorsArray = new SensorsArray();

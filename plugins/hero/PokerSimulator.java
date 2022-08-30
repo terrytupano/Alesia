@@ -19,11 +19,12 @@ import plugins.hero.utils.*;
 
 /**
  * 
- * Link betwen hero and PokerProthsis library. This Class perform th simulation and store all result for futher use.
- * this is for <I>Me vs Opponents</I> simulator.
+ * Link betwen hero and PokerProthsis library. This Class perform th simulation
+ * and store all result for futher use. this is for <I>Me vs Opponents</I>
+ * simulator.
  * <p>
- * this its the class that contain all nesesary information for desicion making and is populated bby the class
- * {@link SensorsArray}
+ * this its the class that contain all nesesary information for desicion making
+ * and is populated bby the class {@link SensorsArray}
  * 
  */
 public class PokerSimulator {
@@ -61,8 +62,10 @@ public class PokerSimulator {
 	/**
 	 * ............
 	 */
-	// TODO: all prevvalue chips related muss be tracked by the correct instance of {@link GameRecorder}
-	// TODO: all heromax chips related muss be tracked by the correct instance of {@link GameRecorder}
+	// TODO: all prevvalue chips related muss be tracked by the correct instance of
+	// {@link GameRecorder}
+	// TODO: all heromax chips related muss be tracked by the correct instance of
+	// {@link GameRecorder}
 	public double heroChips, heroChipsMax;
 	public double callValue, raiseValue, potValue, prevPotValue;
 	public int opponents;
@@ -193,14 +196,15 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * return a {@link Properties} object filled whit all values obtained from diverses evaluations algorithms.
+	 * return a {@link Properties} object filled whit all values obtained from
+	 * diverses evaluations algorithms.
 	 * 
-	 * @param holeCards - Hole Cards
+	 * @param holeCards      - Hole Cards
 	 * @param communityCards - Comunity cards
-	 * @param opponents - number of players ONLY VILLANS
-	 * @param sVillanTau - stimated value for tau variable (villan)
-	 * @param heroChips - hero chips
-	 * @param potValue - pot
+	 * @param opponents      - number of players ONLY VILLANS
+	 * @param sVillanTau     - stimated value for tau variable (villan)
+	 * @param heroChips      - hero chips
+	 * @param potValue       - pot
 	 * 
 	 * @return properties
 	 */
@@ -271,26 +275,30 @@ public class PokerSimulator {
 			result.put("winProb", winProb_n);
 
 			/**
-			 * reweight a list of posibles villans hole cards. the new weight is based on the normalized EV obtain form
-			 * preprolpacardsmodel. if a card is outside range, weight = 0 Hashtable<UoAHand, Double> rWeight = new
-			 * Hashtable<>(); preflopCardsModel.setPercentage(tau); for (UoAHand hand : behindList) { if
-			 * (preflopCardsModel.containsHand(hand)) rWeight.put(hand, preflopCardsModel.getNormalizedEV(hand)); }
-			 * result.put("reWeightList", rWeight);
+			 * reweight a list of posibles villans hole cards. the new weight is based on
+			 * the normalized EV obtain form preprolpacardsmodel. if a card is outside
+			 * range, weight = 0 Hashtable<UoAHand, Double> rWeight = new Hashtable<>();
+			 * preflopCardsModel.setPercentage(tau); for (UoAHand hand : behindList) { if
+			 * (preflopCardsModel.containsHand(hand)) rWeight.put(hand,
+			 * preflopCardsModel.getNormalizedEV(hand)); } result.put("reWeightList",
+			 * rWeight);
 			 */
 
 			/**
-			 * Hand Potential algorithm based on "Opponent Modeling in Poker", Darse Billings, Denis Papp, Jonathan
-			 * Schaeffer, Duane SzafronPoker. page 7.
+			 * Hand Potential algorithm based on "Opponent Modeling in Poker", Darse
+			 * Billings, Denis Papp, Jonathan Schaeffer, Duane SzafronPoker. page 7.
 			 * <p>
-			 * this method compute and return a the <code>PPot</code> and <code>NPot</code> in array format.
+			 * this method compute and return a the <code>PPot</code> and <code>NPot</code>
+			 * in array format.
 			 * 
-			 * note: The hand strength calculation is with respect to one opponent but can be extrapolated to multiple
-			 * opponents by raising it to the power of the number of active opponents.
+			 * note: The hand strength calculation is with respect to one opponent but can
+			 * be extrapolated to multiple opponents by raising it to the power of the
+			 * number of active opponents.
 			 */
 			// set the tau value to compute re weight
 			preflopCardsModel.setPercentage(sVillanTau);
 			UoAHand iBoard = new UoAHand();
-			int iterations = 10000;
+			int iterations = 50000;
 			double ahead = 0, tied = 0, behind = 0;
 
 			// Hand potential array, each index represents ahead, tied, and behind.
@@ -334,7 +342,8 @@ public class PokerSimulator {
 				int myRank = evaluator.rankHand(holeCards.getCard(1), holeCards.getCard(2), iBoard);
 				int villanRank = evaluator.rankHand(villan.getCard(1), villan.getCard(2), iBoard);
 
-				// following the opponent modeling paper: 1 for in card selection range , 0.01 when not
+				// following the opponent modeling paper: 1 for in card selection range , 0.01
+				// when not
 				// *** test purpose ***
 				double weight = 1;
 				// double weight = preflopCardsModel.containsHand(villan) ? 1.0 : 0.01;
@@ -354,13 +363,15 @@ public class PokerSimulator {
 			// HPTotal[tied]);
 
 			/* Ppot: were behind but moved ahead. */
-			// Ppot = (HP[behind][ahead] + HP[behind][tied] / 2 + HP[tied][ahead]/2) / (HPTotal[behind] + HPTotal[tied])
+			// Ppot = (HP[behind][ahead] + HP[behind][tied] / 2 + HP[tied][ahead]/2) /
+			// (HPTotal[behind] + HPTotal[tied])
 			Ppot = (HP[2][0] + HP[2][1] / 2d + HP[1][0] / 2d) / (double) (HPTotal[2] + HPTotal[1]);
 			if (Double.isNaN(Ppot))
 				Ppot = 1.0;
 
 			/* Npot: were ahead but fell behind. */
-			// Npot = (HP[ahead][behind] + HP[tied][behind] / 2 + HP[ahead][tied] / 2) / (HPTotal[ahead] +
+			// Npot = (HP[ahead][behind] + HP[tied][behind] / 2 + HP[ahead][tied] / 2) /
+			// (HPTotal[ahead] +
 			// HPTotal[tied])
 			Npot = (HP[0][2] + HP[1][2] / 2d + HP[0][1] / 2d) / (double) (HPTotal[0] + HPTotal[1]);
 
@@ -373,10 +384,12 @@ public class PokerSimulator {
 		}
 
 		//
-		// String[] rcards = {"Jc 4h", "Ac Jc", "5h 2h", "6s 5s", "5s 5h", "5s 3s", "Ac Qd", "7s 5s", "Qs Ts"};
+		// String[] rcards = {"Jc 4h", "Ac Jc", "5h 2h", "6s 5s", "5s 5h", "5s 3s", "Ac
+		// Qd", "7s 5s", "Qs Ts"};
 		// for (String rcard : rcards) {
 		// if (rcard.equals(villan.toString().trim())) {
-		// // System.out.println("%7s %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f", weight, );
+		// // System.out.println("%7s %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f %1,3f",
+		// weight, );
 		// }
 		// }
 
@@ -387,16 +400,19 @@ public class PokerSimulator {
 
 		// ammo control
 		double ammo = HS_n * potValue + (Ppot * heroChips);
-		String txt1 = String.format("%7.2f = %1.3f * %7.2f  + (%1.3f * %7.2f)", ammo, HS_n, potValue,
-				Ppot, heroChips);
+		String txt1 = String.format("%7.2f = %1.3f * %7.2f  + (%1.3f * %7.2f)", ammo, HS_n, potValue, Ppot, heroChips);
 		result.put("ammoControl", txt1);
 		result.put("ammunitions", ammo);
 
 		// TODO: getSignificantCard()
-		// upperbound opponent hand probability: this value refleck the fack that the vas mayority of case, the
-		// computation dont need to compute using the full range of card. e.g it is improbable that an some point, a
-		// villa hat a royal flush or a streich flush and the villan is allin and hero hat a flush. in order to avoid a
-		// hight provability of fold, the computation take into accound that a villas hand with ranck > this upperbound
+		// upperbound opponent hand probability: this value refleck the fack that the
+		// vas mayority of case, the
+		// computation dont need to compute using the full range of card. e.g it is
+		// improbable that an some point, a
+		// villa hat a royal flush or a streich flush and the villan is allin and hero
+		// hat a flush. in order to avoid a
+		// hight provability of fold, the computation take into accound that a villas
+		// hand with ranck > this upperbound
 		// is not take into acount
 
 		return result;
@@ -458,7 +474,8 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * clear the simulation eviorement. Use this metod to clear al component in case of error or start/stop event
+	 * clear the simulation eviorement. Use this metod to clear al component in case
+	 * of error or start/stop event
 	 * 
 	 */
 	public void clearEnviorement() {
@@ -466,7 +483,8 @@ public class PokerSimulator {
 		this.opponents = -1;
 		holeCards.makeEmpty();
 		communityCards.makeEmpty();
-		// 190831: ya el sistema se esta moviendo. por lo menos hace fold !!!! :D estoy en el salon de clases del campo
+		// 190831: ya el sistema se esta moviendo. por lo menos hace fold !!!! :D estoy
+		// en el salon de clases del campo
 		// de refujiados en dresden !!!! ya van 2 meses
 		cardsBuffer.clear();
 		sensorStatus.clear();
@@ -487,13 +505,15 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * Return the information component whit all values computesd form simulations and game status
+	 * Return the information component whit all values computesd form simulations
+	 * and game status
 	 * 
 	 * @return information component
 	 */
 	public TUIPanel getReportPanel() {
 		return reportPanel;
 	}
+
 	/**
 	 * Return the strin representation of the parameters of the table
 	 * 
@@ -512,7 +532,8 @@ public class PokerSimulator {
 	// // Hero must check for oportunity
 	// if (!takeOpportunity)
 	// return txt;
-	// // the word oportunity means the event present in flop or turn streat. in river is not a oportunity any more
+	// // the word oportunity means the event present in flop or turn streat. in
+	// river is not a oportunity any more
 	// if (currentRound < FLOP_CARDS_DEALT)
 	// return txt;
 	//
@@ -548,9 +569,11 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * perform the PokerProphesier simulation. Call this method when all the cards on the table has been setted using
-	 * {@link #addCard(String, String)} this method will create the {@link HoleCards} and the {@link CommunityCards} (if
-	 * is available). After the simulation, the adapters are updated and can be consulted and the report are up to date
+	 * perform the PokerProphesier simulation. Call this method when all the cards
+	 * on the table has been setted using {@link #addCard(String, String)} this
+	 * method will create the {@link HoleCards} and the {@link CommunityCards} (if
+	 * is available). After the simulation, the adapters are updated and can be
+	 * consulted and the report are up to date
 	 * 
 	 */
 	public void runSimulation() {
@@ -558,7 +581,8 @@ public class PokerSimulator {
 		variableList.put(STATUS, "Runing ...");
 		updateReport();
 
-		// Hero.heroLogger.warning("String " + card + " for card representation incorrect. Card not created");
+		// Hero.heroLogger.warning("String " + card + " for card representation
+		// incorrect. Card not created");
 		UoACard c1 = new UoACard(cardsBuffer.get("hero.card1"));
 		UoACard c2 = new UoACard(cardsBuffer.get("hero.card2"));
 		holeCards.makeEmpty();
@@ -591,9 +615,12 @@ public class PokerSimulator {
 		Npot = (double) uoAEvaluation.getOrDefault("NPot", 0.0);
 		winProb_n = (double) uoAEvaluation.getOrDefault("winProb", 0.0);
 		HS_n = (double) uoAEvaluation.getOrDefault("HS", 0.0);
+		double rankA = (double) uoAEvaluation.getOrDefault("rankAhead%", 0.0);
+		double rankB = (double) uoAEvaluation.getOrDefault("rankBehind%", 0.0);
 
 		// update the simulation result to the console
-		variableList.put("simulator.Troper stimated villan tau Value", stimatedVillanTau);
+		String rnk = "rankAhead " + twoDigitFormat.format(rankA) + " rankBehind " + twoDigitFormat.format(rankB);
+		variableList.put("simulator.Troper Ranks", rnk);
 		variableList.put("simulator.Trooper Current hand",
 				percentageFormat.format(winProb_n) + " " + uoAEvaluation.get("name"));
 		variableList.put("simulator.Table cards",
@@ -619,8 +646,9 @@ public class PokerSimulator {
 	 * set the action related information.
 	 * 
 	 * @param aperformed - the action performed by the {@link Trooper}
-	 * @param actions list of {@link TEntry} where each key is an instancia of {@link TrooperAction} and the value is
-	 *        the probability for this action to be selected
+	 * @param actions    list of {@link TEntry} where each key is an instancia of
+	 *                   {@link TrooperAction} and the value is the probability for
+	 *                   this action to be selected
 	 */
 	public void setActionsData(TrooperAction aperformed, Vector<TEntry<TrooperAction, Double>> actions) {
 		actionsBarChart.setCategoryMarker(aperformed);
@@ -631,6 +659,7 @@ public class PokerSimulator {
 	public void setCallValue(double callValue) {
 		this.callValue = callValue;
 	}
+
 	public void setHeroChips(double heroChips) {
 		this.heroChips = heroChips;
 		if (heroChips > heroChipsMax)
@@ -645,19 +674,24 @@ public class PokerSimulator {
 	public void setNunOfOpponets(int opp) {
 		this.opponents = opp;
 	}
+
 	public void setPotValue(double potValue) {
 		this.prevPotValue = this.potValue;
 		this.potValue = potValue;
 	}
+
 	public void setRaiseValue(double raiseValue) {
 		this.raiseValue = raiseValue;
 	}
+
 	/**
-	 * Update the table position. the Hero´s table position is determinated detecting the dealer button and counting
-	 * clockwise. For examples, in a 4 villans table:
+	 * Update the table position. the Heroï¿½s table position is determinated
+	 * detecting the dealer button and counting clockwise. For examples, in a 4
+	 * villans table:
 	 * <li>If hero has the dealer button, this method return 5;
 	 * <li>if villan4 is the dealer, this method return 1. Hero is small blind
-	 * <li>if villan1 is the dealer, this method return 4. Hero is in middle table position.
+	 * <li>if villan1 is the dealer, this method return 4. Hero is in middle table
+	 * position.
 	 * <p>
 	 * this metod is called during the {@link SensorsArray#read(String)} operation.
 	 */
@@ -665,6 +699,7 @@ public class PokerSimulator {
 		// int tp = Math.abs(dbp - (getActiveSeats() + 1));
 		this.tablePosition = Math.abs(dealerPos - (villans + 1));
 	}
+
 	public void setVariable(String key, Object value) {
 		// format double values
 		Object value1 = value;
@@ -672,12 +707,14 @@ public class PokerSimulator {
 			value1 = twoDigitFormat.format(((Double) value).doubleValue());
 		variableList.put(key, value1);
 		if (Trooper.STATUS.equals(key)) {
-			// variableList.put("trooper.Performance Step time", (System.currentTimeMillis() - lastStepMillis));
+			// variableList.put("trooper.Performance Step time", (System.currentTimeMillis()
+			// - lastStepMillis));
 			// lastStepMillis = System.currentTimeMillis();
 		}
 		// mandatori. i nedd to see what is happening
 		updateReport();
 	}
+
 	public void updateReport() {
 		if (!Hero.allowSimulationGUIUpdate())
 			return;
@@ -698,16 +735,19 @@ public class PokerSimulator {
 		text += "</html>";
 		reportJLabel.setText(text);
 		reportJLabel.repaint();
-		// Hero.heroLogger.severe("updateMyOutsHelperInfo(): " + (System.currentTimeMillis() - t1));
+		// Hero.heroLogger.severe("updateMyOutsHelperInfo(): " +
+		// (System.currentTimeMillis() - t1));
 	}
 
 	/**
-	 * return a HTML table based on the <code>helperString</code> argument. the <code>only</code> paratemeter indicate a
-	 * filter of elemenst. If any line form helperstring argument star with a word form this list, the line is include
-	 * in the result. an empty list for this parametr means all elemenst
+	 * return a HTML table based on the <code>helperString</code> argument. the
+	 * <code>only</code> paratemeter indicate a filter of elemenst. If any line form
+	 * helperstring argument star with a word form this list, the line is include in
+	 * the result. an empty list for this parametr means all elemenst
 	 * 
-	 * @param helperString - string come form any {@link PokerProphesierAdapter} helper class
-	 * @param only - list of filter words or empty list
+	 * @param helperString - string come form any {@link PokerProphesierAdapter}
+	 *                     helper class
+	 * @param only         - list of filter words or empty list
 	 * 
 	 * @return HTML table
 	 */

@@ -223,14 +223,13 @@ public class TableDialog extends JDialog implements Client {
 		if (log)
 			outConsole.append(msg + "\n");
 
+		proxyClient.messageReceived(message);
+
 		// wait
 		try {
 			Thread.sleep(table.getSpeed());
 		} catch (Exception e) {
-			// do nothig
 		}
-
-		proxyClient.messageReceived(message);
 	}
 
 	@Override

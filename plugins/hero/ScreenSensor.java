@@ -207,6 +207,9 @@ public class ScreenSensor extends JPanel {
 		double val = -1;
 		try {
 			if (ocr != null) {
+				// TODO: move to global settings
+				ocr = ocr.replace(".", "");
+				ocr = ocr.replace(",", ".");
 				val = Double.parseDouble(ocr);
 			}
 		} catch (Exception e) {
@@ -321,7 +324,8 @@ public class ScreenSensor extends JPanel {
 		rank = "G".equals(rank) ? "Q" : rank;
 		rank = "B".equals(rank) ? "6" : rank;
 		rank = "I0".equals(rank) ? "T" : rank;
-
+		rank = "ID".equals(rank) ? "T" : rank;
+		
 		// report error and return empty string
 		String suit = "";
 		if ("".equals(rank)) {

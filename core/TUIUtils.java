@@ -58,7 +58,6 @@ import com.alee.utils.swing.*;
 import dev.utils.*;
 import gui.*;
 import gui.wlaf.*;
-import javafx.scene.control.*;
 
 /**
  * static methods for grapichal user interfaces utils
@@ -176,7 +175,7 @@ public class TUIUtils {
 	 * retorna un <code>Box</code> con formato preestablecido para los componentes que se encuentran en la parte
 	 * inferior de las ventanas de dialogo.
 	 * 
-	 * @param jc - Generalmente, un contenedor con los botones ya añadidos
+	 * @param jc - Generalmente, un contenedor con los botones ya aï¿½adidos
 	 * @return <code>Box</code> listo para adicionar a la parte inferirior
 	 */
 	public static Box getBoxForButtons(JComponent jc, boolean eb) {
@@ -721,7 +720,7 @@ public class TUIUtils {
 	/**
 	 * crea y retorna un separador horizontal con un texto colocado hacia la izquierda
 	 * 
-	 * 20161123.04:25 NAAAA GUEBONAAA DE VIEJOOOOO !!! ESTE METODO DEBE TENER +10 AÑOS !!!! FUE DE LOS PRIMEROS PARA
+	 * 20161123.04:25 NAAAA GUEBONAAA DE VIEJOOOOO !!! ESTE METODO DEBE TENER +10 Aï¿½OS !!!! FUE DE LOS PRIMEROS PARA
 	 * CLIO
 	 * 
 	 * @param idl - id para texto
@@ -1129,7 +1128,7 @@ public class TUIUtils {
 	}
 
 	/**
-	 * Perform the initialization method p´for thise static class
+	 * Perform the initialization method pï¿½for thise static class
 	 * 
 	 * @since 2.3
 	 */
@@ -1204,7 +1203,7 @@ public class TUIUtils {
 			((JTextArea) jtc).setColumns(col);
 		}
 		Dimension d = jtc.getPreferredSize();
-		d.width = (int) ((col * 10) * 0.80); // % del tamaño
+		d.width = (int) ((col * 10) * 0.80); // % del tamaï¿½o
 		jtc.setPreferredSize(d);
 		jtc.setMaximumSize(d);
 	}

@@ -69,20 +69,20 @@ public class Table extends Task {
 	/** Whether players will always call the showdown, or fold when no chance. */
 	private static final boolean ALWAYS_CALL_SHOWDOWN = false;
 
-	/** valid action when a villan or hero loose the battle: End the simulation. */
-	public static final String GAME_OVER = "gameOver";
-
+	/**
+	 * valid action when a villan or hero loose the battle: End the simulation. public static final String GAME_OVER =
+	 * "gameOver";
+	 */
 	/**
 	 * valid action when a villan or hero loose the battle: Refill the player chips artificialy allowing the simulation
-	 * to continue
+	 * to continue public static final String REFILL = "refill";
 	 */
-	public static final String REFILL = "refill";
 
-	/** valid action when a villan or hero loose the battle: The simulation continue to the end. */
-	public static final String DO_NOTHING = "doNothing";
+	/** The simulation continue to the end. */
+	private static final String DO_NOTHING = "doNothing";
 
-	/** valid action when a villan or hero loose the battle: Restart the hole table. */
-	public static final String RESTAR = "reStar";
+	/** wenn der Tisch hat weniger Players als erlaubt (feld {@link #MIN_PLAYERS}), die Simulation ist erneu startet */
+	private static final String RESTAR = "reStar";
 
 	/** current capacity of the table */
 	public static final int CAPACITY = 8;
@@ -712,8 +712,10 @@ public class Table extends Task {
 
 	/**
 	 * Plays a single hand.
+	 * 
+	 * @throws InterruptedException
 	 */
-	private void playHand() {
+	private void playHand() throws InterruptedException {
 		resetHand();
 		// Small blind.
 		if (activePlayers.size() > 2) {
@@ -851,17 +853,15 @@ public class Table extends Task {
 					continue;
 				}
 
-				// action to take when any player is out of the battle. this is intendet to keep the simulation alive.
-				// if the player is hero, the action GAME_OVER can take place. but if not, only refill or do_nothis are
-				// available
-				// tmp player count
+				// zählt tätig Spieler
 				int actp = 0;
 				for (Player player : players) {
 					if (player.getCash() >= bigBlind) {
 						actp++;
 					}
 				}
-				if (DO_NOTHING.equals(whenPlayerLose) && actp < MIN_PLAYERS) {
+
+				if (RESTAR.equals(whenPlayerLose) && actp < MIN_PLAYERS) {
 					String msg = "Hand: " + numOfHand
 							+ ", The table has less players that allow. Restartting the hole table.";
 					notifyMessage(msg);
@@ -874,29 +874,31 @@ public class Table extends Task {
 				// when a single player loose
 				for (Player player : players) {
 					if (player.getCash() < bigBlind) {
-						// when is Hero, end the simulation??
-						if (player.getName().equals("Hero") && GAME_OVER.equals(whenPlayerLose)) {
-							endedByHero = true;
-							break;
-						}
-						if (REFILL.equals(whenPlayerLose)) {
-							String msg = "Hand # " + numOfHand + ": " + player.getName()
-									+ " lost the battle. Refilling cash " + buyIn;
-							notifyMessage(msg);
-							notifyMessage(REFILL);
-							player.resetHand();
-							player.setCash(buyIn);
-						}
 
-						if (RESTAR.equals(whenPlayerLose)) {
-							String msg = "Hand: " + numOfHand + ": " + player.getName()
-									+ " lost the battle. Restartting the hole table.";
-							notifyMessage(msg);
-							for (Player player2 : players) {
-								player2.resetHand();
-								player2.setCash(buyIn);
-							}
-						}
+						// when is Hero, end the simulation??
+						// if (player.getName().equals("Hero") && GAME_OVER.equals(whenPlayerLose)) {
+						// endedByHero = true;
+						// break;
+						// }
+
+						// if (REFILL.equals(whenPlayerLose)) {
+						// String msg = "Hand # " + numOfHand + ": " + player.getName()
+						// + " lost the battle. Refilling cash " + buyIn;
+						// notifyMessage(msg);
+						// notifyMessage(REFILL);
+						// player.resetHand();
+						// player.setCash(buyIn);
+						// }
+
+						// if (RESTAR.equals(whenPlayerLose)) {
+						// String msg = "Hand: " + numOfHand + ": " + player.getName()
+						// + " lost the battle. Restartting the hole table.";
+						// notifyMessage(msg);
+						// for (Player player2 : players) {
+						// player2.resetHand();
+						// player2.setCash(buyIn);
+						// }
+						// }
 					}
 				}
 

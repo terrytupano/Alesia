@@ -1,7 +1,9 @@
 package plugins.hero;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Point;
+import java.awt.Robot;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 
 /**
  * Base class to send programaticily events throw the mouse or the keyboard. each action recived by this class is the
@@ -63,6 +65,7 @@ public class RobotActuator {
 			}
 
 			Point p = fig.getRandomPoint();
+//			System.out.println(p);
 			mouseMove(p.x, p.y);
 
 			// perform double clicks

@@ -13,7 +13,7 @@ import plugins.hero.ozsoft.actions.*;
  */
 public class HeroBot extends Bot {
 
-//	private DescriptiveStatistics statistics;
+	// private DescriptiveStatistics statistics;
 
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
@@ -35,10 +35,10 @@ public class HeroBot extends Bot {
 		pokerSimulator.setNunOfOpponets(actV);
 		pokerSimulator.setTablePosition(dealer, actV);
 
-//		long t1 = System.currentTimeMillis();
+		// long t1 = System.currentTimeMillis();
 		pokerSimulator.runSimulation();
 		TrooperAction act = trooperT.getSimulationAction(trooperParameter);
-//		statistics.addValue(System.currentTimeMillis() - t1);
+		// statistics.addValue(System.currentTimeMillis() - t1);
 
 		PlayerAction action = null;
 		if (act.equals(TrooperAction.FOLD))
@@ -65,9 +65,9 @@ public class HeroBot extends Bot {
 	@Override
 	public void messageReceived(String message) {
 		super.messageReceived(message);
-		if (message.equals(Table.RESTAR)) {
-			// System.out.println("Avg descition method: "+statistics.getMean());
-		}
+		// if (message.equals(Table.RESTAR)) {
+		// System.out.println("Avg descition method: "+statistics.getMean());
+		// }
 	}
 	@Override
 	public void boardUpdated(UoAHand hand, int bet, int pot) {

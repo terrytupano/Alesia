@@ -53,7 +53,6 @@ import com.alee.utils.*;
 import gui.*;
 import gui.docking.*;
 import gui.wlaf.*;
-import sun.swing.*;
 
 /**
  * Entrada aplicacion

@@ -226,7 +226,7 @@ public class TUIPanel extends WebPanel {
 	 */
 	public void addToolBarActions(List<Action> actions) {
 		// toolBarPanel.removeAll();
-		popupMenu = new JPopupMenu();
+//		popupMenu = new JPopupMenu();
 		// ArrayList<JComponent> componets = new ArrayList<>();
 		for (Action act : actions) {
 			addToolBarAction(act);
