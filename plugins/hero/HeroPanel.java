@@ -10,19 +10,23 @@
  ******************************************************************************/
 package plugins.hero;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.alee.extended.layout.*;
-import com.alee.laf.button.*;
-import com.alee.laf.grouping.*;
-import com.alee.laf.panel.*;
-import com.alee.laf.tabbedpane.*;
-import com.alee.managers.settings.*;
+import com.alee.extended.layout.VerticalFlowLayout;
+import com.alee.laf.button.WebToggleButton;
+import com.alee.laf.grouping.GroupPane;
+import com.alee.laf.panel.WebPanel;
+import com.alee.laf.tabbedpane.TabbedPaneState;
+import com.alee.laf.tabbedpane.WebTabbedPane;
+import com.alee.managers.settings.Configuration;
 
-import core.*;
-import core.datasource.model.*;
-import gui.*;
-import gui.console.*;
+import core.TActionsFactory;
+import core.TUIUtils;
+import core.datasource.model.TrooperParameter;
+import gui.TUIFormPanel;
+import gui.console.ConsolePanel;
 
 public class HeroPanel extends TUIFormPanel {
 
@@ -45,21 +49,29 @@ public class HeroPanel extends TUIFormPanel {
 		wtp.add(sensorArrayPanel, "Sensor Array");
 		wtp.add(pockerSimulatorPanel, "Pocker Simulator");
 		wtp.add(new ConsolePanel(Hero.heroLogger), "Log console");
-
 		wtp.registerSettings(new Configuration<TabbedPaneState>("HeroPanel.tabbedPanel"));
+
 		WebToggleButton play = TUIUtils.getWebToggleButton(TActionsFactory.getAction("runTrooper"));
+		WebToggleButton test = TUIUtils.getWebToggleButton(TActionsFactory.getAction("testTrooper"));
 		WebToggleButton stop = TUIUtils.getWebToggleButton(TActionsFactory.getAction("stopTrooper"));
-		stop.setSelected(true);
 		WebToggleButton pause = TUIUtils.getWebToggleButton(TActionsFactory.getAction("pauseTrooper"));
-		GroupPane pane = new GroupPane(play, stop, pause);
+		GroupPane pane = new GroupPane(play, test, stop, pause);
+
+		stop.setSelected(true);
+		play.addActionListener(e -> test.setEnabled(false));
+		test.addActionListener(e -> play.setEnabled(false));
+		stop.addActionListener(e -> {
+			play.setEnabled(true);
+			test.setEnabled(true);
+		});
+
 		getToolBar().add(pane);
-		addToolBarActions("testTrooper");
 		setBodyComponent(wtp);
 	}
 
 	/**
-	 * shortcut that enable update all the UI components from (posible) new {@link SensorsArray} and/or
-	 * {@link PokerSimulator}
+	 * shortcut that enable update all the UI components from (posible) new
+	 * {@link SensorsArray} and/or {@link PokerSimulator}
 	 * 
 	 * @param sensorsArray - the array to update
 	 */

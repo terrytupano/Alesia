@@ -260,7 +260,7 @@ public class SensorsArray {
 		System.out.println("lookActionSensors() " + (System.currentTimeMillis() - t1));
 	}
 	/**
-	 * this metho campture all screeen´s areas without do any ocr operation. Use this mothod to retrive all sensor areas
+	 * this metho campture all screeenï¿½s areas without do any ocr operation. Use this mothod to retrive all sensor areas
 	 * and set the enable status for fast comparation.
 	 * 
 	 */
@@ -334,10 +334,6 @@ public class SensorsArray {
 			pokerSimulator.setNunOfOpponets(getActiveVillans());
 			pokerSimulator.runSimulation();
 		}
-
-		// performance variables and update report
-		// pokerSimulator.setVariable("sensorArray.Total readed sensors", slist.size());
-		pokerSimulator.setVariable("sensorArray.Performance", "Tesseract " + ((int) tesseractTime.getMean()));
 	}
 	
 	/**

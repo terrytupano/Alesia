@@ -42,6 +42,7 @@ public class PokerSimulator {
 	private static DecimalFormat twoDigitFormat = new DecimalFormat("#0.00");
 
 	/** Static reference to the standar PF cards model for performance purpose */
+	// TODO: WTF?? try to figure out way static reference ???????
 	private static PreflopCardsModel preflopCardsModel = new PreflopCardsModel("pokerStar");
 	/**
 	 * temporal storage for the incoming cards (simulator)
@@ -625,7 +626,7 @@ public class PokerSimulator {
 				percentageFormat.format(winProb_n) + " " + uoAEvaluation.get("name"));
 		variableList.put("simulator.Table cards",
 				"hole " + holeCards.toString() + " Comunity " + communityCards + " Current " + currentHand.toString());
-		String txt = "Amunitions " + heroChips + " Pot " + potValue + " Call " + callValue + " Raise " + raiseValue
+		String txt = "Chips " + heroChips + " Pot " + potValue + " Call " + callValue + " Raise " + raiseValue
 				+ " Position " + tablePosition;
 		variableList.put("simulator.Table values", txt);
 		variableList.put("simulator.Simulator values",
@@ -706,16 +707,11 @@ public class PokerSimulator {
 		if (value instanceof Double)
 			value1 = twoDigitFormat.format(((Double) value).doubleValue());
 		variableList.put(key, value1);
-		if (Trooper.STATUS.equals(key)) {
-			// variableList.put("trooper.Performance Step time", (System.currentTimeMillis()
-			// - lastStepMillis));
-			// lastStepMillis = System.currentTimeMillis();
-		}
 		// mandatori. i nedd to see what is happening
 		updateReport();
 	}
 
-	public void updateReport() {
+	private void updateReport() {
 		if (!Hero.allowSimulationGUIUpdate())
 			return;
 

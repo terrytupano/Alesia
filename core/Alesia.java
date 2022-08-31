@@ -102,11 +102,14 @@ public class Alesia extends Application {
 	}
 
 	/**
-	 * Convenient method to open the alesia local database connection using the system enviorement variables. call this
-	 * method to create or open a new database connection and attach these to {@link Thread} that invoke this method.
+	 * Convenient method to open the alesia local database connection using the
+	 * system enviorement variables. call this method to create or open a new
+	 * database connection and attach these to {@link Thread} that invoke this
+	 * method.
 	 * <p>
-	 * this method is intentet for javaLite imeplementation. this method relly in the javaLite internal storage that
-	 * determine if the connection name is aready opened. if is opened, just attach to the invoker thread
+	 * this method is intentet for javaLite imeplementation. this method relly in
+	 * the javaLite internal storage that determine if the connection name is aready
+	 * opened. if is opened, just attach to the invoker thread
 	 */
 	@Deprecated
 	public void openDB() {
@@ -118,9 +121,10 @@ public class Alesia extends Application {
 				System.getProperty("activejdbc.password"));
 		alesiaDB.open(spec);
 	}
+
 	/**
-	 * Open and return an instacen of {@link DB} for the given prefix. The connection parameters must be in the
-	 * database.properties file or similar.
+	 * Open and return an instacen of {@link DB} for the given prefix. The
+	 * connection parameters must be in the database.properties file or similar.
 	 * 
 	 * @param name - prefix name of the conneciton parameters
 	 * @return instance of {@link DB}
@@ -139,7 +143,8 @@ public class Alesia extends Application {
 		keys.removeIf(k -> !k.toString().startsWith(name));
 		Properties properties = new Properties();
 
-		// build a new propert list whiout the prefix. keeping only the property and value spected by the jdbc lib
+		// build a new propert list whiout the prefix. keeping only the property and
+		// value spected by the jdbc lib
 		keys.forEach(k -> properties.put(k.toString().substring(name.length() + 1), orgPrp.get(k)));
 
 		// mandatory parameters
@@ -155,7 +160,8 @@ public class Alesia extends Application {
 
 	public static Map<String, Object> showDialog(TUIFormPanel content, double withFactor, double heightFactor) {
 
-		// standar behavior: if the title of the tuipanel is visible, this method remove the string and put in as this
+		// standar behavior: if the title of the tuipanel is visible, this method remove
+		// the string and put in as this
 		// dialog title
 		String popOvertext = " ";
 		if (content.isTitleVisible()) {
@@ -203,8 +209,9 @@ public class Alesia extends Application {
 	}
 
 	/**
-	 * Look in the Alesia.properties file, look for the property "Alesia.database.file.name" and load an return the list
-	 * of all prperties found in that file. This file contain all data base connection information.
+	 * Look in the Alesia.properties file, look for the property
+	 * "Alesia.database.file.name" and load an return the list of all prperties
+	 * found in that file. This file contain all data base connection information.
 	 * 
 	 * @return all properties found in the database properties files
 	 */
@@ -226,7 +233,7 @@ public class Alesia extends Application {
 	 * retrive global identificator from <code>wmic</code>
 	 * 
 	 * @param gid - gobal id
-	 * @param vn - variable name
+	 * @param vn  - variable name
 	 * 
 	 * @return variable value
 	 */
@@ -234,7 +241,7 @@ public class Alesia extends Application {
 		String rval = null;
 		try {
 			Runtime runtime = Runtime.getRuntime();
-			Process process = runtime.exec(new String[]{"wmic", gid, "get", vn});
+			Process process = runtime.exec(new String[] { "wmic", gid, "get", vn });
 			InputStream is = process.getInputStream();
 			Scanner sc = new Scanner(is);
 			while (sc.hasNext()) {
@@ -254,19 +261,23 @@ public class Alesia extends Application {
 	}
 
 	/**
-	 * request the user autentication for entry the aplication. this method chec the system variable ... to determnide
-	 * the kind of autentication required. this method has 2 ending.
+	 * request the user autentication for entry the aplication. this method chec the
+	 * system variable ... to determnide the kind of autentication required. this
+	 * method has 2 ending.
 	 * <ol>
-	 * <li>Exist this method normaly means the autentication step is succefully or maybe no autentication was required.
-	 * The framework will continue his normal execuion steps.
-	 * <li>If there is problem with autentication procedure, this method will finnish the app
+	 * <li>Exist this method normaly means the autentication step is succefully or
+	 * maybe no autentication was required. The framework will continue his normal
+	 * execuion steps.
+	 * <li>If there is problem with autentication procedure, this method will
+	 * finnish the app
 	 */
 	private void requestAutentication() {
 		Alesia.getInstance().getMainFrame().setSplashIncrementText("Request autentication");
 		Factory<org.apache.shiro.mgt.SecurityManager> factory = new IniSecurityManagerFactory("classpath:shiro.ini");
 		DefaultSecurityManager securityManager = (DefaultSecurityManager) factory.getInstance();
 		DefaultSessionManager sessionManager = (DefaultSessionManager) securityManager.getSessionManager();
-		// TODO: securiy breach!?!?! read this method documentation. anoter java program can run on the same vm and
+		// TODO: securiy breach!?!?! read this method documentation. anoter java program
+		// can run on the same vm and
 		// retrive security??
 		SecurityUtils.setSecurityManager(securityManager);
 		Subject currentUser = SecurityUtils.getSubject();
@@ -281,7 +292,8 @@ public class Alesia extends Application {
 		/**
 		 * to present local user information net user administrator
 		 * 
-		 * command line for check password against local user net use \\localhost /user:username password terry porfin12
+		 * command line for check password against local user net use \\localhost
+		 * /user:username password terry porfin12
 		 */
 		if (!currentUser.isAuthenticated()) {
 			UserLogIn li = new UserLogIn();
@@ -304,7 +316,8 @@ public class Alesia extends Application {
 				Alesia.logger.info("The account for username " + token.getPrincipal() + " is locked.  "
 						+ "Please contact your administrator to unlock it.");
 			}
-			// ... catch more exceptions here (maybe custom ones specific to your application?
+			// ... catch more exceptions here (maybe custom ones specific to your
+			// application?
 			catch (AuthenticationException ae) {
 				// unexpected condition? error?
 			}
@@ -352,8 +365,9 @@ public class Alesia extends Application {
 	}
 
 	/**
-	 * check for another active instance of Alesia looking the current active windows. if another instance is found,
-	 * this mehtod send cmd commands and end this currentexecution.
+	 * check for another active instance of Alesia looking the current active
+	 * windows. if another instance is found, this mehtod send cmd commands and end
+	 * this currentexecution.
 	 * 
 	 * @see TResources#getActiveWindows(String)
 	 * @see TResources#performCMDOWCommand(String, String)
@@ -373,7 +387,8 @@ public class Alesia extends Application {
 	protected void initialize(String[] args) {
 
 		// Loggin configuration. this step is performed here for conbenence
-		// TODO: For slf4j: the bridge betwen slf4j is set using the slf4j-jdk14-1.7.25 jar lib
+		// TODO: For slf4j: the bridge betwen slf4j is set using the slf4j-jdk14-1.7.25
+		// jar lib
 		// for Apache: Set the system property
 		// For Alesia. look on the configuration file. if the file exist, i use it
 
@@ -392,7 +407,8 @@ public class Alesia extends Application {
 		logger = Logger.getLogger("Alesia");
 		logger.info("Wellcome to Alesia.");
 
-		// update alesia.propertyes to eviorement variables. this step is performed here for convenience
+		// update alesia.propertyes to eviorement variables. this step is performed here
+		// for convenience
 		try {
 			Properties prp = new Properties();
 			prp.load(new FileInputStream(new File("Alesia.properties")));
@@ -417,7 +433,8 @@ public class Alesia extends Application {
 		newMsg = Applet.newAudioClip(getClass().getResource("/core/resources/newMsg.wav"));
 		errMsg = Applet.newAudioClip(getClass().getResource("/core/resources/errMsg.wav"));
 
-		// System.setProperty("org.apache.commons.logging.Log", Jdk14Logger.class.getName());
+		// System.setProperty("org.apache.commons.logging.Log",
+		// Jdk14Logger.class.getName());
 
 		// parse app argument parameters and append to tpreferences to futher uses
 		// TODO: do something
@@ -425,6 +442,7 @@ public class Alesia extends Application {
 		// String[] kv = arg.split("=");
 		// }
 	}
+
 	@Override
 	protected void ready() {
 		mainFrame.setSplashIncrementText("Loading plugins ...");
@@ -468,13 +486,13 @@ public class Alesia extends Application {
 
 		// Initializing L&F
 		WebLookAndFeel.install(WebLightSkin.class);
-		StyleManager.addExtensions(new XmlSkinExtension(new ClassResource(Alesia.class, "resources/SimpleExtension.xml")));
+//		StyleManager.addExtensions(new XmlSkinExtension(new ClassResource(Alesia.class, "resources/SimpleExtension.xml")));
 //		ProprietaryUtils.setupAATextInfo(UIManager.getDefaults());
 
-		
 		// TODO: no languaje manajer for now. still using old school i18n
 		// Configurting languages
-		// LanguageManager.addDictionary ( new Dictionary ( Alesia.class, "language/demo-language.xml" ) );
+		// LanguageManager.addDictionary ( new Dictionary ( Alesia.class,
+		// "language/demo-language.xml" ) );
 		// LanguageManager.addLanguageListener ( new LanguageLocaleUpdater () );
 
 		// TODO: remove the antialaisin shint form the lookandfell

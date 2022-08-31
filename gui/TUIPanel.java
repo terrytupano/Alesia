@@ -10,36 +10,62 @@
  ******************************************************************************/
 package gui;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.AbstractButton;
 import javax.swing.Action;
-import javax.swing.border.*;
+import javax.swing.ActionMap;
+import javax.swing.Box;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JEditorPane;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.border.EmptyBorder;
 
-import org.jdesktop.application.*;
+import org.jdesktop.application.ApplicationAction;
 
-import com.alee.extended.panel.*;
-import com.alee.laf.button.*;
-import com.alee.laf.label.*;
-import com.alee.laf.panel.*;
-import com.alee.laf.toolbar.*;
-import com.alee.laf.window.*;
-import com.alee.managers.style.*;
-import com.jgoodies.common.base.*;
-import com.jgoodies.forms.factories.*;
-import com.jgoodies.forms.layout.*;
+import com.alee.extended.panel.GroupPanel;
+import com.alee.extended.panel.GroupingType;
+import com.alee.laf.button.WebButton;
+import com.alee.laf.grouping.GroupPane;
+import com.alee.laf.label.WebLabel;
+import com.alee.laf.panel.WebPanel;
+import com.alee.laf.toolbar.WebToolBar;
+import com.alee.laf.window.WebDialog;
+import com.alee.managers.style.StyleId;
+import com.alee.utils.SwingUtils;
+import com.jgoodies.common.base.Preconditions;
+import com.jgoodies.forms.factories.Borders;
+import com.jgoodies.forms.layout.Sizes;
 
-import core.*;
+import core.Alesia;
+import core.TActionsFactory;
+import core.TMessage;
+import core.TStringUtils;
+import core.TUIUtils;
 
 /**
- * base class for application ui manage. this class is divided in tritle component, body component and footer component.
- * the base implementation create a title component that consist in a title label, a 3 dot button and a aditional
- * information component. the behabior of the 3dot buttons can bi setted via {@link #set3DotBehavior(int)} method. the
- * title of this component (title component and 3dot button) can be set visible/invisible leaving the aditional
- * information alone. Aditional information can be set visible or not.
+ * base class for application ui manage. this class is divided in tritle
+ * component, body component and footer component. the base implementation
+ * create a title component that consist in a title label, a 3 dot button and a
+ * aditional information component. the behabior of the 3dot buttons can bi
+ * setted via {@link #set3DotBehavior(int)} method. the title of this component
+ * (title component and 3dot button) can be set visible/invisible leaving the
+ * aditional information alone. Aditional information can be set visible or not.
  * 
  * @author terry
  *
@@ -47,8 +73,8 @@ import core.*;
 public class TUIPanel extends WebPanel {
 
 	/**
-	 * clase que presenta la instancia de <code>JPopupMenu</code> creada para la table que presenta los datos dentro de
-	 * esta clase
+	 * clase que presenta la instancia de <code>JPopupMenu</code> creada para la
+	 * table que presenta los datos dentro de esta clase
 	 * 
 	 */
 	public class ListMouseProcessor extends MouseAdapter {
@@ -94,6 +120,7 @@ public class TUIPanel extends WebPanel {
 			}
 		}
 	}
+
 	public static double ASPECT_RATION_NONE = 0.0;
 	public static double ASPECT_RATION_NARROW = 1.3333;
 	public static double ASPECT_RATION_DEFAULT = 1.6666;
@@ -136,7 +163,8 @@ public class TUIPanel extends WebPanel {
 		this.additionalInfo = TUIUtils.getJEditorPane(null, null);
 		additionalInfo.setPreferredSize(new Dimension(0, 48));
 
-		// noListPanel are used to display a message when instances of this component show a list of elements and
+		// noListPanel are used to display a message when instances of this component
+		// show a list of elements and
 		// such list has no elements to display.
 		this.bodyMessageJComponent = Box.createVerticalBox();
 		this.blkinfoLabel = new JLabel();
@@ -170,6 +198,7 @@ public class TUIPanel extends WebPanel {
 			}
 		}
 	}
+
 	/**
 	 * add a new action at the end of the toolbar panel
 	 * 
@@ -205,7 +234,8 @@ public class TUIPanel extends WebPanel {
 	}
 
 	/**
-	 * perform {@link #addToolBarActions(List)} whit all the actions inside map argument
+	 * perform {@link #addToolBarActions(List)} whit all the actions inside map
+	 * argument
 	 * 
 	 * @param map - instance of actionMap
 	 */
@@ -218,9 +248,10 @@ public class TUIPanel extends WebPanel {
 	}
 
 	/**
-	 * set the toolbar for this component. This toolbar will replace the title label of this component. Use thid method
-	 * when you need a full toolbar available for component that requirer many actions (like editors). other whise, use
-	 * the 3dot bar.
+	 * set the toolbar for this component. This toolbar will replace the title label
+	 * of this component. Use thid method when you need a full toolbar available for
+	 * component that requirer many actions (like editors). other whise, use the
+	 * 3dot bar.
 	 * 
 	 * @param actions actions to set inside the bar.
 	 */
@@ -233,12 +264,15 @@ public class TUIPanel extends WebPanel {
 		}
 
 		// 171231: append some standar actions for list sublcases
-		// toolBarPanel.add(TUIUtils.getWebButtonForToolBar(actionMap.get("filterList")), LineLayout.END);
-		// toolBarPanel.add(TUIUtils.getWebButtonForToolBar(actionMap.get("refreshList")), LineLayout.END);
+		// toolBarPanel.add(TUIUtils.getWebButtonForToolBar(actionMap.get("filterList")),
+		// LineLayout.END);
+		// toolBarPanel.add(TUIUtils.getWebButtonForToolBar(actionMap.get("refreshList")),
+		// LineLayout.END);
 	}
 
 	/**
-	 * perform {@link #addToolBarActions(List)} with the actions name found in {@link TActionsFactory}
+	 * perform {@link #addToolBarActions(List)} with the actions name found in
+	 * {@link TActionsFactory}
 	 * 
 	 * @param actions - action name array
 	 */
@@ -247,7 +281,8 @@ public class TUIPanel extends WebPanel {
 	}
 
 	public final WebDialog createDialog(boolean setAspectRatio) {
-		// Preconditions.checkState(EventQueue.isDispatchThread(), "You must create and show dialogs from the
+		// Preconditions.checkState(EventQueue.isDispatchThread(), "You must create and
+		// show dialogs from the
 		// Event-Dispatch-Thread (EDT).");
 		// checkWindowTitle(title);
 		if (dialog != null) {
@@ -255,7 +290,8 @@ public class TUIPanel extends WebPanel {
 			return dialog;
 		}
 		dialog = new WebDialog(StyleId.dialogDecorated, Alesia.getInstance().getMainFrame());
-		// standar behavior: if the title of the tuipanel is visible, this method remove the string and put in as this
+		// standar behavior: if the title of the tuipanel is visible, this method remove
+		// the string and put in as this
 		// dialog title
 		if (isTitleVisible()) {
 			dialog.setTitle(getTitleText());
@@ -291,6 +327,7 @@ public class TUIPanel extends WebPanel {
 	public WebToolBar getToolBar() {
 		return toolBar;
 	}
+
 	public boolean isTitleVisible() {
 		return titleLabel.isVisible();
 	}
@@ -329,28 +366,19 @@ public class TUIPanel extends WebPanel {
 	 */
 	public void setFooterActions(Action... actions) {
 		Vector<JComponent> lst = new Vector<>();
-		lst.add(new JLabel());
 		for (Action act : actions) {
 			allActions.add(act);
-
-			// TODO: this value muss kommt from look and feel file
-			TUIUtils.overRideIcons(16, Color.BLACK, act);
-
+			TUIUtils.overRideIcons(TUIUtils.iconSize, Color.black, act);
 			WebButton wb = new WebButton(act);
 			// ApplicationAction aa = (ApplicationAction) act;
 			// String sco = aa.getResourceMap().getString(aa.getName() + ".Action.scope");
 			lst.add(wb);
 		}
 
-		GroupPanel groupPane = new GroupPanel(GroupingType.fillFirst, true,
-				(JComponent[]) lst.toArray(new JComponent[lst.size()]));
-
-		// GroupPanel groupPane = new GroupPane(StyleId.grouppane, (WebButton[]) lst.toArray(new
-		// WebButton[lst.size()]));
-		// groupPane.setOrientation(SwingConstants.LEADING);
-		// SwingUtils.equalizeComponentsWidth(groupPane.getComponents());
-
-		setFooterComponent(groupPane);
+		GroupPane pane = new GroupPane((JComponent[]) lst.toArray(new JComponent[lst.size()]));
+		GroupPanel anel = new GroupPanel(GroupingType.fillFirst, true, new WebLabel(), pane);
+		SwingUtils.equalizeComponentsWidth(pane.getComponents());
+		setFooterComponent(anel);
 	}
 
 	/**
@@ -364,23 +392,28 @@ public class TUIPanel extends WebPanel {
 		List<Action> alist = TActionsFactory.getActions(actions);
 		setFooterActions(alist.toArray(new Action[0]));
 	}
+
 	public void setFooterComponent(JComponent footer) {
 		if (footerJComponent != null) {
 			remove(footerJComponent);
 		}
 		this.footerJComponent = footer;
 		// add decoration
+		footerJComponent.setOpaque(true);
 		footerJComponent.setBorder(Borders.DIALOG);
 		add(footerJComponent, BorderLayout.SOUTH);
 	}
+
 	/**
-	 * replace the {@link JComponent} set using the metod {@link #setBodyComponent(JComponent)} and present a new
-	 * componet to display the selected mensaje. If the msgId parameter is <code>null</code>, hide the message componet
-	 * and present the body component
+	 * replace the {@link JComponent} set using the metod
+	 * {@link #setBodyComponent(JComponent)} and present a new componet to display
+	 * the selected mensaje. If the msgId parameter is <code>null</code>, hide the
+	 * message componet and present the body component
 	 * 
-	 * @param msgId - message id for text
-	 * @param visibleTB - indicati if the toolbarpanel will be visible or not visible
-	 * @param msgData - Sustitution data
+	 * @param msgId     - message id for text
+	 * @param visibleTB - indicati if the toolbarpanel will be visible or not
+	 *                  visible
+	 * @param msgData   - Sustitution data
 	 * 
 	 * @see UIComponentPanel#getToolBar()
 	 */
@@ -404,9 +437,10 @@ public class TUIPanel extends WebPanel {
 	}
 
 	/**
-	 * Same as {@link #setMessage(String, boolean, Object...)} but set the toolbar no visible
+	 * Same as {@link #setMessage(String, boolean, Object...)} but set the toolbar
+	 * no visible
 	 * 
-	 * @param msgId - message id for text
+	 * @param msgId   - message id for text
 	 * @param msgData - Sustitution data
 	 */
 	public void setMessage(String msgId, Object... msgData) {
@@ -435,7 +469,8 @@ public class TUIPanel extends WebPanel {
 	}
 
 	/**
-	 * TODO: this buton bust be mutable acordin if there are mor element inside the toolbar or not
+	 * TODO: this buton bust be mutable acordin if there are mor element inside the
+	 * toolbar or not
 	 * 
 	 * @return
 	 */
@@ -453,6 +488,7 @@ public class TUIPanel extends WebPanel {
 		// container.invalidate();
 		// }
 	}
+
 	protected void computeAndSetInitialDialogSize() {
 		if (getPreferredSize().width <= 0) {
 			dialog.pack();
@@ -492,17 +528,22 @@ public class TUIPanel extends WebPanel {
 	}
 
 	/**
-	 * Enable/Disable all the actions present in this component acordint to parametars pass as arguments.
+	 * Enable/Disable all the actions present in this component acordint to
+	 * parametars pass as arguments.
 	 * <p>
-	 * For example. the class {@link TUIFormPanel} has the <code>Acept </code> action. this action has a paremeter
-	 * <code>acept.Action.isCommint = true</code> that mark this action as an action for commit changes to the sistem.
+	 * For example. the class {@link TUIFormPanel} has the <code>Acept </code>
+	 * action. this action has a paremeter
+	 * <code>acept.Action.isCommint = true</code> that mark this action as an action
+	 * for commit changes to the sistem.
 	 * <p>
-	 * call this metodo <code>enableInternalActions("isCommint", "true", false)</code> means that all actions whit
-	 * property <code>.isCommit = true</code> will be disabled
+	 * call this metodo
+	 * <code>enableInternalActions("isCommint", "true", false)</code> means that all
+	 * actions whit property <code>.isCommit = true</code> will be disabled
 	 * 
 	 * @param property - indicate the property of the action to look for
-	 * @param value - the value of the param property must be equal tho this value
-	 * @param enable - boolean value to enable or disable de action.
+	 * @param value    - the value of the param property must be equal tho this
+	 *                 value
+	 * @param enable   - boolean value to enable or disable de action.
 	 */
 	protected void setEnableActions(String property, String value, boolean enable) {
 		for (Action a : allActions) {

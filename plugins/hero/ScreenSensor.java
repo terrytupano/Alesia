@@ -35,7 +35,6 @@ public class ScreenSensor extends JPanel {
 
 	private Hashtable<String, BufferedImage> images;
 	private String showImage;
-
 	private Shape shape;
 	private int scaledWidth, scaledHeight;
 	private Color backgroundColor;
@@ -45,9 +44,11 @@ public class ScreenSensor extends JPanel {
 	private JLabel imageLabel;
 	private String ocrResult;
 	private Tesseract iTesseract;
-	private int ocrTime = -1;
+	private long ocrTime = -1;
 	private SensorsArray sensorsArray;
 	private String currencySymbol;
+	private String decimalSeparator;
+	private String groupSeparator;
 
 	public ScreenSensor(SensorsArray sensorsArray, Shape sha) {
 		super(new BorderLayout());
@@ -56,6 +57,8 @@ public class ScreenSensor extends JPanel {
 		this.shape = sha;
 		this.imageLabel = new JLabel();
 		this.dataLabel = new JLabel();
+		this.decimalSeparator = TStringUtils.getString("table.decimal-separator");
+		this.groupSeparator = TStringUtils.getString("table.group-separator");
 		dataLabel.setFont(new Font("courier new", Font.PLAIN, 12));
 		setName(shape.name);
 
@@ -178,7 +181,7 @@ public class ScreenSensor extends JPanel {
 			}
 		}
 		update();
-		ocrTime = (int) (System.currentTimeMillis() - t1);
+		ocrTime = (System.currentTimeMillis() - t1);
 	}
 
 	public BufferedImage getImage(String type) {
@@ -207,9 +210,8 @@ public class ScreenSensor extends JPanel {
 		double val = -1;
 		try {
 			if (ocr != null) {
-				// TODO: move to global settings
-				ocr = ocr.replace(".", "");
-				ocr = ocr.replace(",", ".");
+				ocr = ocr.replace(groupSeparator, "");
+				ocr = ocr.replace(decimalSeparator, ".");
 				val = Double.parseDouble(ocr);
 			}
 		} catch (Exception e) {

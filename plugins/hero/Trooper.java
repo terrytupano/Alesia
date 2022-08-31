@@ -65,8 +65,9 @@ public class Trooper extends Task {
 	private int handsCounter = 0;
 	private long time1;
 	private DescriptiveStatistics outGameStats;
+	private DescriptiveStatistics trooperPerformance;
+
 	private boolean paused = false;
-	long stepMillis;
 	// This variable is ONLY used and cleaned by ensuregametable method
 	private String lastHoleCards = "";
 	private double maxRekonAmmo;
@@ -97,6 +98,7 @@ public class Trooper extends Task {
 		}
 		this.gameRecorder = new GameRecorder(numOfVillans);
 		this.outGameStats = new DescriptiveStatistics(10);
+		this.trooperPerformance = new DescriptiveStatistics(10);
 		// this.pokerSimulator = sensorsArray.getPokerSimulator();
 		this.handsCounter = 0;
 		this.playUntil = 0;
@@ -461,8 +463,6 @@ public class Trooper extends Task {
 	 * 
 	 */
 	private void potOdd() {
-		// TODO: check Poker Expected Value (EV) Formula: EV = (%W * $W) � (%L * $L)
-		// https://www.splitsuit.com/simple-poker-expected-value-formula
 		double HS_n = (double) pokerSimulator.uoAEvaluation.get("HS");
 		double Ppot = (double) pokerSimulator.uoAEvaluation.get("PPot");
 		double alpha = trooperParameter.getDouble("alpha");
@@ -487,7 +487,7 @@ public class Trooper extends Task {
 		availableActions.removeIf(ta -> ta.expectedValue < beta);
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 
-		String txt1 = String.format("(%1.3f * %7.2f * %1.3f) + (%1.3f * %7.2f * %1.3f)", HS_n, pokerSimulator.potValue,
+		String txt1 = String.format("%7.2f = (%1.3f * %7.2f * %1.3f) + (%1.3f * %7.2f * %1.3f)", ammo, HS_n, pokerSimulator.potValue,
 				alpha, Ppot, pokerSimulator.heroChips, zeta);
 		setVariableAndLog(EXPLANATION, txt1);
 
@@ -565,7 +565,7 @@ public class Trooper extends Task {
 			value1 = fourDigitFormat.format(((Double) value).doubleValue());
 		// append the playtime to the status (visual purpose only)
 		if (STATUS.equals(key)) {
-			value = "Play time " + timeFormat.format(new Date(playTime - TimeUnit.HOURS.toMillis(1))) + " loss limit "
+			value = "Hand " + handsCounter + " Play time " + timeFormat.format(new Date(playTime - TimeUnit.HOURS.toMillis(1))) + " loss limit "
 					+ twoDigitFormat.format(playUntil) + " " + value.toString();
 		}
 		pokerSimulator.setVariable(key, value);
@@ -740,6 +740,7 @@ public class Trooper extends Task {
 				setVariableAndLog(EXPLANATION, "Tropper dismiss.");
 				return null;
 			}
+			long t1 = System.currentTimeMillis();
 
 			// TODO: used for reweight. not implemented
 //			pokerSimulator.stimatedVillanTau = getMinActiveTau();
@@ -756,6 +757,12 @@ public class Trooper extends Task {
 
 			decide();
 			act();
+
+			trooperPerformance.addValue(System.currentTimeMillis() - t1);
+			pokerSimulator.setVariable("sensorArray.Performance",
+					"Tesseract " + twoDigitFormat.format(sensorsArray.tesseractTime.getMean() / 1000D) + "s. Trooper "
+							+ twoDigitFormat.format(trooperPerformance.getMean() / 1000D) + "s.");
+
 		}
 		return null;
 	}

@@ -144,9 +144,6 @@ public class Hero extends TPlugin {
 	public void heroPanel(ActionEvent event) {
 		heroPanel = new HeroPanel();
 		Alesia.getInstance().getMainPanel().showPanel(heroPanel);
-		// temp: change the main frame using this coordenates: 0,40 547,735
-		// temporal: must be loaded from troperPanel
-		// tableFile = new File("plugins/hero/resources/ps-main table.ppt");
 		initTrooperEnviorement();
 		Alesia.getInstance().getMainFrame().setBounds(10, 65, 620, 900);
 	}
@@ -154,8 +151,6 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public void pauseTrooper(ActionEvent event) {
 		if (activeTrooper != null) {
-			// boolean pause = !activeTrooper.isPaused();
-			// TActionsFactory.getAbstractButton(event).setIcon(TUIUtils.getSmallFontIcon(pause ? '\ue037' : '\ue034'));
 			activeTrooper.pause(true);
 		}
 	}
@@ -275,10 +270,7 @@ public class Hero extends TPlugin {
 	public void stopTrooper(ActionEvent event) {
 		if (activeTrooper != null) {
 			activeTrooper.cancelTrooper(true);
-			// heroPanel.setAllEnabledBut(true, new String[0]);
-			// TActionsFactory.getAction("pauseTrooper").putValue(Action.SMALL_ICON,
-			// TUIUtils.getSmallFontIcon('\ue037'));// :
-			activeTrooper = null; // '\ue034'));
+			activeTrooper = null;
 		}
 	}
 

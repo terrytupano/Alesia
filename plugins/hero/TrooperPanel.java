@@ -25,14 +25,7 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		addPropertyChangeListener(TActionsFactory.ACTION_PERFORMED, this);
 		Map<String, ColumnMetadata> columns = TrooperParameter.getMetaModel().getColumnMetadata();
 		setModel(model);
-		// activeCaption
-		// desktop
-		// TODO: old parameter for triangular distribbution
-		// addInputComponent(TUIUtils.getTWebComboBox("tau", "tdisrange", model.get("tau")));
 
-		// WebComboBox webc = TUIUtils.getTWebComboBox("preflopCards", PreflopCardsModel.getPreflopList(),
-		// model.get("preflopCards"));
-		// addInputComponent(webc);
 		addInputComponent(TUIUtils.getNumericTextField("tau", model, columns), false, true);
 		addInputComponent(TUIUtils.getWebCheckBox("strictPreflop", model.getBoolean("strictPreflop")));
 		addInputComponent(TUIUtils.getNumericTextField("reconnBase", model, columns), false, true);
@@ -48,25 +41,6 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 					+ ("".equals(c.trim()) ? "" : "," + c);
 		}
 		addInputComponent(TUIUtils.getTWebComboBox("tableParameters", "table.parameters0", tparm));
-
-		// FormLayout layout = new FormLayout("left:pref:grow");
-		// DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG);
-		// builder.append(TUIUtils.getTitlePanel("playTime"));
-		// builder.append(getInputComponent("playTime"));
-		// builder.append(TUIUtils.getTitlePanel("playUntil"));
-		// builder.append(getInputComponent("playUntil"));
-		// builder.append(TUIUtils.getTitlePanel("tableParameters"));
-		// builder.append(getInputComponent("tableParameters"));
-		// builder.append(TUIUtils.getTitlePanel("tau"));
-		// builder.append(getInputComponent("tau"));
-		// builder.append(TUIUtils.getTitlePanel("reconnBase"));
-		// builder.append(getInputComponent("reconnBase"));
-		// builder.append(TUIUtils.getTitlePanel("phi"));
-		// builder.append(getInputComponent("phi"));
-		// builder.append(TUIUtils.getTitlePanel("takeOpportunity"));
-		// builder.append(getInputComponent("takeOpportunity"));
-		// builder.append(TUIUtils.getTitlePanel("strictPreflop"));
-		// builder.append(getInputComponent("strictPreflop"));
 
 		FormLayout layout = new FormLayout(
 				"left:default:grow, 3dlu, left:default:grow, 3dlu, left:default:grow, 3dlu, left:default:grow");
@@ -98,11 +72,11 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 	@Override
 	public Map<String, Object> getValues() {
 		// parse tableparameters
-		Map values = super.getValues();
+		Map<String, Object> values = super.getValues();
 		String[] tparms = values.get("tableParameters").toString().split("[,]");
-		values.put("buyIn", new Double(tparms[0]));
-		values.put("bigBlind", new Double(tparms[1]));
-		values.put("smallBlind", new Double(tparms[2]));
+		values.put("buyIn", Double.parseDouble(tparms[0]));
+		values.put("bigBlind", Double.parseDouble(tparms[1]));
+		values.put("smallBlind", Double.parseDouble(tparms[2]));
 		// simbol if its present of "" if not
 		values.put("currency", tparms.length > 3 ? tparms[3] : "");
 		return values;
