@@ -1,27 +1,44 @@
 package plugins.hero;
 
-import java.awt.*;
-import java.awt.image.*;
-import java.util.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.util.Hashtable;
 import java.util.List;
 
-import javax.swing.*;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
-import com.alee.utils.*;
+import com.alee.utils.FileUtils;
+import com.alee.utils.ImageUtils;
 
-import core.*;
-import core.datasource.model.*;
-import net.sourceforge.tess4j.*;
-import net.sourceforge.tess4j.util.*;
-import plugins.hero.utils.*;
+import core.TColorUtils;
+import core.TStringUtils;
+import core.datasource.model.TrooperParameter;
+import net.sourceforge.tess4j.TessAPI;
+import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
+import net.sourceforge.tess4j.util.ImageHelper;
+import plugins.hero.utils.TCVUtils;
 
 /**
- * This class is a visual representation of the aread read from the screen. Group of this class are used and controled
- * by {@link SensorsArray} class. This class has a dual purpose:
- * <li>The main function is campture and process the image readed from the screen. the bounds, type of process need to
- * perform for this class, etc. come from the {@link Shape} class created based on the configuration file.
- * <li>this class is an of jpanel, so, this allow swing class use this class to build component that displain the
- * information captured and porccessed by this class.</li>
+ * This class is a visual representation of the aread read from the screen.
+ * Group of this class are used and controled by {@link SensorsArray} class.
+ * This class has a dual purpose:
+ * <li>The main function is campture and process the image readed from the
+ * screen. the bounds, type of process need to perform for this class, etc. come
+ * from the {@link Shape} class created based on the configuration file.
+ * <li>this class is an of jpanel, so, this allow swing class use this class to
+ * build component that displain the information captured and porccessed by this
+ * class.</li>
  * <p>
  * 
  * @author terry
@@ -69,14 +86,15 @@ public class ScreenSensor extends JPanel {
 		showImage(CAPTURED);
 
 		// standar: image at left, data at center
-		// if ratio is > 2. the component aling are vertical (image at top, data at center)
+		// if ratio is > 2. the component aling are vertical (image at top, data at
+		// center)
 		double ratio = (float) shape.bounds.width / (float) shape.bounds.height;
 		add(imageLabel, ratio > 2 ? BorderLayout.NORTH : BorderLayout.WEST);
 		add(dataLabel, BorderLayout.CENTER);
 		TrooperParameter params = TrooperParameter.findFirst("trooper = ?", "Hero");
 		this.currencySymbol = params.getString("currency");
 		this.iTesseract = Hero.getTesseract();
-		clearEnviorement();
+		clearEnvironment();
 		update();
 	}
 
@@ -89,7 +107,7 @@ public class ScreenSensor extends JPanel {
 	/**
 	 * Return a random {@link Point} selectd inside of the area (0,width) (0,height)
 	 * 
-	 * @param width - width of the area
+	 * @param width  - width of the area
 	 * @param height - height of the area
 	 * @return a random point inside area
 	 */
@@ -100,9 +118,10 @@ public class ScreenSensor extends JPanel {
 	}
 
 	/**
-	 * Replage the incomming argumento, which is spected to be only number, with the know replacemente due to tesseract
-	 * caracter bad recognition. for example, is know that ocr operation detect 800 as a00 or 80o. this method will
-	 * return 800 for thath incommin value
+	 * Replage the incomming argumento, which is spected to be only number, with the
+	 * know replacemente due to tesseract caracter bad recognition. for example, is
+	 * know that ocr operation detect 800 as a00 or 80o. this method will return 800
+	 * for thath incommin value
 	 * 
 	 * @param ocrString - posible nomeric value with leters
 	 * @return string only numeric
@@ -122,47 +141,54 @@ public class ScreenSensor extends JPanel {
 	}
 
 	/**
-	 * Capture the region of the screen specified by this sensor. this method is executed at diferent levels acording to
-	 * the retrived information from the screen. The <code>doOcr</code> argument idicate the desire for retrive ocr from
-	 * the image. the ocr will retrive if this argument is <code>true</code> and a diference between the las image and
-	 * the actual image has been detected.
+	 * Capture the region of the screen specified by this sensor. this method is
+	 * executed at diferent levels acording to the retrived information from the
+	 * screen. The <code>doOcr</code> argument idicate the desire for retrive ocr
+	 * from the image. the ocr will retrive if this argument is <code>true</code>
+	 * and a diference between the las image and the actual image has been detected.
 	 * <li>prepare the image
-	 * <li>set the status enabled/disabled for this sensor if the image is considerer enabled. if this sensor is setted
-	 * to disable, no more futher operations will be performed.
-	 * <li>perform de asociated OCR operation according to this area type ONLY IF the image has change.
+	 * <li>set the status enabled/disabled for this sensor if the image is
+	 * considerer enabled. if this sensor is setted to disable, no more futher
+	 * operations will be performed.
+	 * <li>perform de asociated OCR operation according to this area type ONLY IF
+	 * the image has change.
 	 * 
 	 * @see #getCapturedImage()
 	 * 
-	 * @param doOcr - <code>true</code> for perform ocr operation (if is available)
+	 * @param doOcr  - <code>true</code> for perform ocr operation (if is available)
+	 * @param isLive - <code>true</code> capture the image from window.
+	 *               <code>false</code> capture from file
 	 */
-	public void capture(boolean doOcr) {
+	public void capture(boolean doOcr, boolean isLive) {
 		Rectangle bou = shape.bounds;
 		long t1 = System.currentTimeMillis();
 
-		// capture the image
-		if (Hero.isTestMode) {
+		// live or test?
+		if (isLive) {
+			// from the screen
+			capturedImage = sensorsArray.getRobot().createScreenCapture(bou);
+		} else {
 			// from the ppt file background
 			ImageIcon ii = sensorsArray.getScreenAreas().getBackgroundImage();
 			BufferedImage bgimage = ImageUtils.copyToBufferedImage(ii);
 			capturedImage = bgimage.getSubimage(bou.x, bou.y, bou.width, bou.height);
-		} else {
-			// from the screen
-			capturedImage = sensorsArray.getRobot().createScreenCapture(bou);
 		}
 
 		/*
-		 * color reducction and image treatment before OCR operation or enable/disable action: mandatory for all areas
+		 * color reducction and image treatment before OCR operation or enable/disable
+		 * action: mandatory for all areas
 		 */
 		prepareImage();
 
 		/*
-		 * by default an area is enabled if against a dark background, there is some activation color. if the white
-		 * color is over some %, the action is setted as enabled. use the property enable.when=% to set a diferent
-		 * percentage
+		 * by default an area is enabled if against a dark background, there is some
+		 * activation color. if the white color is over some %, the action is setted as
+		 * enabled. use the property enable.when=% to set a diferent percentage
 		 */
 		setEnabled(false);
 		if (!(colorPercent > 1)) {
-			// if a sensor is disabled, his ocr is null by default. this avoid previous ocr values if the sensor was
+			// if a sensor is disabled, his ocr is null by default. this avoid previous ocr
+			// values if the sensor was
 			// enabled before
 			ocrResult = null;
 			update();
@@ -178,10 +204,33 @@ public class ScreenSensor extends JPanel {
 			if ((lastOcrImage == null) || imgdif > 0 || ocrResult == null) {
 				doOCR();
 				lastOcrImage = capturedImage;
+				saveSample(doOcr, isLive);
 			}
 		}
 		update();
 		ocrTime = (System.currentTimeMillis() - t1);
+	}
+
+	/**
+	 * store a copy of the {@link #capturedImage} to file. this methos is util to
+	 * check if all sensors are perfoming the correct ocr operation 
+	 * 
+	 * @param doOcr
+	 * @param isLive
+	 */
+	private void saveSample(boolean doOcr, boolean isLive) {
+		try {
+			String dir = "plugins/hero/resources/scannedCards/";
+			String ext = "png";
+			if (doOcr && isLive && isCardArea() && isEnabled() && (isComunityCard() || isHoleCard())) {
+				String fn = getName() + "." + ocrResult + "." + ext;
+				fn = FileUtils.getAvailableName(dir, fn);
+				File outputfile = new File(dir + fn);
+				ImageIO.write(capturedImage, ext, outputfile);
+			}
+		} catch (Exception e) {
+			Hero.heroLogger.severe(e.getMessage());
+		}
 	}
 
 	public BufferedImage getImage(String type) {
@@ -189,16 +238,19 @@ public class ScreenSensor extends JPanel {
 	}
 
 	/**
-	 * Return the string representation of the {@link #backgroundColor} variable. the format is RRGGBB
+	 * Return the string representation of the {@link #backgroundColor} variable.
+	 * the format is RRGGBB
 	 * 
 	 * @return
 	 */
 	public String getMaxColor() {
 		return TColorUtils.getOpaqueRGBColor(backgroundColor);
 	}
+
 	/**
-	 * Return the int value from this sensor. Some sensor has only numerical information or text/numerical information.
-	 * acording to this, this method will return that numerical information (if is available) or -1 if not. Also, -1 is
+	 * Return the int value from this sensor. Some sensor has only numerical
+	 * information or text/numerical information. acording to this, this method will
+	 * return that numerical information (if is available) or -1 if not. Also, -1 is
 	 * returned if any error is found during the parsing operation.
 	 * 
 	 * @see #OCRCorrection(ScreenSensor)
@@ -219,9 +271,10 @@ public class ScreenSensor extends JPanel {
 		}
 		return val;
 	}
+
 	/**
-	 * Retrun the optical caracter recognition extracted from the asociated area or <code>null</code> if the OCR is not
-	 * available (disabled sensor)
+	 * Retrun the optical caracter recognition extracted from the asociated area or
+	 * <code>null</code> if the OCR is not available (disabled sensor)
 	 * 
 	 * @return OCR result or <code>null</code>
 	 */
@@ -236,12 +289,15 @@ public class ScreenSensor extends JPanel {
 	public boolean isActionArea() {
 		return shape.isActionArea;
 	}
+
 	public boolean isCardArea() {
 		return shape.isCardArea;
 	}
+
 	public boolean isButtonArea() {
 		return shape.isButtonArea;
 	}
+
 	/**
 	 * Return <code>true</code> if this sensor is a comunity card sensor
 	 * 
@@ -273,11 +329,12 @@ public class ScreenSensor extends JPanel {
 	}
 
 	/**
-	 * set for this sensor that draw the original caputured image or the prepared image. this method affect only the
-	 * visual representation of the component.
+	 * set for this sensor that draw the original caputured image or the prepared
+	 * image. this method affect only the visual representation of the component.
 	 * <p>
-	 * WARNING: displaying prepared images will invoke more method on the {@link Tesseract} OCR api engine. this will
-	 * decrease the system performance 4x.
+	 * WARNING: displaying prepared images will invoke more method on the
+	 * {@link Tesseract} OCR api engine. this will decrease the system performance
+	 * 4x.
 	 * 
 	 * @param so - <code>true</code> to draw the original caputred image
 	 */
@@ -294,9 +351,11 @@ public class ScreenSensor extends JPanel {
 		imageLabel.setPreferredSize(dim);
 
 	}
+
 	/**
-	 * Central method to get OCR operations. This method clear and re sets the ocr and exception variables according to
-	 * the succed or failure of the ocr operation.
+	 * Central method to get OCR operations. This method clear and re sets the
+	 * variable {@link #ocrResult} according to the succed or failure of the ocr
+	 * operation.
 	 */
 	private void doOCR() {
 		ocrResult = null;
@@ -312,8 +371,8 @@ public class ScreenSensor extends JPanel {
 	}
 
 	/**
-	 * return the string representation of the car area using a convination of tessearct for rank und collor comparation
-	 * for suit
+	 * return the string representation of the car area using a convination of
+	 * tessearct for rank und collor comparation for suit
 	 * 
 	 * @return the ocr retrived from the original file name or <code>null</code>
 	 */
@@ -327,7 +386,7 @@ public class ScreenSensor extends JPanel {
 		rank = "B".equals(rank) ? "6" : rank;
 		rank = "I0".equals(rank) ? "T" : rank;
 		rank = "ID".equals(rank) ? "T" : rank;
-		
+
 		// report error and return empty string
 		String suit = "";
 		if ("".equals(rank)) {
@@ -361,7 +420,8 @@ public class ScreenSensor extends JPanel {
 	private String getTesseractOCR() throws TesseractException {
 		String srcocr = iTesseract.doOCR(preparedImage);
 
-		// draw segmented regions (only on prepared image) and ONLY when the prepared image is request to be visible
+		// draw segmented regions (only on prepared image) and ONLY when the prepared
+		// image is request to be visible
 		if (showImage.equals(PREPARED) && preparedImage != null) {
 			int pageIteratorLevel = TessAPI.TessPageIteratorLevel.RIL_WORD;
 			// List<Word> wlst = Hero.iTesseract.getWords(preparedImage, pageIteratorLevel);
@@ -375,15 +435,18 @@ public class ScreenSensor extends JPanel {
 				}
 			}
 			// Hero.heroLogger.finer(getName() + ": list of words: " + wlst);
-			// Hero.heroLogger.finer(getName() + ": Tesseract OCR performed. Regions: " + regions.size() + " OCR=" +
+			// Hero.heroLogger.finer(getName() + ": Tesseract OCR performed. Regions: " +
+			// regions.size() + " OCR=" +
 			// srcocr);
 		}
 		Hero.heroLogger.finer(getName() + ": Tesseract OCR performed. Raw OCR whitout correction=" + srcocr);
 		return OCRCorrection(srcocr);
 	}
+
 	/**
-	 * perform custom corrections accordint of the name or type of sensor. for example, for call sensor is spected this
-	 * correction retrive only the numeric value from the second line, ignoring the "call" text
+	 * perform custom corrections accordint of the name or type of sensor. for
+	 * example, for call sensor is spected this correction retrive only the numeric
+	 * value from the second line, ignoring the "call" text
 	 * 
 	 */
 	private String OCRCorrection(String srcocd) {
@@ -391,8 +454,10 @@ public class ScreenSensor extends JPanel {
 		// standar procedure for numeric sensors
 		if (isNumericArea()) {
 			srcocd = srcocd.replaceAll("[^" + currencySymbol + ".1234567890]", "");
-			// at this point the var mus contain the currency simbol as first caracter. in case of error, the first
-			// caracter maybe is a number. as a fail safe, remove allways the first caracter.
+			// at this point the var mus contain the currency simbol as first caracter. in
+			// case of error, the first
+			// caracter maybe is a number. as a fail safe, remove allways the first
+			// caracter.
 			if (!"".equals(currencySymbol) && srcocd.length() > 1)
 				srcocd = srcocd.substring(1).trim();
 		}
@@ -400,7 +465,8 @@ public class ScreenSensor extends JPanel {
 		// standar procedure: remove all blanks caracters
 		srcocd = srcocd.replaceAll("\\s", "");
 
-		// for chips numerical areas, and the value is empty string is probably because all-in action, assign 0
+		// for chips numerical areas, and the value is empty string is probably because
+		// all-in action, assign 0
 		if (isNumericArea() && getName().contains(".chips") && "".equals(srcocd)) {
 			srcocd = "0";
 		}
@@ -410,21 +476,27 @@ public class ScreenSensor extends JPanel {
 
 		return srcocd;
 	}
+
 	/**
-	 * perform image operation to set globals variables relatet with the image previous to OCR, color count operations.
-	 * acording to the type of area that this sensor represent, the underling image can be transformed in diferent ways.
+	 * perform image operation to set globals variables relatet with the image
+	 * previous to OCR, color count operations. acording to the type of area that
+	 * this sensor represent, the underling image can be transformed in diferent
+	 * ways.
 	 * <p>
-	 * This method set the {@link #preparedImage}, {@link #backgroundColor} and {@link #whitePercent} global variables.
+	 * This method set the {@link #preparedImage}, {@link #backgroundColor} and
+	 * {@link #whitePercent} global variables.
 	 * 
 	 */
 	private void prepareImage() {
-		// update global variable. this step is mandatory for all areas because maxcolor and white percent affect the
+		// update global variable. this step is mandatory for all areas because maxcolor
+		// and white percent affect the
 		// flow of the entire class
 		BufferedImage bufimg = TColorUtils.convert3(capturedImage);
 		Hashtable<String, Integer> histo = TColorUtils.getHistogram(bufimg);
 		this.backgroundColor = TColorUtils.getBackgroundColor(histo, Color.white);
 
-		// test: for card areas, if the card is active and contain the cian color (diamond) set the background color as
+		// test: for card areas, if the card is active and contain the cian color
+		// (diamond) set the background color as
 		// cyan
 		if (isCardArea())
 			if (histo.containsKey(TColorUtils.getOpaqueRGBColor(Color.cyan)))
@@ -466,7 +538,8 @@ public class ScreenSensor extends JPanel {
 		String etex = isEnabled() ? "Enabled" : "Disabled";
 		String elin = "<FONT COLOR=" + ecol + ">" + etex + "</FONT>";
 
-		// + "<br>Max color: <FONT style= \"background-color: #"+maxc +"\"><B>" + maxc + "</B></FONT>" + "<br>OCR: " +
+		// + "<br>Max color: <FONT style= \"background-color: #"+maxc +"\"><B>" + maxc +
+		// "</B></FONT>" + "<br>OCR: " +
 		// ocrResult
 		String text = "<html>" + getName() + "  " + elin + "<br>Enable: " + secol + " " + colorPercent
 				+ "<br>Background: <B style= \"color: #" + maxc + "\">" + maxc + "</B>" + "<br>OCR: " + ocrResult
@@ -474,7 +547,7 @@ public class ScreenSensor extends JPanel {
 		dataLabel.setText(text);
 	}
 
-	protected void clearEnviorement() {
+	protected void clearEnvironment() {
 		ocrResult = null;
 		preparedImage = null;
 		capturedImage = null;

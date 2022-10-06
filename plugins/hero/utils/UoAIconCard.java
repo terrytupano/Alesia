@@ -16,9 +16,7 @@ import plugins.hero.UoAHandEval.*;
 public class UoAIconCard extends JLabel {
 	private UoACard uoACard;
 
-	public UoAIconCard(UoACard card) {
-		setOpaque(true);
-		setBackground(Color.gray);
+	public UoAIconCard(UoACard card) {		
 		// small card size
 		setPreferredSize(new Dimension(31, 38));
 		setUoACard(card);
@@ -38,9 +36,13 @@ public class UoAIconCard extends JLabel {
 		if (card == null)
 			this.uoACard = new UoACard();
 		if (uoACard.getIndex() > -1) {
+			setOpaque(false);
 			setIcon(TResources.getIcon("cards/" + card.toString()));
 		} else {
 			setIcon(null);
+			setOpaque(true);
+			setBackground(Color.gray);
+
 		}
 	}
 }

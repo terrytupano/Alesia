@@ -11,8 +11,6 @@
 package plugins.hero;
 
 import java.awt.BorderLayout;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.alee.extended.layout.VerticalFlowLayout;
 import com.alee.laf.button.WebToggleButton;
@@ -75,11 +73,11 @@ public class HeroPanel extends TUIFormPanel {
 	 * 
 	 * @param sensorsArray - the array to update
 	 */
-	public void updateSensorsArray(SensorsArray sensorsArray) {
+	public void updateSensorsArray(Trooper trooper) {
 		setVisible(false);
 		pockerSimulatorPanel.removeAll();
-		pockerSimulatorPanel.add(sensorsArray.getPokerSimulator().getReportPanel(), BorderLayout.CENTER);
-		sensorArrayPanel.updateArray(sensorsArray);
+		pockerSimulatorPanel.add(trooper.getPokerSimulator().getReportPanel(), BorderLayout.CENTER);
+		sensorArrayPanel.updateArray(trooper.getSensorsArray());
 		setVisible(true);
 	}
 }

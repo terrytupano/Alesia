@@ -51,9 +51,9 @@ public class TTaskManager implements PropertyChangeListener {
 	}
 
 	/**
-	 * return <code>true</code> if the Alesia enviorement can ferform one more task.
+	 * return <code>true</code> if the Alesia Environment can ferform one more task.
 	 * 
-	 * @return <code>true</code> for 1 more, <code>false</code> if the enviorement is allready a full capacity
+	 * @return <code>true</code> for 1 more, <code>false</code> if the Environment is allready a full capacity
 	 */
 	public boolean suporMoreTask() {
 		List<Task> tasks = monitor.getTasks();

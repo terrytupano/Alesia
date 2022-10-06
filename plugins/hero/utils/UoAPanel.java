@@ -31,8 +31,8 @@ public class UoAPanel extends TUIFormPanel implements ActionListener {
 	public UoAPanel() {
 		this.console = TUIUtils.getConsoleTextArea();
 
-		cardsPanel = new CardsPanel();
-		cardsPanel.setActionListener(this);
+		cardsPanel = new CardsPanel(this);
+//		cardsPanel.setActionListener(this);
 		// JPanel cardsPanel2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		// cardsPanel2.add(cardsPanel);
 

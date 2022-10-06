@@ -10,67 +10,47 @@
  ******************************************************************************/
 package plugins.hero;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.util.*;
-import java.util.logging.*;
+import java.awt.AWTException;
+import java.awt.Robot;
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.logging.Logger;
 
 import javax.swing.*;
-import javax.swing.Action;
 
-import org.javalite.activejdbc.*;
-import org.jdesktop.application.*;
-import org.jdesktop.application.Task.*;
+import org.javalite.activejdbc.LazyList;
+import org.jdesktop.application.Task;
+import org.jdesktop.application.Task.BlockingScope;
 
-import com.alee.laf.button.*;
-import com.alee.utils.*;
+import com.alee.laf.button.WebToggleButton;
+import com.alee.utils.SwingUtils;
 
-import core.*;
-import core.datasource.model.*;
-import net.sourceforge.tess4j.*;
-import plugins.hero.ozsoft.*;
-import plugins.hero.ozsoft.bots.*;
-import plugins.hero.ozsoft.gui.*;
-import plugins.hero.utils.*;
+import core.Alesia;
+import core.TActionsFactory;
+import core.TEntry;
+import core.TPlugin;
+import core.TResources;
+import core.datasource.model.PreflopCards;
+import core.datasource.model.SimulationResult;
+import core.datasource.model.TrooperParameter;
+import net.sourceforge.tess4j.Tesseract;
+import plugins.hero.ozsoft.GameSimulatorPanel;
+import plugins.hero.ozsoft.Player;
+import plugins.hero.ozsoft.Table;
+import plugins.hero.ozsoft.TableType;
+import plugins.hero.ozsoft.bots.Bot;
+import plugins.hero.ozsoft.gui.TableDialog;
+import plugins.hero.utils.PreFlopCardsPanel;
+import plugins.hero.utils.UoAPanel;
 
 public class Hero extends TPlugin {
 
-	// protected static Tesseract iTesseract;
-	protected static Logger heroLogger = Logger.getLogger("Hero");
-	protected static boolean isTestMode;
-	public static Table simulationTable;
 	private static Trooper activeTrooper;
-
+	protected static Logger heroLogger = Logger.getLogger("Hero");
 	private static HeroPanel heroPanel;
+	private static Table simulationTable;
 	private GameSimulatorPanel simulatorPanel;
-	private SensorsArray sensorsArray;
-
-	public Hero() {
-		TActionsFactory.insertActions(this);
-		Alesia.getInstance().openDB("hero");
-	}
-
-	/**
-	 * in simulation enviorement, this method return <code>true</code> if the current enviorement is NOT a simulation or
-	 * when the current player is Hero and the speed is correct
-	 * 
-	 * @return
-	 */
-	public static boolean allowSimulationGUIUpdate() {
-		// enviorement is NOT in simulation?
-		if (Hero.simulationTable == null)
-			return true;
-
-		// TODO: ---------------- remove
-		// in simulation eviorement, update panel only for hero when the speed is not 0
-		// if (Hero.simulationTable.getSpeed() < 10 || !"Hero".equals(Hero.simulationTable.getActor().getName()))
-		if (!"Hero".equals(Hero.simulationTable.getActor().getName()))
-			return false;
-
-		// the speed is correct and the current player is Hero
-		return true;
-	}
 
 	public static Action getLoadAction() {
 		Action load = TActionsFactory.getAction("fileChooserOpen");
@@ -83,8 +63,8 @@ public class Hero extends TPlugin {
 	}
 
 	/**
-	 * This metod is separated because maybe in the future we will need diferents robot for diferent graphics
-	 * configurations
+	 * This metod is separated because maybe in the future we will need diferents
+	 * robot for diferent graphics configurations
 	 * 
 	 * @return
 	 */
@@ -99,28 +79,55 @@ public class Hero extends TPlugin {
 	}
 
 	public static Tesseract getTesseract() {
-		// TODO: no visible performance improve by setting every sensor with his own teseract instance
+		// TODO: no visible performance improve by setting every sensor with his own
+		// teseract instance
 		Tesseract iTesseract = new Tesseract(); // JNA Interface Mapping
 		iTesseract.setDatapath("plugins/hero/tessdata"); // path to tessdata directory
 
-		// DON:T SET THE PAGEMODE VAR: THIS DESTROY THE ACURACY OF THE OCR OPERATION. i don.t know why but it is
+		// DON:T SET THE PAGEMODE VAR: THIS DESTROY THE ACURACY OF THE OCR OPERATION. i
+		// don.t know why but it is
 		// iTesseract.setPageSegMode(3); //
 
 		iTesseract.setTessVariable("classify_enable_learning", "0");
 		iTesseract.setTessVariable("OMP_THREAD_LIMIT", "1");
-		// TODO: recheck performanece. no visible performance improve setting this variable
+		// TODO: recheck performanece. no visible performance improve setting this
+		// variable
 		// iTesseract.setOcrEngineMode(0); // Run Tesseract only - fastest
 		return iTesseract;
 	}
 
-	@Deprecated
-	public static String parseToUnicode(String hand) {
-		String uni = new String(hand);
-		uni = uni.replace('s', '\u2660');// u2660
-		uni = uni.replace('c', '\u2663');// u2663
-		uni = uni.replace('h', '\u2665');// u2665
-		uni = uni.replace('d', '\u2666');// u2666
-		return uni;
+
+	public Hero() {
+		TActionsFactory.insertActions(this);
+		Alesia.getInstance().openDB("hero");
+	}
+
+	@org.jdesktop.application.Action
+	public void backrollHistory(ActionEvent event) {
+		LazyList<SimulationResult> results = SimulationResult.find("trooper = ? AND hands = ?", "Hero", 0);
+		ArrayList<String> names = new ArrayList<>();
+		results.forEach(sr -> names.add(sr.getString("name")));
+		String[] possibleValues = names.toArray(new String[0]);
+		Object selectedValue = JOptionPane.showInputDialog(Alesia.getInstance().mainFrame, "Choose one", "Input",
+				JOptionPane.INFORMATION_MESSAGE, null, possibleValues, possibleValues[0]);
+		if (selectedValue != null) {
+			String resultName = selectedValue.toString();
+
+			// retrive the first element of the statistical series to detect, the type of graph
+			Alesia.getInstance().openDB("hero");
+			SimulationResult sample = SimulationResult.findFirst("name = ? AND trooper = ?", resultName,
+					"Hero");
+			JDialog chart;
+			if(sample.get("aditionalValue") != null) {
+				chart = new SingeVariableSimulationLineChart(resultName);				
+			} else {
+				chart = new MultiVariableSimulationBarChar(resultName);
+			}
+
+			chart.pack();
+			chart.setLocationRelativeTo(null);
+			chart.setVisible(true);
+		}
 	}
 
 	@org.jdesktop.application.Action
@@ -144,8 +151,14 @@ public class Hero extends TPlugin {
 	public void heroPanel(ActionEvent event) {
 		heroPanel = new HeroPanel();
 		Alesia.getInstance().getMainPanel().showPanel(heroPanel);
-		initTrooperEnviorement();
+		initTrooperEnvironment();
 		Alesia.getInstance().getMainFrame().setBounds(10, 65, 620, 900);
+	}
+
+	private void initTrooperEnvironment() {
+		simulationTable = null;
+		activeTrooper = new Trooper();
+		heroPanel.updateSensorsArray(activeTrooper);
 	}
 
 	@org.jdesktop.application.Action
@@ -176,8 +189,8 @@ public class Hero extends TPlugin {
 
 		}
 		TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 1200 1200 /mov 630 65 ");
-		isTestMode = false;
-		return start(event);
+		initTrooperEnvironment();
+		return activeTrooper;
 	}
 
 	@org.jdesktop.application.Action
@@ -203,7 +216,7 @@ public class Hero extends TPlugin {
 		// override
 		PreflopCards tmp = PreflopCards.findFirst("rangeName = ? ", nam_desc[0]);
 		if (tmp != null) {
-			Object[] options = {"OK", "CANCEL"};
+			Object[] options = { "OK", "CANCEL" };
 			int opt = JOptionPane.showOptionDialog(rangePanel, "the preflop range " + nam_desc[0] + " exist. Override?",
 					"Warning", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
 			if (opt != 0)
@@ -235,7 +248,9 @@ public class Hero extends TPlugin {
 				return null;
 			}
 
+			// WARNING: order by chair is importat. this is take into akonut in simulation
 			LazyList<TrooperParameter> tparms = TrooperParameter.findAll().orderBy("chair");
+			
 			TrooperParameter hero = TrooperParameter.findFirst("trooper = ?", "Hero");
 			int buy = hero.getDouble("buyIn").intValue();
 			int bb = hero.getDouble("bigBlind").intValue();
@@ -244,15 +259,16 @@ public class Hero extends TPlugin {
 				if (tparm.getBoolean("isActive")) {
 					String tName = tparm.getString("trooper");
 					String bCls = tparm.getString("client");
-					Class cls = Class.forName("plugins.hero.ozsoft.bots." + bCls);
+					Class<?> cls = Class.forName("plugins.hero.ozsoft.bots." + bCls);
 					// Constructor cons = cls.getConstructor(String.class);
 					// Bot bot = (Bot) cons.newInstance(name);
+					@SuppressWarnings("deprecation")
 					Bot bot = (Bot) cls.newInstance();
-					PokerSimulator psim = bot.setPokerSimulator("Beta variation", tparm, "beta");
+					Trooper t = bot.getSimulationTrooper(simulationTable, tparm);
 					Player p = new Player(tName, buy, bot, tparm.getInteger("chair"));
 					simulationTable.addPlayer(p);
-					if ("Hero".equals(tName))
-						simulatorPanel.updatePokerSimulator(psim);
+					if ("Hero".equals(tName)) 
+						simulatorPanel.updatePokerSimulator(t.getPokerSimulator());
 				}
 			}
 
@@ -271,35 +287,21 @@ public class Hero extends TPlugin {
 		if (activeTrooper != null) {
 			activeTrooper.cancelTrooper(true);
 			activeTrooper = null;
+			initTrooperEnvironment();
 		}
 	}
 
 	@org.jdesktop.application.Action
 	public void testAreas(ActionEvent event) {
-		if (activeTrooper == null)
-			sensorsArray.testAreas();
-	}
-
-	@org.jdesktop.application.Action
-	public void backrollHistory(ActionEvent event) {
-		LazyList<SimulationResult> results = SimulationResult.find("trooper = ? AND hands = ?", "Hero", 0);
-		ArrayList<String> names = new ArrayList<>();
-		results.forEach(sr -> names.add(sr.getString("name")));
-		String[] possibleValues = names.toArray(new String[0]);
-		Object selectedValue = JOptionPane.showInputDialog(Alesia.getInstance().mainFrame, "Choose one", "Input",
-				JOptionPane.INFORMATION_MESSAGE, null, possibleValues, possibleValues[0]);
-		if (selectedValue != null) {
-			LineChartDemo6 chart = new LineChartDemo6(selectedValue.toString());
-			chart.pack();
-			chart.setLocationRelativeTo(null);
-			chart.setVisible(true);
-		}
+		if (activeTrooper != null)
+			activeTrooper.getSensorsArray().testSensorsAreas();
 	}
 
 	@org.jdesktop.application.Action
 	public Task testTrooper(ActionEvent event) {
-		isTestMode = true;
-		return start(event);
+		initTrooperEnvironment();
+		activeTrooper.getSensorsArray().setLive(false);
+		return activeTrooper;
 	}
 
 	@org.jdesktop.application.Action
@@ -308,30 +310,4 @@ public class Hero extends TPlugin {
 		Alesia.getInstance().getMainPanel().showPanel(aPanel);
 	}
 
-	private void initTrooperEnviorement() {
-		// dont put isTestMode = false; HERE !!!!!!!!!!!!!!!!!
-		simulationTable = null;
-		File tableFile = new File("plugins/hero/resources/ps-10-win11.ppt");
-		ShapeAreas shapeAreas = new ShapeAreas(tableFile);
-		shapeAreas.read();
-		sensorsArray = new SensorsArray();
-		sensorsArray.setShapeAreas(shapeAreas);
-		heroPanel.updateSensorsArray(sensorsArray);
-	}
-
-	private Task start(ActionEvent event) {
-		initTrooperEnviorement();
-		activeTrooper = new Trooper(sensorsArray, sensorsArray.getPokerSimulator());
-		// PropertyChangeListener tl = new PropertyChangeListener() {
-		// public void propertyChange(PropertyChangeEvent evt) {
-		// if (Trooper.PROP_DONE.equals(evt.getPropertyName())) {
-		// WebLookAndFeel.setForceSingleEventsThread(true);
-		// }
-		// }
-		// };
-		// t.getPokerSimulator().setParameter();
-		// activeTrooper.addPropertyChangeListener(tl);
-		heroPanel.setAllEnabledBut(false, "pauseTrooper", "stopTrooper");
-		return activeTrooper;
-	}
 }

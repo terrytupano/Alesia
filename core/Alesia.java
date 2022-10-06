@@ -17,7 +17,6 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
-import javax.swing.*;
 import javax.swing.Action;
 
 import org.apache.commons.logging.impl.*;
@@ -33,7 +32,6 @@ import org.javalite.activejdbc.*;
 import org.javalite.activejdbc.connection_config.*;
 import org.jdesktop.application.*;
 
-import com.alee.api.resource.*;
 import com.alee.extended.image.*;
 import com.alee.extended.layout.*;
 import com.alee.extended.panel.*;
@@ -46,8 +44,6 @@ import com.alee.managers.notification.*;
 import com.alee.managers.plugin.data.*;
 import com.alee.managers.settings.*;
 import com.alee.managers.style.*;
-import com.alee.skin.dark.*;
-import com.alee.skin.light.*;
 import com.alee.utils.*;
 
 import gui.*;
@@ -103,7 +99,7 @@ public class Alesia extends Application {
 
 	/**
 	 * Convenient method to open the alesia local database connection using the
-	 * system enviorement variables. call this method to create or open a new
+	 * system Environment variables. call this method to create or open a new
 	 * database connection and attach these to {@link Thread} that invoke this
 	 * method.
 	 * <p>
@@ -485,7 +481,11 @@ public class Alesia extends Application {
 		XmlUtils.processAnnotations(GalaxyBackground.class);
 
 		// Initializing L&F
-		WebLookAndFeel.install(WebLightSkin.class);
+		WebLookAndFeel.install();
+//		WebLookAndFeel.install(WebLightSkin.class);
+//		WebLookAndFeel.install(FlatSkin.class);
+//		WebLookAndFeel.install(MaterialSkin.class);
+//		WebLookAndFeel.install(WebDarkSkin.class);
 //		StyleManager.addExtensions(new XmlSkinExtension(new ClassResource(Alesia.class, "resources/SimpleExtension.xml")));
 //		ProprietaryUtils.setupAATextInfo(UIManager.getDefaults());
 
@@ -497,6 +497,12 @@ public class Alesia extends Application {
 
 		// TODO: remove the antialaisin shint form the lookandfell
 		// UIDefaults defaults = UIManager.getDefaults();
+		
+		//Turn off the anti-aliasing function of the text
+		//defaultTextRenderingHints only works on the title bar of the form
+		//textRenderingHints works on the controls in the form
+//		StyleConstants.defaultTextRenderingHints = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+//		StyleConstants.textRenderingHints = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
 
 		mainFrame = new TWebFrame();
 		mainFrame.setVisible(true);

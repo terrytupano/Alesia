@@ -1,15 +1,21 @@
 
 package plugins.hero.ozsoft.bots;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
-import org.javalite.activejdbc.*;
+import org.javalite.activejdbc.LazyList;
 
-import core.*;
-import core.datasource.model.*;
-import plugins.hero.*;
-import plugins.hero.UoAHandEval.*;
-import plugins.hero.UoALoky.handranking.*;
+import core.Alesia;
+import core.datasource.model.SimulationResult;
+import core.datasource.model.TrooperParameter;
+import plugins.hero.PokerSimulator;
+import plugins.hero.Trooper;
+import plugins.hero.UoAHandEval.UoAHand;
 import plugins.hero.ozsoft.*;
 
 /**
@@ -19,11 +25,20 @@ import plugins.hero.ozsoft.*;
  */
 public abstract class Bot implements Client {
 
+	public class SimulationVariable {
+		public String name;
+		public int upperBound;
+
+		SimulationVariable(String name, int upperBound) {
+			this.name = name;
+			this.upperBound = upperBound;
+		}
+	}
 	/** Number of hole cards. */
 	protected static final int NO_OF_HOLE_CARDS = 2;
 	protected static Hashtable<String, Object> parm1 = new Hashtable<>();
 	protected PokerSimulator pokerSimulator;
-	protected Trooper trooperT;
+	protected Trooper trooper;
 	protected Player player;
 	protected List<Player> villans;
 	protected int bigBlind;
@@ -31,6 +46,7 @@ public abstract class Bot implements Client {
 	protected int pot;
 	protected int buyIn;
 	protected String trooperName;
+
 	protected UoAHand myHole, communityHand, hand;
 
 	/** poker street. preFlop=0, Flop=1 ... */
@@ -47,6 +63,9 @@ public abstract class Bot implements Client {
 	private int handsT;
 
 	private String simulationName;
+	private String aditionalValue;;
+
+	private List<SimulationVariable> simulationVariables;
 
 	@Override
 	public void actorRotated(Player actor) {
@@ -60,9 +79,29 @@ public abstract class Bot implements Client {
 		this.pot = pot + bet;
 	}
 
+	public Trooper getSimulationTrooper(Table simulationTable, TrooperParameter trooperP) {
+		this.trooper = new Trooper();
+		this.trooper.setSimulationTable(simulationTable);
+		this.pokerSimulator = trooper.getPokerSimulator();
+		this.trooperParameter = trooperP;
+		this.trooperName = trooperParameter.getString("trooper");
+
+		this.simulationName = "Zeta balancing - 0 - 100 buyin";
+
+		// for single variable simulation
+		this.aditionalValue = "zeta";
+
+		// for mutivariable simulation
+		// this.simulationVariables = new ArrayList<>();
+		// simulationVariables.add(new SimulationVariable("alpha", 200));
+		// simulationVariables.add(new SimulationVariable("zeta", 200));
+
+		return trooper;
+	}
+
 	@Override
 	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
-		this.villans = new ArrayList(players);
+		this.villans = new ArrayList<>(players);
 		this.player = players.stream().filter(p -> trooperName.equals(p.getName())).findFirst().get();
 		villans.remove(player);
 		this.bigBlind = bigBlind;
@@ -127,32 +166,88 @@ public abstract class Bot implements Client {
 		}
 	}
 
-	/**
-	 * /** invoqued after contruction. set the simulation parameters for this Bot
-	 * 
-	 * @param SimulationName - simulation name
-	 * @param trooperP - parameters
-	 * @param field - field name in {@link TrooperParameter} that is simulated
-	 */
-	public PokerSimulator setPokerSimulator(String simulationName, TrooperParameter trooperP, String field) {
-		this.pokerSimulator = new PokerSimulator();
-		this.trooperT = new Trooper(null, pokerSimulator);
-		this.simulationName = simulationName;
-		this.fieldName = field;
-		this.trooperParameter = trooperP;
-		this.trooperName = trooperParameter.getString("trooper");
-		return pokerSimulator;
-	}
-	private String fieldName;
-	/**
-	 * 
-	 */
 	private void backrollSnapSchot() {
+		if (simulationVariables == null)
+			singleVariableBackrollSnapSchot();
+		else
+			multiVariableBackrollSnapSchot();
+	}
+
+	private void multiVariableBackrollSnapSchot() {
+		Alesia.getInstance().openDB("hero");
+
+		long cnt = SimulationResult.count("name = ? ", simulationName);
+
+		// if no element is present, add standar 0 elements
+		if (cnt == 0) {
+			SimulationResult sts = SimulationResult.create("name", simulationName, "trooper", "Hero");
+			sts.set("hands", 0);
+			sts.set("wins", 0);
+			sts.set("ratio", 0);
+			sts.insert();
+		}
+
+		// build multiAditionalValues field based rotation of simulation fields
+		Map<String, Object> map = new TreeMap<>();
+		for (SimulationVariable sVar : simulationVariables)
+			map.put(sVar.name, trooperParameter.get(sVar.name));
+		String addVal = map.toString();
+
+		SimulationResult statistic = SimulationResult.findFirst("name = ? AND multiAditionalValues = ?", simulationName,
+				addVal);
+		if (statistic == null) {
+			statistic = SimulationResult.create("name", simulationName, "trooper", "", "multiAditionalValues", addVal);
+		}
+
+		int hands = handsT + (statistic.getInteger("hands") == null ? 0 : statistic.getInteger("hands"));
+		statistic.set("hands", hands);
+		double wins = statistic.getDouble("wins") == null ? 0 : statistic.getDouble("wins");
+		wins = wins + player.getCash() - buyIn;
+		statistic.set("wins", wins);
+		double bb = wins / (bigBlind * 1.0);
+		statistic.set("ratio", bb / (hands * 1.0));
+		statistic.save();
+
+		// only hero rotate the list of variables. the rotate values are static stored. so the other bot can pic the
+		// rest of variables. this avoid colition between bots
+		// WARNIG: this code fracmento take into acount that hero allways is the firs in the rotation. (because is sit
+		// in chair 0)
+		if ("Hero".equals(trooperName)) {
+			varAndList.clear();
+			int count = 8;
+			for (SimulationVariable sVar : simulationVariables) {
+				List<Integer> list = new ArrayList<>();
+				int rb = trooperParameter.getInteger(sVar.name);
+				int inc = sVar.upperBound / count;
+				for (int i = 0; i < count; i++) {
+					rb = rb + inc;
+					if (rb > sVar.upperBound)
+						rb = inc;
+					list.add(rb);
+				}
+				Collections.shuffle(list);
+				varAndList.put(sVar.name, list);
+			}
+			// System.out.println("shuffled by Hero: " + varAndList);
+		}
+
+		for (SimulationVariable sVar : simulationVariables) {
+			List<Integer> sList = varAndList.get(sVar.name);
+			Integer val = sList.remove(0);
+			trooperParameter.set(sVar.name, val);
+		}
+		// System.out.println("after " + trooperName +" selection "+ varAndList);
+		trooperParameter.save();
+	}
+
+	// private static List<Integer> shuffleList = new ArrayList<>();
+	private static Map<String, List<Integer>> varAndList = new Hashtable<>();
+
+	private void singleVariableBackrollSnapSchot() {
 		Alesia.getInstance().openDB("hero");
 		LazyList<SimulationResult> last = SimulationResult
 				.where("name = ? AND trooper = ?", simulationName, trooperName).orderBy("id DESC").limit(1);
-		SimulationResult statistic = SimulationResult.create("name", simulationName, "trooper",
-				trooperName);
+		SimulationResult statistic = SimulationResult.create("name", simulationName, "trooper", trooperName);
 
 		if (last.size() > 0) {
 			statistic.copyFrom(last.get(0));
@@ -161,7 +256,7 @@ public abstract class Bot implements Client {
 			statistic.set("hands", 0);
 			statistic.set("wins", 0);
 			statistic.set("ratio", 0);
-			statistic.setString("aditionalValue", trooperParameter.get(fieldName));
+			statistic.setString("aditionalValue", trooperParameter.get(aditionalValue));
 			statistic.insert();
 			statistic = SimulationResult.create("name", simulationName, "trooper", trooperName);
 		}
@@ -173,7 +268,7 @@ public abstract class Bot implements Client {
 		statistic.set("wins", wins);
 		double bb = wins / (bigBlind * 1.0);
 		statistic.set("ratio", bb / (hands * 1.0));
-		statistic.setString("aditionalValue", trooperParameter.get(fieldName));
+		statistic.setString("aditionalValue", trooperParameter.get(aditionalValue));
 		statistic.insert();
 	}
 }

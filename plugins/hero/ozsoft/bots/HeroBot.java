@@ -37,7 +37,7 @@ public class HeroBot extends Bot {
 
 		// long t1 = System.currentTimeMillis();
 		pokerSimulator.runSimulation();
-		TrooperAction act = trooperT.getSimulationAction(trooperParameter);
+		TrooperAction act = trooper.getSimulationAction(trooperParameter);
 		// statistics.addValue(System.currentTimeMillis() - t1);
 
 		PlayerAction action = null;
@@ -91,7 +91,7 @@ public class HeroBot extends Bot {
 		pokerSimulator.bigBlind = bigBlind;
 		pokerSimulator.smallBlind = bigBlind / 2;
 		pokerSimulator.buyIn = buyIn;
-		pokerSimulator.clearEnviorement();
+		pokerSimulator.clearEnvironment();
 	}
 
 	@Override

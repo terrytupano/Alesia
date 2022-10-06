@@ -17,13 +17,11 @@ import plugins.hero.UoAHandEval.*;
  * 
  */
 public class CardsPanel extends JPanel {
-	private WebButton evalHandButton;
-	private JCheckBox simulateExample;
 	private ArrayList<UoAIconCard> boardCards;
 	private ArrayList<UoAIconCard> deckCards;
 	private JSpinner tauSpinner;
 
-	public CardsPanel() {
+	public CardsPanel(ActionListener listener) {
 		super();
 		SpinnerNumberModel model = new SpinnerNumberModel(15, 0, 100, 5);
 		this.tauSpinner = new JSpinner(model);
@@ -49,10 +47,19 @@ public class CardsPanel extends JPanel {
 			boardCards.add(card);
 		}
 
-		evalHandButton = new WebButton("Evaluate hand");
-		simulateExample = new JCheckBox("Simulate Example");
-		// simulateExample.addActionListener(ap -> boardCards.forEach(c -> c.setEnabled(simulateExample.isSelected())));
-		simulateExample.addActionListener(ap -> resetBoard(simulateExample.isSelected()));
+		WebButton evalHandButton = new WebButton("Evaluate hand");
+		evalHandButton.addActionListener(listener);
+
+		WebButton setExample = new WebButton("Hand from OM");
+		setExample.addActionListener(listener);
+		setExample.addActionListener(ap -> setExampleFromPaper());
+
+		WebButton reset = new WebButton("Reset table");
+		reset.addActionListener(ap -> resetTable());
+
+		WebButton random = new WebButton("Random hand");
+		random.addActionListener(listener);
+		random.addActionListener(ap -> setRandomHand());
 
 		WebPanel holP = new WebPanel(new GridLayout(1, 0, 5, 5));
 		holP.add(boardCards.get(0));
@@ -67,9 +74,11 @@ public class CardsPanel extends JPanel {
 		comP.add(boardCards.get(6));
 		comP.setBorder(new TitledBorder("Comunity cards"));
 
-		WebPanel cmpP = new WebPanel(new GridLayout(0, 1, 0, 0));
+		WebPanel cmpP = new WebPanel(new GridLayout(2, 3, 0, 0));
 		cmpP.add(tauSpinner);
-		cmpP.add(simulateExample);
+		cmpP.add(setExample);
+		cmpP.add(random);
+		cmpP.add(reset);
 		cmpP.add(evalHandButton);
 
 		WebPanel gamePanel = new WebPanel(new FlowLayout(FlowLayout.LEFT));
@@ -99,21 +108,24 @@ public class CardsPanel extends JPanel {
 	}
 
 	/**
-	 * the argument <code>listener</code> will be invoqued when the button evaluation is pressed
+	 * the the boar with the example cart form modeling oponent paper
 	 * 
-	 * @param listener - the listner
 	 */
-	public void setActionListener(ActionListener listener) {
-		evalHandButton.addActionListener(listener);
+	private void setExampleFromPaper() {
+		resetTable();
+		UoAHand exam = new UoAHand("Ad Qc 3h 4c jh");
+		setHand(exam);
 	}
 
-	private void resetBoard(boolean setUoAExample) {
-		deckCards.forEach(jl -> jl.setEnabled(true));
-		boardCards.forEach(jl -> jl.setUoACard(null));
-		UoAHand exam = new UoAHand("Ad Qc 3h 4c jh");
-		int idx[] = exam.getCardArray();
+	/**
+	 * set the hand in the table for simulation
+	 * 
+	 * @param hand
+	 */
+	private void setHand(UoAHand hand) {
+		int idx[] = hand.getCardArray();
 		int cnt = 0;
-		for (int i = 1; i < idx.length-2; i++) {
+		for (int i = 1; i < idx.length - 2; i++) {
 			for (UoAIconCard dcar : deckCards) {
 				if (dcar.getUoACard().getIndex() == idx[i]) {
 					boardCards.get(cnt++).setUoACard(dcar.getUoACard());
@@ -121,6 +133,32 @@ public class CardsPanel extends JPanel {
 				}
 			}
 		}
+
+	}
+
+	/**
+	 * clear the simulation board
+	 */
+	private void resetTable() {
+		deckCards.forEach(jl -> jl.setEnabled(true));
+		boardCards.forEach(jl -> jl.setUoACard(null));
+	}
+
+	/**
+	 * set a random hand for simulation
+	 */
+	private void setRandomHand() {
+		resetTable();
+		ArrayList<UoAIconCard> list = new ArrayList<>(deckCards);
+		Collections.shuffle(list);
+		UoAHand hand = new UoAHand();
+		hand.addCard(list.remove(0).getUoACard());
+		hand.addCard(list.remove(0).getUoACard());
+
+		hand.addCard(list.remove(0).getUoACard());
+		hand.addCard(list.remove(0).getUoACard());
+		hand.addCard(list.remove(0).getUoACard());
+		setHand(hand);
 	}
 
 	/**

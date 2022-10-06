@@ -6,8 +6,9 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
 /**
- * Base class to send programaticily events throw the mouse or the keyboard. each action recived by this class is the
- * name of the sensor to perform the action.
+ * Base class to send programaticily events throw the mouse or the keyboard.
+ * each action recived by this class is the name of the sensor to perform the
+ * action.
  * <p>
  * a secuence of 1 o more action separeted by ; whit the following format:
  * <p>
@@ -15,27 +16,30 @@ import java.awt.event.KeyEvent;
  * <li>action name alone - perform 1 click using the mouse over the action area.
  * <li>action_name,dc - Perform a double click over the action area
  * <li>action_name,c=# - Perform the number # of click over the action area
- * <li>action_name,k=text - write the text text. The area must be previously selected using double or simple click
+ * <li>action_name,k=text - write the text text. The area must be previously
+ * selected using double or simple click
  * 
  * @author terry
  *
  */
+@SuppressWarnings("deprecation")
 public class RobotActuator {
 
 	private Robot robot;
 	private int mouseDelay = 200;
 	private int keyStrokeDelay = 20;
-	private ShapeAreas areas;
+	private Trooper trooper;
 
-	public RobotActuator(ShapeAreas areas) {
-		this.areas = areas;
+	public RobotActuator(Trooper trooper) {
+		this.trooper = trooper;
 		this.robot = Hero.getNewRobot();
 		robot.setAutoDelay(40);
 		robot.setAutoWaitForIdle(true);
 	}
 
 	/**
-	 * Perform the secuence of command asociated with the {@link TrooperAction} passsed as argument.
+	 * Perform the secuence of command asociated with the {@link TrooperAction}
+	 * passsed as argument.
 	 * 
 	 * @see #perform(String)
 	 * @param trooperAction - the action
@@ -45,9 +49,10 @@ public class RobotActuator {
 	}
 
 	/**
-	 * Perform the secuence of commands passed as argument as argument. The command structure is in the class
-	 * documentation. This method dont dont verify the command format. it will try of fullfill the action. check the
-	 * logger entry to verify if the secuence was complete.
+	 * Perform the secuence of commands passed as argument as argument. The command
+	 * structure is in the class documentation. This method dont dont verify the
+	 * command format. it will try of fullfill the action. check the logger entry to
+	 * verify if the secuence was complete.
 	 * 
 	 * @param commands - the commands to perform
 	 */
@@ -58,7 +63,7 @@ public class RobotActuator {
 			String action = temp[0];
 			String actValue = temp.length > 1 ? temp[1] : "";
 
-			Shape fig = areas.getShapes().get(action);
+			Shape fig = trooper.getSensorsArray().getScreenAreas().getShapes().get(action);
 			if (fig == null) {
 				Hero.heroLogger.severe("RobotActuator: Action " + action + " not found.");
 				continue;
@@ -96,11 +101,13 @@ public class RobotActuator {
 	}
 
 	/**
-	 * Perform mouse left click. In test mode, this method send the {@link KeyEvent#VK_CONTROL} using the keyboard to
-	 * signal only. the property "show location of pointer when press control key" must be set on in mouse properties
+	 * Perform mouse left click. In test mode, this method send the
+	 * {@link KeyEvent#VK_CONTROL} using the keyboard to signal only. the property
+	 * "show location of pointer when press control key" must be set on in mouse
+	 * properties
 	 */
 	public void doClick() {
-		if (Hero.isTestMode) {
+		if (!trooper.getSensorsArray().isLive()) {
 			type(KeyEvent.VK_CONTROL);
 			return;
 		}
@@ -109,12 +116,15 @@ public class RobotActuator {
 		robot.mouseRelease(InputEvent.BUTTON1_MASK);
 		robot.delay(mouseDelay);
 	}
+
 	/**
-	 * Perform mouse left click. In test mode, this method send the {@link KeyEvent#VK_CONTROL} using the keyboard to
-	 * signal only. the property "show location of pointer when press control key" must be set on in mouse properties
+	 * Perform mouse left click. In test mode, this method send the
+	 * {@link KeyEvent#VK_CONTROL} using the keyboard to signal only. the property
+	 * "show location of pointer when press control key" must be set on in mouse
+	 * properties
 	 */
 	public void doubleClick() {
-		if (Hero.isTestMode) {
+		if (!trooper.getSensorsArray().isLive()) {
 			type(KeyEvent.VK_CONTROL);
 			return;
 		}
@@ -139,7 +149,8 @@ public class RobotActuator {
 	}
 
 	/**
-	 * Perform key press on the keyboard. This key must be any of the {@link KeyEvent} key codes
+	 * Perform key press on the keyboard. This key must be any of the
+	 * {@link KeyEvent} key codes
 	 * 
 	 * @param vk - the key code to type
 	 */
@@ -151,8 +162,9 @@ public class RobotActuator {
 	}
 
 	/**
-	 * Type the text <code>str</code> using the keyboard. This method only process the characters from A-Z and numbers.
-	 * To sent especial key, use {@link #type(int)} method.
+	 * Type the text <code>str</code> using the keyboard. This method only process
+	 * the characters from A-Z and numbers. To sent especial key, use
+	 * {@link #type(int)} method.
 	 * 
 	 * @param str - text to type
 	 */
@@ -164,7 +176,7 @@ public class RobotActuator {
 			if ((code > 96 && code < 123)) {
 				code = code - 32;
 			}
-			if (Hero.isTestMode)
+			if (!trooper.getSensorsArray().isLive())
 				type(KeyEvent.VK_CONTROL);
 			else
 				type(code);

@@ -1,21 +1,23 @@
 package plugins.hero;
 
-import java.util.*;
+import java.util.List;
 
-import org.apache.commons.lang3.*;
-import org.apache.commons.math3.stat.descriptive.*;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
-import plugins.hero.ozsoft.*;
+import plugins.hero.ozsoft.Player;
 
 /**
- * encapsulate all player information. this class collect the necesary information to make a wild guess over the
- * villans.
+ * encapsulate all player information. this class collect the necesary
+ * information to make a wild guess over the villans.
  * <p>
- * A beginner villan must play around 1-2 hours dayly. a profesional poker player around 2-8 . this class only take the
- * last 100 hands (must be around 1 1/2 hours)
+ * A beginner villan must play around 1-2 hours dayly. a profesional poker
+ * player around 2-8 . this class only take the last 100 hands (must be around 1
+ * 1/2 hours)
  * 
- * TODO. 100 is an estimated to avoid pass behaviors interfir whit the new villans moods and skills. chick this value. a
- * better aproach cound be keep track of long data and remove the old ones by date.
+ * TODO. 100 is an estimated to avoid pass behaviors interfir whit the new
+ * villans moods and skills. chick this value. a better aproach cound be keep
+ * track of long data and remove the old ones by date.
  * 
  * @author terry
  *
@@ -63,9 +65,10 @@ public class GamePlayer {
 	public boolean isActive() {
 		return isActive;
 	}
+
 	/**
-	 * return the name of the villan in this position. can return <code>null</code> if no complete information is
-	 * available at this moment
+	 * return the name of the villan in this position. can return <code>null</code>
+	 * if no complete information is available at this moment
 	 * 
 	 * @return villan name or <code>null</code>
 	 */
@@ -86,15 +89,15 @@ public class GamePlayer {
 	 * Read the sensor form the {@link SensorsArray} asociated whit this recorder
 	 * 
 	 */
-	public void readSensors(SensorsArray sensorsArray) {
+	public void readSensors(Trooper trooper) {
 		isActive = false;
 		String ssPrefix = (playerId == 0) ? "hero" : "villan" + playerId;
 
-		// in simulation enviorement, retrive data direct from Table instance inf Hero
-		if (Hero.simulationTable != null) {
-			Player p = Hero.simulationTable.getPlayers().get(playerId);
-			bigBlind = Hero.simulationTable.bigBlind;
-			buyIn = Hero.simulationTable.buyIn;
+		// in simulation Environment, retrive data direct from Table instance inf Hero
+		if (trooper.getSimulationTable() != null) {
+			Player p = trooper.getSimulationTable().getPlayers().get(playerId);
+			bigBlind = trooper.getSimulationTable().bigBlind;
+			buyIn = trooper.getSimulationTable().buyIn;
 			chips = p.getCash();
 			name = p.getName();
 
@@ -102,11 +105,11 @@ public class GamePlayer {
 			isActive = p.hasCards();
 
 			// ensure flop count only once
-			if (Hero.simulationTable.getCurrentRound() != PokerSimulator.FLOP_CARDS_DEALT)
+			if (trooper.getSimulationTable().getCurrentRound() != PokerSimulator.FLOP_CARDS_DEALT)
 				flopMeasured = false;
 
 			// only count flop
-			if (!flopMeasured && Hero.simulationTable.getCurrentRound() == PokerSimulator.FLOP_CARDS_DEALT) {
+			if (!flopMeasured && trooper.getSimulationTable().getCurrentRound() == PokerSimulator.FLOP_CARDS_DEALT) {
 				int cnt = p.hasCards() ? 1 : 0;
 				totalTauCounter += 1;
 				tauCounter += cnt;
@@ -116,37 +119,37 @@ public class GamePlayer {
 			return;
 		}
 
-		bigBlind = sensorsArray.getPokerSimulator().bigBlind;
-		buyIn = sensorsArray.getPokerSimulator().buyIn;
+		bigBlind = trooper.getPokerSimulator().bigBlind;
+		buyIn = trooper.getPokerSimulator().buyIn;
 
 		// first step: read only card1 and card2 sensor.
-		List<ScreenSensor> list = sensorsArray.getSensors(ssPrefix + ".card");
-		sensorsArray.readSensors(false, list);
+		List<ScreenSensor> list = trooper.getSensorsArray().getSensors(ssPrefix + ".card");
+		trooper.getSensorsArray().readSensors(false, list);
 
 		// only count on preflop and flop
-		if (sensorsArray.getPokerSimulator().currentRound == PokerSimulator.FLOP_CARDS_DEALT) {
-			tauCounter += sensorsArray.isActive(playerId) ? 1 : -1;;
+		if (trooper.getPokerSimulator().currentRound == PokerSimulator.FLOP_CARDS_DEALT) {
+			tauCounter += trooper.getSensorsArray().isActive(playerId) ? 1 : -1;
 			tauCounter = tauCounter <= 10 ? 10 : tauCounter;
 			tauCounter = tauCounter > 100 ? 100 : tauCounter;
 		}
 
 		// in real live battle, the player muss be active to continue
-		if (!sensorsArray.isActive(playerId))
+		if (!trooper.getSensorsArray().isActive(playerId))
 			return;
 
 		isActive = true;
-		list = sensorsArray.getSensors(ssPrefix);
-		sensorsArray.readSensors(true, list);
+		list = trooper.getSensorsArray().getSensors(ssPrefix);
+		trooper.getSensorsArray().readSensors(true, list);
 
 		// amunitions
 		String sName = (playerId == 0) ? "hero.chips" : "villan" + playerId + ".chips";
-		chips = sensorsArray.getSensor(sName).getNumericOCR();
+		chips = trooper.getSensorsArray().getSensor(sName).getNumericOCR();
 
 		// name
 		if (playerId == 0)
 			name = "Hero";
 		else
-			name = sensorsArray.getSensor("villan" + playerId + ".name").getOCR();
+			name = trooper.getSensorsArray().getSensor("villan" + playerId + ".name").getOCR();
 
 		// both values must be available to continue the process
 		if (chips == -1 || name == null)
@@ -167,7 +170,8 @@ public class GamePlayer {
 			}
 		}
 
-		// an the beginning of the record process, set the buyIN as basic anc compute the average winnigs/lose
+		// an the beginning of the record process, set the buyIN as basic anc compute
+		// the average winnigs/lose
 		if (prevValue == -1) {
 			// +/-10 BB mean the player is a new player
 			double win = bigBlind * 10;
@@ -184,7 +188,8 @@ public class GamePlayer {
 			return;
 		}
 
-		// negative for betting, positive for winnigs (don.t record 0 value because affect statistical values)
+		// negative for betting, positive for winnigs (don.t record 0 value because
+		// affect statistical values)
 		if (chips - prevValue != 0)
 			bettingPattern.addValue(chips - prevValue);
 		prevValue = chips;
@@ -192,7 +197,8 @@ public class GamePlayer {
 
 	public void updateDB() {
 		// if (!name.equals(prefix)) {
-		// Game gh = Game.findOrInit("tableparams", Hero.pokerSimulator.getTableParameters(), "name",
+		// Game gh = Game.findOrInit("tableparams",
+		// Hero.pokerSimulator.getTableParameters(), "name",
 		// name);
 		// gh.set("ASSESMENT", getStats());
 		// gh.set("BEATTIN_PATTERN", TResources.getByteArrayFromObject(bettingPattern));
@@ -208,6 +214,7 @@ public class GamePlayer {
 	public double getChips() {
 		return chips;
 	}
+
 	/**
 	 * return the mean but expresed in BB
 	 * 
@@ -227,8 +234,8 @@ public class GamePlayer {
 	 * @return tau [0,100] range (%)
 	 */
 	public int getTau() {
-		 double val = tauCounter / (double) totalTauCounter;
-		 return (int) (val * 100);
+		double val = tauCounter / (double) totalTauCounter;
+		return (int) (val * 100);
 //		return tauCounter;
 	}
 

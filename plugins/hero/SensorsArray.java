@@ -1,24 +1,33 @@
 package plugins.hero;
 
-import java.awt.*;
-import java.util.*;
+import java.awt.Color;
+import java.awt.Robot;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.stream.*;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
-import javax.swing.*;
-import javax.swing.border.*;
+import javax.swing.JPanel;
+import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
 
-import org.apache.commons.math3.stat.descriptive.*;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
-import com.jgoodies.common.base.*;
+import com.jgoodies.common.base.Preconditions;
 
 /**
- * This class control the array of sensor inside of the screen. This class is responsable for reading all the sensor
- * configurated in the {@link DrawingPanel} passsed as argument in the {@link #createSensorsArray(DrawingPanel)} method.
+ * This class control the array of sensor inside of the screen. This class is
+ * responsable for reading all the sensor configurated in the
+ * {@link DrawingPanel} passsed as argument in the
+ * {@link #createSensorsArray(DrawingPanel)} method.
  * <p>
- * althout this class are the eyes of the tropper, numerical values must be retrives throw {@link PokerSimulator}. the
- * poker simulator values are populated during the reading process using the method
- * {@link PokerSimulator#addCard(String, String)} at every time that a change in the enviorement is detected.
+ * althout this class are the eyes of the tropper, numerical values must be
+ * retrives throw {@link PokerSimulator}. the poker simulator values are
+ * populated during the reading process using the method
+ * {@link PokerSimulator#addCard(String, String)} at every time that a change in
+ * the Environment is detected.
  * 
  * @author terry
  *
@@ -42,7 +51,8 @@ public class SensorsArray {
 	public final static String TYPE_VILLANS = "Villans";
 
 	/**
-	 * Read/see only cards areas. this type is only for hero cards and comunity cards
+	 * Read/see only cards areas. this type is only for hero cards and comunity
+	 * cards
 	 * 
 	 */
 	public final static String TYPE_CARDS = "Cards";
@@ -53,34 +63,53 @@ public class SensorsArray {
 	private TreeMap<String, ScreenSensor> screenSensors;
 	private Robot robot;
 	private Border readingBorder, lookingBorder, standByBorder;
-	private PokerSimulator pokerSimulator;
 	private ShapeAreas screenAreas;
+	private PokerSimulator pokerSimulator;
+	private boolean isLive;
 	DescriptiveStatistics tesseractTime = new DescriptiveStatistics(10);
 
-	public SensorsArray() {
-		this.pokerSimulator = new PokerSimulator();
+	public SensorsArray(PokerSimulator pokerSimulator) {
+		this.isLive = true;
+		this.pokerSimulator = pokerSimulator;
 		this.robot = Hero.getNewRobot();
 		this.readingBorder = new LineBorder(Color.BLUE, 2);
 		this.lookingBorder = new LineBorder(Color.ORANGE, 2);
 		this.standByBorder = new LineBorder(new JPanel().getBackground(), 2);
 		this.screenSensors = new TreeMap<>();
+		init();
+	}
+
+	private void init() {
+		File tableFile = new File("plugins/hero/resources/ps-10-win11.ppt");
+		ShapeAreas shapeAreas = new ShapeAreas(tableFile);
+		shapeAreas.read();
+		setShapeAreas(shapeAreas);
+	}
+	public boolean isLive() {
+		return isLive;
+	}
+
+	public void setLive(boolean isLive) {
+		this.isLive = isLive;
 	}
 
 	/**
-	 * set the array mode. this mode indicate from where this instance muss read the values.
+	 * set the array mode. this mode indicate from where this instance muss read the
+	 * values.
 	 * <li>Battle: all the values are read from the screen.
 	 * <li>Simulation: all values are setted by {@link HeroBot}
 	 * 
-	 * @param mode - the mode private String arrayMode; public void setSimulationMode(String mode) {
-	 *        Preconditions.checkArgument(mode.equals("Battle") || mode.equals("Simulation"), "Illegal Array mode " +
-	 *        mode); this.arrayMode = mode; }
+	 * @param mode - the mode private String arrayMode; public void
+	 *             setSimulationMode(String mode) {
+	 *             Preconditions.checkArgument(mode.equals("Battle") ||
+	 *             mode.equals("Simulation"), "Illegal Array mode " + mode);
+	 *             this.arrayMode = mode; }
 	 */
 	/**
 	 * initialize this sensor array. clearing all sensor and all variables
 	 */
-	public void clearEnviorement() {
-		screenSensors.values().forEach((ss) -> ss.clearEnviorement());
-		pokerSimulator.clearEnviorement();
+	public void clearEnvironment() {
+		screenSensors.values().forEach((ss) -> ss.clearEnvironment());
 	}
 
 	/**
@@ -116,9 +145,11 @@ public class SensorsArray {
 	}
 
 	/**
-	 * return where in the table, the dealer button are. If hero has the button, this method return 0.
+	 * return where in the table, the dealer button are. If hero has the button,
+	 * this method return 0.
 	 * 
-	 * @return where the dealer button are or -1 for a fail in thable position detection
+	 * @return where the dealer button are or -1 for a fail in thable position
+	 *         detection
 	 */
 	public int getDealerButtonPosition() {
 		int vil = getVillans();
@@ -133,19 +164,18 @@ public class SensorsArray {
 		return bp;
 	}
 
-	public PokerSimulator getPokerSimulator() {
-		return pokerSimulator;
-	}
 	public Robot getRobot() {
 		return robot;
 	}
 
 	/**
-	 * return the {@link ScreenSensor} by name. The name comes from property <code>name</code>
+	 * return the {@link ScreenSensor} by name. The name comes from property
+	 * <code>name</code>
 	 * 
 	 * @param sensorName - screen sensor name
 	 * 
-	 * @return the screen sensor instance or <code>null</code> if no sensor is found.
+	 * @return the screen sensor instance or <code>null</code> if no sensor is
+	 *         found.
 	 */
 	public ScreenSensor getSensor(String sensorName) {
 		ScreenSensor ss = screenSensors.get(sensorName);
@@ -154,15 +184,19 @@ public class SensorsArray {
 	}
 
 	/**
-	 * This method return a list of all action sensors currently enables. For example. if a enviorement with 10 binary
-	 * sensors, calling this method return <code>1469</code> means that the sensors 1, 4, 6 and 9 are enabled. all
+	 * This method return a list of all action sensors currently enables. For
+	 * example. if a Environment with 10 binary sensors, calling this method return
+	 * <code>1469</code> means that the sensors 1, 4, 6 and 9 are enabled. all
 	 * others are disabled.
 	 * 
-	 * @return list of binary sensors enabled public String getEnabledActions() { String onlist = "";
+	 * @return list of binary sensors enabled public String getEnabledActions() {
+	 *         String onlist = "";
 	 * 
-	 *         List<ScreenSensor> sslist = screenSensors.values().stream().filter(ScreenSensor::isActionArea)
-	 *         .collect(Collectors.toList()); for (int i = 0; i < sslist.size(); i++) { ScreenSensor ss =
-	 *         screenSensors.get("binary.sensor" + i); onlist += ss.isEnabled() ? "" : i; } return onlist; }
+	 *         List<ScreenSensor> sslist =
+	 *         screenSensors.values().stream().filter(ScreenSensor::isActionArea)
+	 *         .collect(Collectors.toList()); for (int i = 0; i < sslist.size();
+	 *         i++) { ScreenSensor ss = screenSensors.get("binary.sensor" + i);
+	 *         onlist += ss.isEnabled() ? "" : i; } return onlist; }
 	 */
 
 	public ShapeAreas getScreenAreas() {
@@ -170,10 +204,12 @@ public class SensorsArray {
 	}
 
 	/**
-	 * retriva a list of sensor.s names acording to the <code>subString</code> argument.
+	 * retriva a list of sensor.s names acording to the <code>subString</code>
+	 * argument.
 	 * <p>
-	 * For example, to retrive all "call" sensors, pass to this method ".call" will return sensor hero.call,
-	 * villan1.call etc. <code>null</code> argument return all configured sensors.
+	 * For example, to retrive all "call" sensors, pass to this method ".call" will
+	 * return sensor hero.call, villan1.call etc. <code>null</code> argument return
+	 * all configured sensors.
 	 * 
 	 * <p>
 	 * the list is sorted
@@ -203,10 +239,13 @@ public class SensorsArray {
 		return (int) screenSensors.keySet().stream().filter(sn -> sn.startsWith("villan") && sn.contains("name"))
 				.count();
 	}
+
 	/**
-	 * return <code>true</code> if the player identifyed as id argument is active (hero or villan). A PLAYER IS ACTIVE
-	 * IF HE HAS CARDS IN THIS HANDS. if a player fold his card. this method will not count that player. from this
-	 * method point of view. the player is in tha game, but in this particular moment are not active.
+	 * return <code>true</code> if the player identifyed as id argument is active
+	 * (hero or villan). A PLAYER IS ACTIVE IF HE HAS CARDS IN THIS HANDS. if a
+	 * player fold his card. this method will not count that player. from this
+	 * method point of view. the player is in tha game, but in this particular
+	 * moment are not active.
 	 * 
 	 * @param id - villan id or 0 for hero
 	 * @return true if the player is active
@@ -219,13 +258,15 @@ public class SensorsArray {
 	}
 
 	/**
-	 * return <code>true</code> if the villanId seat is active. A seat is active if there are a villan sittion on it.
-	 * this method check the villan name sensor and the villan chip sensor. if both are active, the seat is active.
+	 * return <code>true</code> if the villanId seat is active. A seat is active if
+	 * there are a villan sittion on it. this method check the villan name sensor
+	 * and the villan chip sensor. if both are active, the seat is active.
 	 * <p>
-	 * from this method point of view, there are a villan sittin on a seat currently playing or not. maybe he abandom
-	 * the action
+	 * from this method point of view, there are a villan sittin on a seat currently
+	 * playing or not. maybe he abandom the action
 	 * 
-	 * @param villanId - the seat as configured in the ppt file. villan1 is at hero.s left
+	 * @param villanId - the seat as configured in the ppt file. villan1 is at
+	 *                 hero.s left
 	 * @see #getActiveVillans()
 	 * @return numers of villans active seats
 	 */
@@ -234,7 +275,8 @@ public class SensorsArray {
 		// ScreenSensor vchip = getSensor("villan" + villanId + ".chips");
 		// return vname.isEnabled() && vchip.isEnabled();
 
-		// TODO: temporal until now, i.m not using the name sensor for nothing. so, an active seat is when the chip
+		// TODO: temporal until now, i.m not using the name sensor for nothing. so, an
+		// active seat is when the chip
 		// sensor is enabled
 		ScreenSensor vchip = getSensor("villan" + villanId + ".chips");
 		return vchip.isEnabled();
@@ -259,9 +301,11 @@ public class SensorsArray {
 		readSensors(false, sslist);
 		System.out.println("lookActionSensors() " + (System.currentTimeMillis() - t1));
 	}
+
 	/**
-	 * this metho campture all screeen�s areas without do any ocr operation. Use this mothod to retrive all sensor areas
-	 * and set the enable status for fast comparation.
+	 * this metho campture all screeen�s areas without do any ocr operation. Use
+	 * this mothod to retrive all sensor areas and set the enable status for fast
+	 * comparation.
 	 * 
 	 */
 	public void lookTable() {
@@ -273,9 +317,10 @@ public class SensorsArray {
 	}
 
 	/**
-	 * Perform read operation on the {@link ScreenSensor} acoording to the type of the sensor. The type can be any of
-	 * TYPE_ global constatn passed as argument. This method perform the OCR operation on the selected areas and update
-	 * the {@link PokerSimulator} if it.s necesary.
+	 * Perform read operation on the {@link ScreenSensor} acoording to the type of
+	 * the sensor. The type can be any of TYPE_ global constatn passed as argument.
+	 * This method perform the OCR operation on the selected areas and update the
+	 * {@link PokerSimulator} if it.s necesary.
 	 * <p>
 	 * After this method execution, the simulator reflect the actual game status
 	 * 
@@ -296,7 +341,8 @@ public class SensorsArray {
 		// numeric types retrive all numers and update poker simulator
 		if (TYPE_NUMBERS.equals(type)) {
 			slist = allSensors.stream().filter(ss -> ss.isNumericArea()).collect(Collectors.toList());
-			// remove villas sensor. villans sensor are update calling readPlayerStat() method
+			// remove villas sensor. villans sensor are update calling readPlayerStat()
+			// method
 			slist.removeIf(ss -> ss.getName().startsWith("villan"));
 			readSensors(true, slist);
 
@@ -335,12 +381,13 @@ public class SensorsArray {
 			pokerSimulator.runSimulation();
 		}
 	}
-	
+
 	/**
-	 * Perform the read operation for all {@link ScreenSensor} passed int the list argument.
+	 * Perform the read operation for all {@link ScreenSensor} passed int the list
+	 * argument.
 	 * 
-	 * @param read - <code>true</code> to perform OCR operation over the selected sensors. <code>false</code> only
-	 *        capture the image
+	 * @param read - <code>true</code> to perform OCR operation over the selected
+	 *             sensors. <code>false</code> only capture the image
 	 * @param list - list of sensors to capture
 	 * @see ScreenSensor#capture(boolean)
 	 * @since 2.3
@@ -349,7 +396,7 @@ public class SensorsArray {
 		setStandByBorder();
 		for (ScreenSensor ss : list) {
 			ss.setBorder(read ? readingBorder : lookingBorder);
-			ss.capture(read);
+			ss.capture(read, isLive);
 			// update the enable/disable status.
 			pokerSimulator.sensorStatus.put(ss.getName(), ss.isEnabled());
 			// mesure only efective lecture
@@ -361,13 +408,16 @@ public class SensorsArray {
 	}
 
 	/**
-	 * this method read all {@link #TYPE_CARDS} areas from the .ppt file and perform the standar ocr operation. fur test
-	 * purporse
+	 * this method perform a {@link #readSensors(boolean, List)} for all configured
+	 * sensors. the image source is the configuration file and perform the standar
+	 * ocr operation. for test purporse
 	 */
-	public void testAreas() {
-		Hero.isTestMode = true;
+	public void testSensorsAreas() {
 		List<ScreenSensor> slist = screenSensors.values().stream().collect(Collectors.toList());
+		boolean il = isLive;
+		isLive = false;
 		readSensors(true, slist);
+		isLive = il;
 	}
 
 	private void setStandByBorder() {
@@ -377,9 +427,10 @@ public class SensorsArray {
 	/**
 	 * Create the array of sensors setted in the {@link ShapeAreas}.
 	 * <p>
-	 * dont use this method directly. use {@link Trooper#setEnviorement(DrawingPanel)}
+	 * dont use this method directly. use
+	 * {@link Trooper#setEnvironment(DrawingPanel)}
 	 * 
-	 * @param areas - the enviorement
+	 * @param areas - the Environment
 	 */
 	protected void setShapeAreas(ShapeAreas areas) {
 		this.screenAreas = areas;
@@ -389,6 +440,5 @@ public class SensorsArray {
 			screenSensors.put(ss.getName(), ss);
 		}
 		setStandByBorder();
-		// pokerSimulator.clearEnviorement();
 	}
 }

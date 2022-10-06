@@ -15,9 +15,9 @@ import core.*;
 import core.datasource.model.*;
 import plugins.hero.ozsoft.*;
 
-public class LineChartDemo6 extends JDialog {
+public class SingeVariableSimulationLineChart extends JDialog {
 
-	public LineChartDemo6(String resultName) {
+	public SingeVariableSimulationLineChart(String resultName) {
 		super(Alesia.getInstance().mainFrame);
 		JFreeChart jFreeChart = createChart(createDataset(resultName));
 		JPanel jPanel = new ChartPanel(jFreeChart);
