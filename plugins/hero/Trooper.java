@@ -448,10 +448,10 @@ public class Trooper extends Task {
 	 * 
 	 */
 	private void potOdd() {
-		double HS_n = (double) pokerSimulator.uoAEvaluation.get("HS_n");
 		double Ppot = (double) pokerSimulator.uoAEvaluation.get("PPot");
-		double NPot = (double) pokerSimulator.uoAEvaluation.get("NPot");
-		double RPot = (double) pokerSimulator.uoAEvaluation.get("RPot");
+		// double NPot = (double) pokerSimulator.uoAEvaluation.get("NPot");
+		// double RPot = (double) pokerSimulator.uoAEvaluation.get("RPot");
+		// double HS_n = (double) pokerSimulator.uoAEvaluation.get("HS_n");
 		double winProb = (double) pokerSimulator.uoAEvaluation.get("winProb");
 
 		double alpha = trooperParameter.getInteger("alpha") / 100.0;
@@ -459,20 +459,14 @@ public class Trooper extends Task {
 		double zeta = trooperParameter.getInteger("zeta") / 100.0;
 
 		// System.out.println(String.format("%1.3f + %1.3f + %1.3f = %1.3f", Ppot, NPot, RPot, Ppot + NPot + RPot));
-		// TODO: reise alphha und zeta to 300
-		// TODO: implement was poker prthesier call isSet in other owrd. assig a value when hero hast 2 cards of the
-		// hand
 
-		// Alpha - Zeta variations
-		// double ammo = (winProb * pokerSimulator.potValue * alpha) + (Ppot * pokerSimulator.heroChips * zeta);
-
-		// Alpha balancing - 200
-		// double ammo = (winProb * pokerSimulator.potValue * alpha) + (Ppot * pokerSimulator.heroChips * (uppB -
-		// alpha));
+		double rPot = winProb * pokerSimulator.potValue;// * alpha;
+		double invPot = Ppot * (pokerSimulator.potValue - rPot);// * zeta;
+		// double future = Ppot * pokerSimulator.buyIn * (uppB - alpha);
+		double ammo = rPot + invPot;
 
 		// no calculation for 0 values
-		// if (ammo == 0 || winProb == 0) {
-		if (winProb == 0) {
+		if (ammo == 0 || winProb == 0) {
 			availableActions.clear();
 			logInfo(String.format("No posible decision for prob = %1.3f", winProb));
 			// logInfo(String.format("No posible decision for values prob = %1.3f or amunitions = %7.2f", winProb,
@@ -480,10 +474,8 @@ public class Trooper extends Task {
 			return;
 		}
 
-		double podd = winProb * pokerSimulator.potValue;
-		double future = Ppot * pokerSimulator.buyIn * zeta;
 		for (TrooperAction act : availableActions) {
-			double ev = podd + future - act.amount;
+			double ev = (winProb + Ppot) * ammo - act.amount;
 			act.expectedValue = ev;
 		}
 		// remove all negative values
@@ -491,8 +483,9 @@ public class Trooper extends Task {
 		availableActions.removeIf(ta -> ta.expectedValue < beta);
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 
-		String txt1 = String.format("(%1.3f * %7.2f) = %7.2f == (%1.3f * %7.2f * %1.3f) = %7.2f", winProb,
-				pokerSimulator.potValue, podd, Ppot, pokerSimulator.buyIn, zeta, future);
+		String txt1 = String.format(
+				"rPot %1.3f * %7.2f * %1.3f = %7.2f invPot %1.3f * %7.2f * %1.3f = %7.2f ammo = %7.2f", winProb,
+				pokerSimulator.potValue, alpha, rPot, Ppot, invPot, zeta, invPot, ammo);
 		setVariableAndLog(EXPLANATION, txt1);
 
 	}

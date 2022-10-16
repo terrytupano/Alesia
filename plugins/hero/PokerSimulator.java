@@ -1,33 +1,21 @@
 package plugins.hero;
 
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Hashtable;
+import java.awt.*;
+import java.text.*;
+import java.util.*;
 import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.Vector;
-import java.util.stream.Collectors;
+import java.util.stream.*;
 
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.*;
 
-import com.javaflair.pokerprophesier.api.adapter.PokerProphesierAdapter;
-import com.javaflair.pokerprophesier.api.card.CommunityCards;
-import com.javaflair.pokerprophesier.api.card.HoleCards;
+import com.javaflair.pokerprophesier.api.adapter.*;
+import com.javaflair.pokerprophesier.api.card.*;
 
-import core.TEntry;
-import core.datasource.model.TrooperParameter;
-import gui.TUIPanel;
-import plugins.hero.UoAHandEval.UoACard;
-import plugins.hero.UoAHandEval.UoADeck;
-import plugins.hero.UoAHandEval.UoAHand;
-import plugins.hero.UoAHandEval.UoAHandEvaluator;
-import plugins.hero.utils.PreflopCardsModel;
+import core.*;
+import core.datasource.model.*;
+import gui.*;
+import plugins.hero.UoAHandEval.*;
+import plugins.hero.utils.*;
 
 /**
  * 
@@ -397,7 +385,7 @@ public class PokerSimulator {
 			result.put("HS_n", HS_n);
 			result.put("HT_n", HT_n);
 			result.put("HB_n", HB_n);
-			
+
 			result.put("winProb", HS_n + HT_n);
 		}
 
@@ -417,10 +405,11 @@ public class PokerSimulator {
 			result.put("isTheNut", true);
 
 		// ammo control
-//		double ammo = HS_n * potValue + (Ppot * heroChips);
-//		String txt1 = String.format("%7.2f = %1.3f * %7.2f  + (%1.3f * %7.2f)", ammo, HS_n, potValue, Ppot, heroChips);
-//		result.put("ammoControl", txt1);
-//		result.put("ammunitions", ammo);
+		// double ammo = HS_n * potValue + (Ppot * heroChips);
+		// String txt1 = String.format("%7.2f = %1.3f * %7.2f + (%1.3f * %7.2f)", ammo, HS_n, potValue, Ppot,
+		// heroChips);
+		// result.put("ammoControl", txt1);
+		// result.put("ammunitions", ammo);
 
 		// TODO: getSignificantCard()
 		// upperbound opponent hand probability: this value refleck the fack that the
@@ -625,7 +614,7 @@ public class PokerSimulator {
 				.putAll(getEvaluation(holeCards, communityCards, opponents, stimatedVillanTau, heroChips, potValue));
 
 		// WARNING: theses values ARE NOT available in preflop
-		// Ppot = (double) uoAEvaluation.getOrDefault("PPot", 0.0);
+		double Ppot = (double) uoAEvaluation.getOrDefault("PPot", 0.0);
 		// Npot = (double) uoAEvaluation.getOrDefault("NPot", 0.0);
 		double winProb_n = (double) uoAEvaluation.getOrDefault("winProb", 0.0);
 		// HS_n = (double) uoAEvaluation.getOrDefault("HS_n", 0.0);
@@ -635,8 +624,8 @@ public class PokerSimulator {
 		// update the simulation result to the console
 		String rnk = "rankAhead " + twoDigitFormat.format(rankA) + " rankBehind " + twoDigitFormat.format(rankB);
 		variableList.put("simulator.Troper Ranks", rnk);
-		variableList.put("simulator.Trooper Current hand",
-				percentageFormat.format(winProb_n) + " " + uoAEvaluation.get("name"));
+		variableList.put("simulator.Trooper Current hand", "winProb " + percentageFormat.format(winProb_n) + " Ppot "
+				+ percentageFormat.format(Ppot) + " " + uoAEvaluation.get("name"));
 		variableList.put("simulator.Table cards",
 				"hole " + holeCards.toString() + " Comunity " + communityCards + " Current " + currentHand.toString());
 		String txt = "Chips " + heroChips + " Pot " + potValue + " Call " + callValue + " Raise " + raiseValue

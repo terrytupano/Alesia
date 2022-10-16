@@ -10,39 +10,28 @@
  ******************************************************************************/
 package plugins.hero;
 
-import java.awt.AWTException;
-import java.awt.Robot;
-import java.awt.event.ActionEvent;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.logging.Logger;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import java.util.logging.*;
 
 import javax.swing.*;
+import javax.swing.Action;
 
-import org.javalite.activejdbc.LazyList;
-import org.jdesktop.application.Task;
-import org.jdesktop.application.Task.BlockingScope;
+import org.javalite.activejdbc.*;
+import org.jdesktop.application.*;
+import org.jdesktop.application.Task.*;
 
-import com.alee.laf.button.WebToggleButton;
-import com.alee.utils.SwingUtils;
+import com.alee.laf.button.*;
+import com.alee.utils.*;
 
-import core.Alesia;
-import core.TActionsFactory;
-import core.TEntry;
-import core.TPlugin;
-import core.TResources;
-import core.datasource.model.PreflopCards;
-import core.datasource.model.SimulationResult;
-import core.datasource.model.TrooperParameter;
-import net.sourceforge.tess4j.Tesseract;
-import plugins.hero.ozsoft.GameSimulatorPanel;
-import plugins.hero.ozsoft.Player;
-import plugins.hero.ozsoft.Table;
-import plugins.hero.ozsoft.TableType;
-import plugins.hero.ozsoft.bots.Bot;
-import plugins.hero.ozsoft.gui.TableDialog;
-import plugins.hero.utils.PreFlopCardsPanel;
-import plugins.hero.utils.UoAPanel;
+import core.*;
+import core.datasource.model.*;
+import net.sourceforge.tess4j.*;
+import plugins.hero.ozsoft.*;
+import plugins.hero.ozsoft.bots.*;
+import plugins.hero.ozsoft.gui.*;
+import plugins.hero.utils.*;
 
 public class Hero extends TPlugin {
 
@@ -63,8 +52,8 @@ public class Hero extends TPlugin {
 	}
 
 	/**
-	 * This metod is separated because maybe in the future we will need diferents
-	 * robot for diferent graphics configurations
+	 * This metod is separated because maybe in the future we will need diferents robot for diferent graphics
+	 * configurations
 	 * 
 	 * @return
 	 */
@@ -96,7 +85,6 @@ public class Hero extends TPlugin {
 		return iTesseract;
 	}
 
-
 	public Hero() {
 		TActionsFactory.insertActions(this);
 		Alesia.getInstance().openDB("hero");
@@ -115,11 +103,10 @@ public class Hero extends TPlugin {
 
 			// retrive the first element of the statistical series to detect, the type of graph
 			Alesia.getInstance().openDB("hero");
-			SimulationResult sample = SimulationResult.findFirst("name = ? AND trooper = ?", resultName,
-					"Hero");
+			SimulationResult sample = SimulationResult.findFirst("name = ? AND trooper = ?", resultName, "Hero");
 			JDialog chart;
-			if(sample.get("aditionalValue") != null) {
-				chart = new SingeVariableSimulationLineChart(resultName);				
+			if (sample.get("aditionalValue") != null) {
+				chart = new SingeVariableSimulationLineChart(resultName);
 			} else {
 				chart = new MultiVariableSimulationBarChar(resultName);
 			}
@@ -188,6 +175,7 @@ public class Hero extends TPlugin {
 			return null;
 
 		}
+		// TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 1200 1200 /mov " + monitorWith + 630 + " 65 ");
 		TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 1200 1200 /mov 630 65 ");
 		initTrooperEnvironment();
 		return activeTrooper;
@@ -216,7 +204,7 @@ public class Hero extends TPlugin {
 		// override
 		PreflopCards tmp = PreflopCards.findFirst("rangeName = ? ", nam_desc[0]);
 		if (tmp != null) {
-			Object[] options = { "OK", "CANCEL" };
+			Object[] options = {"OK", "CANCEL"};
 			int opt = JOptionPane.showOptionDialog(rangePanel, "the preflop range " + nam_desc[0] + " exist. Override?",
 					"Warning", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
 			if (opt != 0)
@@ -250,7 +238,7 @@ public class Hero extends TPlugin {
 
 			// WARNING: order by chair is importat. this is take into akonut in simulation
 			LazyList<TrooperParameter> tparms = TrooperParameter.findAll().orderBy("chair");
-			
+
 			TrooperParameter hero = TrooperParameter.findFirst("trooper = ?", "Hero");
 			int buy = hero.getDouble("buyIn").intValue();
 			int bb = hero.getDouble("bigBlind").intValue();
@@ -267,7 +255,7 @@ public class Hero extends TPlugin {
 					Trooper t = bot.getSimulationTrooper(simulationTable, tparm);
 					Player p = new Player(tName, buy, bot, tparm.getInteger("chair"));
 					simulationTable.addPlayer(p);
-					if ("Hero".equals(tName)) 
+					if ("Hero".equals(tName))
 						simulatorPanel.updatePokerSimulator(t.getPokerSimulator());
 				}
 			}

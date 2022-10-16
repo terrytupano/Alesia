@@ -204,7 +204,7 @@ public class ScreenSensor extends JPanel {
 			if ((lastOcrImage == null) || imgdif > 0 || ocrResult == null) {
 				doOCR();
 				lastOcrImage = capturedImage;
-				saveSample(doOcr, isLive);
+//				saveSample(doOcr, isLive);
 			}
 		}
 		update();

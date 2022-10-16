@@ -86,7 +86,7 @@ public abstract class Bot implements Client {
 		this.trooperParameter = trooperP;
 		this.trooperName = trooperParameter.getString("trooper");
 
-		this.simulationName = "Zeta balancing - 0 - 100 buyin";
+		this.simulationName = "Zeta balancing - 2 - 16";
 
 		// for single variable simulation
 		this.aditionalValue = "zeta";
