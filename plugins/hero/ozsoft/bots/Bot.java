@@ -86,15 +86,18 @@ public abstract class Bot implements Client {
 		this.trooperParameter = trooperP;
 		this.trooperName = trooperParameter.getString("trooper");
 
-		this.simulationName = "Zeta balancing - 2 - 16";
+		// simulation name 
+		this.simulationName = "Oportunities - phi2 flop turn und river";
 
 		// for single variable simulation
-		this.aditionalValue = "zeta";
+		this.aditionalValue = "phi2";
 
 		// for mutivariable simulation
-		// this.simulationVariables = new ArrayList<>();
-		// simulationVariables.add(new SimulationVariable("alpha", 200));
-		// simulationVariables.add(new SimulationVariable("zeta", 200));
+//		 this.simulationVariables = new ArrayList<>();
+//		 simulationVariables.add(new SimulationVariable("phi", 16));
+//		 simulationVariables.add(new SimulationVariable("phi2", 16));
+//		 simulationVariables.add(new SimulationVariable("phi3", 16));
+//		 simulationVariables.add(new SimulationVariable("phi4", 16));
 
 		return trooper;
 	}

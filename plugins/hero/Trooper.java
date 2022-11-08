@@ -62,10 +62,10 @@ public class Trooper extends Task {
 	private DescriptiveStatistics trooperPerformance;
 
 	private boolean paused = false;
+	private int reaction;
 	// This variable is ONLY used and cleaned by ensuregametable method
 	private String lastHoleCards = "";
 	private double maxRekonAmmo;
-	boolean oportinity = false;
 	private double currentHandCost;
 	private double playUntil;
 	private long playTime;
@@ -91,6 +91,7 @@ public class Trooper extends Task {
 		this.handsCounter = 0;
 		this.playUntil = 0;
 		this.trooperParameter = null;
+		this.subObtimalDist = "Triangular";
 
 		// load all preflop ranges
 		// this.preFlopCardsDist = new Hashtable<>();
@@ -177,55 +178,47 @@ public class Trooper extends Task {
 	 */
 	private boolean checkOpportunities() {
 		String txt = null;
-		if (!trooperParameter.getBoolean("takeOpportunity"))
-			return false;
+		String op = trooperParameter.getString("takeOpportunity");
+
+		if (reaction == pokerSimulator.currentRound)
+			txt = "Reacting to hight bet";
 
 		// pre flop
-		int phi = trooperParameter.getInteger("phi");
-		if (phi > 0 && pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
+		if (pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
+			int phi = trooperParameter.getInteger("phi");
 			preflopCardsModel.setPercentage(phi);
 			if (preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
 				txt = "Current Hole cards in oportunity range.";
+				reaction = pokerSimulator.currentRound;
+				if (phi > 0 && ("takeNoO".equals(op) || "takePosFlop".equals(op))) {
+					txt = null;
+				}
 			}
 		}
-		//
-		// // flop
-		// int phi2 = trooperParameter.getInteger("phi2");
-		// if (phi2 > 0 && pokerSimulator.currentRound ==
-		// PokerSimulator.FLOP_CARDS_DEALT) {
-		// double rankBehind = ((double)
-		// pokerSimulator.uoAEvaluation.get("rankBehind%"));
-		// if (rankBehind <= phi2)
-		// txt = "rankBehind <= " + phi2 + " %";
-		// }
-		//
-		// // turn
-		// int phi3 = trooperParameter.getInteger("phi3");
-		// if (phi3 > 0 && pokerSimulator.currentRound ==
-		// PokerSimulator.TURN_CARD_DEALT) {
-		// double rankBehind = ((double)
-		// pokerSimulator.uoAEvaluation.get("rankBehind%"));
-		// if (rankBehind <= phi3)
-		// txt = "rankBehind <= " + phi3 + " %";
-		// }
-		//
-		// // river
-		// int phi4 = trooperParameter.getInteger("phi4");
-		// if (phi4 > 0 && pokerSimulator.currentRound ==
-		// PokerSimulator.RIVER_CARD_DEALT) {
-		// double rankBehind = ((double)
-		// pokerSimulator.uoAEvaluation.get("rankBehind%"));
-		// if (rankBehind <= phi4)
-		// txt = "rankBehind <= " + phi4 + " %";
-		// }
-		//
-		// allways
-		if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
-			txt = "Is the Nuts.";
+		// flop turn and river
+		if (pokerSimulator.currentRound > PokerSimulator.HOLE_CARDS_DEALT) {
+
+			// river
+			int phi4 = trooperParameter.getInteger("phi4");
+			if (phi4 > 0 && pokerSimulator.currentRound == PokerSimulator.RIVER_CARD_DEALT) {
+				double rankBehind = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
+				if (rankBehind <= phi4) {
+					txt = "rankBehind <= " + phi4 + " %";
+					reaction = pokerSimulator.currentRound;
+					if ("takeNoO".equals(op) || "takePreFlop".equals(op)) {
+						txt = null;
+					}
+				}
+			}
+			// allways
+			if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
+				txt = "Is the Nuts.";
+		}
 
 		if (txt != null) {
 			setVariableAndLog(EXPLANATION, "--- OPORTUNITY DETECTED " + txt + " ---");
-			subObtimalDist = "UniformReal";
+			// subObtimalDist = "UniformReal";
+			subObtimalDist = "Oportunity";
 			loadActions(pokerSimulator.heroChips);
 
 			// to this point, if availableactions are empty, means hero is responding a
@@ -251,11 +244,11 @@ public class Trooper extends Task {
 			Alesia.getInstance().openDB("hero");
 			trooperParameter = TrooperParameter.findFirst("trooper = ?", "Hero");
 		}
-
+		reaction = pokerSimulator.NO_CARDS_DEALT;
 		maxRekonAmmo = -1;
 		currentHandCost = 0;
-		oportinity = false;
-		subObtimalDist = "Triangular";
+		// subObtimalDist is clear with the loadactions method
+
 		// at first time execution, a standar time of 10 second is used
 		long tt = time1 == 0 ? 10000 : System.currentTimeMillis() - time1;
 		outGameStats.addValue(tt);
@@ -336,12 +329,13 @@ public class Trooper extends Task {
 		int elements = availableActions.size();
 		double winProb = (double) pokerSimulator.uoAEvaluation.getOrDefault("winProb", 0.0);
 		double hs = winProb * elements;
-		// double HS_n = (double) pokerSimulator.uoAEvaluation.getOrDefault("HS_n", 0.0);
-		// double hs = HS_n * elements;
-		double mode = (hs > 1) ? elements : hs * elements;
+		// double mode = (hs > 1) ? elements : hs * elements;
+		double mode = (hs > 1) ? 0 : hs * elements;
 		AbstractRealDistribution tdist = new TriangularDistribution(0, mode, elements);
 		if (subObtimalDist.equals("UniformReal"))
 			tdist = new UniformRealDistribution(0, elements);
+		if (subObtimalDist.equals("Oportunity"))
+			tdist = new TriangularDistribution(0, 0, elements);
 		int[] singletos = new int[elements];
 		double[] probabilities = new double[elements];
 		for (int i = 0; i < elements; i++) {
@@ -385,6 +379,8 @@ public class Trooper extends Task {
 	 */
 	private void loadActions(double maximum) {
 		availableActions.clear();
+		subObtimalDist = "Triangular";
+
 		double call = pokerSimulator.callValue;
 		double raise = pokerSimulator.raiseValue;
 		double chips = pokerSimulator.heroChips;
@@ -454,9 +450,9 @@ public class Trooper extends Task {
 		// double HS_n = (double) pokerSimulator.uoAEvaluation.get("HS_n");
 		double winProb = (double) pokerSimulator.uoAEvaluation.get("winProb");
 
-		double alpha = trooperParameter.getInteger("alpha") / 100.0;
-		double uppB = 3.0;
-		double zeta = trooperParameter.getInteger("zeta") / 100.0;
+		// double alpha = trooperParameter.getInteger("alpha") / 100.0;
+		// double uppB = 3.0;
+		// double zeta = trooperParameter.getInteger("zeta") / 100.0;
 
 		// System.out.println(String.format("%1.3f + %1.3f + %1.3f = %1.3f", Ppot, NPot, RPot, Ppot + NPot + RPot));
 
@@ -468,9 +464,7 @@ public class Trooper extends Task {
 		// no calculation for 0 values
 		if (ammo == 0 || winProb == 0) {
 			availableActions.clear();
-			logInfo(String.format("No posible decision for prob = %1.3f", winProb));
-			// logInfo(String.format("No posible decision for values prob = %1.3f or amunitions = %7.2f", winProb,
-			// ammo));
+			logInfo(String.format("No posible decision for values prob = %1.3f or amunitions = %7.2f", winProb, ammo));
 			return;
 		}
 
@@ -483,9 +477,8 @@ public class Trooper extends Task {
 		availableActions.removeIf(ta -> ta.expectedValue < beta);
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 
-		String txt1 = String.format(
-				"rPot %1.3f * %7.2f * %1.3f = %7.2f invPot %1.3f * %7.2f * %1.3f = %7.2f ammo = %7.2f", winProb,
-				pokerSimulator.potValue, alpha, rPot, Ppot, invPot, zeta, invPot, ammo);
+		String txt1 = String.format("rPot %1.3f * %7.2f = %7.2f invPot %1.3f * %7.2f = %7.2f ammo = %7.2f", winProb,
+				pokerSimulator.potValue, rPot, Ppot, (pokerSimulator.potValue - rPot), invPot, ammo);
 		setVariableAndLog(EXPLANATION, txt1);
 
 	}
@@ -529,7 +522,6 @@ public class Trooper extends Task {
 		// 220302: CURRENT SIMULATION TAU PARAMETER VARIATION (STRICK PREPLOP, NO
 		// OPORTUNITY)
 		// 211205: the first real simulation, analisis and result: 30%
-		// hero must play with 50% preflop card selection !!! :D
 		int tau = trooperParameter.getInteger("tau");
 		preflopCardsModel.setPercentage(tau);
 
@@ -625,7 +617,7 @@ public class Trooper extends Task {
 			// canceled ?
 			if (isCancelled())
 				return false;
-			readPlayerStat();
+			// readPlayerStat();
 			sensorsArray.read(SensorsArray.TYPE_ACTIONS);
 
 			// NEW ROUND: if the hero current hand is diferent to the last measure, clear
@@ -639,7 +631,7 @@ public class Trooper extends Task {
 				setVariableAndLog(EXPLANATION,
 						"--- Hand " + (++handsCounter) + " " + pokerSimulator.getTableParameters() + " ---");
 
-				// play time or play sae parameter parameters. when the play time is reach, the
+				// play time or play until parameter parameters. when the play time is reach, the
 				// action sit.out is
 				// clicked and hero return
 
@@ -673,6 +665,17 @@ public class Trooper extends Task {
 				continue;
 			}
 
+			// if this sensor is active and wth the corresponding text, hero is in a all in situation. select "continue
+			// hand" allways (no cash out option) to maximize winnings
+			if (sensorsArray.isSensorEnabled("allin.name")) {
+				// sensorsArray.readSensors(true, sensorsArray.getSensors("allin.name"));
+				if (sensorsArray.getSensor("allin.name").getOCR().equals("fortgesetzt")) {
+					robotActuator.perform("allin.name");
+					setVariableAndLog(EXPLANATION, "Responding with Cotinue Hand in all-in.");
+					continue;
+				}
+			}
+
 			// Environment is in the gametable
 			if (isMyTurnToPlay()) {
 				// repeat the look of the sensors. this is because some times the capture is
@@ -680,7 +683,7 @@ public class Trooper extends Task {
 				// transition. to avoid error reading sensors, perform the lecture once more
 				// time. after the second
 				// lecutre, this return return normaly
-				sensorsArray.read(SensorsArray.TYPE_ACTIONS);
+				// sensorsArray.read(SensorsArray.TYPE_ACTIONS);
 				return true;
 			}
 
@@ -700,11 +703,6 @@ public class Trooper extends Task {
 				continue;
 			}
 
-			// if any of this are active, do nothig. raise.text in this case, is wachit a
-			// chackbok for check
-			// if (sensorsArray.isSensorEnabled("raise.text") || sensorsArray.isSensorEnabled("sensor1")) {
-			// continue;
-			// }
 		}
 		setVariableAndLog(EXPLANATION, "Can.t reach the main gametable.");
 		return false;

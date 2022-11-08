@@ -264,15 +264,16 @@ public class PokerSimulator {
 			result.put("rankTotal", total);
 
 			result.put("rankAhead", aheadList.size());
-			result.put("rankAhead%", ((int) ((aheadList.size() / (total * 1.0)) * 10000)) / 100.0);
+			// result.put("rankAhead%", ((int) ((aheadList.size() / (total * 1.0)) * 10000)) / 100.0);
+			result.put("rankAhead%", ((double) aheadList.size()) / ((double) total) * 100d);
 			result.put("rankAheadList", aheadList);
 
 			result.put("rankTied", tiedList.size());
-			result.put("rankTied%", ((int) ((tiedList.size() / (total * 1.0)) * 10000)) / 100.0);
+			result.put("rankTied%", ((double) tiedList.size()) / ((double) total) * 100d);
 			result.put("rankTiedList", tiedList);
 
 			result.put("rankBehind", behindList.size());
-			result.put("rankBehind%", ((int) ((behindList.size() / (total * 1.0)) * 10000)) / 100.0);
+			result.put("rankBehind%", ((double) behindList.size()) / ((double) total) * 100d);
 			result.put("rankBehindList", behindList);
 
 			/**

@@ -853,7 +853,7 @@ public class Table extends Task {
 					continue;
 				}
 
-				// zählt tätig Spieler
+				// zï¿½hlt tï¿½tig Spieler
 				int actp = 0;
 				for (Player player : players) {
 					if (player.getCash() >= bigBlind) {

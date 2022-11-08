@@ -30,7 +30,8 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		addInputComponent(TUIUtils.getWebCheckBox("strictPreflop", model.getBoolean("strictPreflop")));
 		addInputComponent(TUIUtils.getNumericTextField("reconnBase", model, columns), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("reconnBand", model, columns), false, true);
-		addInputComponent(TUIUtils.getWebCheckBox("takeOpportunity", model.getBoolean("takeOpportunity")));
+		addInputComponent(
+				TUIUtils.getTWebComboBox("takeOpportunity", "take.oportutiny", model.getString("takeOpportunity")));
 		addInputComponent(TUIUtils.getNumericTextField("phi", model, columns), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("playTime", model, columns), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("playUntil", model, columns), false, true);
@@ -40,6 +41,7 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 			tparm = model.getString("buyIn") + "," + model.getString("bigBlind") + "," + model.getString("smallBlind")
 					+ ("".equals(c.trim()) ? "" : "," + c);
 		}
+				
 		addInputComponent(TUIUtils.getTWebComboBox("tableParameters", "table.parameters0", tparm));
 
 		FormLayout layout = new FormLayout(
@@ -59,7 +61,7 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		builder.nextLine();
 		builder.append(TStringUtils.getString("phi"), getInputComponent("phi"));
 		builder.nextLine();
-		builder.append(getInputComponent("takeOpportunity"));
+		builder.append(TStringUtils.getString("takeOpportunity"), getInputComponent("takeOpportunity"));
 		builder.append(getInputComponent("strictPreflop"));
 		setBodyComponent(builder.getPanel());
 
