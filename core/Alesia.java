@@ -14,6 +14,7 @@ import java.applet.*;
 import java.awt.Dialog.*;
 import java.awt.event.*;
 import java.io.*;
+import java.text.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -93,19 +94,16 @@ public class Alesia extends Application {
 	 * @param arg - argumentos de entrada
 	 */
 	public static void main(String[] args) {
-		Locale.setDefault(Locale.US);
+//		Locale.setDefault(Locale.US);
 		Application.launch(Alesia.class, args);
 	}
 
 	/**
-	 * Convenient method to open the alesia local database connection using the
-	 * system Environment variables. call this method to create or open a new
-	 * database connection and attach these to {@link Thread} that invoke this
-	 * method.
+	 * Convenient method to open the alesia local database connection using the system Environment variables. call this
+	 * method to create or open a new database connection and attach these to {@link Thread} that invoke this method.
 	 * <p>
-	 * this method is intentet for javaLite imeplementation. this method relly in
-	 * the javaLite internal storage that determine if the connection name is aready
-	 * opened. if is opened, just attach to the invoker thread
+	 * this method is intentet for javaLite imeplementation. this method relly in the javaLite internal storage that
+	 * determine if the connection name is aready opened. if is opened, just attach to the invoker thread
 	 */
 	@Deprecated
 	public void openDB() {
@@ -119,8 +117,8 @@ public class Alesia extends Application {
 	}
 
 	/**
-	 * Open and return an instacen of {@link DB} for the given prefix. The
-	 * connection parameters must be in the database.properties file or similar.
+	 * Open and return an instacen of {@link DB} for the given prefix. The connection parameters must be in the
+	 * database.properties file or similar.
 	 * 
 	 * @param name - prefix name of the conneciton parameters
 	 * @return instance of {@link DB}
@@ -205,9 +203,8 @@ public class Alesia extends Application {
 	}
 
 	/**
-	 * Look in the Alesia.properties file, look for the property
-	 * "Alesia.database.file.name" and load an return the list of all prperties
-	 * found in that file. This file contain all data base connection information.
+	 * Look in the Alesia.properties file, look for the property "Alesia.database.file.name" and load an return the list
+	 * of all prperties found in that file. This file contain all data base connection information.
 	 * 
 	 * @return all properties found in the database properties files
 	 */
@@ -229,7 +226,7 @@ public class Alesia extends Application {
 	 * retrive global identificator from <code>wmic</code>
 	 * 
 	 * @param gid - gobal id
-	 * @param vn  - variable name
+	 * @param vn - variable name
 	 * 
 	 * @return variable value
 	 */
@@ -237,7 +234,7 @@ public class Alesia extends Application {
 		String rval = null;
 		try {
 			Runtime runtime = Runtime.getRuntime();
-			Process process = runtime.exec(new String[] { "wmic", gid, "get", vn });
+			Process process = runtime.exec(new String[]{"wmic", gid, "get", vn});
 			InputStream is = process.getInputStream();
 			Scanner sc = new Scanner(is);
 			while (sc.hasNext()) {
@@ -257,15 +254,12 @@ public class Alesia extends Application {
 	}
 
 	/**
-	 * request the user autentication for entry the aplication. this method chec the
-	 * system variable ... to determnide the kind of autentication required. this
-	 * method has 2 ending.
+	 * request the user autentication for entry the aplication. this method chec the system variable ... to determnide
+	 * the kind of autentication required. this method has 2 ending.
 	 * <ol>
-	 * <li>Exist this method normaly means the autentication step is succefully or
-	 * maybe no autentication was required. The framework will continue his normal
-	 * execuion steps.
-	 * <li>If there is problem with autentication procedure, this method will
-	 * finnish the app
+	 * <li>Exist this method normaly means the autentication step is succefully or maybe no autentication was required.
+	 * The framework will continue his normal execuion steps.
+	 * <li>If there is problem with autentication procedure, this method will finnish the app
 	 */
 	private void requestAutentication() {
 		Alesia.getInstance().getMainFrame().setSplashIncrementText("Request autentication");
@@ -288,8 +282,7 @@ public class Alesia extends Application {
 		/**
 		 * to present local user information net user administrator
 		 * 
-		 * command line for check password against local user net use \\localhost
-		 * /user:username password terry porfin12
+		 * command line for check password against local user net use \\localhost /user:username password terry porfin12
 		 */
 		if (!currentUser.isAuthenticated()) {
 			UserLogIn li = new UserLogIn();
@@ -361,9 +354,8 @@ public class Alesia extends Application {
 	}
 
 	/**
-	 * check for another active instance of Alesia looking the current active
-	 * windows. if another instance is found, this mehtod send cmd commands and end
-	 * this currentexecution.
+	 * check for another active instance of Alesia looking the current active windows. if another instance is found,
+	 * this mehtod send cmd commands and end this currentexecution.
 	 * 
 	 * @see TResources#getActiveWindows(String)
 	 * @see TResources#performCMDOWCommand(String, String)
@@ -482,12 +474,13 @@ public class Alesia extends Application {
 
 		// Initializing L&F
 		WebLookAndFeel.install();
-//		WebLookAndFeel.install(WebLightSkin.class);
-//		WebLookAndFeel.install(FlatSkin.class);
-//		WebLookAndFeel.install(MaterialSkin.class);
-//		WebLookAndFeel.install(WebDarkSkin.class);
-//		StyleManager.addExtensions(new XmlSkinExtension(new ClassResource(Alesia.class, "resources/SimpleExtension.xml")));
-//		ProprietaryUtils.setupAATextInfo(UIManager.getDefaults());
+		// WebLookAndFeel.install(WebLightSkin.class);
+		// WebLookAndFeel.install(FlatSkin.class);
+		// WebLookAndFeel.install(MaterialSkin.class);
+		// WebLookAndFeel.install(WebDarkSkin.class);
+		// StyleManager.addExtensions(new XmlSkinExtension(new ClassResource(Alesia.class,
+		// "resources/SimpleExtension.xml")));
+		// ProprietaryUtils.setupAATextInfo(UIManager.getDefaults());
 
 		// TODO: no languaje manajer for now. still using old school i18n
 		// Configurting languages
@@ -497,12 +490,14 @@ public class Alesia extends Application {
 
 		// TODO: remove the antialaisin shint form the lookandfell
 		// UIDefaults defaults = UIManager.getDefaults();
-		
-		//Turn off the anti-aliasing function of the text
-		//defaultTextRenderingHints only works on the title bar of the form
-		//textRenderingHints works on the controls in the form
-//		StyleConstants.defaultTextRenderingHints = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
-//		StyleConstants.textRenderingHints = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+
+		// Turn off the anti-aliasing function of the text
+		// defaultTextRenderingHints only works on the title bar of the form
+		// textRenderingHints works on the controls in the form
+		// StyleConstants.defaultTextRenderingHints = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING,
+		// RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+		// StyleConstants.textRenderingHints = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING,
+		// RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
 
 		mainFrame = new TWebFrame();
 		mainFrame.setVisible(true);

@@ -62,7 +62,8 @@ public class Trooper extends Task {
 	private DescriptiveStatistics trooperPerformance;
 
 	private boolean paused = false;
-	private int reaction;
+	private int reactToOportunity;
+	private String prevReactionMessage;
 	// This variable is ONLY used and cleaned by ensuregametable method
 	private String lastHoleCards = "";
 	private double maxRekonAmmo;
@@ -180,39 +181,53 @@ public class Trooper extends Task {
 		String txt = null;
 		String op = trooperParameter.getString("takeOpportunity");
 
-		if (reaction == pokerSimulator.currentRound)
-			txt = "Reacting to hight bet";
+		if (reactToOportunity == pokerSimulator.street) {
+			txt = prevReactionMessage + " Reacting!!!";
+		} else {
 
-		// pre flop
-		if (pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
-			int phi = trooperParameter.getInteger("phi");
-			preflopCardsModel.setPercentage(phi);
-			if (preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
-				txt = "Current Hole cards in oportunity range.";
-				reaction = pokerSimulator.currentRound;
-				if (phi > 0 && ("takeNoO".equals(op) || "takePosFlop".equals(op))) {
-					txt = null;
-				}
-			}
-		}
-		// flop turn and river
-		if (pokerSimulator.currentRound > PokerSimulator.HOLE_CARDS_DEALT) {
-
-			// river
-			int phi4 = trooperParameter.getInteger("phi4");
-			if (phi4 > 0 && pokerSimulator.currentRound == PokerSimulator.RIVER_CARD_DEALT) {
-				double rankBehind = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
-				if (rankBehind <= phi4) {
-					txt = "rankBehind <= " + phi4 + " %";
-					reaction = pokerSimulator.currentRound;
-					if ("takeNoO".equals(op) || "takePreFlop".equals(op)) {
+			// pre flop
+			if (pokerSimulator.street == PokerSimulator.HOLE_CARDS_DEALT) {
+				int phi = trooperParameter.getInteger("phi");
+				preflopCardsModel.setPercentage(phi);
+				if (preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
+					txt = "Current Hole cards in oportunity range.";
+					reactToOportunity = pokerSimulator.street;
+					if (phi > 0 && ("takeNoO".equals(op) || "takePosFlop".equals(op))) {
+						prevReactionMessage = txt;
 						txt = null;
 					}
 				}
 			}
-			// allways
-			if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true)
-				txt = "Is the Nuts.";
+			// flop turn and river
+			if (pokerSimulator.street > PokerSimulator.HOLE_CARDS_DEALT) {
+
+				// river
+				int phi4 = trooperParameter.getInteger("phi4");
+				if (phi4 > 0 && pokerSimulator.street == PokerSimulator.RIVER_CARD_DEALT) {
+					double rankBehind = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
+					if (rankBehind <= phi4) {
+						txt = "rankBehind <= " + phi4 + " %";
+						reactToOportunity = pokerSimulator.street;
+						if ("takeNoO".equals(op) || "takePreFlop".equals(op)) {
+							prevReactionMessage = txt;
+							txt = null;
+						}
+					}
+				}
+				// allways
+				if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true) {
+					txt = "Is the Nuts.";
+					reactToOportunity = pokerSimulator.street;
+					if ("takeNoO".equals(op) || "takePreFlop".equals(op)) {
+						prevReactionMessage = txt;
+						txt = null;
+					}
+				}
+			}
+		}
+
+		if (reactToOportunity > PokerSimulator.NO_CARDS_DEALT && txt == null) {
+			setVariableAndLog(EXPLANATION, "--- REACTION PREPARED " + prevReactionMessage + " ---");
 		}
 
 		if (txt != null) {
@@ -244,7 +259,8 @@ public class Trooper extends Task {
 			Alesia.getInstance().openDB("hero");
 			trooperParameter = TrooperParameter.findFirst("trooper = ?", "Hero");
 		}
-		reaction = pokerSimulator.NO_CARDS_DEALT;
+		reactToOportunity = PokerSimulator.NO_CARDS_DEALT;
+		prevReactionMessage = null;
 		maxRekonAmmo = -1;
 		currentHandCost = 0;
 		// subObtimalDist is clear with the loadactions method
@@ -272,13 +288,13 @@ public class Trooper extends Task {
 		}
 
 		// PREFLOP
-		if (pokerSimulator.currentRound == PokerSimulator.HOLE_CARDS_DEALT) {
+		if (pokerSimulator.street == PokerSimulator.HOLE_CARDS_DEALT) {
 			if (!checkOpportunities())
 				setPreflopActions();
 		}
 
 		// FLOP AND FUTHER
-		if (pokerSimulator.currentRound > PokerSimulator.HOLE_CARDS_DEALT) {
+		if (pokerSimulator.street > PokerSimulator.HOLE_CARDS_DEALT) {
 			if (!checkOpportunities()) {
 				loadActions(pokerSimulator.heroChips);
 				potOdd();
@@ -683,7 +699,8 @@ public class Trooper extends Task {
 				// transition. to avoid error reading sensors, perform the lecture once more
 				// time. after the second
 				// lecutre, this return return normaly
-				// sensorsArray.read(SensorsArray.TYPE_ACTIONS);
+				sensorsArray.read(SensorsArray.TYPE_ACTIONS);
+				sensorsArray.saveSample(handsCounter, pokerSimulator.street);
 				return true;
 			}
 
@@ -698,10 +715,10 @@ public class Trooper extends Task {
 			// the i.m back button is active (at this point, the Environment must only being
 			// showing the i.m back
 			// button)
-			if (sensorsArray.isSensorEnabled("imBack")) {
-				robotActuator.perform("imBack");
-				continue;
-			}
+//			if (sensorsArray.isSensorEnabled("imBack")) {
+//				robotActuator.perform("imBack");
+//				continue;
+//			}
 
 		}
 		setVariableAndLog(EXPLANATION, "Can.t reach the main gametable.");

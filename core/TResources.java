@@ -227,10 +227,10 @@ public class TResources {
 	}
 
 	/**
-	 * retorna una instancia de <code>ImageIcon</code> con un tamaño de <code>size*size</code>
+	 * retorna una instancia de <code>ImageIcon</code> con un tamaï¿½o de <code>size*size</code>
 	 * 
 	 * @param in - nombre del archivo de imagen
-	 * @param size - tamaño deseado
+	 * @param size - tamaï¿½o deseado
 	 * @return imagen
 	 */
 	public static ImageIcon getIcon(String in, int size) {
@@ -243,7 +243,7 @@ public class TResources {
 	}
 
 	/**
-	 * Retorna el icono pequeño (16*16). si no existe, retorna null
+	 * Retorna el icono pequeï¿½o (16*16). si no existe, retorna null
 	 * 
 	 * TODO: este metodo se debe eliminar el nombre+16. ahora todos los iconos deben ser almacenados en formato 32*32.
 	 * eliminar usar getIcon(String in, int size)

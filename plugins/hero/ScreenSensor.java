@@ -2,11 +2,9 @@ package plugins.hero;
 
 import java.awt.*;
 import java.awt.image.*;
-import java.io.*;
 import java.util.*;
 import java.util.List;
 
-import javax.imageio.*;
 import javax.swing.*;
 
 import com.alee.utils.*;
@@ -190,27 +188,6 @@ public class ScreenSensor extends JPanel {
 		ocrTime = (System.currentTimeMillis() - t1);
 	}
 
-	/**
-	 * store a copy of the {@link #capturedImage} to file. this methos is util to check if all sensors are perfoming the
-	 * correct ocr operation
-	 * 
-	 * @param doOcr
-	 * @param isLive
-	 */
-	private void saveSample(boolean doOcr, boolean isLive) {
-		try {
-			String dir = "plugins/hero/resources/scannedCards/";
-			String ext = "png";
-			if (doOcr && isLive && isCardArea() && isEnabled() && (isComunityCard() || isHoleCard())) {
-				String fn = getName() + "." + ocrResult + "." + ext;
-				fn = FileUtils.getAvailableName(dir, fn);
-				File outputfile = new File(dir + fn);
-				ImageIO.write(capturedImage, ext, outputfile);
-			}
-		} catch (Exception e) {
-			Hero.heroLogger.severe(e.getMessage());
-		}
-	}
 
 	public BufferedImage getImage(String type) {
 		return images.get(type);
@@ -427,20 +404,24 @@ public class ScreenSensor extends JPanel {
 
 		// standar procedure for numeric sensors
 		if (isNumericArea()) {
-			srcocd = srcocd.replaceAll("[^" + currencySymbol + "1234567890]", "");
-			// srcocd = srcocd.replaceAll("[^" + currencySymbol + decimalSeparator + "1234567890]", "");
-
-			// at this point the var mus contain the currency simbol as first caracter. in case of error, the first
-			// caracter maybe is a number. as a fail safe, remove allways the first caracter.
-			if (!"".equals(currencySymbol) && srcocd.length() > 1)
-				srcocd = srcocd.substring(1).trim();
-
-			// use currency simbol as marker. when the currency simbol is present, assume 2 decimal digits for all
-			// numbers
-			if (currencySymbol != null) {
-				int len = srcocd.length();
-				srcocd = srcocd.substring(0, len - 2) + "." + srcocd.substring(len - 2);
-			}
+			
+			srcocd = Hero.parseNummer(srcocd, currencySymbol);
+			
+			// original code
+			// srcocd = srcocd.replaceAll("[^" + currencySymbol + "1234567890]", "");
+			// // srcocd = srcocd.replaceAll("[^" + currencySymbol + decimalSeparator + "1234567890]", "");
+			//
+			// // at this point the var mus contain the currency simbol as first caracter. in case of error, the first
+			// // caracter maybe is a number. as a fail safe, remove allways the first caracter.
+			// if (!"".equals(currencySymbol) && srcocd.length() > 1)
+			// srcocd = srcocd.substring(1).trim();
+			//
+			// // use currency simbol as marker. when the currency simbol is present, assume 2 decimal digits for all
+			// // numbers
+			// if (!"".equals(currencySymbol)) {
+			// int len = srcocd.length();
+			// srcocd = srcocd.substring(0, len - 2) + "." + srcocd.substring(len - 2);
+			// }
 		}
 
 		// standar procedure: remove all blanks caracters

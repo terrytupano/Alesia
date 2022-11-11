@@ -12,6 +12,7 @@ package plugins.hero;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.text.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -166,19 +167,77 @@ public class Hero extends TPlugin {
 	public Task runTrooper(ActionEvent event) {
 		// retrive info from the porker window to resize
 		ArrayList<TEntry<String, String>> winds = TResources.getActiveWindows("terry1013");
-		// TODO: temporal: set manualy the correct win pos and size
+
+		// live trooper need the target table window
 		if (winds.isEmpty()) {
 			JOptionPane.showMessageDialog(Alesia.getInstance().getMainFrame(), "No active window found", "Error",
 					JOptionPane.ERROR_MESSAGE);
 			WebToggleButton tb = (WebToggleButton) TActionsFactory.getAbstractButton(event);
 			tb.setSelected(false);
-			return null;
-
+			// return null;
 		}
+
+		// overrride trooper table parameters
+		String winTitle = winds.get(0).getValue();
+		String[] words = winTitle.split("\\s");
+		String cs = "";
+		for (String word : words) {
+			if (TStringUtils.wildCardMacher(word, "*/*")) {
+
+				// is there a currency simbol?
+				char ch = word.charAt(0);
+				if (!Character.isDigit(ch))
+					cs = String.valueOf(ch);
+
+				// remove currency simbol and split
+				String[] sb_bb = word.split("/");
+				double sb = Double.parseDouble(Hero.parseNummer(sb_bb[0], cs));
+				double bb = Double.parseDouble(Hero.parseNummer(sb_bb[1], cs));
+				double bi = bb * 100;
+				TrooperParameter trooperParameter = TrooperParameter.findFirst("trooper = ?", "Hero");
+				trooperParameter.setDouble("buyIn", bi);
+				trooperParameter.setDouble("bigBlind", bb);
+				trooperParameter.setDouble("smallBlind", sb);
+				trooperParameter.set("currency", cs);
+				trooperParameter.save();
+			}
+		}
+
 		// TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 1200 1200 /mov " + monitorWith + 630 + " 65 ");
 		TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 1200 1200 /mov 630 65 ");
 		initTrooperEnvironment();
 		return activeTrooper;
+	}
+
+	/**
+	 * central parser from pokerstar localed formatet number ($12,12) to parseable string to double
+	 * <p>
+	 * NOTE this method is called from {@link ScreenSensor} instances in order to correct the ocr read
+	 * 
+	 * @param numer - locale numer
+	 * @param currencySymbol - current simbol "" if not currency simbol is present
+	 * @return double string
+	 */
+	public static String parseNummer(String numer, String currencySymbol) {
+		char decSep = DecimalFormatSymbols.getInstance().getDecimalSeparator();
+
+		String srcocd = numer.replaceAll("[^" + currencySymbol + decSep + "1234567890]", "");
+
+		// at this point the var mus contain the currency simbol as first caracter. in case of error, the first
+		// caracter maybe is a number. as a fail safe, remove allways the first caracter.
+		if (!"".equals(currencySymbol) && srcocd.length() > 1)
+			srcocd = srcocd.substring(1).trim();
+
+		// at this point tesserac may detected the correct decimal separato o maybe not.
+		srcocd = srcocd.replace(decSep, '.');
+		
+//		// use currency simbol as marker. when the currency simbol is present, assume 2 decimal digits for all
+//		// numbers
+//		if (!"".equals(currencySymbol)) {
+//			int len = srcocd.length();
+//			srcocd = srcocd.substring(0, len - 2) + "." + srcocd.substring(len - 2);
+//		}
+		return srcocd;
 	}
 
 	@org.jdesktop.application.Action

@@ -127,7 +127,7 @@ public class GamePlayer {
 		trooper.getSensorsArray().readSensors(false, list);
 
 		// only count on preflop and flop
-		if (trooper.getPokerSimulator().currentRound == PokerSimulator.FLOP_CARDS_DEALT) {
+		if (trooper.getPokerSimulator().street == PokerSimulator.FLOP_CARDS_DEALT) {
 			tauCounter += trooper.getSensorsArray().isActive(playerId) ? 1 : -1;
 			tauCounter = tauCounter <= 10 ? 10 : tauCounter;
 			tauCounter = tauCounter > 100 ? 100 : tauCounter;

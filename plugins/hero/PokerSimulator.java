@@ -69,7 +69,7 @@ public class PokerSimulator {
 	public double heroChips, heroChipsMax;
 	public double callValue, raiseValue, potValue, prevPotValue;
 	public int opponents;
-	public int currentRound = NO_CARDS_DEALT;
+	public int street = NO_CARDS_DEALT;
 	public double buyIn, smallBlind, bigBlind;
 	public final UoAHand communityCards = new UoAHand();
 	public final UoAHand holeCards = new UoAHand();
@@ -486,7 +486,7 @@ public class PokerSimulator {
 	 * 
 	 */
 	public void clearEnvironment() {
-		currentRound = NO_CARDS_DEALT;
+		street = NO_CARDS_DEALT;
 		this.opponents = -1;
 		holeCards.makeEmpty();
 		communityCards.makeEmpty();
@@ -608,7 +608,7 @@ public class PokerSimulator {
 		// String h = cardsBuffer.values().stream().collect(Collectors.joining(" "));
 		currentHand.makeEmpty();
 		cardsBuffer.forEach((key, val) -> currentHand.addCard(new UoACard(val)));
-		currentRound = currentHand.size();
+		street = currentHand.size();
 
 		uoAEvaluation.clear();
 		uoAEvaluation
@@ -633,7 +633,7 @@ public class PokerSimulator {
 				+ " Position " + tablePosition;
 		variableList.put("simulator.Table values", txt);
 		variableList.put("simulator.Simulator values",
-				"Round " + streetNames.get(currentRound) + " Opponents " + opponents);
+				"Round " + streetNames.get(street) + " Opponents " + opponents);
 
 		if (isLive) {
 			Hero.heroLogger.info("Table values: " + variableList.get("simulator.Table values"));
