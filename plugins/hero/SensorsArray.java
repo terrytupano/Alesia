@@ -56,37 +56,51 @@ public class SensorsArray {
 	 * Read/see only actions areas (call button, raise, continue)
 	 */
 	public final static String TYPE_ACTIONS = "Actions";
+
+	/**
+	 * the read operation source is from screen
+	 */
+	public static final String FROM_ROBOT = "FROM_ROBOT";
+	/**
+	 * the read operation source is from configuration file
+	 */
+	public static final String FROM_FILE = "FROM_FILE";
+	/**
+	 * the read operation source is from screen shots directory
+	 */
+	public static final String FROM_SCREENSHOT = "FROM_SCREENSHOT";
+
+	public static final String SCREEN_SHOTS_FOLDER = "plugins/hero/resources/screenShots/";
+
 	private TreeMap<String, ScreenSensor> screenSensors;
 	private Robot robot;
 	private Border readingBorder, lookingBorder, standByBorder;
 	private ShapeAreas screenAreas;
 	private PokerSimulator pokerSimulator;
-	private boolean isLive;
+	private String readSource;
+	private File readSourceFile;
 	DescriptiveStatistics tesseractTime = new DescriptiveStatistics(10);
 
 	public SensorsArray(PokerSimulator pokerSimulator) {
-		this.isLive = true;
+		this.readSource = FROM_ROBOT;
 		this.pokerSimulator = pokerSimulator;
 		this.robot = Hero.getNewRobot();
 		this.readingBorder = new LineBorder(Color.BLUE, 2);
 		this.lookingBorder = new LineBorder(Color.ORANGE, 2);
 		this.standByBorder = new LineBorder(new JPanel().getBackground(), 2);
 		this.screenSensors = new TreeMap<>();
-		init();
-	}
 
-	private void init() {
 		File tableFile = new File("plugins/hero/resources/ps-10-win11.ppt");
 		ShapeAreas shapeAreas = new ShapeAreas(tableFile);
 		shapeAreas.read();
 		setShapeAreas(shapeAreas);
 	}
-	public boolean isLive() {
-		return isLive;
+	public String getReadSource() {
+		return readSource;
 	}
 
-	public void setLive(boolean isLive) {
-		this.isLive = isLive;
+	public void setReadSource(String readSource) {
+		this.readSource = readSource;
 	}
 
 	/**
@@ -160,20 +174,20 @@ public class SensorsArray {
 	}
 
 	/**
-	 * store a copy of the {@link #capturedImage} to file. The result of this operation is used by 
+	 * store a copy of the {@link #capturedImage} to file. The result of this operation is used by
 	 * 
 	 * @param hand - hand number
-	 * @param street - street number 
+	 * @param street - street number
 	 */
 	public void saveSample(int hand, int street) {
 		try {
-			String dir = "plugins/hero/resources/screenShots/";
 			String ext = "png";
 			Rectangle rec = new Rectangle(0, 0, 1920, 1080);
 			BufferedImage image = robot.createScreenCapture(rec);
-			String fn = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss").format(LocalDateTime.now()) +  " Hand " + hand + " Street " + street + "." + ext;
-			fn = FileUtils.getAvailableName(dir, fn);
-			File outputfile = new File(dir + fn);
+			String fn = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss").format(LocalDateTime.now()) + " Hand " + hand
+					+ " Street " + street + "." + ext;
+			fn = FileUtils.getAvailableName(SCREEN_SHOTS_FOLDER, fn);
+			File outputfile = new File(SCREEN_SHOTS_FOLDER + fn);
 			ImageIO.write(image, ext, outputfile);
 		} catch (Exception e) {
 			Hero.heroLogger.severe(e.getMessage());
@@ -393,7 +407,7 @@ public class SensorsArray {
 		setStandByBorder();
 		for (ScreenSensor ss : list) {
 			ss.setBorder(read ? readingBorder : lookingBorder);
-			ss.capture(read, isLive);
+			ss.capture(read, readSource);
 			// update the enable/disable status.
 			pokerSimulator.sensorStatus.put(ss.getName(), ss.isEnabled());
 			// mesure only efective lecture
@@ -404,16 +418,28 @@ public class SensorsArray {
 		setStandByBorder();
 	}
 
-	/**
-	 * this method perform a {@link #readSensors(boolean, List)} for all configured sensors. the image source is the
-	 * configuration file and perform the standar ocr operation. for test purporse
-	 */
-	public void testSensorsAreas() {
+	public void setReadSourceFile(File srcFile) {
+		this.readSourceFile = srcFile;
+	}
+
+	public File getReadSourceFile() {
+		return readSourceFile;
+	}
+	
+	public void testConfigurationFileSensorsAreas() {
 		List<ScreenSensor> slist = screenSensors.values().stream().collect(Collectors.toList());
-		boolean il = isLive;
-		isLive = false;
+		String curSour = readSource;
+		readSource = FROM_FILE;
 		readSensors(true, slist);
-		isLive = il;
+		readSource = curSour;
+	}
+
+	public void testScreenShotsSensorsAreas() {
+		List<ScreenSensor> slist = screenSensors.values().stream().collect(Collectors.toList());
+		String curSour = readSource;
+		readSource = FROM_SCREENSHOT;
+		readSensors(true, slist);
+		readSource = curSour;
 	}
 
 	private void setStandByBorder() {

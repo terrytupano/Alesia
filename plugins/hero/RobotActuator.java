@@ -1,14 +1,11 @@
 package plugins.hero;
 
-import java.awt.Point;
-import java.awt.Robot;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
+import java.awt.*;
+import java.awt.event.*;
 
 /**
- * Base class to send programaticily events throw the mouse or the keyboard.
- * each action recived by this class is the name of the sensor to perform the
- * action.
+ * Base class to send programaticily events throw the mouse or the keyboard. each action recived by this class is the
+ * name of the sensor to perform the action.
  * <p>
  * a secuence of 1 o more action separeted by ; whit the following format:
  * <p>
@@ -16,8 +13,7 @@ import java.awt.event.KeyEvent;
  * <li>action name alone - perform 1 click using the mouse over the action area.
  * <li>action_name,dc - Perform a double click over the action area
  * <li>action_name,c=# - Perform the number # of click over the action area
- * <li>action_name,k=text - write the text text. The area must be previously
- * selected using double or simple click
+ * <li>action_name,k=text - write the text text. The area must be previously selected using double or simple click
  * 
  * @author terry
  *
@@ -38,8 +34,7 @@ public class RobotActuator {
 	}
 
 	/**
-	 * Perform the secuence of command asociated with the {@link TrooperAction}
-	 * passsed as argument.
+	 * Perform the secuence of command asociated with the {@link TrooperAction} passsed as argument.
 	 * 
 	 * @see #perform(String)
 	 * @param trooperAction - the action
@@ -49,10 +44,9 @@ public class RobotActuator {
 	}
 
 	/**
-	 * Perform the secuence of commands passed as argument as argument. The command
-	 * structure is in the class documentation. This method dont dont verify the
-	 * command format. it will try of fullfill the action. check the logger entry to
-	 * verify if the secuence was complete.
+	 * Perform the secuence of commands passed as argument as argument. The command structure is in the class
+	 * documentation. This method dont dont verify the command format. it will try of fullfill the action. check the
+	 * logger entry to verify if the secuence was complete.
 	 * 
 	 * @param commands - the commands to perform
 	 */
@@ -70,7 +64,7 @@ public class RobotActuator {
 			}
 
 			Point p = fig.getRandomPoint();
-//			System.out.println(p);
+			// System.out.println(p);
 			mouseMove(p.x, p.y);
 
 			// perform double clicks
@@ -101,13 +95,11 @@ public class RobotActuator {
 	}
 
 	/**
-	 * Perform mouse left click. In test mode, this method send the
-	 * {@link KeyEvent#VK_CONTROL} using the keyboard to signal only. the property
-	 * "show location of pointer when press control key" must be set on in mouse
-	 * properties
+	 * Perform mouse left click. In test mode, this method send the {@link KeyEvent#VK_CONTROL} using the keyboard to
+	 * signal only. the property "show location of pointer when press control key" must be set on in mouse properties
 	 */
 	public void doClick() {
-		if (!trooper.getSensorsArray().isLive()) {
+		if (!SensorsArray.FROM_ROBOT.equals(trooper.getSensorsArray().getReadSource())) {
 			type(KeyEvent.VK_CONTROL);
 			return;
 		}
@@ -118,13 +110,11 @@ public class RobotActuator {
 	}
 
 	/**
-	 * Perform mouse left click. In test mode, this method send the
-	 * {@link KeyEvent#VK_CONTROL} using the keyboard to signal only. the property
-	 * "show location of pointer when press control key" must be set on in mouse
-	 * properties
+	 * Perform mouse left click. In test mode, this method send the {@link KeyEvent#VK_CONTROL} using the keyboard to
+	 * signal only. the property "show location of pointer when press control key" must be set on in mouse properties
 	 */
 	public void doubleClick() {
-		if (!trooper.getSensorsArray().isLive()) {
+		if (!SensorsArray.FROM_ROBOT.equals(trooper.getSensorsArray().getReadSource())) {
 			type(KeyEvent.VK_CONTROL);
 			return;
 		}
@@ -149,8 +139,7 @@ public class RobotActuator {
 	}
 
 	/**
-	 * Perform key press on the keyboard. This key must be any of the
-	 * {@link KeyEvent} key codes
+	 * Perform key press on the keyboard. This key must be any of the {@link KeyEvent} key codes
 	 * 
 	 * @param vk - the key code to type
 	 */
@@ -162,9 +151,8 @@ public class RobotActuator {
 	}
 
 	/**
-	 * Type the text <code>str</code> using the keyboard. This method only process
-	 * the characters from A-Z and numbers. To sent especial key, use
-	 * {@link #type(int)} method.
+	 * Type the text <code>str</code> using the keyboard. This method only process the characters from A-Z and numbers.
+	 * To sent especial key, use {@link #type(int)} method.
 	 * 
 	 * @param str - text to type
 	 */
@@ -176,7 +164,7 @@ public class RobotActuator {
 			if ((code > 96 && code < 123)) {
 				code = code - 32;
 			}
-			if (!trooper.getSensorsArray().isLive())
+			if (!SensorsArray.FROM_ROBOT.equals(trooper.getSensorsArray().getReadSource()))
 				type(KeyEvent.VK_CONTROL);
 			else
 				type(code);

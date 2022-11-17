@@ -2,9 +2,11 @@ package plugins.hero;
 
 import java.awt.*;
 import java.awt.image.*;
+import java.io.*;
 import java.util.*;
 import java.util.List;
 
+import javax.imageio.*;
 import javax.swing.*;
 
 import com.alee.utils.*;
@@ -137,19 +139,32 @@ public class ScreenSensor extends JPanel {
 	 * @param doOcr - <code>true</code> for perform ocr operation (if is available)
 	 * @param isLive - <code>true</code> capture the image from window. <code>false</code> capture from file
 	 */
-	public void capture(boolean doOcr, boolean isLive) {
+	public void capture(boolean doOcr, String readSource) {
 		Rectangle bou = shape.bounds;
 		long t1 = System.currentTimeMillis();
 
-		// live or test?
-		if (isLive) {
+		// hero is live
+		if (SensorsArray.FROM_ROBOT.equals(readSource)) {
 			// from the screen
 			capturedImage = sensorsArray.getRobot().createScreenCapture(bou);
-		} else {
-			// from the ppt file background
+		}
+
+		// from the ppt file background
+		if (SensorsArray.FROM_FILE.equals(readSource)) {
 			ImageIcon ii = sensorsArray.getScreenAreas().getBackgroundImage();
 			BufferedImage bgimage = ImageUtils.copyToBufferedImage(ii);
 			capturedImage = bgimage.getSubimage(bou.x, bou.y, bou.width, bou.height);
+		}
+
+		// from the screenshots directory
+		if (SensorsArray.FROM_SCREENSHOT.equals(readSource)) {
+			try {
+				File file = sensorsArray.getReadSourceFile();
+				BufferedImage bgimage = ImageIO.read(file);
+				capturedImage = bgimage.getSubimage(bou.x, bou.y, bou.width, bou.height);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		/*
@@ -187,7 +202,6 @@ public class ScreenSensor extends JPanel {
 		update();
 		ocrTime = (System.currentTimeMillis() - t1);
 	}
-
 
 	public BufferedImage getImage(String type) {
 		return images.get(type);
@@ -404,9 +418,9 @@ public class ScreenSensor extends JPanel {
 
 		// standar procedure for numeric sensors
 		if (isNumericArea()) {
-			
+
 			srcocd = Hero.parseNummer(srcocd, currencySymbol);
-			
+
 			// original code
 			// srcocd = srcocd.replaceAll("[^" + currencySymbol + "1234567890]", "");
 			// // srcocd = srcocd.replaceAll("[^" + currencySymbol + decimalSeparator + "1234567890]", "");

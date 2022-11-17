@@ -42,6 +42,11 @@ public class Hero extends TPlugin {
 	private static Table simulationTable;
 	private GameSimulatorPanel simulatorPanel;
 
+	public Hero() {
+		TActionsFactory.insertActions(this);
+		Alesia.getInstance().openDB("hero");
+	}
+
 	public static Action getLoadAction() {
 		Action load = TActionsFactory.getAction("fileChooserOpen");
 		load.addPropertyChangeListener(evt -> {
@@ -86,9 +91,35 @@ public class Hero extends TPlugin {
 		return iTesseract;
 	}
 
-	public Hero() {
-		TActionsFactory.insertActions(this);
-		Alesia.getInstance().openDB("hero");
+	/**
+	 * central parser from pokerstar localed formatet number ($12,12) to parseable string to double
+	 * <p>
+	 * NOTE this method is called from {@link ScreenSensor} instances in order to correct the ocr read
+	 * 
+	 * @param numer - locale numer
+	 * @param currencySymbol - current simbol "" if not currency simbol is present
+	 * @return double string
+	 */
+	public static String parseNummer(String numer, String currencySymbol) {
+		char decSep = DecimalFormatSymbols.getInstance().getDecimalSeparator();
+
+		String srcocd = numer.replaceAll("[^" + currencySymbol + decSep + "1234567890]", "");
+
+		// at this point the var mus contain the currency simbol as first caracter. in case of error, the first
+		// caracter maybe is a number. as a fail safe, remove allways the first caracter.
+		if (!"".equals(currencySymbol) && srcocd.length() > 1)
+			srcocd = srcocd.substring(1).trim();
+
+		// at this point tesserac may detected the correct decimal separato o maybe not.
+		srcocd = srcocd.replace(decSep, '.');
+
+		// // use currency simbol as marker. when the currency simbol is present, assume 2 decimal digits for all
+		// // numbers
+		// if (!"".equals(currencySymbol)) {
+		// int len = srcocd.length();
+		// srcocd = srcocd.substring(0, len - 2) + "." + srcocd.substring(len - 2);
+		// }
+		return srcocd;
 	}
 
 	@org.jdesktop.application.Action
@@ -141,12 +172,6 @@ public class Hero extends TPlugin {
 		Alesia.getInstance().getMainPanel().showPanel(heroPanel);
 		initTrooperEnvironment();
 		Alesia.getInstance().getMainFrame().setBounds(10, 65, 620, 900);
-	}
-
-	private void initTrooperEnvironment() {
-		simulationTable = null;
-		activeTrooper = new Trooper();
-		heroPanel.updateSensorsArray(activeTrooper);
 	}
 
 	@org.jdesktop.application.Action
@@ -207,37 +232,6 @@ public class Hero extends TPlugin {
 		TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 1200 1200 /mov 630 65 ");
 		initTrooperEnvironment();
 		return activeTrooper;
-	}
-
-	/**
-	 * central parser from pokerstar localed formatet number ($12,12) to parseable string to double
-	 * <p>
-	 * NOTE this method is called from {@link ScreenSensor} instances in order to correct the ocr read
-	 * 
-	 * @param numer - locale numer
-	 * @param currencySymbol - current simbol "" if not currency simbol is present
-	 * @return double string
-	 */
-	public static String parseNummer(String numer, String currencySymbol) {
-		char decSep = DecimalFormatSymbols.getInstance().getDecimalSeparator();
-
-		String srcocd = numer.replaceAll("[^" + currencySymbol + decSep + "1234567890]", "");
-
-		// at this point the var mus contain the currency simbol as first caracter. in case of error, the first
-		// caracter maybe is a number. as a fail safe, remove allways the first caracter.
-		if (!"".equals(currencySymbol) && srcocd.length() > 1)
-			srcocd = srcocd.substring(1).trim();
-
-		// at this point tesserac may detected the correct decimal separato o maybe not.
-		srcocd = srcocd.replace(decSep, '.');
-		
-//		// use currency simbol as marker. when the currency simbol is present, assume 2 decimal digits for all
-//		// numbers
-//		if (!"".equals(currencySymbol)) {
-//			int len = srcocd.length();
-//			srcocd = srcocd.substring(0, len - 2) + "." + srcocd.substring(len - 2);
-//		}
-		return srcocd;
 	}
 
 	@org.jdesktop.application.Action
@@ -339,15 +333,25 @@ public class Hero extends TPlugin {
 	}
 
 	@org.jdesktop.application.Action
-	public void testAreas(ActionEvent event) {
+	public void testAreasPpt(ActionEvent event) {
 		if (activeTrooper != null)
-			activeTrooper.getSensorsArray().testSensorsAreas();
+			activeTrooper.getSensorsArray().testConfigurationFileSensorsAreas();
+	}
+
+	@org.jdesktop.application.Action
+	public void testAreasScreen(ActionEvent event) {
+		if (activeTrooper != null) {
+			if (activeTrooper.getSensorsArray().getReadSourceFile() == null)
+				JOptionPane.showMessageDialog(Alesia.getInstance().getMainFrame(), "No screenshot file has been setted",
+						"Error", JOptionPane.ERROR_MESSAGE);
+			activeTrooper.getSensorsArray().testScreenShotsSensorsAreas();
+		}
 	}
 
 	@org.jdesktop.application.Action
 	public Task testTrooper(ActionEvent event) {
 		initTrooperEnvironment();
-		activeTrooper.getSensorsArray().setLive(false);
+		activeTrooper.getSensorsArray().setReadSource(SensorsArray.FROM_FILE);
 		return activeTrooper;
 	}
 
@@ -355,6 +359,12 @@ public class Hero extends TPlugin {
 	public void uoAEvaluator(ActionEvent event) {
 		UoAPanel aPanel = new UoAPanel();
 		Alesia.getInstance().getMainPanel().showPanel(aPanel);
+	}
+
+	private void initTrooperEnvironment() {
+		simulationTable = null;
+		activeTrooper = new Trooper();
+		heroPanel.updateSensorsArray(activeTrooper);
 	}
 
 }

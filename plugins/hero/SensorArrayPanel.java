@@ -1,6 +1,8 @@
 package plugins.hero;
 
 import java.awt.*;
+import java.io.*;
+import java.util.*;
 import java.util.List;
 
 import javax.swing.*;
@@ -8,6 +10,7 @@ import javax.swing.*;
 import com.alee.laf.combobox.*;
 import com.alee.laf.panel.*;
 import com.alee.managers.settings.*;
+import com.alee.utils.*;
 
 import core.*;
 import gui.*;
@@ -17,6 +20,7 @@ public class SensorArrayPanel extends TUIPanel {
 	private WebPanel sensorsPanel;
 	private WebComboBox sensorTypeComboBox;
 	private WebComboBox imageTypeComboBox;
+	private WebComboBox imagesComboBox;
 	private SensorsArray sensorsArray;
 
 	public SensorArrayPanel() {
@@ -42,16 +46,29 @@ public class SensorArrayPanel extends TUIPanel {
 		imageTypeComboBox.addItem(new TEntry(ScreenSensor.COLORED, "show colored images"));
 		imageTypeComboBox.addActionListener(evt -> filterSensors());
 
+		// screen shots images
+		List<File> files = FileUtils.findFilesRecursively(SensorsArray.SCREEN_SHOTS_FOLDER,
+				f -> f.getName().endsWith(".png"));
+		List<TEntry<File, String>> names = new ArrayList<>();
+		files.forEach(f -> names.add(new TEntry<>(f, f.getName().substring(0, f.getName().length() - 4))));
+		this.imagesComboBox = new WebComboBox(names);
+		imagesComboBox.addActionListener(evt -> testSccreenShot());
+
 		imageTypeComboBox.registerSettings(new Configuration<ComboBoxState>("SensorPanel.imageType"));
 		sensorTypeComboBox.registerSettings(new Configuration<ComboBoxState>("SensorPanel.filter"));
 
-		addToolBarActions("testAreas");
-		getToolBar().add(sensorTypeComboBox, imageTypeComboBox);
+		addToolBarActions("testAreasPpt", "testAreasScreen");
+		getToolBar().add(imagesComboBox, sensorTypeComboBox, imageTypeComboBox);
 
 		this.sensorsPanel = new WebPanel(new GridLayout(0, 2));
 		JScrollPane ajsp = new JScrollPane(sensorsPanel);
 
 		setBodyComponent(ajsp);
+	}
+
+	private void testSccreenShot() {
+		TEntry<File, String> selF = (TEntry<File, String>) imagesComboBox.getSelectedItem();
+		sensorsArray.setReadSourceFile(selF.getKey());
 	}
 
 	/**
