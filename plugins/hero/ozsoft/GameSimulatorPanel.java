@@ -45,12 +45,12 @@ public class GameSimulatorPanel extends TUIFormPanel implements PropertyChangeLi
 		FormLayout layout = new FormLayout("pref, 3dlu, pref, 3dlu, pref:grow",
 				"p, 3dlu, p, 3dlu, p, 3dlu, fill:10dlu:grow");
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DLU2);
-		builder.append(TUIUtils.getTitleLabel("Trooper panel", "trooper configuration parameters"), 5);
-		builder.nextLine(2);
+//		builder.append(TUIUtils.getTitleTextLabel("Trooper panel", "trooper configuration parameters"), 5);
+//		builder.nextLine(2);
 		builder.append(trooperPanelContainer, 5);
 		builder.nextLine(2);
-		builder.append(TUIUtils.getTitleLabel("Players", "Select the number and type of players"), 5);
-		builder.nextLine(2);
+//		builder.append(TUIUtils.getTitleTextLabel("Players", "Select the number and type of players"), 5);
+//		builder.nextLine(2);
 		builder.append(clientList, 5);
 
 		JPanel panel = builder.getPanel();

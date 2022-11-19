@@ -9,6 +9,7 @@ import javax.swing.*;
 import com.alee.extended.layout.*;
 import com.alee.extended.magnifier.*;
 import com.alee.laf.button.*;
+import com.alee.laf.label.*;
 import com.alee.laf.panel.*;
 import com.alee.managers.style.*;
 import com.alee.utils.*;
@@ -38,8 +39,10 @@ public class HomePanel extends WebPanel {
 
 		// importants links
 		eastPanel = new WebPanel(new VerticalFlowLayout());
-		
-		eastPanel.add(TUIUtils.getTitleLabel("Others Links", ""));
+
+		WebLabel ol = new WebLabel();
+		ol.setBoldFont();
+		eastPanel.add(ol);
 		this.myMap = Alesia.getInstance().getContext().getActionMap(this);
 		for (Object key : myMap.keys()) {
 			Action act = myMap.get(key);
@@ -54,7 +57,7 @@ public class HomePanel extends WebPanel {
 	}
 
 	/**
-	 * create a main component whit all actions passes as argument. 
+	 * create a main component whit all actions passes as argument.
 	 * 
 	 * @param actions
 	 */

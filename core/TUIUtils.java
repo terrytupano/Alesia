@@ -25,7 +25,6 @@ import javax.swing.Action;
 import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.table.*;
-import javax.swing.table.TableColumn;
 import javax.swing.text.*;
 import javax.swing.text.html.*;
 
@@ -47,6 +46,7 @@ import com.alee.laf.combobox.*;
 import com.alee.laf.label.*;
 import com.alee.laf.panel.*;
 import com.alee.laf.scroll.*;
+import com.alee.laf.spinner.*;
 import com.alee.laf.text.*;
 import com.alee.laf.toolbar.*;
 import com.alee.managers.settings.Configuration;
@@ -75,8 +75,7 @@ public class TUIUtils {
 	public static final int iconSize = 20;
 
 	/**
-	 * copiado de <code>Color.brighter()</code> pero con el factor modificado para
-	 * obtener un mejor degradado
+	 * copiado de <code>Color.brighter()</code> pero con el factor modificado para obtener un mejor degradado
 	 * 
 	 * @return color un poco mas brillante
 	 */
@@ -105,8 +104,8 @@ public class TUIUtils {
 	 * draw a image icon form the icon from <code>Material Icons</code> font.
 	 * 
 	 * @param unicode - the unicode caracter for the icont
-	 * @param size    - target size
-	 * @param color   - foreground color
+	 * @param size - target size
+	 * @param color - foreground color
 	 * 
 	 * @return image
 	 */
@@ -118,12 +117,10 @@ public class TUIUtils {
 	}
 
 	/**
-	 * establece el ancho de las columnas de la tabla pasada como primer argumento
-	 * al valor especificado en el segundo.
+	 * establece el ancho de las columnas de la tabla pasada como primer argumento al valor especificado en el segundo.
 	 * 
 	 * @param jt - tabla
-	 * @param w  - arreglo de enteros con el ancho de la columna segun su posicion.
-	 *           si alguno de ellos es < 1, se omite.
+	 * @param w - arreglo de enteros con el ancho de la columna segun su posicion. si alguno de ellos es < 1, se omite.
 	 */
 	public static void fixTableColumn(JTable jt, int[] w) {
 		TableColumnModel cm = jt.getColumnModel();
@@ -137,10 +134,9 @@ public class TUIUtils {
 	}
 
 	/**
-	 * este metodo da formato estandar a una instancia de <code>JLabel</code> segun
-	 * los argumentos
+	 * este metodo da formato estandar a una instancia de <code>JLabel</code> segun los argumentos
 	 * 
-	 * @param jl  - instancia a dar formato
+	 * @param jl - instancia a dar formato
 	 * @param req - requerido
 	 * @param ena - habilitado
 	 */
@@ -164,8 +160,8 @@ public class TUIUtils {
 		WebImage wi = new WebImage(TResources.getIcon("text")) {
 			protected void paintComponent(Graphics g) {
 				Graphics2D g2d = (Graphics2D) g;
-				g2d.setPaint(new LinearGradientPaint(0, 0, 0, getHeight(), new float[] { 0f, 0.4f, 0.6f, 1f },
-						new Color[] { Color.gray, Color.WHITE, Color.WHITE, Color.gray }));
+				g2d.setPaint(new LinearGradientPaint(0, 0, 0, getHeight(), new float[]{0f, 0.4f, 0.6f, 1f},
+						new Color[]{Color.gray, Color.WHITE, Color.WHITE, Color.gray}));
 				g2d.fill(g2d.getClip() != null ? g2d.getClip() : getVisibleRect());
 
 				super.paintComponent(g);
@@ -178,8 +174,8 @@ public class TUIUtils {
 	}
 
 	/**
-	 * retorna un <code>Box</code> con formato preestablecido para los componentes
-	 * que se encuentran en la parte inferior de las ventanas de dialogo.
+	 * retorna un <code>Box</code> con formato preestablecido para los componentes que se encuentran en la parte
+	 * inferior de las ventanas de dialogo.
 	 * 
 	 * @param jc - Generalmente, un contenedor con los botones ya a�adidos
 	 * @return <code>Box</code> listo para adicionar a la parte inferirior
@@ -206,7 +202,7 @@ public class TUIUtils {
 	/**
 	 * return a {@link CheckComboBox} with predefined parameters
 	 * 
-	 * @param ct  - constants group
+	 * @param ct - constants group
 	 * @param rcd - Record
 	 * @param fld - field name of store parameters
 	 * 
@@ -250,8 +246,7 @@ public class TUIUtils {
 	/**
 	 * return a console stily {@link WebTextArea}.
 	 * <p>
-	 * NOTE: to conrrect control the scrolling, this method DONT set the
-	 * preferedSize
+	 * NOTE: to conrrect control the scrolling, this method DONT set the preferedSize
 	 * 
 	 * @see #getSmartScroller(JComponent)
 	 * 
@@ -287,12 +282,11 @@ public class TUIUtils {
 
 	/**
 	 * coloca los componentes pasados como argumentos uno junto a oltro en un
-	 * <code>new JPanel(new FlowLayout(alg, H_GAP, 0))</code> (alineados hacia alg
-	 * con un espacio entre componentes de H_GAP
+	 * <code>new JPanel(new FlowLayout(alg, H_GAP, 0))</code> (alineados hacia alg con un espacio entre componentes de
+	 * H_GAP
 	 * 
 	 * @param jcomps - componentes
-	 * @param alg    - alineacion de los componente. Puede ser cualquiera
-	 *               <code>FlowLayout.XXX</code>
+	 * @param alg - alineacion de los componente. Puede ser cualquiera <code>FlowLayout.XXX</code>
 	 * @return JPanel
 	 */
 	public static JPanel getInHorizontalBox(Component[] jcomps, int alg) {
@@ -305,13 +299,13 @@ public class TUIUtils {
 	}
 
 	/**
-	 * Retorna el par <code>JLabel(lab) JComponent</code> en un <code>Box</code> con
-	 * alineacion horizontal con ambos componentes a los extremos del contenedor
+	 * Retorna el par <code>JLabel(lab) JComponent</code> en un <code>Box</code> con alineacion horizontal con ambos
+	 * componentes a los extremos del contenedor
 	 * 
-	 * @param lab  - id en ResourceBundle para <code>JLabel</code>
+	 * @param lab - id en ResourceBundle para <code>JLabel</code>
 	 * @param jcom - componente al que refiere la etiqueta lab
-	 * @param req  - <code>true</code> si el par es de entrada obligatoria
-	 * @param ena  - <code>true</code> ambos etiqueta y componente habilitados.
+	 * @param req - <code>true</code> si el par es de entrada obligatoria
+	 * @param ena - <code>true</code> ambos etiqueta y componente habilitados.
 	 * @return Box con componentes en su interior
 	 */
 	public static Box getInHorizontalBox(String lab, JComponent jcom, boolean req, boolean ena) {
@@ -319,14 +313,13 @@ public class TUIUtils {
 	}
 
 	/**
-	 * Retorna el par <code>JLabel(lab) JComponent</code> en un <code>Box</code> con
-	 * alineacion horizontal pero con <code>Box.CreateHorizontalGlue()</code> con
-	 * ambos componentes hacia la izquierda del contenedor
+	 * Retorna el par <code>JLabel(lab) JComponent</code> en un <code>Box</code> con alineacion horizontal pero con
+	 * <code>Box.CreateHorizontalGlue()</code> con ambos componentes hacia la izquierda del contenedor
 	 * 
-	 * @param lab  - id en ResourceBundle para <code>JLabel</code>
+	 * @param lab - id en ResourceBundle para <code>JLabel</code>
 	 * @param jcom - componente al que refiere la etiqueta lab
-	 * @param req  - <code>true</code> si el par es de entrada obligatoria
-	 * @param ena  - <code>true</code> ambos etiqueta y componente habilitados.
+	 * @param req - <code>true</code> si el par es de entrada obligatoria
+	 * @param ena - <code>true</code> ambos etiqueta y componente habilitados.
 	 * @return Box con componentes en su interior
 	 */
 	public static Box getInHorizontalBoxWithGlue(String lab, JComponent jcom, boolean req, boolean ena) {
@@ -334,11 +327,11 @@ public class TUIUtils {
 	}
 
 	/**
-	 * retorna los componentes pasados como argumentos en un contenedor, colocados
-	 * verticalmente y alineados segun el parametro alg
+	 * retorna los componentes pasados como argumentos en un contenedor, colocados verticalmente y alineados segun el
+	 * parametro alg
 	 * 
 	 * @param jcomps - componentes
-	 * @param alg    - alineacion (de SwingConstants)
+	 * @param alg - alineacion (de SwingConstants)
 	 * @return Box
 	 */
 	public static Box getInVerticalBox(JComponent[] jcomps, int alg) {
@@ -364,13 +357,13 @@ public class TUIUtils {
 	}
 
 	/**
-	 * retorna el par <code>JLabel(lab) JComponent</code> dentro de un
-	 * <code>Box</code> vertical alineados hacia la izquierda.
+	 * retorna el par <code>JLabel(lab) JComponent</code> dentro de un <code>Box</code> vertical alineados hacia la
+	 * izquierda.
 	 * 
-	 * @param lab  - id en ResourceBundle para <code>JLabel</code>
+	 * @param lab - id en ResourceBundle para <code>JLabel</code>
 	 * @param jcom - componente
-	 * @param req  - si el componente es de entrada obligatoria o no.
-	 * @param ena  - valor para <code>jcom.setEnabled()</code>
+	 * @param req - si el componente es de entrada obligatoria o no.
+	 * @param ena - valor para <code>jcom.setEnabled()</code>
 	 * 
 	 * @return box vertical
 	 */
@@ -387,9 +380,8 @@ public class TUIUtils {
 		jp.add(jcom);
 
 		/**
-		 * Box b2 = Box.createHorizontalBox(); b2.add(jcom);
-		 * b2.add(Box.createHorizontalGlue()); Box b = Box.createVerticalBox();
-		 * b.add(b1); b.add(b2);
+		 * Box b2 = Box.createHorizontalBox(); b2.add(jcom); b2.add(Box.createHorizontalGlue()); Box b =
+		 * Box.createVerticalBox(); b.add(b1); b.add(b2);
 		 */
 		return jp;// b;
 	}
@@ -409,8 +401,7 @@ public class TUIUtils {
 	}
 
 	/**
-	 * create and return a {@link WebCheckBox}. this implementation assume that the
-	 * data type from the model is boolean
+	 * create and return a {@link WebCheckBox}. this implementation assume that the data type from the model is boolean
 	 * 
 	 * @param field - the field name
 	 * @param model - the Model
@@ -424,8 +415,8 @@ public class TUIUtils {
 	}
 
 	/**
-	 * crea y retorna una instancia de <code>JEditorPane</code> con configuracion
-	 * estandar para presentacion de texto en formato HTML
+	 * crea y retorna una instancia de <code>JEditorPane</code> con configuracion estandar para presentacion de texto en
+	 * formato HTML
 	 * 
 	 * @param txt - texto a presentar en el componente
 	 * 
@@ -450,7 +441,7 @@ public class TUIUtils {
 	/**
 	 * return and {@link JEditorPane} for information read only.
 	 * 
-	 * @param textId            - text id. may be <code>null</code>
+	 * @param textId - text id. may be <code>null</code>
 	 * @param hyperlinkListener - may be <code>null</code>
 	 * 
 	 * @return eidtor pane for read only
@@ -469,12 +460,11 @@ public class TUIUtils {
 	}
 
 	/**
-	 * construye y retorna una instancia de JLabel con los atributos establecidos
-	 * segun los argumentos de entrada.
+	 * construye y retorna una instancia de JLabel con los atributos establecidos segun los argumentos de entrada.
 	 * 
 	 * @param field - id de resource bundle
-	 * @param req   - true si el campo es de entrada obligatoria.
-	 * @param ena   - abilitado o no.
+	 * @param req - true si el campo es de entrada obligatoria.
+	 * @param ena - abilitado o no.
 	 * @return instancia con atributos
 	 */
 	public static JLabel getJLabel(String field, boolean req, boolean ena) {
@@ -504,7 +494,7 @@ public class TUIUtils {
 	 * 
 	 * @param ttn - id de tooltip
 	 * @param val - valor para el componente
-	 * @param cw  - longitud del componente medido en caracteres
+	 * @param cw - longitud del componente medido en caracteres
 	 * @return <code>Jt_uspasswordField</code> con formato estandar
 	 */
 	public static JPasswordField getJPasswordField(String ttn, String val, int cw) {
@@ -520,7 +510,7 @@ public class TUIUtils {
 	/**
 	 * retorna un <code>JRadioButton</code> con valores standar
 	 * 
-	 * @param ti  - id de tooltip
+	 * @param ti - id de tooltip
 	 * @param idt - identificador en resourcebundle para el texto
 	 * @param sel - estado: seleccionado o no
 	 * @return JRadioButton
@@ -549,8 +539,8 @@ public class TUIUtils {
 	/**
 	 * JtextArea estadar para datos de registros
 	 * 
-	 * @param r   - registro
-	 * @param f   - nombre de la columna
+	 * @param r - registro
+	 * @param f - nombre de la columna
 	 * @param lin - Nro de lineas deseadas para el componente
 	 * @return JScrollPane
 	 */
@@ -565,7 +555,7 @@ public class TUIUtils {
 	/**
 	 * retorna <code>JTextArea</code> con formato estandar
 	 * 
-	 * @param tt  - id para tooltips
+	 * @param tt - id para tooltips
 	 * @param val - Texto inicial para el componente
 	 * @param col - columnas. las columnas seran dividias entre el Nro de lineas
 	 * @param lin - Lineas. Nro de lines que se desean para el componentes
@@ -588,7 +578,7 @@ public class TUIUtils {
 	 * 
 	 * @param ttn - id de tooltip
 	 * @param val - valor para el componente
-	 * @param cw  - longitud del componente medido en caracteres
+	 * @param cw - longitud del componente medido en caracteres
 	 * @return <code>JTextField</code> scon formato estandar
 	 */
 	public static JTextField getJTextField(String ttn, String val, int cw) {
@@ -602,15 +592,13 @@ public class TUIUtils {
 	}
 
 	/**
-	 * return the ImageIcon <code>src</code> with a mark which is a scaled instance
-	 * of the icon file name <code>mfn</code> draw over the source image.
+	 * return the ImageIcon <code>src</code> with a mark which is a scaled instance of the icon file name
+	 * <code>mfn</code> draw over the source image.
 	 * 
 	 * @param src - original imagen
 	 * @param mfn - icon file name used as mark
-	 * @param h   - Horizontal position of the mark. any of
-	 *            {@link SwingConstants#LEFT} or {@link SwingConstants#RIGHT}
-	 * @param h   - Vertical position of the mark. any of {@link SwingConstants#TOP}
-	 *            or {@link SwingConstants#BOTTOM}
+	 * @param h - Horizontal position of the mark. any of {@link SwingConstants#LEFT} or {@link SwingConstants#RIGHT}
+	 * @param h - Vertical position of the mark. any of {@link SwingConstants#TOP} or {@link SwingConstants#BOTTOM}
 	 * @return the image icon with the mark
 	 */
 	public static ImageIcon getMarkIcon(ImageIcon src, String mfn, int h, int v) {
@@ -627,10 +615,15 @@ public class TUIUtils {
 	}
 
 	public static NumericTextField getNumericTextField(String field, Model model, Map<String, ColumnMetadata> columns) {
+		return getNumericTextField(field, model, columns, null);
+	}
+
+	public static NumericTextField getNumericTextField(String field, Model model, Map<String, ColumnMetadata> columns,
+			String mask) {
 		ColumnMetadata column = columns.get(field);
 		int len = column.getColumnSize();
 		String val = model.getString(field);
-		return getNumericTextField(field, val, len, null);
+		return getNumericTextField(field, val, len, mask);
 	}
 
 	public static NumericTextField getNumericTextField(String name, String text, int cols, String mask) {
@@ -654,8 +647,8 @@ public class TUIUtils {
 	}
 
 	/**
-	 * create and return a {@link JScrollPane} setted with an instace of
-	 * {@link SmartScroller}. this is intendet for console style componentes
+	 * create and return a {@link JScrollPane} setted with an instace of {@link SmartScroller}. this is intendet for
+	 * console style componentes
 	 * 
 	 * @see SmartScroller
 	 * @param component - component to scroll
@@ -672,7 +665,7 @@ public class TUIUtils {
 	 * crea y retorna un componente informativo con formato estandar
 	 * 
 	 * @param rbid - id de resourceBundle
-	 * @param inf  - componente que contendra la informacion
+	 * @param inf - componente que contendra la informacion
 	 * @return - Box
 	 */
 	public static JPanel getStandarInfoComponent(String rbid, Component inf) {
@@ -735,11 +728,10 @@ public class TUIUtils {
 	}
 
 	/**
-	 * crea y retorna un separador horizontal con un texto colocado hacia la
-	 * izquierda
+	 * crea y retorna un separador horizontal con un texto colocado hacia la izquierda
 	 * 
-	 * 20161123.04:25 NAAAA GUEBONAAA DE VIEJOOOOO !!! ESTE METODO DEBE TENER +10
-	 * A�OS !!!! FUE DE LOS PRIMEROS PARA CLIO
+	 * 20161123.04:25 NAAAA GUEBONAAA DE VIEJOOOOO !!! ESTE METODO DEBE TENER +10 A�OS !!!! FUE DE LOS PRIMEROS PARA
+	 * CLIO
 	 * 
 	 * @param idl - id para texto
 	 * @return componente
@@ -761,25 +753,48 @@ public class TUIUtils {
 		WebLabel tit = new WebLabel(StyleId.labelShadow, TStringUtils.getString(constID));
 		tit.changeFontSize(2);
 		WebLabel text = new WebLabel(TStringUtils.getString(constID + ".tt"));
-		WebPanel panel = new WebPanel(StyleId.panelTransparent, new FormLayout(false, true, 10, 0));
+		WebPanel panel = new WebPanel(StyleId.panelTransparent, new FormLayout(false, false, 10, 0));
 		panel.add(tit, FormLayout.LINE);
 		panel.add(text, FormLayout.LINE);
 		return panel;
 	}
 
+	public static WebPanel getConfigLinePanel(String field, JComponent rightComponent) {
+		Border empty = new EmptyBorder(10, 10, 10, 10);
+		LineBorder line = new LineBorder(Color.LIGHT_GRAY);
+		CompoundBorder border = new CompoundBorder(line, empty);
+		
+		WebPanel panel = new WebPanel(new BorderLayout(10, 10));
+		// Color color =UIManager.getColor("Panel.background");
+		// color = ColorUtils.intermediate(color, Color.WHITE, 0.5f);
+		Color color = ColorUtils.intermediate(panel.getBackground(), Color.WHITE, 0.7f);
+		// panel.setBorder(new WebBorder(10));
+		 panel.setBorder(border);
+		panel.setBackground(color);
+		WebPanel panel2 = new WebPanel(new VerticalFlowLayout(VerticalFlowLayout.MIDDLE));
+		panel2.setBackground(color);
+		panel2.add(rightComponent);
+		panel.add(getTitleTextLabel(field), BorderLayout.CENTER);
+		panel.add(panel2, BorderLayout.EAST);
+		return panel;
+	}
+
 	/**
-	 * return a {@link WebLabel} whit html formated title/message elements
+	 * return a {@link WebLabel} whith html formated title/message elements. the title element is the text found in
+	 * property file and the message will be the field.tt text
 	 * 
-	 * @see TStringUtils#getTitleText(String, String) TODO: temp move to look and
-	 *      feel
+	 * @see TStringUtils#getTitleText(String, String)
 	 * 
-	 * @param title
-	 * @param message
-	 * @return
+	 * @param field - properti key for title
+	 * @param message - property key for message
+	 * 
+	 * @return {@link WebLabel}
 	 */
-	public static WebLabel getTitleLabel(String title, String message) {
-		String msg = TStringUtils.getTitleText(title, message);
-		return new WebLabel(msg);
+	public static WebLabel getTitleTextLabel(String field) {
+		String tit = TStringUtils.getString(field);
+		String msg = TStringUtils.getString(field + ".tt");
+		String html = TStringUtils.getConfigTitleText(tit, msg);
+		return new WebLabel(html);
 	}
 
 	/**
@@ -797,7 +812,7 @@ public class TUIUtils {
 	/**
 	 * return a {@link JScrollPane} with a {@link TPropertyJTable} inside
 	 * 
-	 * @param tid  - tooltip id
+	 * @param tid - tooltip id
 	 * @param prpl - propertis string in standar format
 	 * @return Component 170911: MALDITO MABURRO con sus cadenas de mierdaaaa
 	 */
@@ -826,12 +841,11 @@ public class TUIUtils {
 	}
 
 	/**
-	 * build and return a {@link TWebComboBox} filled with the array of elements and
-	 * selected element (if apply)
+	 * build and return a {@link TWebComboBox} filled with the array of elements and selected element (if apply)
 	 * 
 	 * @param componentName - tha name for this component
-	 * @param entries       - array of elements
-	 * @param selected      - selected element. or <code>null</code>
+	 * @param entries - array of elements
+	 * @param selected - selected element. or <code>null</code>
 	 * 
 	 * @return ready to use {@link TWebComboBox}
 	 */
@@ -853,8 +867,7 @@ public class TUIUtils {
 	}
 
 	/**
-	 * create and return and {@link WebButton} with all settings stablisehd for
-	 * toolbar
+	 * create and return and {@link WebButton} with all settings stablisehd for toolbar
 	 * 
 	 * @param action - action to set in the button
 	 * @return button ready to set as toolbar button
@@ -871,23 +884,8 @@ public class TUIUtils {
 		return button;
 	}
 
-	public static WebToggleButton getWebToggleButtonForToolBar(Action action) {
-		overRideIcons(iconSize, Color.BLACK, action);
-		WebToggleButton button = new WebToggleButton(StyleId.buttonHover, action);
-		button.setText(null);
-		// button.setPreferredSize(new Dimension(46, 26));
-		return button;
-	}
-
 	public static WebCheckBox getWebCheckBox(String name) {
 		return getWebCheckBox(name, false);
-	}
-
-	public static WebSwitch getWebSwitch(String name, boolean selected) {
-		final WebSwitch wswitch = new WebSwitch(selected);
-		wswitch.setName(name);
-		wswitch.putClientProperty("settingsProcessor", new Configuration<ButtonState>(name));
-		return wswitch;
 	}
 
 	public static WebCheckBox getWebCheckBox(String name, boolean selected) {
@@ -918,7 +916,7 @@ public class TUIUtils {
 	 * create and return {@link WebDateField} according to parameters
 	 * 
 	 * @param rcd - Record to obtain data
-	 * @param fn  - record field name
+	 * @param fn - record field name
 	 * @return {@link WebDateField}
 	 * 
 	 */
@@ -930,10 +928,9 @@ public class TUIUtils {
 	}
 
 	/**
-	 * create and return {@link WebDateField} according to parameters. the date
-	 * format is dd/MM/yyy
+	 * create and return {@link WebDateField} according to parameters. the date format is dd/MM/yyy
 	 * 
-	 * @param tt  - id for tooltips
+	 * @param tt - id for tooltips
 	 * @param val - date
 	 * @return {@link WebDateField}
 	 */
@@ -982,12 +979,10 @@ public class TUIUtils {
 	}
 
 	/**
-	 * return a {@link WebTextField} with a trailing cancel button. The cancel
-	 * button reroute the action performed to set a empty text on text component and
-	 * notify the actionlister.
+	 * return a {@link WebTextField} with a trailing cancel button. The cancel button reroute the action performed to
+	 * set a empty text on text component and notify the actionlister.
 	 * 
-	 * @param alist - action listener. listerner to notify when a change on the text
-	 *              component ocurr.
+	 * @param alist - action listener. listerner to notify when a change on the text component ocurr.
 	 * 
 	 * @return text field for search or filter
 	 */
@@ -1028,16 +1023,35 @@ public class TUIUtils {
 	}
 
 	public static WebFormattedTextField getWebFormattedTextField(Model model, ColumnMetadata column) {
+		return getWebFormattedTextField(model, column, null);
+	}
+
+	public static WebFormattedTextField getWebFormattedTextField(Model model, ColumnMetadata column, String mask) {
 		int len = column.getColumnSize();
 		String field = column.getColumnName();
 		Object val = model.get(field);
-		return getWebFormattedTextField(field, val, len, null);
+		return getWebFormattedTextField(field, val, len, mask);
+	}
+
+	public static WebSpinner getWebSpinner(String name, int val, int min, int max, int step) {
+		SpinnerNumberModel sModel = new SpinnerNumberModel(val, min, max, step);
+		WebSpinner spinner = new WebSpinner(sModel);
+		// spinner.setValue(val);
+		spinner.setName(name);
+		spinner.putClientProperty("settingsProcessor", new Configuration<TextComponentState>(name));
+		setToolTip(name, spinner);
+		return spinner;
 	}
 
 	public static WebFormattedTextField getWebFormattedTextField(String field, Model model,
 			Map<String, ColumnMetadata> columns) {
+		return getWebFormattedTextField(field, model, columns, null);
+	}
+
+	public static WebFormattedTextField getWebFormattedTextField(String field, Model model,
+			Map<String, ColumnMetadata> columns, String mask) {
 		ColumnMetadata metadata = columns.get(field);
-		return getWebFormattedTextField(model, metadata);
+		return getWebFormattedTextField(model, metadata, mask);
 	}
 
 	public static WebFormattedTextField getWebFormattedTextField(String name, Object val, int cols) {
@@ -1093,6 +1107,14 @@ public class TUIUtils {
 		return wpf;
 	}
 
+	public static WebSwitch getWebSwitch(String name, boolean selected) {
+		final WebSwitch wswitch = new WebSwitch(selected);
+		wswitch.setSwitchComponents("On", "Off");
+		wswitch.setName(name);
+		wswitch.putClientProperty("settingsProcessor", new Configuration<ButtonState>(name));
+		return wswitch;
+	}
+
 	public static WebTextField getWebTextField(Model model, ColumnMetadata column) {
 		int len = column.getColumnSize();
 		String field = column.getColumnName();
@@ -1117,8 +1139,7 @@ public class TUIUtils {
 	}
 
 	/**
-	 * create and return and {@link WebToggleButton} with all settings stablisehd
-	 * for toolbar
+	 * create and return and {@link WebToggleButton} with all settings stablisehd for toolbar
 	 * 
 	 * @param action - action to set in the button
 	 * @return button ready to set as toolbar button
@@ -1134,6 +1155,14 @@ public class TUIUtils {
 		jb.setText(null);
 		jb.setPreferredWidth(46);
 		return jb;
+	}
+
+	public static WebToggleButton getWebToggleButtonForToolBar(Action action) {
+		overRideIcons(iconSize, Color.BLACK, action);
+		WebToggleButton button = new WebToggleButton(StyleId.buttonHover, action);
+		button.setText(null);
+		// button.setPreferredSize(new Dimension(46, 26));
+		return button;
 	}
 
 	/**
@@ -1180,18 +1209,15 @@ public class TUIUtils {
 	}
 
 	/**
-	 * Utility method for override icons propertis setted in the
-	 * {@link ApplicationAction} by bsf framework. This method
+	 * Utility method for override icons propertis setted in the {@link ApplicationAction} by bsf framework. This method
 	 * <ul>
-	 * <li>check the atributte <code>[action name].Action.iconFont</code>. if this
-	 * attribute is present, set the {@link Action#SMALL_ICON} property for the
-	 * action to this icon font
-	 * <li>if iconFont atributte is not present, take the icon from the
-	 * {@link Action#SMALL_ICON} and create an scaled instance using the size
-	 * parameter. Repaint the icon to the target color toColor argument
+	 * <li>check the atributte <code>[action name].Action.iconFont</code>. if this attribute is present, set the
+	 * {@link Action#SMALL_ICON} property for the action to this icon font
+	 * <li>if iconFont atributte is not present, take the icon from the {@link Action#SMALL_ICON} and create an scaled
+	 * instance using the size parameter. Repaint the icon to the target color toColor argument
 	 * </ul>
 	 * 
-	 * @param size    - new icon size
+	 * @param size - new icon size
 	 * @param toColor - new icon color
 	 * @param actions - list of actions to override
 	 * 
@@ -1219,10 +1245,9 @@ public class TUIUtils {
 	}
 
 	/**
-	 * establece dimenciones para los componentes. Si una instancia de
-	 * <code>JTextField</code> sobrepasa las 30 columnas, no se modifica el ancho ya
-	 * que se asume que se ve mejor. ademas, si componente de texto es menor a las 5
-	 * colummas, se redondea a 5
+	 * establece dimenciones para los componentes. Si una instancia de <code>JTextField</code> sobrepasa las 30
+	 * columnas, no se modifica el ancho ya que se asume que se ve mejor. ademas, si componente de texto es menor a las
+	 * 5 colummas, se redondea a 5
 	 * 
 	 * @param jtc - componente de texto
 	 * @param col - columnas
@@ -1252,16 +1277,16 @@ public class TUIUtils {
 	}
 
 	/**
-	 * Habilita/inhabilita los componentes cmps. Si alguno de estos es instancia de
-	 * <code>Box o JPanel</code> se realiza la operacion a los componentes que
-	 * contienen en forma recursiva.
+	 * Habilita/inhabilita los componentes cmps. Si alguno de estos es instancia de <code>Box o JPanel</code> se realiza
+	 * la operacion a los componentes que contienen en forma recursiva.
 	 * 
 	 * @param cmps - componentes a habilitar/inhabilitar
-	 * @param ena  - =true habilitar, inhabilitar si =false
+	 * @param ena - =true habilitar, inhabilitar si =false
 	 */
 	public static void setEnabled(Component cnt, boolean ena) {
-		Component[] cmps = (cnt instanceof Box || cnt instanceof JPanel) ? cmps = ((Container) cnt).getComponents()
-				: new Component[] { cnt };
+		Component[] cmps = (cnt instanceof Box || cnt instanceof JPanel)
+				? cmps = ((Container) cnt).getComponents()
+				: new Component[]{cnt};
 
 		for (int e = 0; e < cmps.length; e++) {
 			cmps[e].setEnabled(ena);
@@ -1275,13 +1300,12 @@ public class TUIUtils {
 	}
 
 	/**
-	 * set the tooltip for the component. If the component is a instance of
-	 * {@link ToolTipMethods}, the tooltip will be a {@link WebLookAndFeel} tooltip,
-	 * else the tooltip will be a standar swing tooltip
+	 * set the tooltip for the component. If the component is a instance of {@link ToolTipMethods}, the tooltip will be
+	 * a {@link WebLookAndFeel} tooltip, else the tooltip will be a standar swing tooltip
 	 * 
-	 * @param name - the name for the resorurce bundle. this method will be append
-	 *             <code>.tt</code> to this name to look for the tooltip
-	 * @param cmp  - the component
+	 * @param name - the name for the resorurce bundle. this method will be append <code>.tt</code> to this name to look
+	 *        for the tooltip
+	 * @param cmp - the component
 	 */
 	public static void setToolTip(String name, JComponent cmp) {
 		if (name != null) {
@@ -1300,8 +1324,8 @@ public class TUIUtils {
 	/**
 	 * build an Icon based on the unicode caracter.
 	 * 
-	 * @param text  - the icon caracter
-	 * @param font  - source font where the icon font is.
+	 * @param text - the icon caracter
+	 * @param font - source font where the icon font is.
 	 * @param color - foreground color for the image
 	 * 
 	 * @return image
@@ -1328,17 +1352,15 @@ public class TUIUtils {
 	}
 
 	/**
-	 * Construye y retorna <code>Box</code> con el par
-	 * <code>JLabel(lab) JComponent</code> alineados segun los argumentos de entrada
+	 * Construye y retorna <code>Box</code> con el par <code>JLabel(lab) JComponent</code> alineados segun los
+	 * argumentos de entrada
 	 * 
 	 * @param lab - id en ResourceBundle para <code>JLabel</code>
 	 * @parm jcomp - Componente de entrada
-	 * @parm req - <code>true</code> si el componente es un campo de entrada
-	 *       obligatoria
+	 * @parm req - <code>true</code> si el componente es un campo de entrada obligatoria
 	 * @parm ena - valor para metodo <code>setEnabled(ena)</code>
-	 * @parm glue - si =true coloca Box.createHorizontalGlue() entre la etiqueta y
-	 *       el componente para que ambos esten separados. de lo contrario, solo
-	 *       coloca Box.createHorizontalStrut(H_GAP)
+	 * @parm glue - si =true coloca Box.createHorizontalGlue() entre la etiqueta y el componente para que ambos esten
+	 *       separados. de lo contrario, solo coloca Box.createHorizontalStrut(H_GAP)
 	 */
 	private static Box coupleInBox(String lab, JComponent jcom, boolean req, boolean ena, boolean glue) {
 		Box b = Box.createHorizontalBox();

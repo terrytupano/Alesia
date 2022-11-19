@@ -7,6 +7,7 @@ import java.text.*;
 import javax.swing.*;
 import javax.swing.text.*;
 
+import com.alee.laf.*;
 import com.alee.laf.text.*;
 
 public class NumericTextField extends WebTextField implements NumericPlainDocument.InsertErrorListener {
@@ -94,10 +95,11 @@ public class NumericTextField extends WebTextField implements NumericPlainDocume
 
 	// Test code
 	public static void main(String[] args) {
-		try {
-			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
-		} catch (Exception evt) {
-		}
+		WebLookAndFeel.install();
+//		try {
+//			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+//		} catch (Exception evt) {
+//		}
 
 		DecimalFormat format = new DecimalFormat("#,###.###");
 		format.setGroupingUsed(true);

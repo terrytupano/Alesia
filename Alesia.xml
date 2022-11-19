@@ -1,7 +1,7 @@
 <SettingsGroup id="SG-1kf5Q-Vyt4N-mPWYz-TaZ1E-ID" name="Alesia">
   <table.currency type="ComboBoxState" selectedIndex="2"/>
   <entry key="Wenn Hero ist dran, pause" type="ButtonState" selected="false"/>
-  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="2"/>
+  <HeroPanel.tabbedPanel type="TabbedPaneState" selectedIndex="0"/>
   <tDistributionRange type="ComboBoxState" selectedIndex="4"/>
   <minForOportunity type="ComboBoxState" selectedIndex="2"/>
   <SensorPanel.imageType type="ComboBoxState" selectedIndex="0"/>
@@ -17,7 +17,7 @@
   <bluffUpperBound type="TextComponentState" text="200" caretPosition="3"/>
   <plugins.hero.utils.PreFlopCardsPanel.rangeComboBox type="ComboBoxState" selectedIndex="2"/>
   <postflopAmmoControl type="ComboBoxState" selectedIndex="0"/>
-  <SensorPanel.filter type="ComboBoxState" selectedIndex="11"/>
+  <SensorPanel.filter type="ComboBoxState" selectedIndex="13"/>
   <reconnBase type="TextComponentState" text="1" caretPosition="1"/>
   <bigBlindFactor type="ComboBoxState" selectedIndex="5"/>
   <actionComboBox type="ComboBoxState" selectedIndex="1"/>
@@ -51,7 +51,7 @@
       </DockableList>
     </root>
   </FlickaDockablePane>
-  <TWebFrame type="WindowState" location="10,65" size="620,900" state="0"/>
+  <TWebFrame type="WindowState" location="2050,132" size="572,900" state="0"/>
   <simHands type="TextComponentState" text="100000" caretPosition="6"/>
   <takeOpportunity type="ButtonState" selected="true"/>
   <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>

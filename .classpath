@@ -9,7 +9,7 @@
 	<classpathentry kind="lib" path="lib/activejdbc-2.3.1-j8.jar" sourcepath="C:/Users/terry/Documents/java/db/activejdbc/activejdbc-2.3.1-j8-sources.jar"/>
 	<classpathentry kind="lib" path="lib/activejdbc-instrumentation-2.3.jar"/>
 	<classpathentry kind="lib" path="lib/bsaf-1.9.1.jar" sourcepath="C:/Users/terry/Documents/java/jsr296/bsaf/bsaf-1.9.1-sources.jar"/>
-	<classpathentry kind="lib" path="lib/burlap-3.0.1-jar-with-dependencies.jar" sourcepath="C:/Users/terry/Documents/java/Apache/commons-math3-3.6.1/commons-math3-3.6.1-sources.jar"/>
+	<classpathentry kind="lib" path="lib/burlap-3.0.1-jar-with-dependencies.jar" sourcepath="C:/Users/terry/Documents/java/Apache/commons-lang3-3.11/commons-lang3-3.11-sources.jar"/>
 	<classpathentry kind="lib" path="lib/commons-beanutils-1.9.4.jar"/>
 	<classpathentry kind="lib" path="lib/commons-csv-1.4.jar"/>
 	<classpathentry kind="lib" path="lib/commons-lang3-3.11.jar"/>
@@ -55,9 +55,9 @@
 	<classpathentry kind="lib" path="lib/weblaf/slf4j-api-1.7.27.jar"/>
 	<classpathentry kind="lib" path="lib/weblaf/slf4j-simple-1.7.27.jar"/>
 	<classpathentry kind="lib" path="lib/weblaf/svg-salamander-1.1.2.2.jar"/>
-	<classpathentry kind="lib" path="lib/weblaf/weblaf-core-1.2.13.jar" sourcepath="C:/Users/terry/Documents/java/WebLaF/1.213/weblaf-core-1.2.13-sources.jar"/>
+	<classpathentry kind="lib" path="lib/weblaf/weblaf-core-1.2.13.jar" sourcepath="C:/Users/terry/Documents/java/WebLaF/1.29/weblaf-core-1.2.9-sources.jar"/>
 	<classpathentry kind="lib" path="lib/weblaf/weblaf-plugin-1.2.13.jar"/>
-	<classpathentry kind="lib" path="lib/weblaf/weblaf-ui-1.2.13.jar" sourcepath="C:/Users/terry/Documents/java/WebLaF/1.213/weblaf-ui-1.2.13-sources.jar"/>
+	<classpathentry kind="lib" path="lib/weblaf/weblaf-ui-1.2.13.jar" sourcepath="C:/Users/terry/Documents/java/WebLaF/1.29/weblaf-ui-1.2.9-sources.jar"/>
 	<classpathentry kind="lib" path="lib/weblaf/xstream-1.4.9.jar"/>
 	<classpathentry kind="output" path=""/>
 </classpath>

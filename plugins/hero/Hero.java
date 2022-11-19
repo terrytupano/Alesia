@@ -171,7 +171,6 @@ public class Hero extends TPlugin {
 		heroPanel = new HeroPanel();
 		Alesia.getInstance().getMainPanel().showPanel(heroPanel);
 		initTrooperEnvironment();
-		Alesia.getInstance().getMainFrame().setBounds(10, 65, 620, 900);
 	}
 
 	@org.jdesktop.application.Action
@@ -228,6 +227,7 @@ public class Hero extends TPlugin {
 			}
 		}
 
+		Alesia.getInstance().getMainFrame().setBounds(10, 65, 620, 900);
 		// TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 1200 1200 /mov " + monitorWith + 630 + " 65 ");
 		TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 1200 1200 /mov 630 65 ");
 		initTrooperEnvironment();

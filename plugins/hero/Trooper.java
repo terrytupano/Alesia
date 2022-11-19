@@ -540,12 +540,12 @@ public class Trooper extends Task {
 		// 211205: the first real simulation, analisis and result: 30%
 		int tau = trooperParameter.getInteger("tau");
 		preflopCardsModel.setPercentage(tau);
-
-		String txt = "Preflop Ok.";
+		String txt = "No strict Preflop.";
+		
 		boolean strictPreflop = trooperParameter.getBoolean("strictPreflop");
-
-		if (!preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
-			if (strictPreflop) {
+		if (strictPreflop) {
+			txt = "Preflop in Range";
+			if (!preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
 				setVariableAndLog(EXPLANATION, "Preflop not in range.");
 				return;
 			}
@@ -681,25 +681,25 @@ public class Trooper extends Task {
 				continue;
 			}
 
-			// if this sensor is active and wth the corresponding text, hero is in a all in situation. select "continue
-			// hand" allways (no cash out option) to maximize winnings
-			if (sensorsArray.isSensorEnabled("allin.name")) {
-				// sensorsArray.readSensors(true, sensorsArray.getSensors("allin.name"));
-				if (sensorsArray.getSensor("allin.name").getOCR().equals("fortgesetzt")) {
-					robotActuator.perform("allin.name");
-					setVariableAndLog(EXPLANATION, "Responding with Cotinue Hand in all-in.");
-					continue;
-				}
-			}
-
 			// Environment is in the gametable
 			if (isMyTurnToPlay()) {
-				// repeat the look of the sensors. this is because some times the capture is
-				// during a animation
-				// transition. to avoid error reading sensors, perform the lecture once more
-				// time. after the second
-				// lecutre, this return return normaly
+				// repeat the look of the sensors. this is because some times the capture is during a animation
+				// transition. to avoid error reading sensors, perform the lecture once more time. after the second
+				// lecutre, this return return normaly sensorsArray.read(SensorsArray.TYPE_ACTIONS);
+				Thread.sleep(100);
 				sensorsArray.read(SensorsArray.TYPE_ACTIONS);
+
+				// if this sensor is active and wth the corresponding text, hero is in a all in situation. select
+				// "continue hand" allways (no cash out option) to maximize winnings
+				if (sensorsArray.isSensorEnabled("allin.name")) {
+					// sensorsArray.readSensors(true, sensorsArray.getSensors("allin.name"));
+					if (sensorsArray.getSensor("allin.name").getOCR().equals("fortgesetzt")) {
+						robotActuator.perform("allin.name");
+						setVariableAndLog(EXPLANATION, "Responding with Cotinue Hand in all-in.");
+						continue;
+					}
+				}
+
 				sensorsArray.saveSample(handsCounter, pokerSimulator.street);
 				return true;
 			}
@@ -715,10 +715,10 @@ public class Trooper extends Task {
 			// the i.m back button is active (at this point, the Environment must only being
 			// showing the i.m back
 			// button)
-//			if (sensorsArray.isSensorEnabled("imBack")) {
-//				robotActuator.perform("imBack");
-//				continue;
-//			}
+			// if (sensorsArray.isSensorEnabled("imBack")) {
+			// robotActuator.perform("imBack");
+			// continue;
+			// }
 
 		}
 		setVariableAndLog(EXPLANATION, "Can.t reach the main gametable.");

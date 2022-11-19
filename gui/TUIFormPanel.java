@@ -11,6 +11,7 @@ import javax.swing.text.*;
 
 import org.javalite.activejdbc.*;
 
+import com.alee.extended.button.*;
 import com.alee.extended.date.*;
 import com.alee.extended.filechooser.*;
 import com.alee.managers.settings.*;
@@ -480,13 +481,20 @@ public class TUIFormPanel extends TUIPanel implements DocumentListener, FilesSel
 		// val = ((HTMLEditor) jcmp).getText();
 		// return val;
 		// }
+		
+		// boolean (WebSwitch)
+		if (jcmp instanceof WebSwitch) {
+			val = ((WebSwitch) jcmp).isSelected();
+			return val;
+		}
+
 		// boolean
 		if (jcmp instanceof JCheckBox) {
-			val = new Boolean(((JCheckBox) jcmp).isSelected());
+			val = ((JCheckBox) jcmp).isSelected();
 			return val;
 		}
 		if (jcmp instanceof JRadioButton) {
-			val = new Boolean(((JRadioButton) jcmp).isSelected());
+			val = ((JRadioButton) jcmp).isSelected();
 			return val;
 		}
 		// campo solo de salida. si el valor es instancia de LTEntry, retorna clave

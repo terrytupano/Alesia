@@ -328,9 +328,9 @@ public class TStringUtils {
 	 * Given a text and a wildcard pattern, implement wildcard pattern matching algorithm that finds if wildcard pattern
 	 * is matched with text. The matching should cover the entire text (not partial text).
 	 * <p>
-	 * The wildcard pattern can include the characters ‘?’ and ‘*’
-	 * <li>‘?’ – matches any single character
-	 * <li>‘*’ – Matches any sequence of characters (including the empty sequence)
+	 * The wildcard pattern can include the characters ï¿½?ï¿½ and ï¿½*ï¿½
+	 * <li>ï¿½?ï¿½ ï¿½ matches any single character
+	 * <li>ï¿½*ï¿½ ï¿½ Matches any sequence of characters (including the empty sequence)
 	 * <p>
 	 * examples
 	 * 
@@ -488,6 +488,19 @@ public class TStringUtils {
 		msg = msg.replace("<message>", message);
 		return msg;
 	}
+
+	public static String getConfigTitleText(String title, String message) {
+		Font f = HTMLUtils.getDefaultTextFont();
+		String name = f.getFamily();
+		int siz = f.getSize();
+		String patt = "<html><p style='font-family: " + name + "; font-size: " + (siz + 1) + "; color: "
+				+ ColorUtils.toHex(TUIUtils.ACCENT_COLOR) + ";'><b><title></b></p>" + "<p style='font-family: " + name
+				+ "; font-size: " + siz + ";'><message></html>";
+		String msg = patt.replace("<title>", title);
+		msg = msg.replace("<message>", message);
+		return msg;
+	}
+
 	/**
 	 * return an <code>ArrayList<ArrayList<String>></code> contain the list of element described in the propertifile
 	 * under the group parameter. the array of array contain ilve the values tabulator separated. the result is similar

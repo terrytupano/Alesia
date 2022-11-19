@@ -10,6 +10,7 @@ import javax.swing.border.*;
 import com.alee.laf.button.*;
 import com.alee.laf.panel.*;
 
+import core.*;
 import plugins.hero.UoAHandEval.*;
 
 /**
@@ -23,8 +24,7 @@ public class CardsPanel extends JPanel {
 
 	public CardsPanel(ActionListener listener) {
 		super();
-		SpinnerNumberModel model = new SpinnerNumberModel(15, 0, 100, 5);
-		this.tauSpinner = new JSpinner(model);
+		this.tauSpinner = TUIUtils.getWebSpinner("tau", 15, 0, 100, 5);
 		deckCards = new ArrayList<>();
 		boardCards = new ArrayList<>();
 		CardMouseListener mouseListener = new CardMouseListener();
