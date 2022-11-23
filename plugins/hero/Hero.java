@@ -168,9 +168,14 @@ public class Hero extends TPlugin {
 
 	@org.jdesktop.application.Action
 	public void heroPanel(ActionEvent event) {
-		heroPanel = new HeroPanel();
-		Alesia.getInstance().getMainPanel().showPanel(heroPanel);
-		initTrooperEnvironment();
+		// if there a instance of trooper current active, return the same pane
+		if (activeTrooper != null) {
+			Alesia.getInstance().getMainPanel().showPanel(heroPanel);
+		} else {
+			heroPanel = new HeroPanel();
+			Alesia.getInstance().getMainPanel().showPanel(heroPanel);
+			initTrooperEnvironment();
+		}
 	}
 
 	@org.jdesktop.application.Action

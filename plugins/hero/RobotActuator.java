@@ -11,9 +11,9 @@ import java.awt.event.*;
  * <p>
  * <code>action_name;action_name:c=#;action_name:k=text</code>
  * <li>action name alone - perform 1 click using the mouse over the action area.
- * <li>action_name,dc - Perform a double click over the action area
- * <li>action_name,c=# - Perform the number # of click over the action area
- * <li>action_name,k=text - write the text text. The area must be previously selected using double or simple click
+ * <li>action_name:dc - Perform a double click over the action area
+ * <li>action_name:c=# - Perform the number # of click over the action area
+ * <li>action_name:k=text - write the text text. The area must be previously selected using double or simple click
  * 
  * @author terry
  *
@@ -53,7 +53,7 @@ public class RobotActuator {
 	public void perform(String command) {
 		String[] commandss = command.split(";");
 		for (String cmd : commandss) {
-			String temp[] = cmd.split("[,]");
+			String temp[] = cmd.split(":");
 			String action = temp[0];
 			String actValue = temp.length > 1 ? temp[1] : "";
 

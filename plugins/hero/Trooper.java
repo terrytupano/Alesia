@@ -14,6 +14,7 @@ import core.*;
 import core.datasource.model.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.bots.*;
+import plugins.hero.ozsoft.gui.*;
 import plugins.hero.utils.*;
 
 /**
@@ -439,7 +440,7 @@ public class Trooper extends Task {
 				if (isInt)
 					tick = ((int) (tick / 10)) * 10;
 				String txt = isInt ? "" + (int) tick : twoDigitFormat.format(tick);
-				availableActions.add(new TrooperAction("raise", "raise.text,dc;raise.text,k=" + txt + ";raise", tick));
+				availableActions.add(new TrooperAction("raise", "raise.text:dc;raise.text:k=" + txt + ";raise", tick));
 			}
 		}
 	}
@@ -466,16 +467,22 @@ public class Trooper extends Task {
 		// double HS_n = (double) pokerSimulator.uoAEvaluation.get("HS_n");
 		double winProb = (double) pokerSimulator.uoAEvaluation.get("winProb");
 
-		// double alpha = trooperParameter.getInteger("alpha") / 100.0;
-		// double uppB = 3.0;
-		// double zeta = trooperParameter.getInteger("zeta") / 100.0;
-
-		// System.out.println(String.format("%1.3f + %1.3f + %1.3f = %1.3f", Ppot, NPot, RPot, Ppot + NPot + RPot));
-
-		double rPot = winProb * pokerSimulator.potValue;// * alpha;
-		double invPot = Ppot * (pokerSimulator.potValue - rPot);// * zeta;
-		// double future = Ppot * pokerSimulator.buyIn * (uppB - alpha);
-		double ammo = rPot + invPot;
+		boolean newFormula = trooperParameter.getBoolean("ammoFormula");
+		double ammo = 0;
+		if (newFormula) {
+			ammo = (winProb + Ppot) * pokerSimulator.potValue;
+			String txt1 = String.format("ammo =  (%1.3f + %1.3f) * %7.2f = %7.2f ", winProb, Ppot,
+					pokerSimulator.potValue, ammo);
+			setVariableAndLog(EXPLANATION, txt1);
+		} else {
+			double rPot = winProb * pokerSimulator.potValue;// * alpha;
+			double invPot = Ppot * (pokerSimulator.potValue - rPot);// * zeta;
+			// double future = Ppot * pokerSimulator.buyIn * (uppB - alpha);
+			ammo = rPot + invPot;
+			String txt1 = String.format("rPot %1.3f * %7.2f = %7.2f invPot %1.3f * %7.2f = %7.2f ammo = %7.2f", winProb,
+					pokerSimulator.potValue, rPot, Ppot, (pokerSimulator.potValue - rPot), invPot, ammo);
+			setVariableAndLog(EXPLANATION, txt1);
+		}
 
 		// no calculation for 0 values
 		if (ammo == 0 || winProb == 0) {
@@ -489,14 +496,9 @@ public class Trooper extends Task {
 			act.expectedValue = ev;
 		}
 		// remove all negative values
-		double beta = trooperParameter.getDouble("beta");
-		availableActions.removeIf(ta -> ta.expectedValue < beta);
+		// double beta = trooperParameter.getDouble("beta");
+		availableActions.removeIf(ta -> ta.expectedValue < 0);
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
-
-		String txt1 = String.format("rPot %1.3f * %7.2f = %7.2f invPot %1.3f * %7.2f = %7.2f ammo = %7.2f", winProb,
-				pokerSimulator.potValue, rPot, Ppot, (pokerSimulator.potValue - rPot), invPot, ammo);
-		setVariableAndLog(EXPLANATION, txt1);
-
 	}
 
 	/**
@@ -541,7 +543,7 @@ public class Trooper extends Task {
 		int tau = trooperParameter.getInteger("tau");
 		preflopCardsModel.setPercentage(tau);
 		String txt = "No strict Preflop.";
-		
+
 		boolean strictPreflop = trooperParameter.getBoolean("strictPreflop");
 		if (strictPreflop) {
 			txt = "Preflop in Range";
