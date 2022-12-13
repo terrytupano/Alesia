@@ -43,8 +43,8 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		addInputComponent(TUIUtils.getWebSwitch("ammoFormula", model.getBoolean("ammoFormula")));
 		addInputComponent(TUIUtils.getNumericTextField("phi", model, columns), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("phi4", model, columns), false, true);
-		addInputComponent(TUIUtils.getNumericTextField("playTime", model, columns, "#.##"), false, true);
-		addInputComponent(TUIUtils.getNumericTextField("playUntil", model, columns, "#.##"), false, true);
+		addInputComponent(TUIUtils.getNumericTextField("playTime", model, columns), false, true);
+		addInputComponent(TUIUtils.getNumericTextField("playUntil", model, columns), false, true);
 
 		FormLayout layout = new FormLayout("fill:10dlu:grow");
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG);

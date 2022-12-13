@@ -45,6 +45,7 @@ public class Hero extends TPlugin {
 	public Hero() {
 		TActionsFactory.insertActions(this);
 		Alesia.getInstance().openDB("hero");
+		Locale.setDefault(Locale.ENGLISH);
 	}
 
 	public static Action getLoadAction() {
@@ -113,6 +114,8 @@ public class Hero extends TPlugin {
 		// at this point tesserac may detected the correct decimal separato o maybe not.
 		srcocd = srcocd.replace(decSep, '.');
 
+		// correction. at this poit if tesserac make a mistake in the reading the variable contain a extreme large ammount. sucho ammount is correct ammount 
+		
 		// // use currency simbol as marker. when the currency simbol is present, assume 2 decimal digits for all
 		// // numbers
 		// if (!"".equals(currencySymbol)) {
@@ -169,7 +172,7 @@ public class Hero extends TPlugin {
 	@org.jdesktop.application.Action
 	public void heroPanel(ActionEvent event) {
 		// if there a instance of trooper current active, return the same pane
-		if (activeTrooper != null) {
+		if (activeTrooper != null && activeTrooper.isStarted()) {
 			Alesia.getInstance().getMainPanel().showPanel(heroPanel);
 		} else {
 			heroPanel = new HeroPanel();
@@ -332,7 +335,6 @@ public class Hero extends TPlugin {
 	public void stopTrooper(ActionEvent event) {
 		if (activeTrooper != null) {
 			activeTrooper.cancelTrooper(true);
-			activeTrooper = null;
 			initTrooperEnvironment();
 		}
 	}

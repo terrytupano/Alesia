@@ -14,7 +14,6 @@ import core.*;
 import core.datasource.model.*;
 import plugins.hero.ozsoft.*;
 import plugins.hero.ozsoft.bots.*;
-import plugins.hero.ozsoft.gui.*;
 import plugins.hero.utils.*;
 
 /**
@@ -237,9 +236,21 @@ public class Trooper extends Task {
 			subObtimalDist = "Oportunity";
 			loadActions(pokerSimulator.heroChips);
 
+			// 221201: due to high variance in getSuboptimalAction plus real money players are cautious about high pot
+			// increment and in order to stabilize winnings according to eV from opportunity card distribution.
+			// Oportunities is now allways all-in
+			if (!availableActions.isEmpty()) {
+				TrooperAction action = new TrooperAction("", -1.0);
+				for (TrooperAction a : availableActions) {
+					action = a.amount > action.amount ? a : action;
+				}
+				availableActions.clear();
+				availableActions.add(action);
+			}
+
 			// to this point, if availableactions are empty, means hero is responding a
 			// extreme hihgt raise. that mean meybe hero is weak. at this point reise mean
-			// all in. (call actions is not considerer because is not oportuniti)
+			// all in. (call actions is not considerer because is not oportunity)
 			if (availableActions.size() == 0 && pokerSimulator.raiseValue >= 0)
 				availableActions.add(new TrooperAction("raise", pokerSimulator.raiseValue));
 		}
@@ -475,12 +486,13 @@ public class Trooper extends Task {
 					pokerSimulator.potValue, ammo);
 			setVariableAndLog(EXPLANATION, txt1);
 		} else {
-			double rPot = winProb * pokerSimulator.potValue;// * alpha;
-			double invPot = Ppot * (pokerSimulator.potValue - rPot);// * zeta;
-			// double future = Ppot * pokerSimulator.buyIn * (uppB - alpha);
+			double rPot = winProb * pokerSimulator.potValue;
+			double invPot = Ppot * (pokerSimulator.potValue - rPot);
 			ammo = rPot + invPot;
-			String txt1 = String.format("rPot %1.3f * %7.2f = %7.2f invPot %1.3f * %7.2f = %7.2f ammo = %7.2f", winProb,
-					pokerSimulator.potValue, rPot, Ppot, (pokerSimulator.potValue - rPot), invPot, ammo);
+			String txt1 = String.format("ammo = (%1.3f * %7.2f) + (%1.3f * %7.2f) = %7.2f", winProb,
+					pokerSimulator.potValue, Ppot, (pokerSimulator.potValue - rPot), ammo);
+			// String txt1 = String.format("(%1.3f * %7.2f) = %7.2f, (%1.3f * %7.2f) = %7.2f ammo = %7.2f", winProb,
+			// pokerSimulator.potValue, rPot, Ppot, (pokerSimulator.potValue - rPot), invPot, ammo);
 			setVariableAndLog(EXPLANATION, txt1);
 		}
 
@@ -553,9 +565,9 @@ public class Trooper extends Task {
 			}
 		}
 
-		double ev = preflopCardsModel.getEV(pokerSimulator.holeCards);
+		double nEv = preflopCardsModel.getNormalizedEV(pokerSimulator.holeCards);
 		if (maxRekonAmmo == -1) {
-			maxRekonAmmo = base + (band * ev);
+			maxRekonAmmo = base + (band * nEv);
 		}
 
 		double call = pokerSimulator.callValue;
@@ -583,7 +595,7 @@ public class Trooper extends Task {
 			return;
 		}
 
-		String txt1 = String.format(txt + " %7.2f = %7.2f + %7.2f * %1.3f", maxRekonAmmo, base, band, ev);
+		String txt1 = String.format(txt + " %7.2f + (%7.2f * %1.3f) = %7.2f", base, band, nEv, maxRekonAmmo);
 		setVariableAndLog(EXPLANATION, txt1);
 	}
 
