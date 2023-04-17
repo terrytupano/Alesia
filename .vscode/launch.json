@@ -1,0 +1,85 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "HelloGridWorld",
+            "request": "launch",
+            "mainClass": "burlap.HelloGridWorld",
+            "projectName": "Alesia"
+        },
+        {
+            "type": "java",
+            "name": "PlotTest",
+            "request": "launch",
+            "mainClass": "burlap.PlotTest",
+            "projectName": "Alesia"
+        },
+        {
+            "type": "java",
+            "name": "ExampleGridWorld",
+            "request": "launch",
+            "mainClass": "burlap.part3.ExampleGridWorld",
+            "projectName": "Alesia"
+        },
+        {
+            "type": "java",
+            "name": "BasicBehavior",
+            "request": "launch",
+            "mainClass": "burlap.part4.BasicBehavior",
+            "projectName": "Alesia"
+        },
+        {
+            "type": "java",
+            "name": "Alesia",
+            "request": "launch",
+            "mainClass": "core.Alesia",
+            "projectName": "Alesia",
+            "preLaunchTask": "Run instrumentation"
+        },
+        {
+            "type": "java",
+            "name": "NumericTextField",
+            "request": "launch",
+            "mainClass": "gui.NumericTextField",
+            "projectName": "Alesia"
+        },
+        {
+            "type": "java",
+            "name": "UIManagerDefaults",
+            "request": "launch",
+            "mainClass": "gui.UIManagerDefaults",
+            "projectName": "Alesia"
+        },
+        {
+            "type": "java",
+            "name": "Frame1",
+            "request": "launch",
+            "mainClass": "gui.table.Frame1",
+            "projectName": "Alesia"
+        },
+        {
+            "type": "java",
+            "name": "LineChartDemo8",
+            "request": "launch",
+            "mainClass": "hero.LineChartDemo8",
+            "projectName": "Alesia"
+        },
+        {
+            "type": "java",
+            "name": "UoAHandEvaluator",
+            "request": "launch",
+            "mainClass": "hero.UoAHandEval.UoAHandEvaluator",
+            "projectName": "Alesia"
+        }
+    ]
+}

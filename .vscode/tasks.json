@@ -1,0 +1,15 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run instrumentation",
+            "type": "shell",
+            // "command": "mvn org.javalite:activejdbc-instrumentation:2.0:instrument----------"
+            // "command": "/lib/instrumentation.bat",
+            "command": "cmd.exe /c '/lib/instrumentation.bat'"
+
+        }
+    ]
+  }

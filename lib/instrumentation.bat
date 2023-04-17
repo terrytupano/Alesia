@@ -1,6 +1,6 @@
 @echo off
 
-set CLASSPATH=..
+set CLASSPATH=../bin
 rem set CLASSPATH=%CLASSPATH%;core/datasource/model
 set CLASSPATH=%CLASSPATH%;activejdbc-2.3.1-j8.jar
 set CLASSPATH=%CLASSPATH%;jackson-annotations-2.9.0.jar
@@ -13,4 +13,4 @@ set CLASSPATH=%CLASSPATH%;slf4j-api-1.7.25.jar
 set CLASSPATH=%CLASSPATH%;slf4j-simple-1.7.25.jar
 set CLASSPATH=%CLASSPATH%;mysql-connector-java-8.0.20.jar
 
-java -classpath %CLASSPATH% -DoutputDirectory=.. org.javalite.instrumentation.Main
+java -classpath %CLASSPATH% -DoutputDirectory=../bin org.javalite.instrumentation.Main

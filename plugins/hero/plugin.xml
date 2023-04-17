@@ -1,9 +1,0 @@
-<PluginInformation>
-    <id>hero</id>
-    <title>Hero</title>
-    <description>Poker player based on MoP ideas</description>
-    <version major="1" minor="0" />
-    <disableable>true</disableable>
-    <mainClass>plugins.hero.Hero</mainClass>
-	<type>leftPanelUI</type>
-</PluginInformation>
