@@ -1,8 +1,10 @@
 package core;
 
 import java.awt.*;
+import java.io.*;
 import java.text.*;
 
+import javax.sound.sampled.*;
 import javax.swing.*;
 
 import com.jgoodies.validation.*;
@@ -18,13 +20,19 @@ public class TValidationMessage implements ValidationMessage {
 	public static final int A_WHILE = 10000;
 	public static final int FOR_EVER = 999000;
 
-	private Color color;
+	private Color color, iconColor;
 	private Severity severity;
 	private String message;
-	private Icon icon;
+	private char icon;
 	private int miliSeconds;
 
+	// private static final AudioClip newMsg = Applet.newAudioClip(TResources.getFile("newMsg.wav").toURL());
+	// private static final AudioClip errMsg = Applet.newAudioClip(TResources.getFile("errMsg.wav").toURL());
+	private static final File newMsg = TResources.getFile("newMsg.wav");
+	private static final File errMsg = TResources.getFile("errMsg.wav");
+
 	public TValidationMessage(String messageId) {
+
 		String[] a_m = TStringUtils.getString(messageId).split(";");
 		if (a_m.length < 2) {
 			throw new IllegalArgumentException("Error trying get exception ID " + messageId);
@@ -35,25 +43,29 @@ public class TValidationMessage implements ValidationMessage {
 			this.color = ACTION_COLOR;
 			this.miliSeconds = FOR_EVER;
 			severity = Severity.INFO;
-			this.icon = TUIUtils.getFontIcon('\ue87f', 14, ACTION_COLOR.darker());
+			icon = '\ue87f';
+			iconColor = color.darker();
 		}
 		if (a_m[0].equals("e")) {
 			this.color = ERROR_COLOR;
 			this.miliSeconds = FOR_EVER;
 			severity = Severity.ERROR;
-			this.icon = TUIUtils.getFontIcon('\ue001', 14, ERROR_COLOR.darker());
+			icon = '\ue001';
+			iconColor = color.darker();
 		}
 		if (a_m[0].equals("i")) {
 			this.color = INFORMATION_COLOR;
 			this.miliSeconds = SHORT;
 			severity = Severity.OK;
-			this.icon = TUIUtils.getFontIcon('\ue88e', 14, INFORMATION_COLOR.darker());
+			icon = '\ue88e';
+			iconColor = color.darker();
 		}
 		if (a_m[0].equals("w")) {
 			this.color = WARNING_COLOR;
 			this.miliSeconds = A_WHILE;
 			severity = Severity.WARNING;
-			this.icon = TUIUtils.getFontIcon('\ue8b2', 14, WARNING_COLOR.darker());
+			icon = '\ue8b2';
+			iconColor = color.darker();
 		}
 	}
 
@@ -76,11 +88,15 @@ public class TValidationMessage implements ValidationMessage {
 	public Severity severity() {
 		return severity;
 	}
-	
+
 	public Icon getIcon() {
-		return icon;
+		return getIcon(14);
 	}
-	
+
+	public Icon getIcon(int size) {
+		return TUIUtils.getFontIcon(icon, size, iconColor);
+	}
+
 	/**
 	 * Retorna el color asociado al tipo de excepcion
 	 * 
@@ -96,5 +112,20 @@ public class TValidationMessage implements ValidationMessage {
 	 */
 	public int getMiliSeconds() {
 		return miliSeconds;
+	}
+
+	public Severity getSeverity() {
+		return severity;
+	}
+
+	public void playSound() {
+		try {
+			File clipFile = (getSeverity() == Severity.INFO || getSeverity() == Severity.OK) ? newMsg : errMsg;
+			Clip clip = AudioSystem.getClip();
+			clip.open(AudioSystem.getAudioInputStream(clipFile));
+			clip.start();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

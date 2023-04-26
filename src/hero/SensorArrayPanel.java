@@ -49,7 +49,7 @@ public class SensorArrayPanel extends TUIPanel {
 		imageTypeComboBox.addActionListener(evt -> filterSensors());
 
 		// screen shots images
-		List<File> files = FileUtils.findFilesRecursively(Hero.SCREEN_SHOTS_FOLDER,
+		List<File> files = FileUtils.findFilesRecursively(Constants.SCREEN_SHOTS_FOLDER,
 				f -> f.getName().endsWith(".png"));
 		List<TEntry<File, String>> names = new ArrayList<>();
 		files.forEach(f -> names.add(new TEntry<>(f, f.getName().substring(0, f.getName().length() - 4))));

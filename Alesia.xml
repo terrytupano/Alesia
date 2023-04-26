@@ -18,7 +18,7 @@
   <bluffUpperBound type="TextComponentState" text="200" caretPosition="3"/>
   <plugins.hero.utils.PreFlopCardsPanel.rangeComboBox type="ComboBoxState" selectedIndex="2"/>
   <postflopAmmoControl type="ComboBoxState" selectedIndex="0"/>
-  <SensorPanel.filter type="ComboBoxState" selectedIndex="13"/>
+  <SensorPanel.filter type="ComboBoxState" selectedIndex="0"/>
   <reconnBase type="TextComponentState" text="1" caretPosition="1"/>
   <bigBlindFactor type="ComboBoxState" selectedIndex="5"/>
   <actionComboBox type="ComboBoxState" selectedIndex="1"/>
@@ -52,7 +52,7 @@
       </DockableList>
     </root>
   </FlickaDockablePane>
-  <TWebFrame type="WindowState" location="1989,48" size="593,892" state="0"/>
+  <TWebFrame type="WindowState" location="1978,35" size="560,839" state="0"/>
   <simHands type="TextComponentState" text="100000" caretPosition="6"/>
   <takeOpportunity type="ButtonState" selected="true"/>
   <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>

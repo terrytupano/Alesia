@@ -6,6 +6,6 @@ import com.alee.managers.style.*;
 public final class TSkin extends XmlSkin {
 
 	public TSkin() {
-		super(TResources.getFile("/core/resources/skin.xml"));
+		super(TResources.getFileResource("/core/resources/skin.xml"));
 	}
 }

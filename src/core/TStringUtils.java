@@ -35,7 +35,7 @@ public class TStringUtils {
 	private static SimpleDateFormat dateFormat = new SimpleDateFormat();
 	private static Random random = new Random();
 	/**
-	 * contains all the .propertie files. (Alesia core) and detected plugins.
+	 * contains all the .propertie files.
 	 */
 	private static Properties allProperties = new Properties();
 	// private static ArrayList<Properties> properties = new ArrayList<>();
@@ -418,11 +418,11 @@ public class TStringUtils {
 		Font f = HTMLUtils.getDefaultTextFont();
 		String name = f.getFamily();
 		int siz = f.getSize();
-		String patt = "<html><p style='font-family: " + name + "; font-size: 15; color: "
+		String patt = "<html><p style='font-family: " + name + "; font-size: 13; font-weight: bold; color: "
 				+ ColorUtils.toHex(TUIUtils.ACCENT_COLOR) + ";'><title></p>" + "<p style='font-family: " + name
 				+ "; font-size: " + siz + ";'><message></html>";
 		String msg = patt.replace("<title>", title);
-		msg = msg.replace("<message>", message);
+		msg = msg.replace("<message>", message == null ? "" : message);
 		return msg;
 	}
 

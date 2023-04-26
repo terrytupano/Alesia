@@ -15,7 +15,7 @@ import hero.ozsoft.*;
 import hero.ozsoft.bots.*;
 
 /**
- * this class represent the core of al hero plugins. As a core class, this class dependes of anothers classes in order
+ * this class represent the core of  hero. As a core class, this class dependes of anothers classes in order
  * to build a useful player agent. the followin is a list of class from where the information is retrived, and the
  * actions are performed.
  * <ul>

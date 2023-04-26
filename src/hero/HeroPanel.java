@@ -31,7 +31,7 @@ public class HeroPanel extends TUIFormPanel {
 	private TrooperPanel trooperPanel;
 	private SensorArrayPanel sensorArrayPanel;
 	private WebPanel pockerSimulatorPanel;
-	private WebTabbedPane wtp;
+	private WebTabbedPane webTabbedPane;
 
 	public HeroPanel() {
 		this.sensorArrayPanel = new SensorArrayPanel();
@@ -42,12 +42,12 @@ public class HeroPanel extends TUIFormPanel {
 		params.setLayout(new VerticalFlowLayout(true, false));
 		params.add(trooperPanel);
 		this.pockerSimulatorPanel = new WebPanel(new BorderLayout());
-		wtp = new WebTabbedPane();
-		wtp.add(params, "Trooper parameters");
-		wtp.add(sensorArrayPanel, "Sensor Array");
-		wtp.add(pockerSimulatorPanel, "Pocker Simulator");
-		wtp.add(new ConsolePanel(Hero.heroLogger), "Log console");
-		wtp.registerSettings(new Configuration<TabbedPaneState>("HeroPanel.tabbedPanel"));
+		webTabbedPane = new WebTabbedPane();
+		webTabbedPane.add(params, "Trooper parameters");
+		webTabbedPane.add(sensorArrayPanel, "Sensor Array");
+		webTabbedPane.add(pockerSimulatorPanel, "Pocker Simulator");
+		webTabbedPane.add(new ConsolePanel(Hero.heroLogger), "Log console");
+		webTabbedPane.registerSettings(new Configuration<TabbedPaneState>("HeroPanel.tabbedPanel"));
 
 		WebToggleButton play = TUIUtils.getWebToggleButton(TActionsFactory.getAction("runTrooper"));
 		WebToggleButton test = TUIUtils.getWebToggleButton(TActionsFactory.getAction("testTrooper"));
@@ -64,7 +64,7 @@ public class HeroPanel extends TUIFormPanel {
 		});
 
 		getToolBar().add(pane);
-		setBodyComponent(wtp);
+		setBodyComponent(webTabbedPane);
 	}
 
 	/**

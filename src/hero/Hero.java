@@ -35,11 +35,6 @@ import net.sourceforge.tess4j.*;
 
 public class Hero {
 
-	public static final String HERO_RESOURCES = TResources.USER_DIR + "/bin/hero/resources";
-	public static final String PPT_FILE = HERO_RESOURCES + "/ps-10-win11.ppt";
-	public static final String SCREEN_SHOTS_FOLDER = TResources.USER_DIR + "/screenShots/";
-	public static final String TESSDATA = HERO_RESOURCES + "/tessdata/";
-
 	private static Trooper activeTrooper;
 	protected static Logger heroLogger = Logger.getLogger("Hero");
 	private static HeroPanel heroPanel;
@@ -82,7 +77,7 @@ public class Hero {
 		// TODO: no visible performance improve by setting every sensor with his own
 		// teseract instance
 		Tesseract iTesseract = new Tesseract(); // JNA Interface Mapping
-		iTesseract.setDatapath(TESSDATA); // path to tessdata directory
+		iTesseract.setDatapath(Constants.TESSDATA); // path to tessdata directory
 
 		// DON:T SET THE PAGEMODE VAR: THIS DESTROY THE ACURACY OF THE OCR OPERATION. i
 		// don.t know why but it is
@@ -97,12 +92,12 @@ public class Hero {
 	}
 
 	/**
-	 * central parser from pokerstar localed formatet number ($12,12) to parseable string to double
+	 * central parser from pokerstar located formatet number ($12,12) to parseable string to double
 	 * <p>
 	 * NOTE this method is called from {@link ScreenSensor} instances in order to correct the ocr read
 	 * 
 	 * @param numer - locale numer
-	 * @param currencySymbol - current simbol "" if not currency simbol is present
+	 * @param currencySymbol - current symbol "" if not currency symbol is present
 	 * @return double string
 	 */
 	public static String parseNummer(String numer, String currencySymbol) {
@@ -110,7 +105,7 @@ public class Hero {
 
 		String srcocd = numer.replaceAll("[^" + currencySymbol + decSep + "1234567890]", "");
 
-		// at this point the var mus contain the currency simbol as first caracter. in case of error, the first
+		// at this point the var mus contain the currency symbol as first caracter. in case of error, the first
 		// caracter maybe is a number. as a fail safe, remove allways the first caracter.
 		if (!"".equals(currencySymbol) && srcocd.length() > 1)
 			srcocd = srcocd.substring(1).trim();
@@ -119,9 +114,9 @@ public class Hero {
 		srcocd = srcocd.replace(decSep, '.');
 
 		// correction. at this poit if tesserac make a mistake in the reading the variable contain a extreme large
-		// ammount. sucho ammount is correct ammount
+		// amount. sucho amount is correct amount
 
-		// // use currency simbol as marker. when the currency simbol is present, assume 2 decimal digits for all
+		// // use currency symbol as marker. when the currency symbol is present, assume 2 decimal digits for all
 		// // numbers
 		// if (!"".equals(currencySymbol)) {
 		// int len = srcocd.length();
@@ -210,7 +205,7 @@ public class Hero {
 					JOptionPane.ERROR_MESSAGE);
 			WebToggleButton tb = (WebToggleButton) TActionsFactory.getAbstractButton(event);
 			tb.setSelected(false);
-			// return null;
+			 return null;
 		}
 
 		// overrride trooper table parameters
@@ -220,12 +215,12 @@ public class Hero {
 		for (String word : words) {
 			if (TStringUtils.wildCardMacher(word, "*/*")) {
 
-				// is there a currency simbol?
+				// is there a currency symbol?
 				char ch = word.charAt(0);
 				if (!Character.isDigit(ch))
 					cs = String.valueOf(ch);
 
-				// remove currency simbol and split
+				// remove currency symbol and split
 				String[] sb_bb = word.split("/");
 				double sb = Double.parseDouble(Hero.parseNummer(sb_bb[0], cs));
 				double bb = Double.parseDouble(Hero.parseNummer(sb_bb[1], cs));
@@ -286,7 +281,7 @@ public class Hero {
 	public Task startSimulation(ActionEvent event) {
 		try {
 			// check max task
-			if (!Alesia.getInstance().taskManager.suporMoreTask()) {
+			if (Alesia.getInstance().taskManager.suporMoreTask()) {
 				Alesia.showNotification("hero.msg03", "");
 				return null;
 			}
@@ -312,10 +307,10 @@ public class Hero {
 				if (tparm.getBoolean("isActive")) {
 					String tName = tparm.getString("trooper");
 					String bCls = tparm.getString("client");
-					Class<?> cls = Class.forName("plugins.hero.ozsoft.bots." + bCls);
+					Class<?> cls = Class.forName("hero.ozsoft.bots." + bCls);
 					// Constructor cons = cls.getConstructor(String.class);
 					// Bot bot = (Bot) cons.newInstance(name);
-					// @SuppressWarnings("deprecation")
+					 @SuppressWarnings("deprecation")
 					Bot bot = (Bot) cls.newInstance();
 					Trooper t = bot.getSimulationTrooper(simulationTable, tparm);
 					Player p = new Player(tName, buy, bot, tparm.getInteger("chair"));

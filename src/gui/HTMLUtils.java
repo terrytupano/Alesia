@@ -45,7 +45,7 @@ public class HTMLUtils {
 
 	private static String loadDefaultRule(Font font) {
 		if (cachedDefaultRule == null) {
-			cachedDefaultRule = FileUtils.readToString(TResources.getFile("Default.css"));
+			cachedDefaultRule = FileUtils.readToString(TResources.getFileResource("Default.css"));
 			cachedDefaultRule = cachedDefaultRule.replace("<default.font-family>", font.getFontName());
 			cachedDefaultRule = cachedDefaultRule.replace("<default.font-size>", "" + font.getSize());
 		}

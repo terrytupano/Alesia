@@ -5,54 +5,52 @@ import java.awt.event.*;
 import java.util.List;
 
 import javax.swing.*;
+import javax.swing.border.*;
 
 import com.alee.extended.layout.*;
 import com.alee.extended.magnifier.*;
-import com.alee.laf.button.*;
-import com.alee.laf.label.*;
 import com.alee.laf.panel.*;
-import com.alee.managers.style.*;
 import com.alee.utils.*;
 
 import core.*;
+import gui.jgoodies.*;
 
 /**
- * this home panel is divide en 2 main grups.
+ * main panel of Alesia. contain all available actions + tools and about links
  * 
- * Center - cotain all plugin detected in plugin folder richt - contain adtional links
- * 
- * @author terry
+ * @author Terry
  *
  */
 public class HomePanel extends WebPanel {
 
 	private ActionMap myMap;
-	private WebPanel centerPanel, eastPanel;
+	private WebPanel centerPanel, southPanel;
 	private MagnifierGlass magnifier;
-
+	
 	public HomePanel() {
-		super(new BorderLayout());
+		super(new BorderLayout(TUIUtils.STANDAR_GAP,TUIUtils.STANDAR_GAP));
 		magnifier = new MagnifierGlass();
 		centerPanel = new WebPanel();
-		centerPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 4, 4));
+		TUIUtils.setEmptyBorder(this);
+		centerPanel.setLayout(new VerticalFlowLayout(TUIUtils.STANDAR_GAP,TUIUtils.STANDAR_GAP,true,  false));
 
-		// importants links
-		eastPanel = new WebPanel(new VerticalFlowLayout());
-
-		WebLabel ol = new WebLabel();
-		ol.setBoldFont();
-		eastPanel.add(ol);
+		// splash component
+		JComponent splash = Alesia.getInstance().mainFrame.getSplash();
+		
+		// footer actions
+		southPanel = new WebPanel();
+		southPanel.setLayout(new VerticalFlowLayout(TUIUtils.STANDAR_GAP,TUIUtils.STANDAR_GAP,true,  false));
 		this.myMap = Alesia.getInstance().getContext().getActionMap(this);
 		for (Object key : myMap.keys()) {
-			Action act = myMap.get(key);
-			// TUIUtils.overRideIcons(12, Color.DARK_GRAY, act);
-			WebButton btn = new WebButton(StyleId.buttonHover, act);
-			btn.setHorizontalAlignment(WebButton.LEFT);
-			eastPanel.add(btn);
+			Action action = myMap.get(key);
+			ListItem item = new ListItem();
+			item.setSmallAction(action);
+			southPanel.add(item);
 		}
 
+		add(splash, BorderLayout.NORTH);
 		add(centerPanel, BorderLayout.CENTER);
-		add(eastPanel, BorderLayout.EAST);
+		add(southPanel, BorderLayout.SOUTH);
 	}
 
 	/**
@@ -63,7 +61,10 @@ public class HomePanel extends WebPanel {
 	public void setActions(List<Action> actions) {
 		centerPanel.removeAll();
 		for (Action action : actions) {
-			centerPanel.add(TDockingContainer.getMosaicWebButton(action));
+			ListItem item = new ListItem();
+			item.setAction(action);
+			centerPanel.add(item);
+//			centerPanel.add(TUIUtils.getMosaicWebButton(action));
 		}
 		SwingUtils.equalizeComponentsSize(centerPanel.getComponents());
 	}

@@ -7,19 +7,20 @@ import javax.swing.*;
 import javax.swing.border.*;
 
 import com.alee.laf.label.*;
+import com.alee.laf.panel.*;
 import com.jgoodies.common.base.*;
 import com.jgoodies.common.display.*;
 import com.jgoodies.forms.builder.*;
 import com.jgoodies.forms.layout.*;
 
 /**
- * class for display a generic item. this class came in 3 flavors. the construccion of this component dont build the
- * panel. clases must call {@link #buildView()} before use or present this class
+ * class for display a generic item. this class came in 3 flavors. the construction of this component don't build the
+ * panel. classes must call {@link #buildView()} before use or present this class
  * 
  * @author terry
  *
  */
-public class ListItemView extends JPanel {
+public class ListItemView extends WebPanel {
 
 	public static Color ERROR = Color.RED;
 	public static Color NONE = Color.BLACK;
@@ -49,6 +50,11 @@ public class ListItemView extends JPanel {
 		this(SINGLE_LINE);
 	}
 
+	
+	public void setFlavor(String flavor) {
+		this.flavor = flavor;
+	}
+	
 	public ListItemView(String flavor) {
 		this.flavor = flavor;
 		graphicLabel = new WebLabel();
@@ -73,12 +79,12 @@ public class ListItemView extends JPanel {
 		setPrimaryFont(pf.deriveFont(si + 2f));
 		setOverlineFont(pf);
 		setSecondaryFont(pf);
-		setGraphicPadding(new Insets(0, 0, 0, 16));
+		setGraphicPadding(new Insets(2, 2, 2, 4));
 		graphicLabel.setVisible(false);
 		setMetaPadding(new Insets(4, 16, 0, 0));
 		metaLabel.setVisible(false);
 
-		setPadding(new Insets(4, 4, 4, 4));
+		setPadding(new Insets(8, 8, 8, 8));
 	}
 
 	private void buildDoubleLine() {

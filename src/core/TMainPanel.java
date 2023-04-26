@@ -1,4 +1,5 @@
 package core;
+
 /*******************************************************************************
  * Copyright (C) 2017 terry.
  * All rights reserved. This program and the accompanying materials
@@ -10,7 +11,6 @@ package core;
  *     terry - initial API and implementation
  ******************************************************************************/
 
-
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
@@ -18,7 +18,6 @@ import java.util.*;
 import java.util.List;
 
 import javax.swing.*;
-import javax.swing.Action;
 
 import org.jdesktop.application.*;
 
@@ -26,37 +25,45 @@ import com.alee.extended.statusbar.*;
 import com.alee.extended.transition.*;
 import com.alee.extended.transition.effects.*;
 import com.alee.extended.transition.effects.slide.*;
-import com.alee.laf.button.*;
+import com.alee.laf.grouping.*;
 import com.alee.laf.label.*;
 import com.alee.laf.panel.*;
 import com.alee.laf.toolbar.*;
-import com.alee.managers.style.*;
 import com.alee.utils.*;
 import com.jgoodies.common.base.*;
 
 import gui.*;
 
-public class TDockingContainer extends WebPanel {
+/**
+ * Contain the Toolbar, and the center panel where all component are displayed.
+ * this panel control the transitions between pages and control the navigations.
+ * 
+ * @author terry
+ *
+ */
+public class TMainPanel extends WebPanel {
 
 	private ComponentTransition transitionPanel;
 	private WebToolBar toolBar;
+	private GroupPane leftAndHomeGroup;
 	private SlideTransitionEffect effect;
 	private HomePanel homePanel;
 	private ApplicationAction home, previous;
-	private ActionMap myMap;
 	private int cmpCounter;
 	private List<JComponent> components;
 
-	public TDockingContainer() {
+	public TMainPanel() {
 		super(new BorderLayout());
-		this.myMap = Alesia.getInstance().getContext().getActionMap(this);
+		ActionMap actionMap = Alesia.getInstance().getContext().getActionMap(this);
 
 		// toolbar
-		this.previous = (ApplicationAction) myMap.get("previous");
-		this.home = (ApplicationAction) myMap.get("home");
-		this.toolBar = TUIUtils.getWebToolBar(previous, home);
+		this.previous = (ApplicationAction) actionMap.get("previous");
+		this.home = (ApplicationAction) actionMap.get("home");
+		this.toolBar = TUIUtils.getWebToolBar();
+		this.leftAndHomeGroup = TUIUtils.getGroupPane(previous, home);
+		toolBar.add(leftAndHomeGroup);
 
-		// staus bar
+		// Status bar
 		WebStatusBar statusBar = new WebStatusBar();
 		WebLabel pd = new WebLabel(TStringUtils.getAboutAppShort(), TResources.getSmallIcon("alpha.png"));
 		statusBar.add(pd);
@@ -88,42 +95,6 @@ public class TDockingContainer extends WebPanel {
 		add(statusBar, BorderLayout.SOUTH);
 		showPanel(homePanel, Direction.down);
 		syncNavActions();
-	}
-
-	public static ArrayList<WebButton> createNavButtons(Color toColor, String style, Font font, Action... actions) {
-		int size = 20;
-		ArrayList<WebButton> list = new ArrayList<>();
-		TUIUtils.overRideIcons(size, toColor, actions);
-		for (Action action : actions) {
-			WebButton wb = new WebButton(StyleId.of(style), action);
-			if (font != null) {
-				wb.setFont(font);
-			}
-			// TODO: incorporate security
-			list.add(wb);
-		}
-		return list;
-	}
-
-	/**
-	 * create and return a especial instace of {@link WebButton}
-	 * 
-	 * @param action - action
-	 * 
-	 * @return especial webbuton
-	 */
-	public static WebButton getMosaicWebButton(Action action) {
-		TUIUtils.overRideIcons(32, TUIUtils.ACCENT_COLOR, action);
-		WebButton btn = new WebButton(StyleId.buttonHover, action);
-		// btn.onMouseEnter(me -> btn.setBorder(new LineBorder(Color.BLUE));
-		String html = TStringUtils.getTitleText(action.getValue(javax.swing.Action.NAME).toString(),
-				action.getValue(javax.swing.Action.SHORT_DESCRIPTION).toString());
-		btn.setText(html);
-		btn.setIconTextGap(8);
-		btn.setVerticalAlignment(SwingConstants.TOP);
-		btn.setHorizontalAlignment(SwingConstants.LEFT);
-		// btn.setVerticalTextPosition(SwingConstants.TOP);
-		return btn;
 	}
 
 	/**
@@ -190,6 +161,17 @@ public class TDockingContainer extends WebPanel {
 		cmpCounter = components.size() - 1;
 		syncNavActions();
 
+		// remove the toolbar from the source and add to this component
+		if (newComponent instanceof TUIPanel) {
+			TUIPanel tuiPanel = (TUIPanel) newComponent;
+			if (tuiPanel.getToolBar().getComponentCount() > 0)
+				toolBar.addSeparator();
+			Component[] components = tuiPanel.getToolBar().getComponents();
+			for (Component component : components) {
+				toolBar.add(component);
+			}
+		}
+
 		// auto select listener for model select property
 		List<Container> cnts = SwingUtils.collectAllContainers(newComponent);
 		for (Container cnt : cnts) {
@@ -209,8 +191,8 @@ public class TDockingContainer extends WebPanel {
 	 * of the class pass as argument.
 	 * <p>
 	 * Use this class for example when an arbitrary action alter the internal
-	 * content of another class and you want
-	 * those class uptade their internal content data .
+	 * content of another class and you want those class uptade their internal
+	 * content data .
 	 * 
 	 * @param clsn - active instance to refresh
 	 */
@@ -225,6 +207,9 @@ public class TDockingContainer extends WebPanel {
 	}
 
 	private void syncNavActions() {
+		toolBar.removeAll();
+		toolBar.add(leftAndHomeGroup);
+		toolBar.repaint();
 		previous.setEnabled(components.size() > 1);
 		home.setEnabled(components.size() > 1);
 	}

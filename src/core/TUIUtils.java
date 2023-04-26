@@ -1,4 +1,5 @@
 package core;
+
 /*******************************************************************************
  * Copyright (C) 2017 terry.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,6 @@ package core;
  * Contributors:
  *     terry - initial API and implementation
  ******************************************************************************/
-
 
 import java.awt.*;
 import java.awt.event.*;
@@ -44,6 +44,7 @@ import com.alee.laf.*;
 import com.alee.laf.button.*;
 import com.alee.laf.checkbox.*;
 import com.alee.laf.combobox.*;
+import com.alee.laf.grouping.*;
 import com.alee.laf.label.*;
 import com.alee.laf.panel.*;
 import com.alee.laf.scroll.*;
@@ -55,8 +56,10 @@ import com.alee.managers.style.*;
 import com.alee.managers.tooltip.*;
 import com.alee.utils.*;
 import com.alee.utils.swing.*;
+import com.jgoodies.common.base.*;
 
 import gui.*;
+import gui.jgoodies.*;
 import gui.wlaf.*;
 
 /**
@@ -71,8 +74,12 @@ public class TUIUtils {
 	public static final int V_GAP = 4;
 	public static final Font H1_Font = UIManager.getFont("Label.font").deriveFont(20l);
 	public static final Font H2_Font = UIManager.getFont("Label.font").deriveFont(16l);
-	public static final Color ACCENT_COLOR = new Color(17, 48, 68);
-	public static final int iconSize = 20;
+//	public static final Color ACCENT_COLOR = Color.BLUE.darker();
+	public static final Color ACCENT_COLOR = new Color(63, 90, 116);
+	public static final int TOOL_BAR_ICON_SIZE = 20;
+	public static final int STANDAR_GAP = 10;
+	public static final Border STANDAR_EMPTY_BORDER = new EmptyBorder(TUIUtils.STANDAR_GAP, TUIUtils.STANDAR_GAP,
+			TUIUtils.STANDAR_GAP, TUIUtils.STANDAR_GAP);
 
 	/**
 	 * copiado de <code>Color.brighter()</code> pero con el factor modificado para
@@ -101,6 +108,21 @@ public class TUIUtils {
 				Math.min((int) (b / FACTOR), 255));
 	}
 
+	public static WebPanel getListItems(JComponent... components) {
+		WebPanel panel = new WebPanel();
+		setEmptyBorder(panel);
+		panel.setLayout(new VerticalFlowLayout(TUIUtils.STANDAR_GAP,TUIUtils.STANDAR_GAP,true,  false));
+
+		for (JComponent jComponent : components) {
+			String name = jComponent.getName();
+			Preconditions.checkNotNull(name, "The component hast no name.");
+			ListItem item = ListItem.getItemForField(name, jComponent);
+			panel.add(item, FormLayout.LINE);
+		}
+//		return new JScrollPane(panel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		return panel;
+	}
+
 	/**
 	 * draw a image icon form the icon from <code>Material Icons</code> font.
 	 * 
@@ -115,6 +137,81 @@ public class TUIUtils {
 		font = font.deriveFont(size);
 		String text = Character.toString(unicode);
 		return buildImage(text, font, color);
+	}
+
+	/**
+	 * build an Icon based on the unicode caracter.
+	 * 
+	 * @param text  - the icon caracter
+	 * @param font  - source font where the icon font is.
+	 * @param color - foreground color for the image
+	 * 
+	 * @return image
+	 */
+	private static BufferedImage buildImage(String text, Font font, Color color) {
+		JLabel label = new JLabel(text);
+		label.setForeground(color);
+		label.setFont(font);
+		Dimension dim = label.getPreferredSize();
+		int width = dim.width;
+		int height = dim.height;
+		// int width = dim.width + 1;
+		// int height = dim.height + 1;
+		label.setSize(width, height);
+		BufferedImage bufImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2d = bufImage.createGraphics();
+		// g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+		// RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		// g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
+		// RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+		label.print(g2d);
+		g2d.dispose();
+		return bufImage;
+	}
+
+	/**
+	 * Construye y retorna <code>Box</code> con el par
+	 * <code>JLabel(lab) JComponent</code> alineados segun los argumentos de entrada
+	 * 
+	 * @param lab - id en ResourceBundle para <code>JLabel</code>
+	 * @parm jcomp - Componente de entrada
+	 * @parm req - <code>true</code> si el componente es un campo de entrada
+	 *       obligatoria
+	 * @parm ena - valor para metodo <code>setEnabled(ena)</code>
+	 * @parm glue - si =true coloca Box.createHorizontalGlue() entre la etiqueta y
+	 *       el componente para que ambos esten separados. de lo contrario, solo
+	 *       coloca Box.createHorizontalStrut(H_GAP)
+	 */
+	private static Box coupleInBox(String lab, JComponent jcom, boolean req, boolean ena, boolean glue) {
+		Box b = Box.createHorizontalBox();
+		JLabel jl = getJLabel(lab, req, ena);
+		b.add(jl);
+		b.add(Box.createHorizontalStrut(H_GAP));
+		if (glue) {
+			b.add(Box.createHorizontalGlue());
+		}
+		jl.setEnabled(ena);
+		jcom.setEnabled(ena);
+		b.add(jcom);
+		if (!glue) {
+			b.add(Box.createHorizontalGlue());
+		}
+		return b;
+	}
+
+	public static ArrayList<WebButton> createNavButtons(Color toColor, String style, Font font, Action... actions) {
+		int size = 20;
+		ArrayList<WebButton> list = new ArrayList<>();
+		overRideIcons(size, toColor, actions);
+		for (Action action : actions) {
+			WebButton wb = new WebButton(StyleId.of(style), action);
+			if (font != null) {
+				wb.setFont(font);
+			}
+			// TODO: incorporate security
+			list.add(wb);
+		}
+		return list;
 	}
 
 	/**
@@ -177,14 +274,6 @@ public class TUIUtils {
 		return wi;
 	}
 
-	/**
-	 * retorna un <code>Box</code> con formato preestablecido para los componentes
-	 * que se encuentran en la parte
-	 * inferior de las ventanas de dialogo.
-	 * 
-	 * @param jc - Generalmente, un contenedor con los botones ya a�adidos
-	 * @return <code>Box</code> listo para adicionar a la parte inferirior
-	 */
 	public static Box getBoxForButtons(JComponent jc, boolean eb) {
 		Box b1 = Box.createVerticalBox();
 		b1.add(Box.createVerticalStrut(V_GAP));
@@ -202,6 +291,26 @@ public class TUIUtils {
 		CompoundBorder cb = new CompoundBorder(new EmptyBorder(2, 2, 2, 2), bg.getBorder());
 		bg.setBorder(cb);
 		return bg;
+	}
+
+	public static WebPanel getConfigLinePanel(String field, JComponent rightComponent) {
+		Border empty = new EmptyBorder(10, 10, 10, 10);
+		LineBorder line = new LineBorder(Color.LIGHT_GRAY);
+		CompoundBorder border = new CompoundBorder(line, empty);
+
+		WebPanel panel = new WebPanel(new BorderLayout(10, 10));
+		// Color color =UIManager.getColor("Panel.background");
+		// color = ColorUtils.intermediate(color, Color.WHITE, 0.5f);
+		Color color = ColorUtils.intermediate(panel.getBackground(), Color.WHITE, 0.7f);
+		// panel.setBorder(new WebBorder(10));
+		panel.setBorder(border);
+		panel.setBackground(color);
+		WebPanel panel2 = new WebPanel(new VerticalFlowLayout(VerticalFlowLayout.MIDDLE));
+		panel2.setBackground(color);
+		panel2.add(rightComponent);
+		panel.add(getTitleTextLabel(field), BorderLayout.CENTER);
+		panel.add(panel2, BorderLayout.EAST);
+		return panel;
 	}
 
 	/**
@@ -259,8 +368,7 @@ public class TUIUtils {
 	/**
 	 * coloca los componentes pasados como argumentos uno junto a oltro en un
 	 * <code>new JPanel(new FlowLayout(alg, H_GAP, 0))</code> (alineados hacia alg
-	 * con un espacio entre componentes de
-	 * H_GAP
+	 * con un espacio entre componentes de H_GAP
 	 * 
 	 * @param jcomps - componentes
 	 * @param alg    - alineacion de los componente. Puede ser cualquiera
@@ -278,8 +386,7 @@ public class TUIUtils {
 
 	/**
 	 * Retorna el par <code>JLabel(lab) JComponent</code> en un <code>Box</code> con
-	 * alineacion horizontal con ambos
-	 * componentes a los extremos del contenedor
+	 * alineacion horizontal con ambos componentes a los extremos del contenedor
 	 * 
 	 * @param lab  - id en ResourceBundle para <code>JLabel</code>
 	 * @param jcom - componente al que refiere la etiqueta lab
@@ -293,9 +400,8 @@ public class TUIUtils {
 
 	/**
 	 * Retorna el par <code>JLabel(lab) JComponent</code> en un <code>Box</code> con
-	 * alineacion horizontal pero con
-	 * <code>Box.CreateHorizontalGlue()</code> con ambos componentes hacia la
-	 * izquierda del contenedor
+	 * alineacion horizontal pero con <code>Box.CreateHorizontalGlue()</code> con
+	 * ambos componentes hacia la izquierda del contenedor
 	 * 
 	 * @param lab  - id en ResourceBundle para <code>JLabel</code>
 	 * @param jcom - componente al que refiere la etiqueta lab
@@ -309,8 +415,7 @@ public class TUIUtils {
 
 	/**
 	 * retorna los componentes pasados como argumentos en un contenedor, colocados
-	 * verticalmente y alineados segun el
-	 * parametro alg
+	 * verticalmente y alineados segun el parametro alg
 	 * 
 	 * @param jcomps - componentes
 	 * @param alg    - alineacion (de SwingConstants)
@@ -340,8 +445,7 @@ public class TUIUtils {
 
 	/**
 	 * retorna el par <code>JLabel(lab) JComponent</code> dentro de un
-	 * <code>Box</code> vertical alineados hacia la
-	 * izquierda.
+	 * <code>Box</code> vertical alineados hacia la izquierda.
 	 * 
 	 * @param lab  - id en ResourceBundle para <code>JLabel</code>
 	 * @param jcom - componente
@@ -364,8 +468,8 @@ public class TUIUtils {
 
 		/**
 		 * Box b2 = Box.createHorizontalBox(); b2.add(jcom);
-		 * b2.add(Box.createHorizontalGlue()); Box b =
-		 * Box.createVerticalBox(); b.add(b1); b.add(b2);
+		 * b2.add(Box.createHorizontalGlue()); Box b = Box.createVerticalBox();
+		 * b.add(b1); b.add(b2);
 		 */
 		return jp;// b;
 	}
@@ -401,8 +505,7 @@ public class TUIUtils {
 
 	/**
 	 * crea y retorna una instancia de <code>JEditorPane</code> con configuracion
-	 * estandar para presentacion de texto en
-	 * formato HTML
+	 * estandar para presentacion de texto en formato HTML
 	 * 
 	 * @param txt - texto a presentar en el componente
 	 * 
@@ -583,8 +686,7 @@ public class TUIUtils {
 
 	/**
 	 * return the ImageIcon <code>src</code> with a mark which is a scaled instance
-	 * of the icon file name
-	 * <code>mfn</code> draw over the source image.
+	 * of the icon file name <code>mfn</code> draw over the source image.
 	 * 
 	 * @param src - original imagen
 	 * @param mfn - icon file name used as mark
@@ -605,6 +707,27 @@ public class TUIUtils {
 		int vpos = v == SwingConstants.TOP ? 0 : size - ii.getIconHeight();
 		g2d.drawImage(ii.getImage(), hpos, vpos, null);
 		return new ImageIcon(bi);
+	}
+
+	/**
+	 * create and return a especial instace of {@link WebButton}
+	 * 
+	 * @param action - action
+	 * 
+	 * @return especial webbuton
+	 */
+	public static WebButton getMosaicWebButton(Action action) {
+		overRideIcons(32, ACCENT_COLOR, action);
+		WebButton btn = new WebButton(StyleId.buttonHover, action);
+		// btn.onMouseEnter(me -> btn.setBorder(new LineBorder(Color.BLUE));
+		String html = TStringUtils.getTitleText(action.getValue(javax.swing.Action.NAME).toString(),
+				action.getValue(javax.swing.Action.SHORT_DESCRIPTION).toString());
+		btn.setText(html);
+		btn.setIconTextGap(8);
+		btn.setVerticalAlignment(SwingConstants.TOP);
+		btn.setHorizontalAlignment(SwingConstants.LEFT);
+		// btn.setVerticalTextPosition(SwingConstants.TOP);
+		return btn;
 	}
 
 	public static NumericTextField getNumericTextField(String field, Model model, Map<String, ColumnMetadata> columns) {
@@ -636,13 +759,12 @@ public class TUIUtils {
 	}
 
 	public static Icon getSmallFontIcon(char unicode) {
-		return new ImageIcon(buildImage(unicode, iconSize, Color.BLACK));
+		return new ImageIcon(buildImage(unicode, TOOL_BAR_ICON_SIZE, Color.BLACK));
 	}
 
 	/**
 	 * create and return a {@link JScrollPane} setted with an instace of
-	 * {@link SmartScroller}. this is intendet for
-	 * console style componentes
+	 * {@link SmartScroller}. this is intendet for console style componentes
 	 * 
 	 * @see SmartScroller
 	 * @param component - component to scroll
@@ -708,6 +830,13 @@ public class TUIUtils {
 		return (int) bounds.getHeight();
 	}
 
+	static int getStringPixelWidth(String str, Font font) {
+		FontMetrics metrics = new FontMetrics(font) {
+		};
+		Rectangle2D bounds = metrics.getStringBounds(str, null);
+		return (int) bounds.getWidth();
+	}
+
 	/**
 	 * TODO: temp move to laf xml file
 	 * 
@@ -726,8 +855,7 @@ public class TUIUtils {
 	 * izquierda
 	 * 
 	 * 20161123.04:25 NAAAA GUEBONAAA DE VIEJOOOOO !!! ESTE METODO DEBE TENER +10
-	 * A�OS !!!! FUE DE LOS PRIMEROS PARA
-	 * CLIO
+	 * A�OS !!!! FUE DE LOS PRIMEROS PARA CLIO
 	 * 
 	 * @param idl - id para texto
 	 * @return componente
@@ -749,40 +877,20 @@ public class TUIUtils {
 		WebLabel tit = new WebLabel(StyleId.labelShadow, TStringUtils.getString(constID));
 		tit.changeFontSize(2);
 		WebLabel text = new WebLabel(TStringUtils.getString(constID + ".tt"));
-		WebPanel panel = new WebPanel(StyleId.panelTransparent, new FormLayout(false, false, 10, 0));
+		WebPanel panel = new WebPanel(StyleId.panelTransparent, new FormLayout(false, false, STANDAR_GAP, 0));
 		panel.add(tit, FormLayout.LINE);
 		panel.add(text, FormLayout.LINE);
 		return panel;
 	}
 
-	public static WebPanel getConfigLinePanel(String field, JComponent rightComponent) {
-		Border empty = new EmptyBorder(10, 10, 10, 10);
-		LineBorder line = new LineBorder(Color.LIGHT_GRAY);
-		CompoundBorder border = new CompoundBorder(line, empty);
-
-		WebPanel panel = new WebPanel(new BorderLayout(10, 10));
-		// Color color =UIManager.getColor("Panel.background");
-		// color = ColorUtils.intermediate(color, Color.WHITE, 0.5f);
-		Color color = ColorUtils.intermediate(panel.getBackground(), Color.WHITE, 0.7f);
-		// panel.setBorder(new WebBorder(10));
-		panel.setBorder(border);
-		panel.setBackground(color);
-		WebPanel panel2 = new WebPanel(new VerticalFlowLayout(VerticalFlowLayout.MIDDLE));
-		panel2.setBackground(color);
-		panel2.add(rightComponent);
-		panel.add(getTitleTextLabel(field), BorderLayout.CENTER);
-		panel.add(panel2, BorderLayout.EAST);
-		return panel;
-	}
-
 	/**
-	 * return a {@link WebLabel} whith html formated title/message elements. the
-	 * title element is the text found in
-	 * property file and the message will be the field.tt text
+	 * return a {@link WebLabel} with html formated title/message elements. the
+	 * title element is the text found in property file and the message will be the
+	 * field.tt text
 	 * 
 	 * @see TStringUtils#getTitleText(String, String)
 	 * 
-	 * @param field   - properti key for title
+	 * @param field   - property key for title
 	 * @param message - property key for message
 	 * 
 	 * @return {@link WebLabel}
@@ -815,22 +923,13 @@ public class TUIUtils {
 	}
 
 	public static WebComboBox getTWebComboBox(String fieldName, String group) {
-		List<TSEntry>  entries = TStringUtils.getEntriesFrom(group);
+		List<TSEntry> entries = TStringUtils.getEntriesFrom(group);
 		return getWebComboBox(fieldName, entries, null);
 	}
 
 	public static WebComboBox getTWebComboBox(String fieldName, String group, String selectedKey) {
-		List<TSEntry>  entries = TStringUtils.getEntriesFrom(group);
+		List<TSEntry> entries = TStringUtils.getEntriesFrom(group);
 		return getWebComboBox(fieldName, entries, selectedKey);
-	}
-
-	public static WebComboBox getWebComboBox(String fieldName, List<TSEntry> entries, String selectedKey) {
-		TSEntry entry = TStringUtils.getEntryFromList(entries, selectedKey);
-		WebComboBox comboBox = new WebComboBox(entries, entry);
-		comboBox.setName(fieldName);
-		comboBox.putClientProperty("settingsProcessor", new Configuration<ComboBoxState>(fieldName));
-		setToolTip(fieldName, comboBox);
-		return comboBox;
 	}
 
 	/**
@@ -842,7 +941,7 @@ public class TUIUtils {
 	 * @since 2.3
 	 */
 	public static WebButton getWebButtonForToolBar(Action action) {
-		overRideIcons(iconSize, action);
+		overRideIcons(TOOL_BAR_ICON_SIZE, action);
 		WebButton button = new WebButton(action);
 		// button.setRequestFocusEnabled(false);
 		// TooltipManager.setTooltip(jb, (String)
@@ -866,11 +965,20 @@ public class TUIUtils {
 	}
 
 	public static WebCheckBoxList<TSEntry> getWebCheckBoxList(String fieldName, String group) {
-		List <TSEntry> entries = TStringUtils.getEntriesFrom(group);
+		List<TSEntry> entries = TStringUtils.getEntriesFrom(group);
 		CheckBoxListModel<TSEntry> model = new CheckBoxListModel<>();
 		entries.forEach(e -> model.add(new CheckBoxCellData<TSEntry>(e)));
 		WebCheckBoxList<TSEntry> boxList = new WebCheckBoxList<>(model);
 		return boxList;
+	}
+
+	public static WebComboBox getWebComboBox(String fieldName, List<TSEntry> entries, String selectedKey) {
+		TSEntry entry = TStringUtils.getEntryFromList(entries, selectedKey);
+		WebComboBox comboBox = new WebComboBox(entries, entry);
+		comboBox.setName(fieldName);
+		comboBox.putClientProperty("settingsProcessor", new Configuration<ComboBoxState>(fieldName));
+		setToolTip(fieldName, comboBox);
+		return comboBox;
 	}
 
 	/**
@@ -942,8 +1050,8 @@ public class TUIUtils {
 
 	/**
 	 * return a {@link WebTextField} with a trailing cancel button. The cancel
-	 * button reroute the action performed to
-	 * set a empty text on text component and notify the actionlister.
+	 * button reroute the action performed to set a empty text on text component and
+	 * notify the actionlister.
 	 * 
 	 * @param alist - action listener. listerner to notify when a change on the text
 	 *              component ocurr.
@@ -995,16 +1103,6 @@ public class TUIUtils {
 		String field = column.getColumnName();
 		Object val = model.get(field);
 		return getWebFormattedTextField(field, val, len, mask);
-	}
-
-	public static WebSpinner getWebSpinner(String name, int val, int min, int max, int step) {
-		SpinnerNumberModel sModel = new SpinnerNumberModel(val, min, max, step);
-		WebSpinner spinner = new WebSpinner(sModel);
-		// spinner.setValue(val);
-		spinner.setName(name);
-		spinner.putClientProperty("settingsProcessor", new Configuration<TextComponentState>(name));
-		setToolTip(name, spinner);
-		return spinner;
 	}
 
 	public static WebFormattedTextField getWebFormattedTextField(String field, Model model,
@@ -1071,6 +1169,16 @@ public class TUIUtils {
 		return wpf;
 	}
 
+	public static WebSpinner getWebSpinner(String name, int val, int min, int max, int step) {
+		SpinnerNumberModel sModel = new SpinnerNumberModel(val, min, max, step);
+		WebSpinner spinner = new WebSpinner(sModel);
+		// spinner.setValue(val);
+		spinner.setName(name);
+		spinner.putClientProperty("settingsProcessor", new Configuration<TextComponentState>(name));
+		setToolTip(name, spinner);
+		return spinner;
+	}
+
 	public static WebSwitch getWebSwitch(String name, boolean selected) {
 		final WebSwitch wswitch = new WebSwitch(selected);
 		wswitch.setSwitchComponents("On", "Off");
@@ -1103,7 +1211,7 @@ public class TUIUtils {
 	}
 
 	/**
-	 * create and return and {@link WebToggleButton} with all settings stablisehd
+	 * create and return and {@link WebToggleButton} with all standard settings 
 	 * for toolbar
 	 * 
 	 * @param action - action to set in the button
@@ -1111,7 +1219,7 @@ public class TUIUtils {
 	 * @since 2.3
 	 */
 	public static WebToggleButton getWebToggleButton(Action action) {
-		overRideIcons(iconSize, action);
+		overRideIcons(TOOL_BAR_ICON_SIZE, action);
 		WebToggleButton jb = new WebToggleButton(StyleId.togglebutton, action);
 		// test: for toglebuttons, perform action performed over the action
 		// jb.addItemListener(
@@ -1123,7 +1231,7 @@ public class TUIUtils {
 	}
 
 	public static WebToggleButton getWebToggleButtonForToolBar(Action action) {
-		overRideIcons(iconSize, Color.BLACK, action);
+		overRideIcons(TOOL_BAR_ICON_SIZE, Color.BLACK, action);
 		WebToggleButton button = new WebToggleButton(StyleId.buttonHover, action);
 		button.setText(null);
 		// button.setPreferredSize(new Dimension(46, 26));
@@ -1150,6 +1258,15 @@ public class TUIUtils {
 		}
 		return toolBar;
 	}
+	
+	public static GroupPane getGroupPane(Action... actions) {
+		GroupPane groupPane = new GroupPane();
+		for (Action action : actions) {
+			WebButton b = getWebButtonForToolBar(action);
+			groupPane.add(b);
+		}
+		return groupPane;		
+	}
 
 	/**
 	 * Perform the initialization method
@@ -1174,16 +1291,15 @@ public class TUIUtils {
 	}
 
 	/**
-	 * Utility method for override icons propertis setted in the
+	 * Utility method for override icons properties setted in the
 	 * {@link ApplicationAction} by bsf framework. This method
 	 * <ul>
-	 * <li>check the atributte <code>[action name].Action.iconFont</code>. if this
-	 * attribute is present, set the
-	 * {@link Action#SMALL_ICON} property for the action to this icon font
+	 * <li>check the attribute <code>[action name].Action.iconFont</code>. if this
+	 * attribute is present, set the {@link Action#SMALL_ICON} property for the
+	 * action to this icon font
 	 * <li>if iconFont atributte is not present, take the icon from the
-	 * {@link Action#SMALL_ICON} and create an scaled
-	 * instance using the size parameter. Repaint the icon to the target color
-	 * toColor argument
+	 * {@link Action#SMALL_ICON} and create an scaled instance using the size
+	 * parameter. Repaint the icon to the target color toColor argument
 	 * </ul>
 	 * 
 	 * @param size    - new icon size
@@ -1215,10 +1331,9 @@ public class TUIUtils {
 
 	/**
 	 * establece dimenciones para los componentes. Si una instancia de
-	 * <code>JTextField</code> sobrepasa las 30
-	 * columnas, no se modifica el ancho ya que se asume que se ve mejor. ademas, si
-	 * componente de texto es menor a las
-	 * 5 colummas, se redondea a 5
+	 * <code>JTextField</code> sobrepasa las 30 columnas, no se modifica el ancho ya
+	 * que se asume que se ve mejor. ademas, si componente de texto es menor a las 5
+	 * colummas, se redondea a 5
 	 * 
 	 * @param jtc - componente de texto
 	 * @param col - columnas
@@ -1238,26 +1353,20 @@ public class TUIUtils {
 		jtc.setMaximumSize(d);
 	}
 
-	/**
-	 * coloca un borde vacio (espacio) al rededor del componente.
-	 * 
-	 * @param comp - componente a colocar border
-	 */
 	public static void setEmptyBorder(JComponent comp) {
 		comp.setBorder(new EmptyBorder(H_GAP, V_GAP, H_GAP, V_GAP));
 	}
 
 	/**
 	 * Habilita/inhabilita los componentes cmps. Si alguno de estos es instancia de
-	 * <code>Box o JPanel</code> se realiza
-	 * la operacion a los componentes que contienen en forma recursiva.
+	 * <code>Box o JPanel</code> se realiza la operacion a los componentes que
+	 * contienen en forma recursiva.
 	 * 
 	 * @param cmps - componentes a habilitar/inhabilitar
 	 * @param ena  - =true habilitar, inhabilitar si =false
 	 */
 	public static void setEnabled(Component cnt, boolean ena) {
-		Component[] cmps = (cnt instanceof Box || cnt instanceof JPanel)
-				? cmps = ((Container) cnt).getComponents()
+		Component[] cmps = (cnt instanceof Box || cnt instanceof JPanel) ? cmps = ((Container) cnt).getComponents()
 				: new Component[] { cnt };
 
 		for (int e = 0; e < cmps.length; e++) {
@@ -1273,13 +1382,11 @@ public class TUIUtils {
 
 	/**
 	 * set the tooltip for the component. If the component is a instance of
-	 * {@link ToolTipMethods}, the tooltip will be
-	 * a {@link WebLookAndFeel} tooltip, else the tooltip will be a standar swing
-	 * tooltip
+	 * {@link ToolTipMethods}, the tooltip will be a {@link WebLookAndFeel} tooltip,
+	 * else the tooltip will be a standar swing tooltip
 	 * 
 	 * @param name - the name for the resorurce bundle. this method will be append
-	 *             <code>.tt</code> to this name to look
-	 *             for the tooltip
+	 *             <code>.tt</code> to this name to look for the tooltip
 	 * @param cmp  - the component
 	 */
 	public static void setToolTip(String name, JComponent cmp) {
@@ -1294,75 +1401,6 @@ public class TUIUtils {
 					cmp.setToolTipText(tooltip);
 			}
 		}
-	}
-
-	static int getStringPixelWidth(String str, Font font) {
-		FontMetrics metrics = new FontMetrics(font) {
-		};
-		Rectangle2D bounds = metrics.getStringBounds(str, null);
-		return (int) bounds.getWidth();
-	}
-
-	/**
-	 * build an Icon based on the unicode caracter.
-	 * 
-	 * @param text  - the icon caracter
-	 * @param font  - source font where the icon font is.
-	 * @param color - foreground color for the image
-	 * 
-	 * @return image
-	 */
-	private static BufferedImage buildImage(String text, Font font, Color color) {
-		JLabel label = new JLabel(text);
-		label.setForeground(color);
-		label.setFont(font);
-		Dimension dim = label.getPreferredSize();
-		int width = dim.width;
-		int height = dim.height;
-		// int width = dim.width + 1;
-		// int height = dim.height + 1;
-		label.setSize(width, height);
-		BufferedImage bufImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g2d = bufImage.createGraphics();
-		// g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-		// RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		// g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
-		// RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-		label.print(g2d);
-		g2d.dispose();
-		return bufImage;
-	}
-
-	/**
-	 * Construye y retorna <code>Box</code> con el par
-	 * <code>JLabel(lab) JComponent</code> alineados segun los
-	 * argumentos de entrada
-	 * 
-	 * @param lab - id en ResourceBundle para <code>JLabel</code>
-	 * @parm jcomp - Componente de entrada
-	 * @parm req - <code>true</code> si el componente es un campo de entrada
-	 *       obligatoria
-	 * @parm ena - valor para metodo <code>setEnabled(ena)</code>
-	 * @parm glue - si =true coloca Box.createHorizontalGlue() entre la etiqueta y
-	 *       el componente para que ambos esten
-	 *       separados. de lo contrario, solo coloca
-	 *       Box.createHorizontalStrut(H_GAP)
-	 */
-	private static Box coupleInBox(String lab, JComponent jcom, boolean req, boolean ena, boolean glue) {
-		Box b = Box.createHorizontalBox();
-		JLabel jl = getJLabel(lab, req, ena);
-		b.add(jl);
-		b.add(Box.createHorizontalStrut(H_GAP));
-		if (glue) {
-			b.add(Box.createHorizontalGlue());
-		}
-		jl.setEnabled(ena);
-		jcom.setEnabled(ena);
-		b.add(jcom);
-		if (!glue) {
-			b.add(Box.createHorizontalGlue());
-		}
-		return b;
 	}
 
 }

@@ -89,7 +89,7 @@ public class SensorsArray {
 		this.standByBorder = new LineBorder(new JPanel().getBackground(), 2);
 		this.screenSensors = new TreeMap<>();
 
-		File tableFile = new File(Hero.PPT_FILE);
+		File tableFile = new File(Constants.PPT_FILE);
 		ShapeAreas shapeAreas = new ShapeAreas(tableFile);
 		shapeAreas.read();
 		setShapeAreas(shapeAreas);
@@ -185,8 +185,8 @@ public class SensorsArray {
 			BufferedImage image = robot.createScreenCapture(rec);
 			String fn = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss").format(LocalDateTime.now()) + " Hand " + hand
 					+ " Street " + street + "." + ext;
-			fn = FileUtils.getAvailableName(Hero.SCREEN_SHOTS_FOLDER, fn);
-			File outputfile = new File(Hero.SCREEN_SHOTS_FOLDER + fn);
+			fn = FileUtils.getAvailableName(Constants.SCREEN_SHOTS_FOLDER, fn);
+			File outputfile = new File(Constants.SCREEN_SHOTS_FOLDER + fn);
 			ImageIO.write(image, ext, outputfile);
 		} catch (Exception e) {
 			Hero.heroLogger.severe(e.getMessage());

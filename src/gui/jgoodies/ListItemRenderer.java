@@ -5,7 +5,7 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.plaf.*;
 
-public final class ListItemRenderer<E> extends ListItemView implements ListCellRenderer<E>, UIResource {
+public class ListItemRenderer<E> extends ListItemView implements ListCellRenderer<E>, UIResource {
 
 	private final ListCellRenderer<Object> prototypeRenderer = new DefaultListCellRenderer();
 

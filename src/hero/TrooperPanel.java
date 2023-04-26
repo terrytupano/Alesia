@@ -3,8 +3,13 @@ package hero;
 import java.beans.*;
 import java.util.*;
 
-import org.javalite.activejdbc.*;
+import javax.swing.*;
 
+import org.javalite.activejdbc.*;
+import org.jfree.ui.tabbedui.*;
+
+import com.alee.extended.layout.*;
+import com.alee.laf.panel.*;
 import com.jgoodies.forms.builder.*;
 import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.*;
@@ -13,9 +18,10 @@ import core.*;
 import datasource.*;
 
 import gui.*;
+import gui.jgoodies.*;
 
 /**
- * Pannel with all configuration parameters for the trooper.
+ * Panel with all configuration parameters for the trooper.
  * 
  * @author terry
  * 
@@ -39,35 +45,9 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		addInputComponent(TUIUtils.getNumericTextField("playTime", model, columns), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("playUntil", model, columns), false, true);
 
-		FormLayout layout = new FormLayout("fill:10dlu:grow");
-		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG);
-		// DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-		// builder.append(TUIUtils.getTitleTextLabel("playTime"), getInputComponent("playTime"));
-		builder.append(TUIUtils.getConfigLinePanel("playTime", getInputComponent("playTime")));
-		builder.nextLine();
-		builder.append(TUIUtils.getConfigLinePanel("playUntil", getInputComponent("playUntil")));
-		builder.nextLine();
-		builder.append(TUIUtils.getConfigLinePanel("strictPreflop", getInputComponent("strictPreflop")));
-		builder.nextLine();
-		builder.append(TUIUtils.getConfigLinePanel("tau", getInputComponent("tau")));
-		builder.nextLine();
-		builder.append(TUIUtils.getConfigLinePanel("ammoFormula", getInputComponent("ammoFormula")));
-		builder.nextLine();
-		builder.append(TUIUtils.getConfigLinePanel("reconnBase", getInputComponent("reconnBase")));
-		builder.nextLine();
-		builder.append(TUIUtils.getConfigLinePanel("reconnBand", getInputComponent("reconnBand")));
-		builder.nextLine();
-		builder.append(TUIUtils.getConfigLinePanel("takeOpportunity", getInputComponent("takeOpportunity")));
-		builder.nextLine();
-		builder.append(TUIUtils.getConfigLinePanel("phi", getInputComponent("phi")));
-		builder.nextLine();
-		builder.append(TUIUtils.getConfigLinePanel("phi4", getInputComponent("phi4")));
-		builder.nextLine();
-
-		setBodyComponent(builder.getPanel());
-
+		JComponent component = TUIUtils.getListItems(getComponents());
+		setBodyComponent(component);
 		setFooterActions("update");
-
 	}
 
 	// @Override

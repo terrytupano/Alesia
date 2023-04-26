@@ -183,11 +183,6 @@ public abstract class TUIListPanel extends TUIPanel implements ListSelectionList
 		return webTable;
 	}
 
-	/**
-	 * metodo de inicializacion. subclases deben implementar este metodo para completar la contruccion de la misma. Ej
-	 * las clases en el paquete gui.impl deben usar este metodo para establecer la solicitud de servicio.
-	 * 
-	 */
 	abstract public void init();
 
 	/**
@@ -313,7 +308,7 @@ public abstract class TUIListPanel extends TUIPanel implements ListSelectionList
 			String vc = (col_ico_val.length > 2) ? col_ico_val[2] : null;
 			tdcr.setIconParameters(Integer.parseInt(col_ico_val[0]), col_ico_val[1], vc);
 		} else {
-			tdcr.setIconParameters(0, "document", null);
+//			tdcr.setIconParameters(0, "document", null);
 		}
 	}
 

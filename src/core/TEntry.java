@@ -16,19 +16,21 @@ import java.util.Map.*;
 
 import javax.swing.*;
 
+import org.apache.commons.io.*;
+
 /**
  * This class is a copy of {@link AbstractMap.SimpleEntry} with 2 main purposes
  * <ul>
- * <li>Simple convenience for easy acees from Alesia framework
+ * <li>Simple convenience for easy access from Alesia framework
  * <li>{@link #toString()} method only return the string of the value object.
- * This class is intented for simple list
+ * This class is indented for simple list
  * usage and for some UI component. Some times a key value pair is need for
  * display the value and use the key. for
  * examples, model for {@link JComboBox}.
  * </ul>
  * <p>
- * TERRY DON.T MODIFY THIS CLASS. if you fell the necesity of modify this class
- * is because you need a new aproach to
+ * TERRY DON.T MODIFY THIS CLASS. if you fell the necessity of modify this class
+ * is because you need a new approach to
  * solve the problem.
  *
  * @since 2.3

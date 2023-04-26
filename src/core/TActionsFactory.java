@@ -190,6 +190,7 @@ public class TActionsFactory {
 		AbstractButton src = (AbstractButton) event.getSource();
 		ApplicationAction me = (ApplicationAction) src.getAction();
 		TUIFormPanel cnt = SwingUtils.getFirstParent((JComponent) src, TUIFormPanel.class);
+		cnt.setModel(null);
 		boolean val = ((TUIFormPanel) cnt).validateFields();
 		if (val) {
 			disposeDialog(cnt, me);

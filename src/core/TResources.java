@@ -1,4 +1,5 @@
 package core;
+
 /*******************************************************************************
  * Copyright (C) 2017 terry.
  * All rights reserved. This program and the accompanying materials
@@ -16,6 +17,7 @@ import java.io.*;
 import java.io.InputStream;
 import java.util.*;
 import java.util.List;
+import java.util.zip.*;
 
 import javax.imageio.*;
 import javax.swing.*;
@@ -45,7 +47,7 @@ public class TResources {
 	/**
 	 * perform a <b>cmdow.exe</b> command.
 	 * 
-	 * @param winId - window ID
+	 * @param winId     - window ID
 	 * @param cmdowParm - command to perform
 	 * @see #getActiveWindows(String)
 	 */
@@ -59,13 +61,14 @@ public class TResources {
 	}
 
 	/**
-	 * Consult the <b>cmdow.exe</b> program and look for the active windows who match the partialName parameter. The
-	 * result is stored in a {@link List} of {@link TEntry} where the key is the window identificator and the value is
-	 * the window title bar.
+	 * Consult the <b>cmdow.exe</b> program and look for the active windows who
+	 * match the partialName parameter. The result is stored in a {@link List} of
+	 * {@link TEntry} where the key is the window identificator and the value is the
+	 * window title bar.
 	 * 
 	 * <p>
-	 * This method use the name parameter and fill the resulting list whit a patter matchin obtained from concating
-	 * <code>*partialName*</code>
+	 * This method use the name parameter and fill the resulting list whit a patter
+	 * matchin obtained from concating <code>*partialName*</code>
 	 * 
 	 * @param partialName - partial name of the window to look for
 	 * 
@@ -100,8 +103,8 @@ public class TResources {
 	}
 
 	/**
-	 * Read and return the content of the file <code>fn</code> in byte array. This method throw and
-	 * {@link ApplicationException} if the file length is > 16 Mg
+	 * Read and return the content of the file <code>fn</code> in byte array. This
+	 * method throw and {@link ApplicationException} if the file length is > 16 Mg
 	 * 
 	 * @param fn - File to read
 	 * @return
@@ -130,38 +133,49 @@ public class TResources {
 		return td;
 	}
 
-	/**
-	 * return a list of files which file name contain the substring {@code subst}. this method look recursibily starting
-	 * form the <code>dir</code> argument
-	 * 
-	 * @param dir - starting dir file
-	 * @param extention - file name must end with this extention
-	 * 
-	 * @return list of files fount or an empy list if no files was found
-	 */
 	public static List<File> findFiles(File dir, String extention) {
 		Preconditions.checkArgument(dir.isDirectory(), "The file is not a file directory");
 		return FileUtils.findFilesRecursively(dir, f -> f.getName().endsWith(extention));
 	}
 
-	public static FileResource getFile(String fileName) {
-		List<File> files = FileUtils.findFilesRecursively(USER_DIR, f -> f.getName().contains(fileName));
-		if (!files.isEmpty())
-			return new FileResource(files.get(0));
+	public static FileResource getFileResource(String fileName) {
+		return new FileResource(getFile(fileName));
+	}
+
+	public static File getFile(String fileName) {
+		Preconditions.checkNotNull(fileName, "fileName argument can.t be null");
+		for (File file : RESOURCES_FOLDERS) {
+			File file2 = new File(file.getPath() + "/" + fileName);
+			if (file2.exists())
+				return file2;
+		}
+		throw new IllegalArgumentException("The file name '"+ fileName+"' was not found.");
+	}
+
+	public static byte[] getFromZipFile(String fileName, File zipFileName) {
+		try (java.util.zip.ZipFile zipFile = new ZipFile(zipFileName)) {
+			Enumeration<? extends ZipEntry> entries = zipFile.entries();
+			while (entries.hasMoreElements()) {
+				ZipEntry entry = entries.nextElement();
+				if (entry.getName().equals(fileName)) {
+					InputStream inputStream = zipFile.getInputStream(entry);
+					byte[] bs = new byte[(int) entry.getSize()];
+					inputStream.read(bs);
+					inputStream.close();
+					zipFile.close();
+					return bs;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return null;
 	}
 
 	public static ImageIcon getIcon(String iconName) {
-		Preconditions.checkNotNull(iconName, "iconName argument can.t be null");
-		// to clean the app. only names with extension
-		Preconditions.checkArgument(iconName.contains("."), "'"+iconName+"'" + " iconName don.t contain a valid image extention.");
-		for (File file : RESOURCES_FOLDERS) {
-			File file2 = new File(file.getPath() + "/" + iconName);
-			// ImageUtils.SUPPORTED_IMAGES
-			if (file2.exists())
-				return new ImageIcon(file2.getAbsolutePath());
-		}
-		return null;
+		Preconditions.checkArgument(iconName.contains("."),
+				"'" + iconName + "'" + " iconName don.t contain a valid image extention.");
+		return new ImageIcon(getFile(iconName).getAbsolutePath());
 	}
 
 	public static ImageIcon getIcon(String iconName, int size) {
@@ -178,8 +192,9 @@ public class TResources {
 	}
 
 	/**
-	 * Utility method to convert byte array to object. the return value is deserialized using
-	 * {@link ObjectInputStream#readObject()} method. Designed for store purpose
+	 * Utility method to convert byte array to object. the return value is
+	 * deserialized using {@link ObjectInputStream#readObject()} method. Designed
+	 * for store purpose
 	 * 
 	 * @param bao - byte array of stored object
 	 * @return object read form serialized form
@@ -198,7 +213,7 @@ public class TResources {
 	}
 
 	/**
-	 * utility to conver from {@link ImageIcon} to array of byte
+	 * utility to convert from {@link ImageIcon} to array of byte
 	 * 
 	 * @param ii - image icon
 	 * @return array of byte
@@ -218,8 +233,9 @@ public class TResources {
 	}
 
 	/**
-	 * Return the <code>val</code> argument in byte array generated by {@link ObjectOutputStream#writeObject(Object)}
-	 * methdo execution. this method is used generaly to store data inside a <code>BLOG</code> field
+	 * Return the <code>val</code> argument in byte array generated by
+	 * {@link ObjectOutputStream#writeObject(Object)} methdo execution. this method
+	 * is used generaly to store data inside a <code>BLOG</code> field
 	 * 
 	 * @param val - object
 	 * @return serialized object

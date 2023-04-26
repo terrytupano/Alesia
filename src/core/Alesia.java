@@ -10,8 +10,6 @@ package core;
  *     terry - initial API and implementation
  ******************************************************************************/
 
-
-import java.applet.*;
 import java.awt.Dialog.*;
 import java.awt.event.*;
 import java.io.*;
@@ -41,11 +39,6 @@ import gui.*;
 import gui.wlaf.*;
 import hero.*;
 
-/**
- * Entrada aplicacion
- * 
- * @author Terry
- */
 public class Alesia extends Application {
 
 	public TWebFrame mainFrame;
@@ -54,8 +47,7 @@ public class Alesia extends Application {
 	public ArrayList<Skin> skins;
 	public TTaskManager taskManager;
 
-	private AudioClip newMsg, errMsg;
-	private TDockingContainer mainPanel;
+	private TMainPanel mainPanel;
 	private DB alesiaDB;
 
 	public static synchronized Alesia getInstance() {
@@ -63,7 +55,7 @@ public class Alesia extends Application {
 		return (Alesia) a;
 	}
 
-	public TDockingContainer getMainPanel() {
+	public TMainPanel getMainPanel() {
 		return mainPanel;
 	}
 
@@ -75,14 +67,8 @@ public class Alesia extends Application {
 		return mainFrame;
 	}
 
-	/**
-	 * inicio de aplicacion
-	 * 
-	 * @param arg - argumentos de entrada
-	 */
 	public static void main(String[] args) {
-//		Locale.setDefault(Locale.US);
-		Application.launch(Alesia.class, args);
+		Application.launch(Alesia.class, args);	
 	}
 
 	/**
@@ -159,16 +145,11 @@ public class Alesia extends Application {
 	}
 
 	public static void showNotification(String messageId, Object... arguments) {
-		TValidationMessage tm = new TValidationMessage(messageId, arguments);
-		WebInnerNotification npop = NotificationManager.showInnerNotification(Alesia.getInstance().getMainFrame(),
-				tm.formattedText(), tm.getIcon());
-		// ae.getExceptionIcon(), NotificationOption.accept);
-		npop.setDisplayTime(tm.getMiliSeconds());
-		if (messageId.equals("notification.msg00")) {
-			Alesia.getInstance().errMsg.play();
-		} else {
-			Alesia.getInstance().newMsg.play();
-		}
+		TValidationMessage message = new TValidationMessage(messageId, arguments);
+		WebInnerNotification notification = NotificationManager.showInnerNotification(
+				Alesia.getInstance().getMainFrame(), message.formattedText(), message.getIcon(32));
+		notification.setDisplayTime(message.getMiliSeconds());
+		message.playSound();
 	}
 
 	/**
@@ -222,11 +203,9 @@ public class Alesia extends Application {
 		return rval;
 	}
 
-
 	public void restarApplication() {
 		try {
 			shutdown();
-			// espera para hasta q finalizen todos los subsys
 			Thread.sleep(2000);
 			Runtime.getRuntime().exec("cmd /c start /MIN restart.bat");
 		} catch (Exception e) {
@@ -236,7 +215,7 @@ public class Alesia extends Application {
 
 	/**
 	 * check for another active instance of Alesia looking the current active windows. if another instance is found,
-	 * this mehtod send cmd commands and end this currentexecution.
+	 * this method send cmd commands and end this current execution.
 	 * 
 	 * @see TResources#getActiveWindows(String)
 	 * @see TResources#performCMDOWCommand(String, String)
@@ -255,7 +234,7 @@ public class Alesia extends Application {
 	@Override
 	protected void initialize(String[] args) {
 
-		// Loggin configuration. this step is performed here for conbenence
+		// Logging configuration. this step is performed here for conbenence
 		// TODO: For slf4j: the bridge betwen slf4j is set using the slf4j-jdk14-1.7.25
 		// jar lib
 		// for Apache: Set the system property
@@ -276,7 +255,7 @@ public class Alesia extends Application {
 		logger = Logger.getLogger("Alesia");
 		logger.info("Wellcome to Alesia.");
 
-		// update alesia.propertyes to eviorement variables. this step is performed here
+		// update alesia.propertyes to environment variables. this step is performed here
 		// for convenience
 		try {
 			Properties prp = new Properties();
@@ -299,9 +278,6 @@ public class Alesia extends Application {
 		// load all actions into the application
 		new TActionsFactory();
 
-		newMsg = Applet.newAudioClip(getClass().getResource("/core/resources/newMsg.wav"));
-		errMsg = Applet.newAudioClip(getClass().getResource("/core/resources/errMsg.wav"));
-
 		// System.setProperty("org.apache.commons.logging.Log",
 		// Jdk14Logger.class.getName());
 
@@ -318,17 +294,17 @@ public class Alesia extends Application {
 		this.taskManager = new TTaskManager();
 		// requestAutentication();
 
-		mainPanel = new TDockingContainer();
+		mainPanel = new TMainPanel();
 		HomePanel homePanel = mainPanel.getHomePanel();
 
 		// load left panel actions
 		mainFrame.setSplashIncrementText("Loading plugins ...");
-		ArrayList<Action> alist = new ArrayList<>();		
+		ArrayList<Action> alist = new ArrayList<>();
 		Hero hero = new Hero();
 		alist.addAll(hero.getUI());
 		Flicka flicka = new Flicka();
 		alist.addAll(flicka.getUI());
-		
+
 		homePanel.setActions(alist);
 		Alesia.getInstance().getMainFrame().setContentPane(mainPanel);
 	}
@@ -345,7 +321,7 @@ public class Alesia extends Application {
 	protected void startup() {
 		Alesia.logger.info("Starting Up ...");
 
-		SettingsManager.setDefaultSettingsDir(FileUtils.getWorkingDirectoryPath());
+		SettingsManager.setDefaultSettingsDir(TResources.USER_DIR);
 		SettingsManager.setDefaultSettingsGroup("Alesia");
 		SettingsManager.setSaveOnChange(true);
 

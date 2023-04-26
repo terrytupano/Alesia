@@ -31,7 +31,6 @@ import com.alee.laf.window.*;
 import com.alee.managers.style.*;
 import com.alee.utils.*;
 import com.jgoodies.common.base.*;
-import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.*;
 
 import core.*;
@@ -52,11 +51,6 @@ import core.*;
  */
 public class TUIPanel extends WebPanel {
 
-	/**
-	 * clase que presenta la instancia de <code>JPopupMenu</code> creada para la
-	 * table que presenta los datos dentro de esta clase
-	 * 
-	 */
 	public class ListMouseProcessor extends MouseAdapter {
 
 		private JComponent invoker;
@@ -85,11 +79,7 @@ public class TUIPanel extends WebPanel {
 			showPopup(e);
 		}
 
-		/**
-		 * presetna menu
-		 * 
-		 * @param e - evento
-		 */
+
 		private void showPopup(MouseEvent e) {
 			if (e.isPopupTrigger()) {
 				// verifica null porque x autorizciones, pueden no haber elementos
@@ -338,7 +328,7 @@ public class TUIPanel extends WebPanel {
 	}
 
 	/**
-	 * set an standar footer area for components intendet to input data.
+	 * set an standard footer area for components intended to input data.
 	 * 
 	 * @param actions Actions to add
 	 */
@@ -346,7 +336,7 @@ public class TUIPanel extends WebPanel {
 		Vector<JComponent> lst = new Vector<>();
 		for (Action act : actions) {
 			allActions.add(act);
-			TUIUtils.overRideIcons(TUIUtils.iconSize, Color.black, act);
+			TUIUtils.overRideIcons(TUIUtils.TOOL_BAR_ICON_SIZE, Color.black, act);
 			WebButton wb = new WebButton(act);
 			// ApplicationAction aa = (ApplicationAction) act;
 			// String sco = aa.getResourceMap().getString(aa.getName() + ".Action.scope");
@@ -356,6 +346,7 @@ public class TUIPanel extends WebPanel {
 		GroupPane pane = new GroupPane((JComponent[]) lst.toArray(new JComponent[lst.size()]));
 		GroupPanel anel = new GroupPanel(GroupingType.fillFirst, true, new WebLabel(), pane);
 		SwingUtils.equalizeComponentsWidth(pane.getComponents());
+		anel.setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
 		setFooterComponent(anel);
 	}
 
@@ -378,7 +369,11 @@ public class TUIPanel extends WebPanel {
 		this.footerJComponent = footer;
 		// add decoration
 		footerJComponent.setOpaque(true);
-		footerJComponent.setBorder(Borders.DIALOG);
+		footerJComponent.setBackground(getBackground().brighter());
+		Border border = footer.getBorder();
+		MatteBorder border2 = new MatteBorder(1, 0, 0, 0, Color.GRAY);
+		CompoundBorder border3 = new CompoundBorder(border2, border);
+		footerJComponent.setBorder(border3);
 		add(footerJComponent, BorderLayout.SOUTH);
 	}
 

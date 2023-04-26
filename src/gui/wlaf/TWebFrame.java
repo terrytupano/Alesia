@@ -17,8 +17,7 @@ import com.alee.managers.style.*;
 
 import core.*;
 
-
-
+@SuppressWarnings("rawtypes")
 public class TWebFrame extends WebFrame {
 
 	private JComponent splashPanel;
@@ -57,7 +56,7 @@ public class TWebFrame extends WebFrame {
 	}
 
 	/**
-	 * center the r2 rectangle based on r1 coordenates
+	 * center the r2 rectangle based on r1 coordinates
 	 * 
 	 * @param r1 - base rectangle
 	 * @param r2 - rectangle to center
@@ -74,10 +73,10 @@ public class TWebFrame extends WebFrame {
 		return new Point(r2.x - (r2.width), r2.y - (r2.height / 2));
 	}
 	/**
-	 * Calc new rectangle resulting that is centered based on src rectangle
+	 * Calculate new rectangle resulting that is centered based on src rectangle
 	 * 
-	 * @param src - orginial rectangle
-	 * @param dim - new size of orginal rectangle
+	 * @param src - original rectangle
+	 * @param dim - new size of original rectangle
 	 * 
 	 * @return center rectangle
 	 */
@@ -135,5 +134,15 @@ public class TWebFrame extends WebFrame {
 		form.add(splashSubtitleLabel, FormLayout.LINE);
 		form.add(splashIncrementLabel, FormLayout.LINE);
 		return form;
+	}
+	
+	/**
+	 * return the splash component without status bar 
+	 * 
+	 * @return splash component
+	 */
+	public JComponent getSplash() {
+		splashIncrementLabel.setVisible(false);
+		return splashPanel;
 	}
 }
