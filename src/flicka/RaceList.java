@@ -29,7 +29,6 @@ public class RaceList extends TUIListPanel implements PropertyChangeListener {
 	private Race sourceModel;
 
 	public RaceList() {
-		showAditionalInformation(false);
 		// actionMap = Alesia.getInstance().getContext().getActionMap(this);
 		addToolBarActions(TActionsFactory.getActions("newModel", "editModel", "deleteModel"));
 

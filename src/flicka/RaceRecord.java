@@ -25,7 +25,6 @@ public class RaceRecord extends TUIFormPanel {
 		this.newr = newr;
 		this.mode = mode;
 		setModel(model);
-		showAditionalInformation(false);
 		// EVENT components:
 		if (mode == EVENT || mode == FULL) {
 			addInputComponent(TUIUtils.getWebDateField(model, listPanel.getColumnMetadata().get("redate")), true, true);

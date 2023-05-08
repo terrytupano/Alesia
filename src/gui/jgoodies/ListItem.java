@@ -61,10 +61,14 @@ public class ListItem extends JPanel implements MouseListener {
 		String html = TStringUtils.getTitleText(action.getValue(javax.swing.Action.NAME).toString(), message);
 		lineLabel.setText(html);
 		setIcon((ImageIcon) action.getValue(Action.LARGE_ICON_KEY));
-		WebLabel label = new WebLabel(TUIUtils.getFontIcon('\uE315', 20, TUIUtils.ACCENT_COLOR));
-		setRightComponent(label);
+		setActionArrowComponent();
 		setBorderVisible(true);
 		addMouseListener(this);
+	}
+
+	public void setActionArrowComponent() {
+		WebLabel label = new WebLabel(TUIUtils.getFontIcon('\uE315', 20, TUIUtils.ACCENT_COLOR));
+		setRightComponent(label);
 	}
 
 	public static ListItem getItemForField(String fieldName, JComponent rightComponent) {
@@ -78,6 +82,13 @@ public class ListItem extends JPanel implements MouseListener {
 		item.rightPanel.setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
 		item.iconLabel.setBorder(null);
 		return item;
+	}
+
+	@Override
+	public void setOpaque(boolean isOpaque) {
+		super.setOpaque(isOpaque);
+		if (rightPanel != null)
+			rightPanel.setOpaque(isOpaque);
 	}
 
 	public void setBorderVisible(boolean visible) {

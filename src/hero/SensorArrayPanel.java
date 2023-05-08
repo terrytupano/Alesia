@@ -5,31 +5,33 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 
-import javax.swing.*;
-
+import com.alee.laf.button.*;
 import com.alee.laf.combobox.*;
+import com.alee.laf.grouping.*;
 import com.alee.laf.panel.*;
+import com.alee.laf.scroll.*;
+import com.alee.laf.toolbar.*;
 import com.alee.managers.settings.*;
 import com.alee.utils.*;
 
 import core.*;
-import gui.*;
 
-public class SensorArrayPanel extends TUIPanel {
+public class SensorArrayPanel extends WebPanel {
 
 	private WebPanel sensorsPanel;
 	private WebComboBox sensorTypeComboBox;
 	private WebComboBox imageTypeComboBox;
-	private WebComboBox imagesComboBox;
+	private WebComboBox screensComboBox;
 	private SensorsArray sensorsArray;
 
 	public SensorArrayPanel() {
+		super(new BorderLayout());
 		List<TSEntry> list = new ArrayList<>();
 
 		// list of options to filter sensors
-		list.add(new TSEntry("*", "All") );
+		list.add(new TSEntry("*", "All"));
 		list.add(new TSEntry("villan*", "Only villans"));
-		// temporal: just 8 villans
+		// temporal: just 8 villains
 		for (int i = 1; i <= 8; i++) {
 			list.add(new TSEntry("villan" + i + "*", "only villan" + i));
 		}
@@ -53,34 +55,40 @@ public class SensorArrayPanel extends TUIPanel {
 				f -> f.getName().endsWith(".png"));
 		List<TEntry<File, String>> names = new ArrayList<>();
 		files.forEach(f -> names.add(new TEntry<>(f, f.getName().substring(0, f.getName().length() - 4))));
-		this.imagesComboBox = new WebComboBox(names);
-		imagesComboBox.addActionListener(evt -> testSccreenShot());
+		this.screensComboBox = new WebComboBox(names);
+		screensComboBox.addActionListener(evt -> testSccreenShot());
 
 		imageTypeComboBox.registerSettings(new Configuration<ComboBoxState>("SensorPanel.imageType"));
 		sensorTypeComboBox.registerSettings(new Configuration<ComboBoxState>("SensorPanel.filter"));
 
-		addToolBarActions("testAreasPpt", "testAreasScreen");
-		getToolBar().add(imagesComboBox, sensorTypeComboBox, imageTypeComboBox);
+		WebButton testPpt = TUIUtils.getWebButtonForToolBar(TActionsFactory.getAction("testAreasPpt"));
+		WebButton testScreeen = TUIUtils.getWebButtonForToolBar(TActionsFactory.getAction("testAreasScreen"));
+
+		GroupPane groupPane = TUIUtils.getGroupPane(screensComboBox, testScreeen);
+		GroupPane groupPane2 = new GroupPane(sensorTypeComboBox, imageTypeComboBox);
+		WebToolBar toolBar = TUIUtils.getUndecoradetToolBar(testPpt, groupPane2, groupPane);
 
 		this.sensorsPanel = new WebPanel(new GridLayout(0, 2));
-		JScrollPane ajsp = new JScrollPane(sensorsPanel);
+		WebScrollPane scrollPane = TUIUtils.getWebScrollPane(sensorsPanel);
 
-		setBodyComponent(ajsp);
+		add(toolBar, BorderLayout.NORTH);
+		add(scrollPane, BorderLayout.CENTER);
 	}
 
 	private void testSccreenShot() {
-		TEntry<File, String> selF = (TEntry<File, String>) imagesComboBox.getSelectedItem();
+		@SuppressWarnings("unchecked")
+		TEntry<File, String> selF = (TEntry<File, String>) screensComboBox.getSelectedItem();
 		sensorsArray.setReadSourceFile(selF.getKey());
 	}
 
 	/**
-	 * update the visual componentes in this palen to the (posible) new instance of
-	 * {@link SensorsArray}
+	 * update the visual components in this panel to the (possible) new instance of
+	 * {@link Trooper} passed as argument
 	 * 
-	 * @param sensorsArray - the array
+	 * @param trooper - the trooper
 	 */
-	public void updateArray(SensorsArray sensorsArray) {
-		this.sensorsArray = sensorsArray;
+	public void setTrooper(Trooper trooper) {
+		this.sensorsArray = trooper.getSensorsArray();
 		sensorsPanel.removeAll();
 		List<ScreenSensor> ssl = sensorsArray.getSensors(null);
 		for (ScreenSensor ss : ssl) {
@@ -91,7 +99,7 @@ public class SensorArrayPanel extends TUIPanel {
 	}
 
 	private void filterSensors() {
-		// on the component registerSettings(), the sensorarray is null
+		// on the component registerSettings(), the sensor array is null
 		if (sensorsArray == null)
 			return;
 		sensorsPanel.setVisible(false);
@@ -102,8 +110,8 @@ public class SensorArrayPanel extends TUIPanel {
 		List<ScreenSensor> ssl = sensorsArray.getSensors(null);
 		for (ScreenSensor ss : ssl) {
 			ss.showImage(sCapture);
-			// spetial name or wildcard string (the structure type: xxx has noting in
-			// spetial, just a name)
+			// Special name or wild card string (the structure type: xxx has noting in
+			// Special, just a name)
 			if (filter.startsWith("type:")) {
 				if (filter.equals("type: textareas") && ss.isTextArea())
 					sensorsPanel.add(ss);

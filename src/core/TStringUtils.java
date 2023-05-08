@@ -186,12 +186,6 @@ public class TStringUtils {
 		return dateFormat.format(d);
 	}
 
-	/**
-	 * @since 2.3
-	 * 
-	 * @param key
-	 * @return
-	 */
 	public static String getString(String key) {
 		String txt = allProperties.getProperty(key);
 		return (txt == null) ? key : txt;
@@ -426,6 +420,18 @@ public class TStringUtils {
 		return msg;
 	}
 
+	public static String getOneLineTitleText(String title, String message) {
+		Font f = HTMLUtils.getDefaultTextFont();
+		String name = f.getFamily();
+		int siz = f.getSize();
+		String patt = "<html><FONT style='font-family: " + name + "; font-size: 13; font-weight: bold; color: "
+				+ ColorUtils.toHex(TUIUtils.ACCENT_COLOR) + ";'><title></FONT>" + "<FONT style='font-family: " + name
+				+ "; font-size: " + siz + ";'><message></html>";
+		String msg = patt.replace("<title>", title);
+		msg = msg.replace("<message>", message == null ? "" : message);
+		return msg;
+	}
+
 	public static String getConfigTitleText(String title, String message) {
 		Font f = HTMLUtils.getDefaultTextFont();
 		String name = f.getFamily();
@@ -436,5 +442,15 @@ public class TStringUtils {
 		String msg = patt.replace("<title>", title);
 		msg = msg.replace("<message>", message);
 		return msg;
+	}
+
+	public static String getFormateTable(String lines) {
+		String[] hslines = lines.split("\n");
+		String res = "";
+		for (String lin : hslines) {
+			lin = "<tr><td>" + lin + "</td></tr>";
+			res += lin.replaceAll(": ", "</td><td>");
+		}
+		return "<table border=\"0\", cellspacing=\"0\">" + res + "</table>";
 	}
 }

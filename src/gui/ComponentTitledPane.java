@@ -83,10 +83,10 @@ public class ComponentTitledPane extends JPanel {
 				 */
 				public void stateChanged(ChangeEvent e) {
 					JToggleButton jtb = (JToggleButton) e.getSource();
-					TUIUtils.setEnabled(getContentPane(), inverse ? !jtb.isSelected() : jtb.isSelected());
+					TUIUtils.setEnabledRecursively(getContentPane(), inverse ? !jtb.isSelected() : jtb.isSelected());
 				}
 			});
-			TUIUtils.setEnabled(getContentPane(), inverse ? !togle.isSelected() : togle.isSelected());
+			TUIUtils.setEnabledRecursively(getContentPane(), inverse ? !togle.isSelected() : togle.isSelected());
 		}
 	}
 

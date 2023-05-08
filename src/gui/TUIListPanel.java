@@ -369,7 +369,7 @@ public abstract class TUIListPanel extends TUIPanel implements ListSelectionList
 	private void createJTable() {
 
 		this.webTable = new WebTable();
-		webTable.addMouseListener(new ListMouseProcessor(webTable));
+//		webTable.addMouseListener(new ListMouseProcessor(webTable));
 
 		ListSelectionModel lsm = webTable.getSelectionModel();
 		lsm.addListSelectionListener(this);
@@ -379,7 +379,7 @@ public abstract class TUIListPanel extends TUIPanel implements ListSelectionList
 		webTable.setShowGrid(false);
 
 		this.tJlist = new WebList();
-		tJlist.addMouseListener(new ListMouseProcessor(tJlist));
+//		tJlist.addMouseListener(new ListMouseProcessor(tJlist));
 		lsm = tJlist.getSelectionModel();
 		lsm.addListSelectionListener(this);
 

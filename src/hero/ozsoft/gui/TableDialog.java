@@ -28,13 +28,13 @@ import javax.swing.*;
 import com.alee.api.resource.*;
 import com.alee.extended.layout.*;
 import com.alee.laf.button.*;
-import com.alee.laf.text.*;
 import com.alee.utils.*;
 import com.jgoodies.forms.builder.*;
 import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.FormLayout;
 
 import core.*;
+import gui.*;
 import hero.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.*;
@@ -67,7 +67,7 @@ public class TableDialog extends JDialog implements Client {
 	private String actorName;
 
 	private Client proxyClient;
-	private final WebTextArea outConsole;
+	private final TConsoleTextArea outConsole;
 	private Player heroPlayer;
 
 	/**
@@ -118,7 +118,7 @@ public class TableDialog extends JDialog implements Client {
 		// };
 
 		// control panel
-		outConsole = TUIUtils.getConsoleTextArea();
+		outConsole = new TConsoleTextArea();
 		WebButton endGame = new WebButton(ap -> dispose());
 		endGame.setIcon(TUIUtils.getSmallFontIcon('\ue047'));
 

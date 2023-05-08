@@ -5,7 +5,6 @@ import java.awt.event.*;
 import java.util.List;
 
 import javax.swing.*;
-import javax.swing.border.*;
 
 import com.alee.extended.layout.*;
 import com.alee.extended.magnifier.*;

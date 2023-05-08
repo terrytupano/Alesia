@@ -33,7 +33,7 @@ public class RobotActuator {
 	}
 
 	/**
-	 * Perform the secuence of command asociated with the {@link TrooperAction} passsed as argument.
+	 * Perform the sequence of command associated with the {@link TrooperAction} passed as argument.
 	 * 
 	 * @see #perform(String)
 	 * @param trooperAction - the action
@@ -43,9 +43,9 @@ public class RobotActuator {
 	}
 
 	/**
-	 * Perform the secuence of commands passed as argument as argument. The command structure is in the class
+	 * Perform the sequence of commands passed as argument as argument. The command structure is in the class
 	 * documentation. This method dont dont verify the command format. it will try of fullfill the action. check the
-	 * logger entry to verify if the secuence was complete.
+	 * logger entry to verify if the sequence was complete.
 	 * 
 	 * @param commands - the commands to perform
 	 */

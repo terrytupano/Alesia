@@ -1,4 +1,4 @@
-package gui.wlaf;
+package core;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -15,7 +15,7 @@ import com.alee.laf.window.*;
 import com.alee.managers.settings.*;
 import com.alee.managers.style.*;
 
-import core.*;
+import gui.wlaf.*;
 
 @SuppressWarnings("rawtypes")
 public class TWebFrame extends WebFrame {

@@ -8,7 +8,7 @@
  * Contributors:
  *     terry - initial API and implementation
  ******************************************************************************/
-package gui;
+package core;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -28,14 +28,12 @@ import com.alee.extended.window.*;
 import com.alee.laf.label.*;
 import com.alee.laf.panel.*;
 
-import core.*;
-
 
 
 /**
- * Clone of original ProgressMonitor with is dysplay in a {@link WebPopOver}. this component display the progress of a
- * {@link Callable} implementaations and allow the user hide the dialog with run in background button and cancel the
- * operaticon whit cancel button. Cancel button are available only if this object was create passing a Future != null.
+ * Clone of original ProgressMonitor with is display in a {@link WebPopOver}. this component display the progress of a
+ * {@link Callable} implementations and allow the user hide the dialog with run in background button and cancel the
+ * Operation whit cancel button. Cancel button are available only if this object was create passing a Future != null.
  * if future = null, cancel are disabled.
  * 
  * @author terry

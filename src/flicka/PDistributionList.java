@@ -27,7 +27,6 @@ import gui.*;
 public class PDistributionList extends TUIListPanel implements PropertyChangeListener {
 
 	public PDistributionList() {
-		showAditionalInformation(false);
 //		this toolbar hat new ExportToFileAction(this, "") warum???
 //		setToolBar(TActionsFactory.getActions("deleteModel"));
 		setColumns("pdrace;pdvalue;pdhits;pdmasscenter;pdprediction;pddecision;pdevent");

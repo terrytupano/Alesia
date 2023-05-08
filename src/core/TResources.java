@@ -15,6 +15,7 @@ import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
 import java.io.InputStream;
+import java.text.*;
 import java.util.*;
 import java.util.List;
 import java.util.zip.*;
@@ -28,9 +29,13 @@ import com.jgoodies.common.base.*;
 
 public class TResources {
 
+	public  static NumberFormat percentageFormat = NumberFormat.getPercentInstance();
+	public  static DecimalFormat twoDigitFormat = new DecimalFormat("#0.00");
+	public  static DecimalFormat fourDigitFormat = new DecimalFormat("#0.0000");
 	public static String USER_DIR = System.getProperty("user.dir");
 	private static String TEMP_PATH = System.getProperty("java.io.tmpdir") + "Alesia/";
 	private static List<File> RESOURCES_FOLDERS;
+	
 
 	public static void init() {
 		// scan all resources folder

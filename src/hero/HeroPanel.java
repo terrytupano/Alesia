@@ -10,19 +10,14 @@
  ******************************************************************************/
 package hero;
 
-import java.awt.BorderLayout;
-
-import com.alee.extended.layout.VerticalFlowLayout;
-import com.alee.laf.button.WebToggleButton;
-import com.alee.laf.grouping.GroupPane;
-import com.alee.laf.panel.WebPanel;
-import com.alee.laf.tabbedpane.TabbedPaneState;
-import com.alee.laf.tabbedpane.WebTabbedPane;
-import com.alee.managers.settings.Configuration;
+import com.alee.laf.button.*;
+import com.alee.laf.grouping.*;
+import com.alee.laf.scroll.*;
+import com.alee.laf.tabbedpane.*;
+import com.alee.managers.settings.*;
 
 import core.*;
 import datasource.*;
-
 import gui.*;
 import gui.console.*;
 
@@ -30,20 +25,19 @@ public class HeroPanel extends TUIFormPanel {
 
 	private TrooperPanel trooperPanel;
 	private SensorArrayPanel sensorArrayPanel;
-	private WebPanel pockerSimulatorPanel;
+	private PokerSimulatorPanel pockerSimulatorPanel;
 	private WebTabbedPane webTabbedPane;
 
 	public HeroPanel() {
 		this.sensorArrayPanel = new SensorArrayPanel();
+
 		TrooperParameter model = TrooperParameter.findFirst("trooper = ?", "Hero");
 		this.trooperPanel = new TrooperPanel(model);
+		WebScrollPane trooperscrollPane = TUIUtils.getWebScrollPane(trooperPanel);
 
-		WebPanel params = new WebPanel();
-		params.setLayout(new VerticalFlowLayout(true, false));
-		params.add(trooperPanel);
-		this.pockerSimulatorPanel = new WebPanel(new BorderLayout());
+		this.pockerSimulatorPanel = new PokerSimulatorPanel();
 		webTabbedPane = new WebTabbedPane();
-		webTabbedPane.add(params, "Trooper parameters");
+		webTabbedPane.add(trooperscrollPane, "Trooper parameters");
 		webTabbedPane.add(sensorArrayPanel, "Sensor Array");
 		webTabbedPane.add(pockerSimulatorPanel, "Pocker Simulator");
 		webTabbedPane.add(new ConsolePanel(Hero.heroLogger), "Log console");
@@ -68,16 +62,13 @@ public class HeroPanel extends TUIFormPanel {
 	}
 
 	/**
-	 * shortcut that enable update all the UI components from (posible) new
+	 * shortcut that enable update all the UI components from (possible) new
 	 * {@link SensorsArray} and/or {@link PokerSimulator}
 	 * 
-	 * @param sensorsArray - the array to update
+	 * @param trooper - the new trooper
 	 */
-	public void updateSensorsArray(Trooper trooper) {
-		setVisible(false);
-		pockerSimulatorPanel.removeAll();
-		pockerSimulatorPanel.add(trooper.getPokerSimulator().getReportPanel(), BorderLayout.CENTER);
-		sensorArrayPanel.updateArray(trooper.getSensorsArray());
-		setVisible(true);
+	public void setTrooper(Trooper trooper) {
+		this.pockerSimulatorPanel.setTrooper(trooper);
+		this.sensorArrayPanel.setTrooper(trooper);
 	}
 }

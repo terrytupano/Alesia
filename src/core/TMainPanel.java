@@ -71,6 +71,7 @@ public class TMainPanel extends WebPanel {
 		statusBar.addToEnd(Alesia.getInstance().taskManager.getProgressBar());
 
 		transitionPanel = new ComponentTransition();
+		// add the initial content of the frame splash
 		transitionPanel.setContent(Alesia.getInstance().getMainFrame().getContentPane());
 
 		// Transition effect
@@ -183,8 +184,10 @@ public class TMainPanel extends WebPanel {
 				addChangeListener(TUIListPanel.MODEL_SELECTED, pcl);
 			}
 		}
+
 		transitionPanel.performTransition(newComponent);
 	}
+	
 
 	/**
 	 * Utility method to perform {@link UIListPanel#freshen()} in an active instance

@@ -109,14 +109,7 @@ public class Alesia extends Application {
 
 	public static Map<String, Object> showDialog(TUIFormPanel content, double withFactor, double heightFactor) {
 
-		// standar behavior: if the title of the tuipanel is visible, this method remove
-		// the string and put in as this
-		// dialog title
 		String popOvertext = " ";
-		if (content.isTitleVisible()) {
-			popOvertext = content.getTitleText();
-			content.setTitleVisible(false);
-		}
 		final WebPopOver popOver = new WebPopOver(Alesia.getInstance().getMainFrame());
 		popOver.setModalityType(ModalityType.TOOLKIT_MODAL);
 		popOver.setMovable(false);
@@ -173,9 +166,9 @@ public class Alesia extends Application {
 	}
 
 	/**
-	 * retrive global identificator from <code>wmic</code>
+	 * Retrieve global identificator from <code>wmic</code>
 	 * 
-	 * @param gid - gobal id
+	 * @param gid - global id
 	 * @param vn - variable name
 	 * 
 	 * @return variable value
@@ -292,7 +285,6 @@ public class Alesia extends Application {
 	protected void ready() {
 		mainFrame.setSplashIncrementText("Starting task manager ...");
 		this.taskManager = new TTaskManager();
-		// requestAutentication();
 
 		mainPanel = new TMainPanel();
 		HomePanel homePanel = mainPanel.getHomePanel();
@@ -306,6 +298,9 @@ public class Alesia extends Application {
 		alist.addAll(flicka.getUI());
 
 		homePanel.setActions(alist);
+		
+		mainPanel.showPanel(homePanel);
+//		mainPanel.showPanel(new HeroPanel());
 		Alesia.getInstance().getMainFrame().setContentPane(mainPanel);
 	}
 

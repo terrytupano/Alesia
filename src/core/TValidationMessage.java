@@ -26,8 +26,6 @@ public class TValidationMessage implements ValidationMessage {
 	private char icon;
 	private int miliSeconds;
 
-	// private static final AudioClip newMsg = Applet.newAudioClip(TResources.getFile("newMsg.wav").toURL());
-	// private static final AudioClip errMsg = Applet.newAudioClip(TResources.getFile("errMsg.wav").toURL());
 	private static final File newMsg = TResources.getFile("newMsg.wav");
 	private static final File errMsg = TResources.getFile("errMsg.wav");
 
@@ -97,19 +95,10 @@ public class TValidationMessage implements ValidationMessage {
 		return TUIUtils.getFontIcon(icon, size, iconColor);
 	}
 
-	/**
-	 * Retorna el color asociado al tipo de excepcion
-	 * 
-	 * @return color
-	 */
 	public Color getColor() {
 		return color;
 	}
-	/**
-	 * retorna el tiempo que se espera se muestre esta exepcion.
-	 * 
-	 * @return tiempo en seg.
-	 */
+
 	public int getMiliSeconds() {
 		return miliSeconds;
 	}

@@ -19,10 +19,10 @@ import com.alee.utils.*;
 import com.jgoodies.common.base.*;
 
 /**
- * This class control the array of sensor inside of the screen. This class is responsable for reading all the sensor
- * configurated in the {@link DrawingPanel} passsed as argument in the {@link #createSensorsArray(DrawingPanel)} method.
+ * This class control the array of sensor inside of the screen. This class is responsible for reading all the sensor
+ * configured in the {@link DrawingPanel} passed as argument in the {@link #createSensorsArray(DrawingPanel)} method.
  * <p>
- * althout this class are the eyes of the tropper, numerical values must be retrives throw {@link PokerSimulator}. the
+ * Although this class are the eyes of the trooper, numerical values must be retries throw {@link PokerSimulator}. the
  * poker simulator values are populated during the reading process using the method
  * {@link PokerSimulator#addCard(String, String)} at every time that a change in the Environment is detected.
  * 
@@ -36,19 +36,19 @@ public class SensorsArray {
 	 */
 	public final static String TYPE_NUMBERS = "Numbers";
 	/**
-	 * Read/see only text sensors, names of the villans mainly
+	 * Read/see only text sensors, names of the villains mainly
 	 */
 	public final static String TYPE_TEXT = "Text";
 
 	/**
-	 * Read/see TODO: read only villans information (all)
+	 * Read/see TODO: read only villains information (all)
 	 * 
 	 * @see #TYPE_CARDS
 	 */
 	public final static String TYPE_VILLANS = "Villans";
 
 	/**
-	 * Read/see only cards areas. this type is only for hero cards and comunity cards
+	 * Read/see only cards areas. this type is only for hero cards and community cards
 	 * 
 	 */
 	public final static String TYPE_CARDS = "Cards";
@@ -78,7 +78,7 @@ public class SensorsArray {
 	private PokerSimulator pokerSimulator;
 	private String readSource;
 	private File readSourceFile;
-	DescriptiveStatistics tesseractTime = new DescriptiveStatistics(10);
+	DescriptiveStatistics performaceStatistic = new DescriptiveStatistics(10);
 			
 	public SensorsArray(PokerSimulator pokerSimulator) {
 		this.readSource = FROM_ROBOT;
@@ -119,24 +119,24 @@ public class SensorsArray {
 	}
 
 	/**
-	 * Return the number of current villans active seats.
+	 * Return the number of current villains active seats.
 	 * 
 	 * @see #isSeatActive(int)
-	 * @return - num of active villans + me
+	 * @return - num of active villains + me
 	 */
 	public int getActiveSeats() {
 		int av = 0;
 		for (int i = 1; i <= getVillans(); i++) {
 			av += isSeatActive(i) ? 1 : 0;
 		}
-		// at this point at least must be 1 villan active set
+		// at this point at least must be 1 villains active set
 		if (av == 0)
 			Hero.heroLogger.severe("Fail to detect active seats");
 		return av;
 	}
 
 	/**
-	 * Return the number of current active villans.
+	 * Return the number of current active villains.
 	 * 
 	 * @see #isActive(int)
 	 * @see #getActiveSeats()
@@ -223,9 +223,9 @@ public class SensorsArray {
 	}
 
 	/**
-	 * retriva a list of sensor.s names acording to the <code>subString</code> argument.
+	 * Retrieve a list of sensor.s names according to the <code>subString</code> argument.
 	 * <p>
-	 * For example, to retrive all "call" sensors, pass to this method ".call" will return sensor hero.call,
+	 * For example, to retrieve all "call" sensors, pass to this method ".call" will return sensor hero.call,
 	 * villan1.call etc. <code>null</code> argument return all configured sensors.
 	 * 
 	 * <p>
@@ -246,11 +246,11 @@ public class SensorsArray {
 	}
 
 	/**
-	 * Return the number of villans configurated in this table.
+	 * Return the number of villains configured in this table.
 	 * 
 	 * @see HeroPanel
 	 * 
-	 * @return total villans
+	 * @return total villains
 	 */
 	public int getVillans() {
 		return (int) screenSensors.keySet().stream().filter(sn -> sn.startsWith("villan") && sn.contains("name"))
@@ -258,11 +258,11 @@ public class SensorsArray {
 	}
 
 	/**
-	 * return <code>true</code> if the player identifyed as id argument is active (hero or villan). A PLAYER IS ACTIVE
+	 * return <code>true</code> if the player identified as id argument is active (hero or villain). A PLAYER IS ACTIVE
 	 * IF HE HAS CARDS IN THIS HANDS. if a player fold his card. this method will not count that player. from this
-	 * method point of view. the player is in tha game, but in this particular moment are not active.
+	 * method point of view. the player is in the game, but in this particular moment are not active.
 	 * 
-	 * @param id - villan id or 0 for hero
+	 * @param id - villain id or 0 for hero
 	 * @return true if the player is active
 	 */
 	public boolean isActive(int id) {
@@ -274,14 +274,14 @@ public class SensorsArray {
 
 	/**
 	 * return <code>true</code> if the villanId seat is active. A seat is active if there are a villan sittion on it.
-	 * this method check the villan name sensor and the villan chip sensor. if both are active, the seat is active.
+	 * this method check the villain name sensor and the villain chip sensor. if both are active, the seat is active.
 	 * <p>
-	 * from this method point of view, there are a villan sittin on a seat currently playing or not. maybe he abandom
+	 * from this method point of view, there are a villain sittin on a seat currently playing or not. maybe he abandom
 	 * the action
 	 * 
 	 * @param villanId - the seat as configured in the ppt file. villan1 is at hero.s left
 	 * @see #getActiveVillans()
-	 * @return numers of villans active seats
+	 * @return numers of villains active seats
 	 */
 	public boolean isSeatActive(int villanId) {
 		// ScreenSensor vname = getSensor("villan" + villanId + ".name");
@@ -329,9 +329,9 @@ public class SensorsArray {
 	}
 
 	/**
-	 * Perform read operation on the {@link ScreenSensor} acoording to the type of the sensor. The type can be any of
-	 * TYPE_ global constatn passed as argument. This method perform the OCR operation on the selected areas and update
-	 * the {@link PokerSimulator} if it.s necesary.
+	 * Perform read operation on the {@link ScreenSensor} according to the type of the sensor. The type can be any of
+	 * TYPE_ global constant passed as argument. This method perform the OCR operation on the selected areas and update
+	 * the {@link PokerSimulator} if it.s necessary.
 	 * <p>
 	 * After this method execution, the simulator reflect the actual game status
 	 * 
@@ -341,7 +341,7 @@ public class SensorsArray {
 		Collection<ScreenSensor> allSensors = screenSensors.values();
 		List<ScreenSensor> slist = new ArrayList<ScreenSensor>();
 
-		// ation areas
+		// Action areas
 		if (TYPE_ACTIONS.equals(type)) {
 			slist = allSensors.stream().filter(ss -> ss.isActionArea()).collect(Collectors.toList());
 			slist.add(getSensor("hero.card1"));
@@ -349,10 +349,10 @@ public class SensorsArray {
 			readSensors(true, slist);
 		}
 
-		// numeric types retrive all numers and update poker simulator
+		// numeric types retrieve all numbers and update poker simulator
 		if (TYPE_NUMBERS.equals(type)) {
 			slist = allSensors.stream().filter(ss -> ss.isNumericArea()).collect(Collectors.toList());
-			// remove villas sensor. villans sensor are update calling readPlayerStat()
+			// remove villas sensor. villains sensor are update calling readPlayerStat()
 			// method
 			slist.removeIf(ss -> ss.getName().startsWith("villan"));
 			readSensors(true, slist);
@@ -365,9 +365,6 @@ public class SensorsArray {
 			pokerSimulator.setCallValue(getSensor("hero.call").getNumericOCR());
 			pokerSimulator.setHeroChips(getSensor("hero.chips").getNumericOCR());
 			pokerSimulator.setRaiseValue(getSensor("hero.raise").getNumericOCR());
-
-			// the report is update at the end of this method
-			// pokerSimulator.updateReport();
 		}
 
 		// cards areas sensor will perform a simulation
@@ -409,9 +406,9 @@ public class SensorsArray {
 			ss.capture(read, readSource);
 			// update the enable/disable status.
 			pokerSimulator.sensorStatus.put(ss.getName(), ss.isEnabled());
-			// mesure only efective lecture
+			// Measure only effective lecture
 			if (ss.isEnabled() && ss.getOCRPerformanceTime() > 0) {
-				tesseractTime.addValue(ss.getOCRPerformanceTime());
+				performaceStatistic.addValue(ss.getOCRPerformanceTime());
 			}
 		}
 		setStandByBorder();
@@ -446,9 +443,9 @@ public class SensorsArray {
 	}
 
 	/**
-	 * Create the array of sensors setted in the {@link ShapeAreas}.
+	 * Create the array of sensors seated in the {@link ShapeAreas}.
 	 * <p>
-	 * dont use this method directly. use {@link Trooper#setEnvironment(DrawingPanel)}
+	 * Don't use this method directly. use {@link Trooper#setEnvironment(DrawingPanel)}
 	 * 
 	 * @param areas - the Environment
 	 */

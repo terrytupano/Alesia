@@ -26,7 +26,6 @@ import gui.*;
 public class DBExplorer extends TUIListPanel {
 
 	public DBExplorer() {
-		showAditionalInformation(false);
 		addToolBarActions(TActionsFactory.getActions("newModel", "raceFromTable","editModel", "deleteModel", "runSimulation",
 				"runMultiSimulation", "countEndPositions"));
 		setColumns("redate;rerace;redistance;reracetime;reserie;repartial1;repartial2;repartial3;repartial4");

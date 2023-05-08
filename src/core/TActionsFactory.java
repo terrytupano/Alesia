@@ -82,15 +82,15 @@ public class TActionsFactory {
 	}
 
 	public static List<javax.swing.Action> getActions(String... keys) {
-		ArrayList<javax.swing.Action> l = new ArrayList<>();
-		for (String k : keys) {
-			l.add(getAction(k));
+		ArrayList<javax.swing.Action> actions = new ArrayList<>();
+		for (String key : keys) {
+			actions.add(getAction(key));
 		}
-		return l;
+		return actions;
 	}
 
 	/**
-	 * general property fired when a action is perfored (button click)
+	 * general property fired when a action is performed (button click)
 	 */
 	public static String ACTION_PERFORMED = "actionPerformed";
 
@@ -190,7 +190,6 @@ public class TActionsFactory {
 		AbstractButton src = (AbstractButton) event.getSource();
 		ApplicationAction me = (ApplicationAction) src.getAction();
 		TUIFormPanel cnt = SwingUtils.getFirstParent((JComponent) src, TUIFormPanel.class);
-		cnt.setModel(null);
 		boolean val = ((TUIFormPanel) cnt).validateFields();
 		if (val) {
 			disposeDialog(cnt, me);

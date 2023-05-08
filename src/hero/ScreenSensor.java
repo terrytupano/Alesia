@@ -17,12 +17,12 @@ import net.sourceforge.tess4j.util.*;
 import datasource.*;
 
 /**
- * This class is a visual representation of the aread read from the screen. Group of this class are used and controled
+ * This class is a visual representation of the area read from the screen. Group of this class are used and controlled
  * by {@link SensorsArray} class. This class has a dual purpose:
- * <li>The main function is campture and process the image readed from the screen. the bounds, type of process need to
+ * <li>The main function is capture and process the image had read from the screen. the bounds, type of process need to
  * perform for this class, etc. come from the {@link Shape} class created based on the configuration file.
- * <li>this class is an of jpanel, so, this allow swing class use this class to build component that displain the
- * information captured and porccessed by this class.</li>
+ * <li>this class is an of JPanel, so, this allow swing class use this class to build component that displays the
+ * information captured and processed by this class.</li>
  * <p>
  * 
  * @author terry
@@ -69,8 +69,8 @@ public class ScreenSensor extends JPanel {
 
 		showImage(CAPTURED);
 
-		// standar: image at left, data at center
-		// if ratio is > 2. the component aling are vertical (image at top, data at
+		// Standard: image at left, data at center
+		// if ratio is > 2. the component align are vertical (image at top, data at
 		// center)
 		double ratio = (float) shape.bounds.width / (float) shape.bounds.height;
 		add(imageLabel, ratio > 2 ? BorderLayout.NORTH : BorderLayout.WEST);
@@ -89,7 +89,7 @@ public class ScreenSensor extends JPanel {
 	}
 
 	/**
-	 * Return a random {@link Point} selectd inside of the area (0,width) (0,height)
+	 * Return a random {@link Point} selected inside of the area (0,width) (0,height)
 	 * 
 	 * @param width - width of the area
 	 * @param height - height of the area
@@ -102,7 +102,7 @@ public class ScreenSensor extends JPanel {
 	}
 
 	/**
-	 * Replage the incomming argumento, which is spected to be only number, with the know replacemente due to tesseract
+	 * Replace the incoming argument, which is spected to be only number, with the know replacemente due to tesseract
 	 * caracter bad recognition. for example, is know that ocr operation detect 800 as a00 or 80o. this method will
 	 * return 800 for thath incommin value
 	 * 
@@ -124,18 +124,18 @@ public class ScreenSensor extends JPanel {
 	}
 
 	/**
-	 * Capture the region of the screen specified by this sensor. this method is executed at diferent levels acording to
-	 * the retrived information from the screen. The <code>doOcr</code> argument idicate the desire for retrive ocr from
-	 * the image. the ocr will retrive if this argument is <code>true</code> and a diference between the las image and
+	 * Capture the region of the screen specified by this sensor. this method is executed at different levels according to
+	 * the retrieved information from the screen. The <code>doOcr</code> argument indicate the desire for retrive OCR from
+	 * the image. the ocr will retrive if this argument is <code>true</code> and a difference between the last image and
 	 * the actual image has been detected.
 	 * <li>prepare the image
 	 * <li>set the status enabled/disabled for this sensor if the image is considerer enabled. if this sensor is setted
-	 * to disable, no more futher operations will be performed.
-	 * <li>perform de asociated OCR operation according to this area type ONLY IF the image has change.
+	 * to disable, no more further operations will be performed.
+	 * <li>perform the associated OCR operation according to this area type ONLY IF the image has change.
 	 * 
 	 * @see #getCapturedImage()
 	 * 
-	 * @param doOcr - <code>true</code> for perform ocr operation (if is available)
+	 * @param doOcr - <code>true</code> for perform OCR operation (if is available)
 	 * @param isLive - <code>true</code> capture the image from window. <code>false</code> capture from file
 	 */
 	public void capture(boolean doOcr, String readSource) {
@@ -167,13 +167,13 @@ public class ScreenSensor extends JPanel {
 		}
 
 		/*
-		 * color reducction and image treatment before OCR operation or enable/disable action: mandatory for all areas
+		 * color reduction and image treatment before OCR operation or enable/disable action: mandatory for all areas
 		 */
 		prepareImage();
 
 		/*
 		 * by default an area is enabled if against a dark background, there is some activation color. if the white
-		 * color is over some %, the action is setted as enabled. use the property enable.when=% to set a diferent
+		 * color is over some %, the action is setted as enabled. use the property enable.when=% to set a different
 		 * percentage
 		 */
 		setEnabled(false);
@@ -217,7 +217,7 @@ public class ScreenSensor extends JPanel {
 
 	/**
 	 * Return the int value from this sensor. Some sensor has only numerical information or text/numerical information.
-	 * acording to this, this method will return that numerical information (if is available) or -1 if not. Also, -1 is
+	 * According to this, this method will return that numerical information (if is available) or -1 if not. Also, -1 is
 	 * returned if any error is found during the parsing operation.
 	 * 
 	 * @see #OCRCorrection(ScreenSensor)
@@ -240,7 +240,7 @@ public class ScreenSensor extends JPanel {
 	}
 
 	/**
-	 * Retrun the optical caracter recognition extracted from the asociated area or <code>null</code> if the OCR is not
+	 * Return the optical character recognition extracted from the associated area or <code>null</code> if the OCR is not
 	 * available (disabled sensor)
 	 * 
 	 * @return OCR result or <code>null</code>
@@ -296,13 +296,13 @@ public class ScreenSensor extends JPanel {
 	}
 
 	/**
-	 * set for this sensor that draw the original caputured image or the prepared image. this method affect only the
+	 * set for this sensor that draw the original captured image or the prepared image. this method affect only the
 	 * visual representation of the component.
 	 * <p>
 	 * WARNING: displaying prepared images will invoke more method on the {@link Tesseract} OCR api engine. this will
 	 * decrease the system performance 4x.
 	 * 
-	 * @param so - <code>true</code> to draw the original caputred image
+	 * @param so - <code>true</code> to draw the original captured image
 	 */
 	public void showImage(String type) {
 		this.showImage = type;
@@ -320,7 +320,7 @@ public class ScreenSensor extends JPanel {
 
 	/**
 	 * Central method to get OCR operations. This method clear and re sets the variable {@link #ocrResult} according to
-	 * the succed or failure of the ocr operation.
+	 * the succeed or failure of the ocr operation.
 	 */
 	private void doOCR() {
 		ocrResult = null;
@@ -336,10 +336,10 @@ public class ScreenSensor extends JPanel {
 	}
 
 	/**
-	 * return the string representation of the car area using a convination of tessearct for rank und collor comparation
+	 * return the string representation of the car area using a convination of tessearct for rank and color comparation
 	 * for suit
 	 * 
-	 * @return the ocr retrived from the original file name or <code>null</code>
+	 * @return the ocr retrieved from the original file name or <code>null</code>
 	 */
 	private String getCardOCR() throws Exception {
 		// String ocr = getOCRFromImage(preparedImage, Hero.preparedCards);
@@ -378,7 +378,7 @@ public class ScreenSensor extends JPanel {
 	/**
 	 * Perform tesseract ocr operation for generic areas.
 	 * 
-	 * @return the string recogniyed by tesseract
+	 * @return the string recognized by tesseract
 	 * 
 	 * @throws TesseractException
 	 */
@@ -495,7 +495,7 @@ public class ScreenSensor extends JPanel {
 	}
 
 	/**
-	 * update the asociatet UI components with the internal values from this sensor.
+	 * update the associated UI components with the internal values from this sensor.
 	 */
 	private void update() {
 		BufferedImage sel = images.get(showImage);

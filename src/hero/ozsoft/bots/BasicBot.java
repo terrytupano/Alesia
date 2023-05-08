@@ -23,10 +23,10 @@ import hero.ozsoft.*;
 import hero.ozsoft.actions.*;
 
 /**
- * Auto mutable Alpha and Tau paremeters bot.
+ * Auto mutable Alpha and Tau parameters bot.
  * 
  * Current implementation acts purely on the bot's hole cards, based on <code>Tau</code> parameter of Original preflop
- * dsitribution. and <code>alpha</code> mutable parameter selection. Only <b>hero</b> ist allow to mutate every 100
+ * Distribution. and <code>alpha</code> mutable parameter selection. Only <b>hero</b> ist allow to mutate every 100
  * hands. All other players will be randomly created with random parameters.
  * 
  * <li>combined with a configurable level of tightness (when to play or fold a hand ) and aggression (how much to bet or

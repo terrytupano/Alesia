@@ -155,7 +155,6 @@ public class Hero {
 	@org.jdesktop.application.Action
 	public void gameSimulator(ActionEvent event) {
 		this.simulatorPanel = new GameSimulatorPanel();
-		// trooperPanel = simulatorPanel.getTrooperPanel();
 		Alesia.getInstance().getMainPanel().showPanel(simulatorPanel);
 	}
 
@@ -195,8 +194,8 @@ public class Hero {
 	}
 
 	@org.jdesktop.application.Action
-	public Task runTrooper(ActionEvent event) {
-		// retrive info from the porker window to resize
+	public Task<Void, Map<String, Object>> runTrooper(ActionEvent event) {
+		// Retrieve info from the porker window to resize
 		ArrayList<TSEntry> windows = TResources.getActiveWindows("terry1013");
 
 		// live trooper need the target table window
@@ -208,7 +207,7 @@ public class Hero {
 			 return null;
 		}
 
-		// overrride trooper table parameters
+		// Override trooper table parameters
 		String winTitle = windows.get(0).getValue();
 		String[] words = winTitle.split("\\s");
 		String cs = "";
@@ -296,7 +295,7 @@ public class Hero {
 				return null;
 			}
 
-			// WARNING: order by chair is importat. this is take into akonut in simulation
+			// WARNING: order by chair is important. this is take into account in simulation
 			LazyList<TrooperParameter> tparms = TrooperParameter.findAll().orderBy("chair");
 
 			TrooperParameter hero = TrooperParameter.findFirst("trooper = ?", "Hero");
@@ -312,11 +311,11 @@ public class Hero {
 					// Bot bot = (Bot) cons.newInstance(name);
 					 @SuppressWarnings("deprecation")
 					Bot bot = (Bot) cls.newInstance();
-					Trooper t = bot.getSimulationTrooper(simulationTable, tparm);
-					Player p = new Player(tName, buy, bot, tparm.getInteger("chair"));
-					simulationTable.addPlayer(p);
+					Trooper trooper = bot.getSimulationTrooper(simulationTable, tparm);
+					Player player = new Player(tName, buy, bot, tparm.getInteger("chair"));
+					simulationTable.addPlayer(player);
 					if ("Hero".equals(tName))
-						simulatorPanel.updatePokerSimulator(t.getPokerSimulator());
+						simulatorPanel.setTrooper(trooper);
 				}
 			}
 
@@ -372,7 +371,7 @@ public class Hero {
 	private void initTrooperEnvironment() {
 		simulationTable = null;
 		activeTrooper = new Trooper();
-		heroPanel.updateSensorsArray(activeTrooper);
+		heroPanel.setTrooper(activeTrooper);
 	}
 
 }

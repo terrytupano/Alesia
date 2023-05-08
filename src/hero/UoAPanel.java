@@ -10,95 +10,111 @@
  ******************************************************************************/
 package hero;
 
+import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+import java.util.List;
 
-import com.alee.laf.text.*;
-import com.jgoodies.forms.builder.*;
-import com.jgoodies.forms.factories.*;
-import com.jgoodies.forms.layout.*;
+import com.alee.laf.button.*;
+import com.alee.laf.grouping.*;
+import com.alee.laf.panel.*;
+import com.alee.laf.spinner.*;
 
 import core.*;
 import gui.*;
 import hero.UoAHandEval.*;
 
-public class UoAPanel extends TUIFormPanel implements ActionListener {
+public class UoAPanel extends TUIPanel {
 
 	private CardsPanel cardsPanel;
-	private WebTextArea console;
+	private TConsoleTextArea console;
+	private WebSpinner tauSpinner;
 
 	public UoAPanel() {
-		this.console = TUIUtils.getConsoleTextArea();
+		super();
+		this.tauSpinner = TUIUtils.getWebSpinner("tau", 15, 0, 100, 5);
 
-		cardsPanel = new CardsPanel(this);
-		// cardsPanel.setActionListener(this);
-		// JPanel cardsPanel2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-		// cardsPanel2.add(cardsPanel);
+//		setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
+		this.console = new TConsoleTextArea();
+		this.cardsPanel = new CardsPanel();
 
-		FormLayout layout = new FormLayout("pref:grow, 3dlu, pref:grow", "p, 3dlu, fill:pref:grow");
-		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DLU2);
+		WebButton evaluateHandButton = TUIUtils.getWebButtonForToolBar(this, "evaluateHand");
+		WebButton resetTableButton = TUIUtils.getWebButtonForToolBar(this, "resetTable");
+		WebButton setRandomHandButton = TUIUtils.getWebButtonForToolBar(this, "setRandomHand");
+		WebButton setExampleFromOMPaperButton = TUIUtils.getWebButtonForToolBar(this, "setExampleFromOMPaper");
 
-		// builder.append(TUIUtils.getTitleLabel("Single Hand simulation",
-		// "Select the hole card an the comunity cards. press <b>Evaluate hand</b> when
-		// ready"), 3);
-		// builder.nextLine(2);
-		builder.append(cardsPanel);
-		// builder.nextLine(2);
-		// builder.append(TUIUtils.getTitleLabel("Evaluation Result", ""), 3);
-		builder.nextLine(2);
-		builder.append(TUIUtils.getSmartScroller(console), 3);
+		GroupPane pane = new GroupPane(tauSpinner, evaluateHandButton, setRandomHandButton, setExampleFromOMPaperButton, resetTableButton);
 
-		setBodyComponent(builder.getPanel());
-		// registreSettings();
+		getToolBar().add(pane);
+		add(cardsPanel, BorderLayout.NORTH);
+		WebPanel webPanel = new WebPanel(new BorderLayout());
+		webPanel.add(cardsPanel, BorderLayout.NORTH);
+		webPanel.add(TUIUtils.getSmartScroller(console), BorderLayout.CENTER);
+
+		setBodyComponent(webPanel);
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
+	@org.jdesktop.application.Action
+	public void evaluateHand(ActionEvent event) {
+		evaluateHandImpl();
+	}
+
+	@org.jdesktop.application.Action
+	public void resetTable(ActionEvent event) {
+		cardsPanel.resetTable();
+		console.clear();
+	}
+
+	@org.jdesktop.application.Action
+	public void setRandomHand(ActionEvent event) {
+		cardsPanel.setRandomHand();
+		evaluateHandImpl();
+	}
+
+	@org.jdesktop.application.Action
+	public void setExampleFromOMPaper(ActionEvent event) {
+		cardsPanel.setExampleFromOponetModelingPaper();
+		evaluateHandImpl();
+	}
+
+	private void evaluateHandImpl() {
 		Hashtable<String, Object> parms = cardsPanel.getGameCards();
-		console.setText("");
+		console.clear();
 
 		UoAHand myHole = (UoAHand) parms.get("myHole");
 		// check hole hand
 		if (myHole.size() == 1) {
 			console.append(
-					"ERROR: Hole hand must contain 0 cards (for board evaluation) OR 2 cards for normal card evaluation.\n");
+					"ERROR\nHole hand must contain 0 cards (for board evaluation)\nOR 2 cards for normal card evaluation.\n");
 			return;
 		}
 
 		UoAHand comunity = (UoAHand) parms.get("comunityCards");
-		// check comunity cards
+		// check community cards
 		if (comunity.size() < 3) {
-			console.append("ERROR: Comunity card must contain 3, 4 or 5 cards.\n");
+			console.append("ERROR\nComunity card must contain 3, 4 or 5 cards.\n");
 			return;
 		}
 
 		console.append("Hole cards: " + myHole + " Comunity cards: " + comunity + "\n");
-		int tau = (Integer) parms.get("tau");
+		int tau = (Integer) tauSpinner.getValue();
 
-		long t = System.currentTimeMillis();
-		Properties properties = PokerSimulator.getEvaluation(myHole, comunity, 1, tau, 10000, 1000);
+		Map<String, Object> evaluationResult = PokerSimulator.getEvaluation(myHole, comunity, 1, tau, 10000, 1000);
 		// Add Chen score
-		properties.put("Chen Score", PokerSimulator.getChenScore(myHole));
-
-		// to sort the list
-		TreeMap<Object, Object> treeMap = new TreeMap<>(properties);
-		// DecimalFormat probFormat = new DecimalFormat("#0.000");
+		evaluationResult.put("Chen Score", PokerSimulator.getChenScore(myHole));
 
 		// all elements instance of List are array of uoAHand. override this property
 		// and show only a sublist
-		Set<Object> keys = treeMap.keySet();
-		for (Object key : keys) {
-			if (treeMap.get(key) instanceof List) {
-				List<UoAHand> l = (List<UoAHand>) treeMap.get(key);
+		Set<String> keys = evaluationResult.keySet();
+		for (String key : keys) {
+			if (evaluationResult.get(key) instanceof List) {
+				@SuppressWarnings("unchecked")
+				List<UoAHand> l = (List<UoAHand>) evaluationResult.get(key);
 				String examp = PokerSimulator.parseHands(l.subList(0, Math.min(l.size(), 10)));
-				treeMap.put(key, examp);
+				evaluationResult.put(key, examp);
 			}
 		}
-		// console.append("\nEvaluation\n");
-		String patt = "%-15s %-50s";
-		// console.append("\n" + String.format(patt, "Property", "Value"));
-		treeMap.forEach((key, value) -> console.append("\n" + String.format(patt, key, value)));
 
-		console.append("\nExcetution time: " + (System.currentTimeMillis() - t));
+		console.print(evaluationResult);
 	}
 }

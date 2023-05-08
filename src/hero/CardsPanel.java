@@ -4,27 +4,22 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 
-import javax.swing.*;
 import javax.swing.border.*;
 
-import com.alee.laf.button.*;
 import com.alee.laf.panel.*;
 
-import core.*;
 import hero.UoAHandEval.*;
 
 /**
- * panel with whit a matrix of all poker cards and area to set Hero Hole cards, villan Hole cards and the comunity cards
+ * panel with whit a matrix of all poker cards and area to set Hero Hole cards, villain Hole cards and the community cards
  * 
  */
-public class CardsPanel extends JPanel {
+public class CardsPanel extends WebPanel {
 	private ArrayList<UoAIconCard> boardCards;
 	private ArrayList<UoAIconCard> deckCards;
-	private JSpinner tauSpinner;
 
-	public CardsPanel(ActionListener listener) {
+	public CardsPanel() {
 		super();
-		this.tauSpinner = TUIUtils.getWebSpinner("tau", 15, 0, 100, 5);
 		deckCards = new ArrayList<>();
 		boardCards = new ArrayList<>();
 		CardMouseListener mouseListener = new CardMouseListener();
@@ -47,20 +42,6 @@ public class CardsPanel extends JPanel {
 			boardCards.add(card);
 		}
 
-		WebButton evalHandButton = new WebButton("Evaluate hand");
-		evalHandButton.addActionListener(listener);
-
-		WebButton setExample = new WebButton("Hand from OM");
-		setExample.addActionListener(listener);
-		setExample.addActionListener(ap -> setExampleFromPaper());
-
-		WebButton reset = new WebButton("Reset table");
-		reset.addActionListener(ap -> resetTable());
-
-		WebButton random = new WebButton("Random hand");
-		random.addActionListener(listener);
-		random.addActionListener(ap -> setRandomHand());
-
 		WebPanel holP = new WebPanel(new GridLayout(1, 0, 5, 5));
 		holP.add(boardCards.get(0));
 		holP.add(boardCards.get(1));
@@ -74,44 +55,21 @@ public class CardsPanel extends JPanel {
 		comP.add(boardCards.get(6));
 		comP.setBorder(new TitledBorder("Comunity cards"));
 
-		WebPanel cmpP = new WebPanel(new GridLayout(2, 3, 0, 0));
-		cmpP.add(tauSpinner);
-		cmpP.add(setExample);
-		cmpP.add(random);
-		cmpP.add(reset);
-		cmpP.add(evalHandButton);
 
 		WebPanel gamePanel = new WebPanel(new FlowLayout(FlowLayout.LEFT));
 		gamePanel.add(holP);
 		gamePanel.add(comP);
-		gamePanel.add(cmpP);
-
-		// // panel whit game cards area
-		// FormLayout layout = new FormLayout(
-		// "pref, 3dlu, pref, 20dlu, pref, 3dlu, pref, 3dlu, pref, 3dlu, pref, 3dlu, pref, 3dlu, pref", "");
-		// PanelBuilder builder = new PanelBuilder(layout, new FormDebugPanel());
-		// // PanelBuilder builder = new PanelBuilder(layout);
-		//
-		// builder.add(new WebLabel("My Hole"), CC.rcw(1, 1, 3));
-		// builder.add(new WebLabel("Comunity cards"), CC.rcw(1, 5, 3));
-		// builder.nextLine();
-		// for (UoAIconCard icon : boardCards) {
-		// builder.add(icon);
-		// builder.nextColumn();
-		// }
-		// builder.add(cmdp, CC.rchw(1, 8, 2,1));
-		// JPanel gamePanel = builder.build();
 
 		setLayout(new BorderLayout(0, 5));
 		add(cardsPanel, BorderLayout.CENTER);
 		add(gamePanel, BorderLayout.SOUTH);
 	}
-
+	
 	/**
-	 * the the boar with the example cart form modeling oponent paper
+	 * the the boar with the example cart form modeling opponent paper
 	 * 
 	 */
-	private void setExampleFromPaper() {
+	public void setExampleFromOponetModelingPaper() {
 		resetTable();
 		UoAHand exam = new UoAHand("Ad Qc 3h 4c jh");
 		setHand(exam);
@@ -139,7 +97,7 @@ public class CardsPanel extends JPanel {
 	/**
 	 * clear the simulation board
 	 */
-	private void resetTable() {
+	public void resetTable() {
 		deckCards.forEach(jl -> jl.setEnabled(true));
 		boardCards.forEach(jl -> jl.setUoACard(null));
 	}
@@ -147,7 +105,7 @@ public class CardsPanel extends JPanel {
 	/**
 	 * set a random hand for simulation
 	 */
-	private void setRandomHand() {
+	public void setRandomHand() {
 		resetTable();
 		ArrayList<UoAIconCard> list = new ArrayList<>(deckCards);
 		Collections.shuffle(list);
@@ -163,9 +121,9 @@ public class CardsPanel extends JPanel {
 
 	/**
 	 * return the selected cards inside a {@link Hashtable}
-	 * <li>myHole - contains the Hole cards
-	 * <li>comunityCards - contains the selected comunity cards
-	 * <li>tau - tau parameter
+	 * <li>myHole - instance of {@link UoAHand} contains the Hole cards
+	 * <li>comunityCards - instance of {@link UoAHand} contains the selected
+	 * community cards
 	 * 
 	 * @return selected cards
 	 */
@@ -181,7 +139,7 @@ public class CardsPanel extends JPanel {
 		sco = sco.replace("1c", "");
 		sco = sco.trim();
 		ht.put("comunityCards", new UoAHand(sco));
-		ht.put("tau", tauSpinner.getValue());
+
 		return ht;
 	}
 
@@ -216,7 +174,7 @@ public class CardsPanel extends JPanel {
 			// board -> deck
 			if (boardCards.contains(selCard)) {
 				if (selCard.getUoACard().getIndex() > -1) {
-					// find in board the corespondient card and enabled
+					// find in board the correspondent card and enabled
 					UoAIconCard psel = deckCards.stream()
 							.filter(uoai -> uoai.getUoACard().getIndex() == selCard.getUoACard().getIndex()).findFirst()
 							.orElseGet(null);

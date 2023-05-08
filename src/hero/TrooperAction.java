@@ -1,7 +1,7 @@
 package hero;
 
 /**
- * this class encapsule all required values for the trooper to perform an action.
+ * this class encapsulate all required values for the trooper to perform an action.
  * 
  */
 public class TrooperAction {
@@ -18,16 +18,16 @@ public class TrooperAction {
 	 */
 	public final double amount;
 	/**
-	 * the string secuence for {@link RobotActuator} class
+	 * the string sequence for {@link RobotActuator} class
 	 */
 	public final String robotCommand;
 	/**
-	 * cmputed expected value for this action
+	 * Computed expected value for this action
 	 */
 	public double expectedValue;
 
 	/**
-	 * Constructor. the robot comand for this action will be the name
+	 * Constructor. the robot command for this action will be the name
 	 * 
 	 * @param name The action's name.
 	 * @param amount - the cost for this action.
@@ -40,7 +40,7 @@ public class TrooperAction {
 	 * Constructor.
 	 * 
 	 * @param name The action's name.
-	 * @param robotCmd The command secuence for the {@link RobotActuator} class
+	 * @param robotCmd The command sequence for the {@link RobotActuator} class
 	 * @param amount The action's amount.
 	 */
 	public TrooperAction(String name, String robotCmd, double amount) {

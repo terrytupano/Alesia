@@ -8,10 +8,11 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 
 import com.alee.extended.layout.*;
+import com.alee.laf.button.*;
 import com.alee.laf.combobox.*;
+import com.alee.laf.grouping.*;
 import com.alee.laf.panel.*;
 import com.alee.managers.settings.*;
-import com.alee.managers.style.*;
 
 import core.*;
 import gui.*;
@@ -29,18 +30,21 @@ public class PreFlopCardsPanel extends TUIPanel {
 
 	public PreFlopCardsPanel() {
 		super();
-		this.preflopsComboBox = new WebComboBox(StyleId.comboboxHover, PreflopCardsModel.getPreflopList());
-		TUIUtils.setDimensionForTextComponent(preflopsComboBox, 40);
+		this.preflopsComboBox = new WebComboBox(PreflopCardsModel.getPreflopList());
 		preflopsComboBox.addActionListener(evt -> loadFromDB());
-		// ResourceMap r = Alesia.getInstance().getContext().getResourceManager().getResourceMap();
+		// ResourceMap r =
+		// Alesia.getInstance().getContext().getResourceManager().getResourceMap();
 		// r.injectComponent(this);
 		preflopCardsModel = new PreflopCardsModel();
 		WebPanel panel = new WebPanel(new VerticalFlowLayout());
 		panel.add(createRangePanel());
 		preflopsComboBox.registerSettings(new Configuration<ComboBoxState>(getClass().getName() + ".rangeComboBox"));
-		addToolBarActions("savePreflopRange");
-		getToolBar().add(preflopsComboBox);
-		setBodyComponent(panel);
+
+		WebButton save = TUIUtils.getWebButtonForToolBar(TActionsFactory.getAction("savePreflopRange"));
+		GroupPane toolBarPane = new GroupPane(save, preflopsComboBox);
+
+		getToolBar().add(toolBarPane);
+		setBodyComponent(panel, true);
 	}
 
 	/**
@@ -109,7 +113,6 @@ public class PreFlopCardsPanel extends TUIPanel {
 		slider.addChangeListener(sliderL);
 
 		panel.add(slider, BorderLayout.SOUTH);
-
 		return panel;
 	}
 
@@ -133,7 +136,8 @@ public class PreFlopCardsPanel extends TUIPanel {
 	}
 
 	/**
-	 * load the selected item in combobos and update the gloval variable {@link #preflopCardsModel}
+	 * load the selected item in combo box and update the global variable
+	 * {@link #preflopCardsModel}
 	 * 
 	 */
 	private void loadFromDB() {
@@ -143,7 +147,8 @@ public class PreFlopCardsPanel extends TUIPanel {
 			preflopCardsModel = new PreflopCardsModel();
 		}
 
-		// setvalueisadjusting = true avoid actionperformed invocation. this is becaus during
+		// setvalueisadjusting = true avoid actionperformed invocation. this is becaus
+		// during
 		// slider.setValueIsAdjusting(true);
 		slider.setValue(preflopCardsModel.getPercentage());
 		// slider.setValueIsAdjusting(false);

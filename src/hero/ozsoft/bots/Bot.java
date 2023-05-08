@@ -117,7 +117,7 @@ public abstract class Bot implements Client {
 
 		// hand track
 		// Hand: 1, Hero is the dealer.
-		// Hand: 67, the table has less players that allow. Restartting the hole table.
+		// Hand: 67, the table has less players that allow. Restarting the hole table.
 		if (message.startsWith("Hand: ")) {
 			// String[] tmp = message.split("[,]");
 			// handsT = Integer.parseInt(tmp[0].replace("Hand: ", ""));
@@ -180,7 +180,7 @@ public abstract class Bot implements Client {
 
 		long cnt = SimulationResult.count("name = ? ", simulationName);
 
-		// if no element is present, add standar 0 elements
+		// if no element is present, add standard 0 elements
 		if (cnt == 0) {
 			SimulationResult sts = SimulationResult.create("name", simulationName, "trooper", "Hero");
 			sts.set("hands", 0);
@@ -211,8 +211,8 @@ public abstract class Bot implements Client {
 		statistic.save();
 
 		// only hero rotate the list of variables. the rotate values are static stored. so the other bot can pic the
-		// rest of variables. this avoid colition between bots
-		// WARNIG: this code fracmento take into acount that hero allways is the firs in the rotation. (because is sit
+		// rest of variables. this avoid collisions between bots
+		// WARNIG: this code fragment take into account that hero always is the first in the rotation. (because is sit
 		// in chair 0)
 		if ("Hero".equals(trooperName)) {
 			varAndList.clear();
@@ -254,7 +254,7 @@ public abstract class Bot implements Client {
 		if (last.size() > 0) {
 			statistic.copyFrom(last.get(0));
 		} else {
-			// insert 0 element for a correct grapichs and posterior list selection
+			// insert 0 element for a correct graphics and posterior list selection
 			statistic.set("hands", 0);
 			statistic.set("wins", 0);
 			statistic.set("ratio", 0);

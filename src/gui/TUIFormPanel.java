@@ -18,9 +18,6 @@ import com.alee.managers.settings.*;
 import com.alee.managers.settings.Configuration;
 import com.alee.managers.tooltip.*;
 import com.jgoodies.common.base.*;
-import com.jgoodies.forms.builder.*;
-import com.jgoodies.forms.factories.*;
-import com.jgoodies.forms.layout.*;
 import com.jgoodies.validation.*;
 import com.jgoodies.validation.view.*;
 
@@ -28,37 +25,32 @@ import core.*;
 import gui.wlaf.*;
 
 /**
- * notes: the method {@link #getValue(String)} and {@link #getValues()} method only will return the values for
- * components inserted in this calss using {@link #addInputComponent(JComponent, boolean, boolean)} methods. this allow
+ * notes: the method {@link #getValue(String)} and {@link #getValues()} method
+ * only will return the values for components inserted in this calss using
+ * {@link #addInputComponent(JComponent, boolean, boolean)} methods. this allow
  * sublcass manualy append more ui component that are no related whit this form.
  * 
  * @author terry
  *
  */
-public class TUIFormPanel extends TUIPanel  {
+public class TUIFormPanel extends TUIPanel {
 
 	private static final String MY_LABEL = "myLabel";
 	private static final String MY_WEB_OVERLAY = "myWebOverlay";
 
 	private TValidationMessage mandatory, listEmpty;
-	private DefaultFormBuilder formBuilder;
 	private HashMap<String, JComponent> fieldComponetMap;
 	private ValidationResult validationResult;
 	private Model model;
 	private HashMap<String, Object> temporalStorage;
 
 	public TUIFormPanel() {
-		FormLayout fl = new FormLayout("right:pref, 3dlu, default:grow", "");
 		this.fieldComponetMap = new HashMap<String, JComponent>();
 		this.temporalStorage = new HashMap<>();
 		this.validationResult = new ValidationResult();
-		// TODO: set the mair resourcebuldle to this panel
-		this.formBuilder = new DefaultFormBuilder(fl);
-		formBuilder.border(Borders.DIALOG);
 		this.mandatory = new TValidationMessage("validationMessage.mandatory");
 		this.listEmpty = new TValidationMessage("validationMessage.listEmpty");
 	}
-
 
 	@org.jdesktop.application.Action
 	public void acept() {
@@ -78,10 +70,11 @@ public class TUIFormPanel extends TUIPanel  {
 	}
 
 	private List<JComponent> components = new ArrayList<>();
-	public JComponent[] getComponents() {
+
+	public JComponent[] getInputComponents() {
 		return components.toArray(new JComponent[0]);
 	}
-	
+
 	protected void addInputComponent(String fieldName, JComponent component, boolean required, boolean enable) {
 		fieldComponetMap.put(fieldName, component);
 		components.add(component);
@@ -94,13 +87,6 @@ public class TUIFormPanel extends TUIPanel  {
 		ValidationComponentUtils.setMandatory(component, required);
 	}
 
-	/**
-	 * verifica instancias de <code>JComboBox</code>buscando si algunos de estos componentes no contiene elementos. si
-	 * esto es cierto, este metodo guarda la rason del error y provee feedback color para el componente asociado.
-	 * <p>
-	 * esta clase asume que toda instancia de {@link JComboBox} debe tener al menos 1 elemento (puede ser elementos
-	 * especiales con ninguno)
-	 */
 	public void checkComboBoxes() {
 		for (JComponent jcmp : fieldComponetMap.values()) {
 			if (jcmp instanceof JComboBox) {
@@ -112,12 +98,6 @@ public class TUIFormPanel extends TUIPanel  {
 		}
 	}
 
-	/**
-	 * verifica instancias de <code>DateTimeSpinner</code> obligatorias y que se encuentran habilitadas
-	 * 
-	 * TODO: metodo copiado del viejo framework. Verificar y completar implementacion
-	 * 
-	 */
 	private void checkDateFields() {
 		List<JComponent> jcmplist = new ArrayList<>(fieldComponetMap.values());
 		for (JComponent jcmp : jcmplist) {
@@ -137,11 +117,6 @@ public class TUIFormPanel extends TUIPanel  {
 		}
 	}
 
-	/**
-	 * verifica los componentes que sean instancia de <code>ExtendedJLabel</code> y que sean obligatorios tengan algun
-	 * valor. si no es cierto, se presenta un error
-	 * 
-	 */
 	private void checkExtendedJLabel() {
 		// List<JComponent> jcmplist = new List(fields.values());
 		// for (JComponent jcmp : jcmplist) {
@@ -167,8 +142,9 @@ public class TUIFormPanel extends TUIPanel  {
 	}
 
 	/**
-	 * return the internal value stored in the {@link JComponent} asociated whit this field id. This method assume the
-	 * standar Object <--> Component relation. for example:
+	 * return the internal value stored in the {@link JComponent} asociated whit
+	 * this field id. This method assume the standar Object <--> Component relation.
+	 * for example:
 	 * <ul>
 	 * <li>Number <--> {@link JFormattedTextField}
 	 * <li>Boolean <--> {@link JCheckBox} or {@link JRadioButton}
@@ -297,9 +273,11 @@ public class TUIFormPanel extends TUIPanel  {
 	}
 
 	/**
-	 * return the instance of the {@link Model} setted whit all values introduced as input in this compoment. The model
-	 * must be setted initialy using the method {@link #setModel(Model)}. All field values will be copied as are in the
-	 * input window. Only attributes present in the input window will be copyed to the model.
+	 * return the instance of the {@link Model} setted whit all values introduced as
+	 * input in this compoment. The model must be setted initialy using the method
+	 * {@link #setModel(Model)}. All field values will be copied as are in the input
+	 * window. Only attributes present in the input window will be copyed to the
+	 * model.
 	 * 
 	 * @return the Model with all attributes set.
 	 */
@@ -312,8 +290,9 @@ public class TUIFormPanel extends TUIPanel  {
 	}
 
 	/**
-	 * return the internal fields. This list is for store purpose. Some implementation of this class needs to store
-	 * parameters that has no visual component associated with, but will be needed futher.
+	 * return the internal fields. This list is for store purpose. Some
+	 * implementation of this class needs to store parameters that has no visual
+	 * component associated with, but will be needed futher.
 	 * 
 	 * @see #getValues()
 	 */
@@ -322,9 +301,9 @@ public class TUIFormPanel extends TUIPanel  {
 	}
 
 	/**
-	 * Return a new {@link Hashtable} with all values setted by this GUI. this method also will return all stored
-	 * parameters in the temporal storage buffer for this class. Fields whit values <code>null</code> will not be
-	 * returned
+	 * Return a new {@link Hashtable} with all values setted by this GUI. this
+	 * method also will return all stored parameters in the temporal storage buffer
+	 * for this class. Fields whit values <code>null</code> will not be returned
 	 * 
 	 * @return Hashtable with fields name and values found in this UI
 	 * @see #getTemporalStorage()
@@ -339,28 +318,34 @@ public class TUIFormPanel extends TUIPanel  {
 	}
 
 	/**
-	 * Enable commint actions. Commit action are actions with the property <code>.isCommint = true</code> as property
-	 * (for example, see Acept)
+	 * Enable commint actions. Commit action are actions with the property
+	 * <code>.isCommint = true</code> as property (for example, see Acept)
 	 * 
-	 * @param enable - true of false for enable/disable action public void setEnabledCommintActions(boolean enable) {
-	 *        for (Action a : allActions) { ApplicationAction aa = (ApplicationAction) a; String isc =
-	 *        aa.getResourceMap().getString(aa.getName() + ".Action.isCommint"); if (isc != null && isc.equals("true"))
-	 *        { aa.setEnabled(enable); } } // actions.stream().filter((a) ->
-	 *        a.getValue("isCommint").equals("true")).forEach(a -> a.setEnabled(enable)); }
+	 * @param enable - true of false for enable/disable action public void
+	 *               setEnabledCommintActions(boolean enable) { for (Action a :
+	 *               allActions) { ApplicationAction aa = (ApplicationAction) a;
+	 *               String isc = aa.getResourceMap().getString(aa.getName() +
+	 *               ".Action.isCommint"); if (isc != null && isc.equals("true")) {
+	 *               aa.setEnabled(enable); } } // actions.stream().filter((a) ->
+	 *               a.getValue("isCommint").equals("true")).forEach(a ->
+	 *               a.setEnabled(enable)); }
 	 */
 
 	/**
-	 * Enable/disable <code>Action.scope = element</code> actions. "element" actions are action than act over an element
-	 * of a list. (for example, editModelAction) those action must be enabled/disables if the user select or not an
-	 * elemento form the list.
+	 * Enable/disable <code>Action.scope = element</code> actions. "element" actions
+	 * are action than act over an element of a list. (for example, editModelAction)
+	 * those action must be enabled/disables if the user select or not an elemento
+	 * form the list.
 	 * 
-	 * @param enable - true of false for enable/disable action public void setEnabledElementActions(boolean enable) {
-	 *        setEnableActions("scope", "element", enable); }
+	 * @param enable - true of false for enable/disable action public void
+	 *               setEnabledElementActions(boolean enable) {
+	 *               setEnableActions("scope", "element", enable); }
 	 */
 
 	/**
-	 * Inicia la validacion estandar de datos. Cualquier error encontrado durante esta secuencia de validacion,
-	 * presentara el mensaje e inhabilitara el boton marcado como {@link TConstants#DEFAULT_BUTTON}
+	 * Inicia la validacion estandar de datos. Cualquier error encontrado durante
+	 * esta secuencia de validacion, presentara el mensaje e inhabilitara el boton
+	 * marcado como {@link TConstants#DEFAULT_BUTTON}
 	 * <ol>
 	 * <li>Toda instancia de {@link JComboBox} debe contener elementos
 	 * <li>Campos de entrada obligatoria.
@@ -369,7 +354,8 @@ public class TUIFormPanel extends TUIPanel  {
 	 * <p>
 	 * Si todas las validaciones has sido superadas, se llama a {@link #validate()}
 	 * 
-	 * @param src - Objecto origen del evento que inicio la prevalidacion. puede ser null
+	 * @param src - Objecto origen del evento que inicio la prevalidacion. puede ser
+	 *            null
 	 * 
 	 */
 	public boolean preValidate() {
@@ -404,12 +390,14 @@ public class TUIFormPanel extends TUIPanel  {
 	}
 
 	/**
-	 * Registers all input component for settings auto-save. All WebComponent that suport {@link SettingsMethods} will
-	 * be registred. the client property <code>settingsProcessor</code> muss be setted whit a valid instance of
+	 * Registers all input component for settings auto-save. All WebComponent that
+	 * suport {@link SettingsMethods} will be registred. the client property
+	 * <code>settingsProcessor</code> muss be setted whit a valid instance of
 	 * {@link Configuration}.
 	 * 
 	 * <p>
-	 * To get a valid web component whit the correct configuration, use any of the factory methods in {@link TUIUtils}
+	 * To get a valid web component whit the correct configuration, use any of the
+	 * factory methods in {@link TUIUtils}
 	 * 
 	 * @see SettingsMethods#registerSettings(Configuration)
 	 */
@@ -444,10 +432,10 @@ public class TUIFormPanel extends TUIPanel  {
 	}
 
 	/**
-	 * the the enable/disable status for the couple {@link JLabel} and {@link JComponent} asociated whit this field
-	 * name.
+	 * the the enable/disable status for the couple {@link JLabel} and
+	 * {@link JComponent} asociated whit this field name.
 	 * 
-	 * @param field - field name of the input component
+	 * @param field  - field name of the input component
 	 * @param enable - enable/disable value
 	 */
 	public void setEnable(String field, boolean enable) {
@@ -459,7 +447,8 @@ public class TUIFormPanel extends TUIPanel  {
 	}
 
 	/**
-	 * set the {@link Model} for this component if this componet will be used as Data base CRUD operations
+	 * set the {@link Model} for this component if this component will be used as
+	 * Data base CRUD operations
 	 * 
 	 * @param model - the model
 	 */
@@ -478,9 +467,10 @@ public class TUIFormPanel extends TUIPanel  {
 	}
 
 	/**
-	 * this metod is invoqued by any default save action previous to continue normal operation. use this method to
-	 * perform aditional UI validation. if this method return <code>false</code>, the action will not continue the
-	 * normal flow of operations and all
+	 * this method is invoked by any default save action previous to continue normal
+	 * operation. use this method to perform additional UI validation. if this method
+	 * return <code>false</code>, the action will not continue the normal flow of
+	 * operations and all
 	 * 
 	 * @return
 	 */

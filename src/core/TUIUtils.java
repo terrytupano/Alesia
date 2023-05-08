@@ -81,12 +81,7 @@ public class TUIUtils {
 	public static final Border STANDAR_EMPTY_BORDER = new EmptyBorder(TUIUtils.STANDAR_GAP, TUIUtils.STANDAR_GAP,
 			TUIUtils.STANDAR_GAP, TUIUtils.STANDAR_GAP);
 
-	/**
-	 * copiado de <code>Color.brighter()</code> pero con el factor modificado para
-	 * obtener un mejor degradado
-	 * 
-	 * @return color un poco mas brillante
-	 */
+
 	public static Color brighter(Color c) {
 		double FACTOR = 0.92;
 		int r = c.getRed();
@@ -106,21 +101,6 @@ public class TUIUtils {
 
 		return new Color(Math.min((int) (r / FACTOR), 255), Math.min((int) (g / FACTOR), 255),
 				Math.min((int) (b / FACTOR), 255));
-	}
-
-	public static WebPanel getListItems(JComponent... components) {
-		WebPanel panel = new WebPanel();
-		setEmptyBorder(panel);
-		panel.setLayout(new VerticalFlowLayout(TUIUtils.STANDAR_GAP,TUIUtils.STANDAR_GAP,true,  false));
-
-		for (JComponent jComponent : components) {
-			String name = jComponent.getName();
-			Preconditions.checkNotNull(name, "The component hast no name.");
-			ListItem item = ListItem.getItemForField(name, jComponent);
-			panel.add(item, FormLayout.LINE);
-		}
-//		return new JScrollPane(panel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		return panel;
 	}
 
 	/**
@@ -167,36 +147,6 @@ public class TUIUtils {
 		label.print(g2d);
 		g2d.dispose();
 		return bufImage;
-	}
-
-	/**
-	 * Construye y retorna <code>Box</code> con el par
-	 * <code>JLabel(lab) JComponent</code> alineados segun los argumentos de entrada
-	 * 
-	 * @param lab - id en ResourceBundle para <code>JLabel</code>
-	 * @parm jcomp - Componente de entrada
-	 * @parm req - <code>true</code> si el componente es un campo de entrada
-	 *       obligatoria
-	 * @parm ena - valor para metodo <code>setEnabled(ena)</code>
-	 * @parm glue - si =true coloca Box.createHorizontalGlue() entre la etiqueta y
-	 *       el componente para que ambos esten separados. de lo contrario, solo
-	 *       coloca Box.createHorizontalStrut(H_GAP)
-	 */
-	private static Box coupleInBox(String lab, JComponent jcom, boolean req, boolean ena, boolean glue) {
-		Box b = Box.createHorizontalBox();
-		JLabel jl = getJLabel(lab, req, ena);
-		b.add(jl);
-		b.add(Box.createHorizontalStrut(H_GAP));
-		if (glue) {
-			b.add(Box.createHorizontalGlue());
-		}
-		jl.setEnabled(ena);
-		jcom.setEnabled(ena);
-		b.add(jcom);
-		if (!glue) {
-			b.add(Box.createHorizontalGlue());
-		}
-		return b;
 	}
 
 	public static ArrayList<WebButton> createNavButtons(Color toColor, String style, Font font, Action... actions) {
@@ -327,166 +277,37 @@ public class TUIUtils {
 		return editorPane;
 	}
 
-	/**
-	 * return a console stily {@link WebTextArea}.
-	 * <p>
-	 * NOTE: to conrrect control the scrolling, this method DONT set the
-	 * preferedSize
-	 * 
-	 * @see #getSmartScroller(JComponent)
-	 * 
-	 * @return conole stile {@link WebTextArea}
-	 */
-	public static WebTextArea getConsoleTextArea() {
-		WebTextArea console = new WebTextArea();
-		Font f = new Font("courier new", Font.PLAIN, 12);
-		console.setFont(f);
-		console.setLineWrap(false);
-		console.setEditable(false);
-		// int h = getStringPixelHeight("X", f);
-		// console.setPreferredSize(new Dimension(-1, h * 10));
-		// console.setMinimumSize(new Dimension(-1, h * 10));
-		return console;
-	}
-
 	public static Icon getFontIcon(char unicode, float size, Color color) {
 		return new ImageIcon(buildImage(unicode, size, color));
 	}
 
-	/**
-	 * retorna un unico componente dentro de una Box alineado hacia la izquierda
-	 * 
-	 * @param jcomp - component
-	 */
-	public static Box getInHoriszontalBox(JComponent jcomp) {
-		Box b = Box.createHorizontalBox();
-		b.add(jcomp);
-		b.add(Box.createHorizontalGlue());
-		return b;
+	public static GroupPane getGroupPane(Action... actions) {
+		return getGroupPane(Arrays.asList(actions));
 	}
 
-	/**
-	 * coloca los componentes pasados como argumentos uno junto a oltro en un
-	 * <code>new JPanel(new FlowLayout(alg, H_GAP, 0))</code> (alineados hacia alg
-	 * con un espacio entre componentes de H_GAP
-	 * 
-	 * @param jcomps - componentes
-	 * @param alg    - alineacion de los componente. Puede ser cualquiera
-	 *               <code>FlowLayout.XXX</code>
-	 * @return JPanel
-	 */
-	public static JPanel getInHorizontalBox(Component[] jcomps, int alg) {
-		JPanel jp = new JPanel(new FlowLayout(alg, H_GAP, 0));
-		for (int t = 0; t < jcomps.length; t++) {
-			jp.add(jcomps[t]);
+	public static GroupPane getGroupPane(JComponent... components) {
+		GroupPane groupPane = new GroupPane();
+		for (JComponent jComponent : components) {
+			groupPane.add(jComponent);
 		}
-
-		return jp;
+		return groupPane;
 	}
 
-	/**
-	 * Retorna el par <code>JLabel(lab) JComponent</code> en un <code>Box</code> con
-	 * alineacion horizontal con ambos componentes a los extremos del contenedor
-	 * 
-	 * @param lab  - id en ResourceBundle para <code>JLabel</code>
-	 * @param jcom - componente al que refiere la etiqueta lab
-	 * @param req  - <code>true</code> si el par es de entrada obligatoria
-	 * @param ena  - <code>true</code> ambos etiqueta y componente habilitados.
-	 * @return Box con componentes en su interior
-	 */
-	public static Box getInHorizontalBox(String lab, JComponent jcom, boolean req, boolean ena) {
-		return coupleInBox(lab, jcom, req, ena, true);
-	}
-
-	/**
-	 * Retorna el par <code>JLabel(lab) JComponent</code> en un <code>Box</code> con
-	 * alineacion horizontal pero con <code>Box.CreateHorizontalGlue()</code> con
-	 * ambos componentes hacia la izquierda del contenedor
-	 * 
-	 * @param lab  - id en ResourceBundle para <code>JLabel</code>
-	 * @param jcom - componente al que refiere la etiqueta lab
-	 * @param req  - <code>true</code> si el par es de entrada obligatoria
-	 * @param ena  - <code>true</code> ambos etiqueta y componente habilitados.
-	 * @return Box con componentes en su interior
-	 */
-	public static Box getInHorizontalBoxWithGlue(String lab, JComponent jcom, boolean req, boolean ena) {
-		return coupleInBox(lab, jcom, req, ena, false);
-	}
-
-	/**
-	 * retorna los componentes pasados como argumentos en un contenedor, colocados
-	 * verticalmente y alineados segun el parametro alg
-	 * 
-	 * @param jcomps - componentes
-	 * @param alg    - alineacion (de SwingConstants)
-	 * @return Box
-	 */
-	public static Box getInVerticalBox(JComponent[] jcomps, int alg) {
-		Box b = Box.createVerticalBox();
-		for (int t = 0; t < jcomps.length; t++) {
-			Box bt = Box.createHorizontalBox();
-			bt.add(jcomps[t]);
-			bt.add(Box.createHorizontalGlue());
-			b.add(bt);
-			b.add(Box.createHorizontalStrut(V_GAP));
+	public static GroupPane getGroupPane(List<Action> actions) {
+		GroupPane groupPane = new GroupPane();
+		for (Action action : actions) {
+			WebButton b = getWebButtonForToolBar(action);
+			groupPane.add(b);
 		}
-		Box b2 = Box.createHorizontalBox();
-		if (alg == SwingConstants.LEFT) {
-			b2.add(Box.createHorizontalGlue());
-			b2.add(b);
-		}
-		if (alg == SwingConstants.RIGHT) {
-			b2.add(b);
-			b2.add(Box.createGlue());
-		}
-		return b2;
-
+		return groupPane;
 	}
 
-	/**
-	 * retorna el par <code>JLabel(lab) JComponent</code> dentro de un
-	 * <code>Box</code> vertical alineados hacia la izquierda.
-	 * 
-	 * @param lab  - id en ResourceBundle para <code>JLabel</code>
-	 * @param jcom - componente
-	 * @param req  - si el componente es de entrada obligatoria o no.
-	 * @param ena  - valor para <code>jcom.setEnabled()</code>
-	 * 
-	 * @return box vertical
-	 */
-	public static JPanel getInVerticalBox(String lab, JComponent jcom, boolean req, boolean ena) {
-		Box b1 = Box.createHorizontalBox();
-		JLabel jl = getJLabel(lab, req, ena);
-		b1.add(jl);
-		b1.add(Box.createHorizontalGlue());
-		jcom.setEnabled(ena);
-
-		JPanel jp = new JPanel();
-		jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
-		jp.add(b1);
-		jp.add(jcom);
-
-		/**
-		 * Box b2 = Box.createHorizontalBox(); b2.add(jcom);
-		 * b2.add(Box.createHorizontalGlue()); Box b = Box.createVerticalBox();
-		 * b.add(b1); b.add(b2);
-		 */
-		return jp;// b;
-	}
-
-	/**
-	 * retorna un <code>JCheckBox</code> con valores standar
-	 * 
-	 * @param idt - identificador en resourcebundle para el texto
-	 * @param sel - estado: seleccionado o no
-	 * 
-	 * @return JCheckBox
-	 */
-	public static JCheckBox getJCheckBox(String idt, boolean sel) {
-		JCheckBox jcb = new JCheckBox(TStringUtils.getString(idt), sel);
-		jcb.setName(idt);
+	public static JCheckBox getJCheckBox(String field, boolean selected) {
+		JCheckBox jcb = new JCheckBox(TStringUtils.getString(field), selected);
+		jcb.setName(field);
 		return jcb;
 	}
+
 
 	/**
 	 * create and return a {@link WebCheckBox}. this implementation assume that the
@@ -499,7 +320,6 @@ public class TUIUtils {
 	 */
 	public static JCheckBox getJCheckBox(String field, Model model) {
 		JCheckBox jcb = getJCheckBox(field, model.getBoolean(field));
-		// jcb.setName(fld);
 		return jcb;
 	}
 
@@ -612,13 +432,6 @@ public class TUIUtils {
 		return jrb;
 	}
 
-	/**
-	 * JtextArea estadar para datos de registros
-	 * 
-	 * @param r - registro
-	 * @param f - nombre de la columna
-	 * @return JScrollPane
-	 */
 	public static JScrollPane getJTextArea(Model model, String field) {
 		@SuppressWarnings("static-access")
 		int len = model.getMetaModel().getColumnMetadata().get(field).getColumnSize();
@@ -628,14 +441,6 @@ public class TUIUtils {
 		return jsp;
 	}
 
-	/**
-	 * JtextArea estadar para datos de registros
-	 * 
-	 * @param r   - registro
-	 * @param f   - nombre de la columna
-	 * @param lin - Nro de lineas deseadas para el componente
-	 * @return JScrollPane
-	 */
 	public static JScrollPane getJTextArea(Model model, String field, int lin) {
 		@SuppressWarnings("static-access")
 		int len = model.getMetaModel().getColumnMetadata().get(field).getColumnSize();
@@ -645,15 +450,6 @@ public class TUIUtils {
 		return jsp;
 	}
 
-	/**
-	 * retorna <code>JTextArea</code> con formato estandar
-	 * 
-	 * @param tt  - id para tooltips
-	 * @param val - Texto inicial para el componente
-	 * @param col - columnas. las columnas seran dividias entre el Nro de lineas
-	 * @param lin - Lineas. Nro de lines que se desean para el componentes
-	 * @return JScrollPane
-	 */
 	public static JScrollPane getJTextArea(String tt, String val, int col, int lin) {
 		int cl = (col / lin);
 		JTextArea jta = new JTextArea(val, lin, cl);
@@ -682,6 +478,37 @@ public class TUIUtils {
 		setDimensionForTextComponent(jtf, cw);
 		setToolTip(ttn, jtf);
 		return jtf;
+	}
+
+	public static WebPanel getListItems(int height, JComponent... rightComponents) {
+		WebPanel panel = new WebPanel(StyleId.panelTransparent, new FormLayout(false, true, STANDAR_GAP, STANDAR_GAP));
+
+		for (JComponent jComponent : rightComponents) {
+			String name = jComponent.getName();
+			Preconditions.checkNotNull(name, "The component hast no name.");
+			ListItem item = ListItem.getItemForField(name, jComponent);
+			// the with is forced by the layout
+			item.setPreferredSize(new Dimension(0, height));
+			panel.add(item, FormLayout.LINE);
+		}
+		panel.setBorder(STANDAR_EMPTY_BORDER);
+		return panel;
+	}
+
+	public static WebPanel getListItems(JComponent... rightComponents) {
+		return getListItems(70, rightComponents);
+	}
+
+	public static JList<ListItem> getListItems2(JComponent... components) {
+		Vector<ListItem> items = new Vector<>();
+		for (JComponent jComponent : components) {
+			String name = jComponent.getName();
+			Preconditions.checkNotNull(name, "The component hast no name.");
+			ListItem item = ListItem.getItemForField(name, jComponent);
+			items.add(item);
+		}
+		JList<ListItem> jList = new JList<>(items);
+		return jList;
 	}
 
 	/**
@@ -763,45 +590,20 @@ public class TUIUtils {
 	}
 
 	/**
-	 * create and return a {@link JScrollPane} setted with an instace of
-	 * {@link SmartScroller}. this is intendet for console style componentes
+	 * create and return a {@link JScrollPane} setted with an instance of
+	 * {@link SmartScroller}. this is intended for console style components
 	 * 
 	 * @see SmartScroller
 	 * @param component - component to scroll
-	 * @return {@link JScrollPane} with standar {@link SmartScroller}
+	 * @return {@link JScrollPane} with standard {@link SmartScroller}
 	 */
 	public static JScrollPane getSmartScroller(JComponent component) {
 		WebScrollPane pane = new WebScrollPane(component, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+//		WebScrollPane pane = getWebScrollPane(component);
+//		pane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		new SmartScroller(pane);
 		return pane;
-	}
-
-	/**
-	 * crea y retorna un componente informativo con formato estandar
-	 * 
-	 * @param rbid - id de resourceBundle
-	 * @param inf  - componente que contendra la informacion
-	 * @return - Box
-	 */
-	public static JPanel getStandarInfoComponent(String rbid, Component inf) {
-		JLabel jl = new JLabel(TStringUtils.getString(rbid) + ":");
-		float inc = 2;
-		Font fo = jl.getFont();
-		fo = fo.deriveFont(fo.getSize() + inc);
-		fo = fo.deriveFont(Font.BOLD);
-		jl.setFont(fo);
-
-		fo = inf.getFont();
-		fo = fo.deriveFont(fo.getSize() + inc);
-		inf.setFont(fo);
-
-		JPanel ic = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-		ic.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
-		ic.add(jl);
-		ic.add(Box.createHorizontalStrut(4));
-		ic.add(inf);
-		return ic;
 	}
 
 	public static WebToggleButton getStartPauseToggleButton(Action action, ActionListener listener) {
@@ -902,6 +704,23 @@ public class TUIUtils {
 		return new WebLabel(html);
 	}
 
+	public static WebPanel getTitleTextPanel(String title, String description) {
+		WebLabel titleLabel = new WebLabel(StyleId.labelShadow, title, WebLabel.LEFT);
+		Font font = titleLabel.getFont();
+		titleLabel.setFont(font.deriveFont(font.getSize() + 2F));
+
+		WebLabel descriptionLabel = new WebLabel(description, WebLabel.LEFT);
+		descriptionLabel.setForeground(Color.GRAY);
+
+		WebPanel vertical = new WebPanel(new VerticalFlowLayout(VerticalFlowLayout.MIDDLE, 0, 0, true, false));
+		vertical.setOpaque(false);
+		vertical.add(titleLabel);
+		vertical.add(descriptionLabel);
+
+		return vertical;
+
+	}
+
 	/**
 	 * return a {@link JScrollPane} with a {@link TPropertyJTable} inside
 	 * 
@@ -922,18 +741,19 @@ public class TUIUtils {
 		return js;
 	}
 
-	public static WebComboBox getTWebComboBox(String fieldName, String group) {
-		List<TSEntry> entries = TStringUtils.getEntriesFrom(group);
-		return getWebComboBox(fieldName, entries, null);
-	}
-
 	public static WebComboBox getTWebComboBox(String fieldName, String group, String selectedKey) {
 		List<TSEntry> entries = TStringUtils.getEntriesFrom(group);
 		return getWebComboBox(fieldName, entries, selectedKey);
 	}
 
+	public static WebToolBar getUndecoradetToolBar(Component... components) {
+		WebToolBar toolBar = new WebToolBar(StyleId.toolbarUndecorated);
+		toolBar.add(components);
+		return toolBar;
+	}
+
 	/**
-	 * create and return and {@link WebButton} with all settings stablisehd for
+	 * create and return and {@link WebButton} with all settings established for
 	 * toolbar
 	 * 
 	 * @param action - action to set in the button
@@ -942,13 +762,16 @@ public class TUIUtils {
 	 */
 	public static WebButton getWebButtonForToolBar(Action action) {
 		overRideIcons(TOOL_BAR_ICON_SIZE, action);
+//		WebButton button = new WebButton(StyleId.buttonHover, action);
 		WebButton button = new WebButton(action);
-		// button.setRequestFocusEnabled(false);
-		// TooltipManager.setTooltip(jb, (String)
-		// taa.getValue(TAbstractAction.SHORT_DESCRIPTION), TooltipWay.down);
 		button.setText(null);
-		// button.setPreferredSize(new Dimension(46, 26));
 		return button;
+	}
+
+	public static WebButton getWebButtonForToolBar(Object actionSource, String action) {
+		 ApplicationContext ac = Alesia.getInstance().getContext();
+		 ActionMap actionMap = ac.getActionMap(actionSource.getClass(), actionSource);
+		 return getWebButtonForToolBar(actionMap.get(action));
 	}
 
 	public static WebCheckBox getWebCheckBox(String name) {
@@ -979,6 +802,11 @@ public class TUIUtils {
 		comboBox.putClientProperty("settingsProcessor", new Configuration<ComboBoxState>(fieldName));
 		setToolTip(fieldName, comboBox);
 		return comboBox;
+	}
+
+	public static WebComboBox getWebComboBox(String fieldName, String group) {
+		List<TSEntry> entries = TStringUtils.getEntriesFrom(group);
+		return getWebComboBox(fieldName, entries, null);
 	}
 
 	/**
@@ -1169,6 +997,14 @@ public class TUIUtils {
 		return wpf;
 	}
 
+	public static WebScrollPane getWebScrollPane(JComponent component) {
+		WebScrollPane scrollPane = new WebScrollPane(component, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPane.setStyleId(StyleId.scrollpaneTransparentHovering);
+		scrollPane.setBorder(null);
+		return scrollPane;
+	}
+
 	public static WebSpinner getWebSpinner(String name, int val, int min, int max, int step) {
 		SpinnerNumberModel sModel = new SpinnerNumberModel(val, min, max, step);
 		WebSpinner spinner = new WebSpinner(sModel);
@@ -1211,8 +1047,8 @@ public class TUIUtils {
 	}
 
 	/**
-	 * create and return and {@link WebToggleButton} with all standard settings 
-	 * for toolbar
+	 * create and return and {@link WebToggleButton} with all standard settings for
+	 * toolbar
 	 * 
 	 * @param action - action to set in the button
 	 * @return button ready to set as toolbar button
@@ -1238,14 +1074,8 @@ public class TUIUtils {
 		return button;
 	}
 
-	/**
-	 * return standar implementation of toolbar
-	 * 
-	 * @return
-	 */
 	public static WebToolBar getWebToolBar() {
-		WebToolBar toolBar = new WebToolBar(StyleId.toolbarUndecorated);
-		// toolBar.setToolbarStyle(ToolbarStyle.attached);
+		WebToolBar toolBar = new WebToolBar(StyleId.toolbarAttachedNorth);
 		toolBar.setFloatable(false);
 		return toolBar;
 	}
@@ -1257,15 +1087,6 @@ public class TUIUtils {
 			toolBar.add(b);
 		}
 		return toolBar;
-	}
-	
-	public static GroupPane getGroupPane(Action... actions) {
-		GroupPane groupPane = new GroupPane();
-		for (Action action : actions) {
-			WebButton b = getWebButtonForToolBar(action);
-			groupPane.add(b);
-		}
-		return groupPane;		
 	}
 
 	/**
@@ -1357,25 +1178,17 @@ public class TUIUtils {
 		comp.setBorder(new EmptyBorder(H_GAP, V_GAP, H_GAP, V_GAP));
 	}
 
-	/**
-	 * Habilita/inhabilita los componentes cmps. Si alguno de estos es instancia de
-	 * <code>Box o JPanel</code> se realiza la operacion a los componentes que
-	 * contienen en forma recursiva.
-	 * 
-	 * @param cmps - componentes a habilitar/inhabilitar
-	 * @param ena  - =true habilitar, inhabilitar si =false
-	 */
-	public static void setEnabled(Component cnt, boolean ena) {
-		Component[] cmps = (cnt instanceof Box || cnt instanceof JPanel) ? cmps = ((Container) cnt).getComponents()
-				: new Component[] { cnt };
+	public static void setEnabledRecursively(Component component, boolean enabled) {
+		Component[] cmps = (component instanceof Box || component instanceof JPanel) ? cmps = ((Container) component).getComponents()
+				: new Component[] { component };
 
 		for (int e = 0; e < cmps.length; e++) {
-			cmps[e].setEnabled(ena);
+			cmps[e].setEnabled(enabled);
 			if (cmps[e] instanceof Box || cmps[e] instanceof JPanel) {
-				setEnabled(cmps[e], ena);
+				setEnabledRecursively(cmps[e], enabled);
 			}
 			if (cmps[e] instanceof JScrollPane) {
-				setEnabled(((JScrollPane) cmps[e]).getViewport().getView(), ena);
+				setEnabledRecursively(((JScrollPane) cmps[e]).getViewport().getView(), enabled);
 			}
 		}
 	}

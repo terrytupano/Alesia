@@ -62,7 +62,7 @@ import hero.ozsoft.actions.*;
  * 
  * @author Oscar Stigter
  */
-public class Table extends Task {
+public class Table extends Task<Void, Void> {
 
 	/** In fixed-limit games, the maximum number of raises per betting round. */
 	private static final int MAX_RAISES = 3;
@@ -71,24 +71,24 @@ public class Table extends Task {
 	private static final boolean ALWAYS_CALL_SHOWDOWN = false;
 
 	/**
-	 * valid action when a villan or hero loose the battle: End the simulation. public static final String GAME_OVER =
+	 * valid action when a villain or hero loose the battle: End the simulation. public static final String GAME_OVER =
 	 * "gameOver";
 	 */
 	/**
-	 * valid action when a villan or hero loose the battle: Refill the player chips artificialy allowing the simulation
+	 * valid action when a villain or hero loose the battle: Refill the player chips artificially allowing the simulation
 	 * to continue public static final String REFILL = "refill";
 	 */
 
 	/** The simulation continue to the end. */
-	private static final String DO_NOTHING = "doNothing";
+	private static final String DO_NOTHING = "DO_NOTHING";
 
-	/** wenn der Tisch hat weniger Players als erlaubt (feld {@link #MIN_PLAYERS}), die Simulation ist erneu startet */
-	private static final String RESTAR = "reStar";
+	/** if the table has fewer players than allowed (field {@link #MIN_PLAYERS}), the simulation is restarted */
+	private static final String RESTAR = "RESTAR";
 
 	/** current capacity of the table */
 	public static final int CAPACITY = 8;
 
-	/** min num of player for {@link #DO_NOTHING} action. */
+	/** Min. Num. of player for {@link #DO_NOTHING} action. */
 	// private static int MIN_PLAYERS = 1 + (CAPACITY / 2);
 	private static int MIN_PLAYERS = 5;
 
@@ -123,16 +123,20 @@ public class Table extends Task {
 
 	/** The minimum bet in the current hand. */
 	private int minBet;
+	
 	/** The current bet in the current hand. */
 	private int bet;
+	
 	/** All pots in the current hand (main pot and any side pots). */
 	private final List<Pot> pots;
+	
 	/** The player who bet or raised last (aggressor). */
 	private Player lastBettor;
+	
 	/** Number of raises in the current betting round. */
 	private int raises;
 
-	/** num of current plyed hands */
+	/** num of current played hands */
 	private int numOfHand;
 	private int speed;
 	public int buyIn, bigBlind;
@@ -159,10 +163,10 @@ public class Table extends Task {
 		NumericTextField simHands = TUIUtils.getNumericTextField("simHands", "100000", 6, null);
 		WebCheckBox pauseCheckBox = TUIUtils.getWebCheckBox("Wenn Hero ist dran, pause");
 		pauseCheckBox.addActionListener(ap -> pauseWhenHero = pauseCheckBox.isSelected());
-		WebComboBox speedComboBox = TUIUtils.getTWebComboBox("speedComboBox", "sim.table.speed");
+		WebComboBox speedComboBox = TUIUtils.getWebComboBox("speedComboBox", "sim.table.speed");
 		speedComboBox.addActionListener(
 				ap -> speed = Integer.parseInt(((TSEntry) speedComboBox.getSelectedItem()).getKey()));
-		WebComboBox actionComboBox = TUIUtils.getTWebComboBox("actionComboBox", "sim.table.actions");
+		WebComboBox actionComboBox = TUIUtils.getWebComboBox("actionComboBox", "sim.table.actions");
 		actionComboBox.addActionListener(
 				ap -> whenPlayerLose = ((TSEntry) actionComboBox.getSelectedItem()).getKey());
 		// Alesia.getInstance().getContext().getActionMap(object);
@@ -171,7 +175,7 @@ public class Table extends Task {
 		// register settings
 		for (Component cmp : toolBar.getComponents()) {
 			JComponent jcmp = (JComponent) cmp;
-			Configuration cnf = (Configuration) jcmp.getClientProperty("settingsProcessor");
+			Configuration<?> cnf = (Configuration<?>) jcmp.getClientProperty("settingsProcessor");
 			((SettingsMethods) jcmp).registerSettings(cnf);
 		}
 	}
@@ -199,7 +203,7 @@ public class Table extends Task {
 	}
 
 	/**
-	 * return the current round expresed in cards numbers. 2 = preflop, 5 = Flop, 6 = Turn, 7 = River
+	 * return the current round expressed in cards numbers. 2 = preflop, 5 = Flop, 6 = Turn, 7 = River
 	 * 
 	 * @return # of dealed cards
 	 */
@@ -606,7 +610,7 @@ public class Table extends Task {
 		// Sanity check.
 		if (totalWon != totalPot) {
 			System.err.println("WARNING: Incorrect pot division!");
-			// TODO: comented to allow the simulation to continue
+			// TODO: commented to allow the simulation to continue
 			// throw new IllegalStateException("Incorrect pot division!");
 		}
 	}
@@ -835,7 +839,7 @@ public class Table extends Task {
 	}
 
 	@Override
-	protected Object doInBackground() throws Exception {
+	protected Void doInBackground() throws Exception {
 		try {
 			for (Player player : players) {
 				player.getClient().joinedTable(tableType, bigBlind, players);
@@ -854,7 +858,7 @@ public class Table extends Task {
 					continue;
 				}
 
-				// z�hlt t�tig Spieler
+				// Counts active players
 				int actp = 0;
 				for (Player player : players) {
 					if (player.getCash() >= bigBlind) {
@@ -914,11 +918,11 @@ public class Table extends Task {
 				if (noOfActivePlayers > 1) {
 					playHand();
 					Player hero = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
+//					message(DO_NOTHING, getTaskListeners());
 					firePropertyChange(PROP_MESSAGE, numOfHand, "# of Players: " + noOfActivePlayers + " played Hands: "
 							+ numOfHand + " Hero Chips: " + hero.getCash());
 					if (simulationsHand > 0) {
-						double d = (numOfHand * 1.0) / (simulationsHand * 1.0);
-						firePropertyChange("progress", numOfHand, (int) (d * 100));
+						setProgress(numOfHand, 1, simulationsHand);
 					}
 				} else {
 					break;

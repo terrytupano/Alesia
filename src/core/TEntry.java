@@ -1,4 +1,5 @@
 package core;
+
 /*******************************************************************************
  * Copyright (C) 2017 terry.
  * All rights reserved. This program and the accompanying materials
@@ -10,34 +11,30 @@ package core;
  *     terry - initial API and implementation
  ******************************************************************************/
 
-
+import java.io.*;
 import java.util.*;
 import java.util.Map.*;
 
 import javax.swing.*;
-
-import org.apache.commons.io.*;
 
 /**
  * This class is a copy of {@link AbstractMap.SimpleEntry} with 2 main purposes
  * <ul>
  * <li>Simple convenience for easy access from Alesia framework
  * <li>{@link #toString()} method only return the string of the value object.
- * This class is indented for simple list
- * usage and for some UI component. Some times a key value pair is need for
- * display the value and use the key. for
+ * This class is indented for simple list usage and for some UI component. Some
+ * times a key value pair is need for display the value and use the key. for
  * examples, model for {@link JComboBox}.
  * </ul>
  * <p>
  * TERRY DON.T MODIFY THIS CLASS. if you fell the necessity of modify this class
- * is because you need a new approach to
- * solve the problem.
+ * is because you need a new approach to solve the problem.
  *
  * @since 2.3
  */
-public class TEntry<K, V> implements Entry<K, V>, java.io.Serializable, Comparable<TEntry<K, V>> {
-	private static final long serialVersionUID = -8499721149061103585L;
+public class TEntry<K, V> implements Entry<K, V>, Serializable, Comparable<TEntry<K, V>> {
 
+	private static final long serialVersionUID = -8499721149061103585L;
 	protected final K key;
 	protected V value;
 
@@ -95,10 +92,9 @@ public class TEntry<K, V> implements Entry<K, V>, java.io.Serializable, Comparab
 
 	/**
 	 * Compares the specified object with this entry for equality. Returns
-	 * {@code true} if the given object is also a
-	 * map entry and the two entries represent the same mapping. More formally, two
-	 * entries {@code e1} and {@code e2}
-	 * represent the same mapping if
+	 * {@code true} if the given object is also a map entry and the two entries
+	 * represent the same mapping. More formally, two entries {@code e1} and
+	 * {@code e2} represent the same mapping if
 	 * 
 	 * <pre>
 	 * (e1.getKey() == null ? e2.getKey() == null : e1.getKey().equals(e2.getKey()))
@@ -106,8 +102,7 @@ public class TEntry<K, V> implements Entry<K, V>, java.io.Serializable, Comparab
 	 * </pre>
 	 * 
 	 * This ensures that the {@code equals} method works properly across different
-	 * implementations of the
-	 * {@code Map.Entry} interface.
+	 * implementations of the {@code Map.Entry} interface.
 	 *
 	 * @param o object to be compared for equality with this map entry
 	 * @return {@code true} if the specified object is equal to this map entry
@@ -133,9 +128,8 @@ public class TEntry<K, V> implements Entry<K, V>, java.io.Serializable, Comparab
 	 * </pre>
 	 * 
 	 * This ensures that {@code e1.equals(e2)} implies that
-	 * {@code e1.hashCode()==e2.hashCode()} for any two Entries
-	 * {@code e1} and {@code e2}, as required by the general contract of
-	 * {@link Object#hashCode}.
+	 * {@code e1.hashCode()==e2.hashCode()} for any two Entries {@code e1} and
+	 * {@code e2}, as required by the general contract of {@link Object#hashCode}.
 	 *
 	 * @return the hash code value for this map entry
 	 * @see #equals
@@ -157,14 +151,15 @@ public class TEntry<K, V> implements Entry<K, V>, java.io.Serializable, Comparab
 
 	@Override
 	public int compareTo(TEntry<K, V> o) {
-		if (o instanceof TEntry) {
-			Comparable oval = (Comparable) o.getValue();
-			Comparable valc = (Comparable) value;
-			return valc.compareTo(oval);
-		}
-		// 20161109 que ladilla !!! parece que contamos may y le tumbaron 500 bs a mama
-		// en el deposito de mercantil
-		return 0;
+		return value.toString().compareTo(o.value.toString());
+//		if (o instanceof TEntry) {
+//			Comparable oval = (Comparable) o.getValue();
+//			Comparable valc = (Comparable) value;
+//			return valc.compareTo(oval);
+//		}
+//		// 20161109 que ladilla !!! parece que contamos may y le tumbaron 500 bs a mama
+//		// en el deposito de mercantil
+//		return 0;
 	}
 
 }
