@@ -96,8 +96,8 @@ public class TableDialog extends JDialog implements Client {
 			chairs.put(player.getChair(), panel);
 		}
 
-		// the player "Hero" allwais the test subject. this element is handled by this class but the
-		// desition is dispacht to proxiClient
+		// the player "Hero" allays the test subject. this element is handled by this class but the
+		// Decision is dispacht to proxiClient
 		heroPlayer = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
 		this.proxyClient = heroPlayer.getClient();
 		heroPlayer.setClient(this);
@@ -132,11 +132,11 @@ public class TableDialog extends JDialog implements Client {
 
 		JPanel jp = new JPanel(new VerticalFlowLayout());
 		jp.setOpaque(false);
-		JToolBar tool = table.getControlPanel();
-		for (Component cmp : tool.getComponents()) {
-			JComponent jcmp = (JComponent) cmp;
-			jp.add(jcmp);
-		}
+//		JToolBar tool = table.getControlPanel();
+//		for (Component cmp : tool.getComponents()) {
+//			JComponent jcmp = (JComponent) cmp;
+//			jp.add(jcmp);
+//		}
 
 		// jp.add(TUIUtils.getStartPauseToggleButton(ap -> table.pause(!table.isPaused())));
 		// jp.add(stepButton);

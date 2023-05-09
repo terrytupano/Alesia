@@ -19,7 +19,7 @@ public  class TrooperCellRenderer extends DefaultListCellRenderer {
 		this.messagePattern = "<description>";
 		this.listItem = new ListItem();
 		listItem.setIcon(TResources.getIcon("robot.png", 25));
-//		listItem.setActionArrowComponent();
+		listItem.setActionArrowComponent();
 		listItem.setOpaque(false);
 	}
 	

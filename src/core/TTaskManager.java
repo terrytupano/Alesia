@@ -42,7 +42,7 @@ public class TTaskManager implements PropertyChangeListener {
 	}
 
 	/**
-	 * return the progress bar used by this class to update the status of active task, queque task, etc.
+	 * return the progress bar used by this class to update the status of active task, queue task, etc.
 	 * 
 	 * @return progress bar
 	 */
@@ -51,15 +51,16 @@ public class TTaskManager implements PropertyChangeListener {
 	}
 
 	/**
-	 * return <code>true</code> if the Alesia Environment can ferform one more task.
+	 * return <code>true</code> if the Alesia Environment can perform one more task.
 	 * 
-	 * @return <code>true</code> for 1 more, <code>false</code> if the Environment is allready a full capacity
+	 * @return <code>true</code> for 1 more, <code>false</code> if the Environment is already a full capacity
 	 */
 	public boolean suporMoreTask() {
 		List<Task> tasks = monitor.getTasks();
 		int ac = (int) tasks.stream().filter(t -> t.isStarted()).count();
 		return ac < poolSize;
 	}
+
 	private void updateTaskBar() {
 		List<Task> tasks = monitor.getTasks();
 		int ac = (int) tasks.stream().filter(t -> t.isStarted()).count();

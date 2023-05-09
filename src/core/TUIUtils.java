@@ -26,6 +26,7 @@ import javax.swing.Action;
 import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.table.*;
+import javax.swing.table.TableColumn;
 import javax.swing.text.*;
 import javax.swing.text.html.*;
 
@@ -57,6 +58,8 @@ import com.alee.managers.tooltip.*;
 import com.alee.utils.*;
 import com.alee.utils.swing.*;
 import com.jgoodies.common.base.*;
+import com.jgoodies.forms.builder.*;
+import com.jgoodies.forms.factories.*;
 
 import gui.*;
 import gui.jgoodies.*;
@@ -80,7 +83,8 @@ public class TUIUtils {
 	public static final int STANDAR_GAP = 10;
 	public static final Border STANDAR_EMPTY_BORDER = new EmptyBorder(TUIUtils.STANDAR_GAP, TUIUtils.STANDAR_GAP,
 			TUIUtils.STANDAR_GAP, TUIUtils.STANDAR_GAP);
-
+	public static final Border DOUBLE_EMPTY_BORDER = new EmptyBorder(TUIUtils.STANDAR_GAP*2, TUIUtils.STANDAR_GAP*2,
+			TUIUtils.STANDAR_GAP*2, TUIUtils.STANDAR_GAP*2);
 
 	public static Color brighter(Color c) {
 		double FACTOR = 0.92;
@@ -149,6 +153,33 @@ public class TUIUtils {
 		return bufImage;
 	}
 
+	/**
+	 * return a star, stop and pause {@link ToggleButton} grouped inside a
+	 * {@link ButtonGroup} (only one button can be selected at a time)
+	 * 
+	 * @param star  - star action
+	 * @param stop  - stop action
+	 * @param pause - pause action
+	 * @return the group
+	 */
+	public static GroupPane getPlayStopButtons(Action star, Action stop, Action pause) {
+		WebToggleButton playButton = TUIUtils.getWebToggleButton(star);
+		playButton.setName(Action.NAME);
+		WebToggleButton stopButton = TUIUtils.getWebToggleButton(stop);
+		stopButton.setName(Action.NAME);
+		WebToggleButton pauseButton = TUIUtils.getWebToggleButton(pause);
+		pauseButton.setName(Action.NAME);
+		GroupPane pane = new GroupPane(playButton, stopButton, pauseButton);
+
+		stopButton.setSelected(true);
+		ButtonGroup group = new ButtonGroup();
+		group.add(playButton);
+		group.add(stopButton);
+		group.add(pauseButton);
+
+		return pane;
+	}
+
 	public static ArrayList<WebButton> createNavButtons(Color toColor, String style, Font font, Action... actions) {
 		int size = 20;
 		ArrayList<WebButton> list = new ArrayList<>();
@@ -164,14 +195,13 @@ public class TUIUtils {
 		return list;
 	}
 
-	/**
-	 * establece el ancho de las columnas de la tabla pasada como primer argumento
-	 * al valor especificado en el segundo.
-	 * 
-	 * @param jt - tabla
-	 * @param w  - arreglo de enteros con el ancho de la columna segun su posicion.
-	 *           si alguno de ellos es < 1, se omite.
-	 */
+	public static DefaultFormBuilder getOneLineFormBuilder() {
+		com.jgoodies.forms.layout.FormLayout layout = new com.jgoodies.forms.layout.FormLayout(
+				"left:pref:grow, 3dlu, right:pref", "");
+		DefaultFormBuilder builder = new DefaultFormBuilder(layout).border(Borders.DIALOG).rowGroupingEnabled(true);
+		return builder;
+	}
+
 	public static void fixTableColumn(JTable jt, int[] w) {
 		TableColumnModel cm = jt.getColumnModel();
 		TableColumn tc;
@@ -307,7 +337,6 @@ public class TUIUtils {
 		jcb.setName(field);
 		return jcb;
 	}
-
 
 	/**
 	 * create and return a {@link WebCheckBox}. this implementation assume that the
@@ -462,53 +491,28 @@ public class TUIUtils {
 		return jsp;
 	}
 
-	/**
-	 * <code>JTextField</code> con formato estandar
-	 * 
-	 * @param ttn - id de tooltip
-	 * @param val - valor para el componente
-	 * @param cw  - longitud del componente medido en caracteres
-	 * @return <code>JTextField</code> scon formato estandar
-	 */
-	public static JTextField getJTextField(String ttn, String val, int cw) {
-		JTextField jtf = new JTextField(cw);
-		jtf.setDocument(new TPlainDocument(val, cw));
-		jtf.setText(val);
-		// jtf.setColumns(rcd.getFieldLength(fld));
-		setDimensionForTextComponent(jtf, cw);
-		setToolTip(ttn, jtf);
-		return jtf;
-	}
+	public static WebPanel getListItems(int height, List<JComponent> rightComponents) {
+		WebPanel panel = new WebPanel(StyleId.panelTransparent, new FormLayout(false, true, 0, 0));
 
-	public static WebPanel getListItems(int height, JComponent... rightComponents) {
-		WebPanel panel = new WebPanel(StyleId.panelTransparent, new FormLayout(false, true, STANDAR_GAP, STANDAR_GAP));
-
+		panel.add(new JSeparator(), FormLayout.LINE);
 		for (JComponent jComponent : rightComponents) {
 			String name = jComponent.getName();
 			Preconditions.checkNotNull(name, "The component hast no name.");
 			ListItem item = ListItem.getItemForField(name, jComponent);
 			// the with is forced by the layout
 			item.setPreferredSize(new Dimension(0, height));
+//			item.setBorder(BorderFactory.createEmptyBorder());
+			item.setBorder(null);
+			item.setOpaque(false);
 			panel.add(item, FormLayout.LINE);
+			panel.add(new JSeparator(), FormLayout.LINE);
 		}
-		panel.setBorder(STANDAR_EMPTY_BORDER);
+//		panel.setBorder(STANDAR_EMPTY_BORDER);
 		return panel;
 	}
 
-	public static WebPanel getListItems(JComponent... rightComponents) {
-		return getListItems(70, rightComponents);
-	}
-
-	public static JList<ListItem> getListItems2(JComponent... components) {
-		Vector<ListItem> items = new Vector<>();
-		for (JComponent jComponent : components) {
-			String name = jComponent.getName();
-			Preconditions.checkNotNull(name, "The component hast no name.");
-			ListItem item = ListItem.getItemForField(name, jComponent);
-			items.add(item);
-		}
-		JList<ListItem> jList = new JList<>(items);
-		return jList;
+	public static WebPanel getListItems(List<JComponent> rightComponents) {
+		return getListItems(50, rightComponents);
 	}
 
 	/**
@@ -675,13 +679,28 @@ public class TUIUtils {
 		return tb;
 	}
 
-	public static WebPanel getTitlePanel(String constID) {
-		WebLabel tit = new WebLabel(StyleId.labelShadow, TStringUtils.getString(constID));
-		tit.changeFontSize(2);
-		WebLabel text = new WebLabel(TStringUtils.getString(constID + ".tt"));
-		WebPanel panel = new WebPanel(StyleId.panelTransparent, new FormLayout(false, false, STANDAR_GAP, 0));
-		panel.add(tit, FormLayout.LINE);
-		panel.add(text, FormLayout.LINE);
+	public static WebLabel getH1Title(String title) {
+		WebLabel label = new WebLabel(StyleId.labelShadow, title, WebLabel.CENTER);
+		label.setFont(new Font("MagistralC", Font.PLAIN, 30));
+//		label.setBorder(STANDAR_EMPTY_BORDER);
+		return label;
+	}
+
+	public static WebLabel getH3Label(String text) {
+//		WebLabel label = new WebLabel(StyleId.labelShadow, text, WebLabel.CENTER);
+		WebLabel label = new WebLabel(text, WebLabel.CENTER);
+		label.changeFontSize(2);
+//		splashSubtitleLabel.setFont(getFont(Font.PLAIN, 15));
+//		label.setBorder(STANDAR_EMPTY_BORDER);
+		return label;
+	}
+
+
+	public static WebPanel getInFormLayout(JComponent... components) {
+		WebPanel panel = new WebPanel(StyleId.panelTransparent, new FormLayout(false, false, 0, 0));
+		for (JComponent jComponent : components) {
+			panel.add(jComponent, FormLayout.LINE);
+		}
 		return panel;
 	}
 
@@ -706,8 +725,7 @@ public class TUIUtils {
 
 	public static WebPanel getTitleTextPanel(String title, String description) {
 		WebLabel titleLabel = new WebLabel(StyleId.labelShadow, title, WebLabel.LEFT);
-		Font font = titleLabel.getFont();
-		titleLabel.setFont(font.deriveFont(font.getSize() + 2F));
+		titleLabel.changeFontSize(2);
 
 		WebLabel descriptionLabel = new WebLabel(description, WebLabel.LEFT);
 		descriptionLabel.setForeground(Color.GRAY);
@@ -769,21 +787,21 @@ public class TUIUtils {
 	}
 
 	public static WebButton getWebButtonForToolBar(Object actionSource, String action) {
-		 ApplicationContext ac = Alesia.getInstance().getContext();
-		 ActionMap actionMap = ac.getActionMap(actionSource.getClass(), actionSource);
-		 return getWebButtonForToolBar(actionMap.get(action));
+		ApplicationContext ac = Alesia.getInstance().getContext();
+		ActionMap actionMap = ac.getActionMap(actionSource.getClass(), actionSource);
+		return getWebButtonForToolBar(actionMap.get(action));
 	}
 
-	public static WebCheckBox getWebCheckBox(String name) {
-		return getWebCheckBox(name, false);
+	public static WebCheckBox getWebCheckBox(String fieldName) {
+		return getWebCheckBox(fieldName, false);
 	}
 
-	public static WebCheckBox getWebCheckBox(String name, boolean selected) {
-		WebCheckBox jcb = new WebCheckBox(TStringUtils.getString(name));
+	public static WebCheckBox getWebCheckBox(String fieldName, boolean selected) {
+		WebCheckBox jcb = new WebCheckBox(TStringUtils.getString(fieldName));
 		jcb.setSelected(selected);
-		jcb.setName(name);
-		setToolTip(name, jcb);
-		jcb.putClientProperty("settingsProcessor", new Configuration<ButtonState>(name));
+		jcb.setName(fieldName);
+		setToolTip(fieldName, jcb);
+		jcb.putClientProperty("settingsProcessor", new Configuration<ButtonState>(fieldName));
 		return jcb;
 	}
 
@@ -1001,7 +1019,7 @@ public class TUIUtils {
 		WebScrollPane scrollPane = new WebScrollPane(component, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane.setStyleId(StyleId.scrollpaneTransparentHovering);
-		scrollPane.setBorder(null);
+		scrollPane.setBorder(BorderFactory.createEmptyBorder());
 		return scrollPane;
 	}
 
@@ -1031,15 +1049,15 @@ public class TUIUtils {
 		return jftf;
 	}
 
-	public static WebTextField getWebTextField(String field, Model model, Map<String, ColumnMetadata> columns) {
-		ColumnMetadata metadata = columns.get(field);
+	public static WebTextField getWebTextField(String fieldName, Model model, Map<String, ColumnMetadata> columns) {
+		ColumnMetadata metadata = columns.get(fieldName);
 		return getWebTextField(model, metadata);
 	}
 
-	public static WebTextField getWebTextField(String name, String val, int colums) {
+	public static WebTextField getWebTextField(String name, String value, int colums) {
 		WebTextField textField = new WebTextField(colums);
-		textField.setDocument(new TPlainDocument(val, colums));
-		textField.setText(val);
+		textField.setDocument(new TPlainDocument(value, colums));
+		textField.setText(value);
 		textField.setName(name);
 		textField.putClientProperty("settingsProcessor", new Configuration<TextComponentState>(name));
 		setToolTip(name, textField);
@@ -1179,7 +1197,8 @@ public class TUIUtils {
 	}
 
 	public static void setEnabledRecursively(Component component, boolean enabled) {
-		Component[] cmps = (component instanceof Box || component instanceof JPanel) ? cmps = ((Container) component).getComponents()
+		Component[] cmps = (component instanceof Box || component instanceof JPanel)
+				? cmps = ((Container) component).getComponents()
 				: new Component[] { component };
 
 		for (int e = 0; e < cmps.length; e++) {

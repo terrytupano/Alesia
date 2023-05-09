@@ -7,3 +7,6 @@ hashtable
 darse
 denis
 showdown
+bot
+min
+num

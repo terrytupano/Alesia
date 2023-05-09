@@ -37,7 +37,7 @@ public class UoAIconCard extends JLabel {
 			this.uoACard = new UoACard();
 		if (uoACard.getIndex() > -1) {
 			setOpaque(false);
-			setIcon(TResources.getIcon(Constants.UOA_ICON_CARS + "/" + card.toString() + ".gif"));
+			setIcon(TResources.getIcon(Constants.UOA_ICON_CARS + card.toString() + ".gif"));
 		} else {
 			setIcon(null);
 			setOpaque(true);

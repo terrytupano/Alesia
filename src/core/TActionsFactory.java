@@ -1,4 +1,5 @@
 package core;
+
 /*******************************************************************************
  * Copyright (C) 2017 terry.
  * All rights reserved. This program and the accompanying materials
@@ -9,7 +10,6 @@ package core;
  * Contributors:
  *     terry - initial API and implementation
  ******************************************************************************/
-
 
 import java.awt.*;
 import java.awt.datatransfer.*;
@@ -37,18 +37,18 @@ public class TActionsFactory {
 
 	private static TActionsFactory instance;
 	/**
-	 * general key for notification whien the information has been loaded inside of
+	 * general key for notification when the information has been loaded inside of
 	 * the action.
 	 */
 	public static String DATA_LOADED = "dataLoaded";
 
 	/**
-	 * contant for data sended outside of the aplication
+	 * Constant for data sendet outside of the application
 	 */
 	public static String DATA_SAVED = "dataSaved";
 
 	/**
-	 * gereal key for send data inside of the action to be processed by it
+	 * general key for send data inside of the action to be processed by it
 	 */
 	public static String INPUT_DATA = "inpuData";
 	private ActionMap actionMap;
@@ -60,14 +60,10 @@ public class TActionsFactory {
 
 	/**
 	 * Insert the given {@link ActionMap} to the main application {@link ActionMap}.
-	 * this allow use this class to find
-	 * aditional actions inserted during plugin initializacion.
+	 * this allow use this class to find additional actions without the verbose
+	 * <code> ActionMap map = Alesia.getInstance().getContext().getActionMap(object);</code>
 	 * 
-	 * FIXME: i.m not schure that is the correct implementation. the correct way is:
-	 * every class muss define his own
-	 * actions and ...
-	 * 
-	 * @param actionMap - tha map to append
+	 * @param object - the object in which the actions are defined
 	 */
 	public static void insertActions(Object object) {
 		ActionMap map = Alesia.getInstance().getContext().getActionMap(object);
@@ -106,9 +102,8 @@ public class TActionsFactory {
 
 	/**
 	 * retrive the instance of {@link ApplicationAction} inside of the
-	 * {@link ActionEvent} pass as argument. this method
-	 * throw and exeption if the source of the event is not an
-	 * {@link AbstractButton}
+	 * {@link ActionEvent} pass as argument. this method throw and exeption if the
+	 * source of the event is not an {@link AbstractButton}
 	 * 
 	 * @param event - event
 	 * @return {@link ApplicationAction}
@@ -166,9 +161,8 @@ public class TActionsFactory {
 	 * standar comit action. this action:
 	 * <ul>
 	 * <li>if the containr of the action is an instance of {@link TUIFormPanel} this
-	 * acction perform
-	 * {@link TUIFormPanel#validateFields()} and perform {@link JDialog#dispose()}
-	 * if the validation is ok
+	 * acction perform {@link TUIFormPanel#validateFields()} and perform
+	 * {@link JDialog#dispose()} if the validation is ok
 	 * 
 	 * </ul>
 	 * 
@@ -206,8 +200,8 @@ public class TActionsFactory {
 
 	/**
 	 * retrive an image store in the system clipboard. This action store the image
-	 * retrived from the system clipboard in
-	 * {@link #DATA_LOADED} value for this action
+	 * retrived from the system clipboard in {@link #DATA_LOADED} value for this
+	 * action
 	 * 
 	 * @param event
 	 * @since 2.3
@@ -235,16 +229,14 @@ public class TActionsFactory {
 
 	/**
 	 * Allow use the internal file tvariables to load custom user variables. this
-	 * action work in pair with
-	 * {@link #saveProperty(ActionEvent)}. This action use the following values
-	 * retrive from
-	 * {@link javax.swing.Action#getValue(String)} method:
+	 * action work in pair with {@link #saveProperty(ActionEvent)}. This action use
+	 * the following values retrive from {@link javax.swing.Action#getValue(String)}
+	 * method:
 	 * <ul>
 	 * <li>grouping - indicate the grouping of the variable to store
 	 * </ul>
 	 * this action display a list of available values. after user selection, the
-	 * value is store as
-	 * <code>loadPerformed</code> value
+	 * value is store as <code>loadPerformed</code> value
 	 * {@link javax.swing.Action#putValue(String, Object)}
 	 * 
 	 * @param event - {@link ActionEvent}
@@ -327,10 +319,9 @@ public class TActionsFactory {
 
 	/**
 	 * Allow use the internal file TVARIABLE to store custom user variables. this
-	 * action work in pair with
-	 * {@link #loadProperty(ActionEvent)}. This action use the following values
-	 * retrive from
-	 * {@link javax.swing.Action#getValue(String)} method:
+	 * action work in pair with {@link #loadProperty(ActionEvent)}. This action use
+	 * the following values retrive from {@link javax.swing.Action#getValue(String)}
+	 * method:
 	 * <ul>
 	 * <li>{@link #GROUP} - indicate the grouping of the variable to store
 	 * <li>{@link #INPUT_DATA} - indicate the data to store in
@@ -371,9 +362,8 @@ public class TActionsFactory {
 
 	/**
 	 * send data of type {@link ImageIcon} to the sytem clipboard. This method
-	 * retrive the image to send using the value
-	 * stored in {@link #INPUT_DATA} property. When the operation is succeded, this
-	 * action set the property
+	 * retrive the image to send using the value stored in {@link #INPUT_DATA}
+	 * property. When the operation is succeded, this action set the property
 	 * {@link #DATA_SAVED} whit the same image recived.
 	 * 
 	 * @param event
@@ -393,17 +383,15 @@ public class TActionsFactory {
 
 	/**
 	 * return the last load or saved variable selected using the
-	 * {@link LoadProperty} and {@link SaveProperty} actiones.
-	 * The last load or saved variables are stored in an special row in the
-	 * variables file. this element contain the
-	 * name (variable name) of the las edited element. the row do not store the
-	 * variable value. this only point to
-	 * another element in the same group with the variable name
+	 * {@link LoadProperty} and {@link SaveProperty} actiones. The last load or
+	 * saved variables are stored in an special row in the variables file. this
+	 * element contain the name (variable name) of the las edited element. the row
+	 * do not store the variable value. this only point to another element in the
+	 * same group with the variable name
 	 * 
 	 * @param grouping - the variable group
 	 * @return instace of {@link LocalProperty} that was load/saved for last time or
-	 *         <code>null</code> if the method
-	 *         can.t find anything
+	 *         <code>null</code> if the method can.t find anything
 	 * @since 2.3
 	 * @see #loadVariable(ActionEvent)
 	 * @see #saveVariable(ActionEvent)

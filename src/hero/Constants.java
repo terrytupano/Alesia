@@ -11,8 +11,8 @@ public class Constants {
 
 	/** table Related images. */
 	public static final String HERO_RESOURCES = TResources.USER_DIR + "/bin/hero/resources";
-	public static final String UOA_ICON_CARS = "/cards";
-	public static final String PLAY_CARDS = "/playCards";
+	public static final String UOA_ICON_CARS = "/cards/";
+	public static final String PLAY_CARDS = "/playCards/";
 	public static final Icon BUTTON_PRESENT_ICON = TResources.getIcon("/dealer_button.png");
 	public static final Icon BUTTON_ABSENT_ICON = TResources.getIcon("/dealer_placeholder.png");
 	public static final Icon CARD_PLACEHOLDER_ICON = TResources.getIcon("/playCards/placeholder.png");

@@ -19,18 +19,13 @@ import java.util.logging.*;
 import javax.swing.*;
 import javax.swing.Action;
 
-import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
-import org.jdesktop.application.Task.*;
 
 import com.alee.laf.button.*;
 import com.alee.utils.*;
 
 import core.*;
 import datasource.*;
-import hero.ozsoft.*;
-import hero.ozsoft.bots.*;
-import hero.ozsoft.gui.*;
 import net.sourceforge.tess4j.*;
 
 public class Hero {
@@ -38,8 +33,8 @@ public class Hero {
 	private static Trooper activeTrooper;
 	protected static Logger heroLogger = Logger.getLogger("Hero");
 	private static HeroPanel heroPanel;
-	private static Table simulationTable;
-	private GameSimulatorPanel simulatorPanel;
+//	private static Table simulationTable;
+//	private GameSimulatorPanel simulatorPanel;
 
 	public Hero() {
 		TActionsFactory.insertActions(this);
@@ -58,7 +53,7 @@ public class Hero {
 	}
 
 	/**
-	 * This metod is separated because maybe in the future we will need diferents robot for diferent graphics
+	 * This method is separated because maybe in the future we will need different robot for different graphics
 	 * configurations
 	 * 
 	 * @return
@@ -92,11 +87,11 @@ public class Hero {
 	}
 
 	/**
-	 * central parser from pokerstar located formatet number ($12,12) to parseable string to double
+	 * central parser from PokerStar located formated number ($12,12) to parseable string to double
 	 * <p>
-	 * NOTE this method is called from {@link ScreenSensor} instances in order to correct the ocr read
+	 * NOTE this method is called from {@link ScreenSensor} instances in order to correct the OCR read
 	 * 
-	 * @param numer - locale numer
+	 * @param numer - locale number
 	 * @param currencySymbol - current symbol "" if not currency symbol is present
 	 * @return double string
 	 */
@@ -125,36 +120,10 @@ public class Hero {
 		return srcocd;
 	}
 
-	@org.jdesktop.application.Action
-	public void backrollHistory(ActionEvent event) {
-		LazyList<SimulationResult> results = SimulationResult.find("trooper = ? AND hands = ?", "Hero", 0);
-		ArrayList<String> names = new ArrayList<>();
-		results.forEach(sr -> names.add(sr.getString("name")));
-		String[] possibleValues = names.toArray(new String[0]);
-		Object selectedValue = JOptionPane.showInputDialog(Alesia.getInstance().mainFrame, "Choose one", "Input",
-				JOptionPane.INFORMATION_MESSAGE, null, possibleValues, possibleValues[0]);
-		if (selectedValue != null) {
-			String resultName = selectedValue.toString();
-
-			// retrive the first element of the statistical series to detect, the type of graph
-			Alesia.getInstance().openDB("hero");
-			SimulationResult sample = SimulationResult.findFirst("name = ? AND trooper = ?", resultName, "Hero");
-			JDialog chart;
-			if (sample.get("aditionalValue") != null) {
-				chart = new SingeVariableSimulationLineChart(resultName);
-			} else {
-				chart = new MultiVariableSimulationBarChar(resultName);
-			}
-
-			chart.pack();
-			chart.setLocationRelativeTo(null);
-			chart.setVisible(true);
-		}
-	}
 
 	@org.jdesktop.application.Action
 	public void gameSimulator(ActionEvent event) {
-		this.simulatorPanel = new GameSimulatorPanel();
+		GameSimulatorPanel simulatorPanel = new GameSimulatorPanel();
 		Alesia.getInstance().getMainPanel().showPanel(simulatorPanel);
 	}
 
@@ -274,60 +243,6 @@ public class Hero {
 		preFlopCardsRange(null);
 	}
 
-	@org.jdesktop.application.Action(block = BlockingScope.ACTION)
-	// @org.jdesktop.application.Action(block = BlockingScope.WINDOW)
-	// @org.jdesktop.application.Action
-	public Task startSimulation(ActionEvent event) {
-		try {
-			// check max task
-			if (Alesia.getInstance().taskManager.suporMoreTask()) {
-				Alesia.showNotification("hero.msg03", "");
-				return null;
-			}
-			// check for hero client
-			if (TrooperParameter.find("name = ?", "Hero") == null) {
-				Alesia.showNotification("hero.msg01", "");
-				return null;
-			}
-			// check min num of players
-			if (TrooperParameter.count("isActive = ?", true) < 2) {
-				Alesia.showNotification("hero.msg02");
-				return null;
-			}
-
-			// WARNING: order by chair is important. this is take into account in simulation
-			LazyList<TrooperParameter> tparms = TrooperParameter.findAll().orderBy("chair");
-
-			TrooperParameter hero = TrooperParameter.findFirst("trooper = ?", "Hero");
-			int buy = hero.getDouble("buyIn").intValue();
-			int bb = hero.getDouble("bigBlind").intValue();
-			simulationTable = new Table(TableType.NO_LIMIT, buy, bb);
-			for (TrooperParameter tparm : tparms) {
-				if (tparm.getBoolean("isActive")) {
-					String tName = tparm.getString("trooper");
-					String bCls = tparm.getString("client");
-					Class<?> cls = Class.forName("hero.ozsoft.bots." + bCls);
-					// Constructor cons = cls.getConstructor(String.class);
-					// Bot bot = (Bot) cons.newInstance(name);
-					 @SuppressWarnings("deprecation")
-					Bot bot = (Bot) cls.newInstance();
-					Trooper trooper = bot.getSimulationTrooper(simulationTable, tparm);
-					Player player = new Player(tName, buy, bot, tparm.getInteger("chair"));
-					simulationTable.addPlayer(player);
-					if ("Hero".equals(tName))
-						simulatorPanel.setTrooper(trooper);
-				}
-			}
-
-			TableDialog dialog = new TableDialog(simulationTable);
-			dialog.setVisible(true);
-
-			return simulationTable;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
 
 	@org.jdesktop.application.Action
 	public void stopTrooper(ActionEvent event) {
@@ -369,7 +284,7 @@ public class Hero {
 	}
 
 	private void initTrooperEnvironment() {
-		simulationTable = null;
+//		simulationTable = null;
 		activeTrooper = new Trooper();
 		heroPanel.setTrooper(activeTrooper);
 	}

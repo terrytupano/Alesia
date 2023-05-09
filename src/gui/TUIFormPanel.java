@@ -43,8 +43,10 @@ public class TUIFormPanel extends TUIPanel {
 	private ValidationResult validationResult;
 	private Model model;
 	private HashMap<String, Object> temporalStorage;
+	private List<String> componentsAsInserted;
 
 	public TUIFormPanel() {
+		this.componentsAsInserted = new ArrayList<>();
 		this.fieldComponetMap = new HashMap<String, JComponent>();
 		this.temporalStorage = new HashMap<>();
 		this.validationResult = new ValidationResult();
@@ -69,15 +71,9 @@ public class TUIFormPanel extends TUIPanel {
 		addInputComponent(name, component, required, enable);
 	}
 
-	private List<JComponent> components = new ArrayList<>();
-
-	public JComponent[] getInputComponents() {
-		return components.toArray(new JComponent[0]);
-	}
-
 	protected void addInputComponent(String fieldName, JComponent component, boolean required, boolean enable) {
 		fieldComponetMap.put(fieldName, component);
-		components.add(component);
+		componentsAsInserted.add(fieldName);
 		JLabel jl = TUIUtils.getJLabel(fieldName, required, enable);
 		WebOverlay overlay = new WebOverlay(component);
 		component.putClientProperty(MY_LABEL, jl);
@@ -259,11 +255,45 @@ public class TUIFormPanel extends TUIPanel {
 		throw new NullPointerException("No value fount for field " + field);
 	}
 
-	public JComponent getInputComponent(String field) {
+	/**
+	 * return the {@link WebOverlay} associated with the input component ....
+	 * 
+	 * @param field - name of the component
+	 * 
+	 * @return {@link WebOverlay}
+	 */
+	public WebOverlay getInputComponent(String field) {
 		JComponent jcmp = fieldComponetMap.get(field);
 		Preconditions.checkNotNull(jcmp, "Component identified as %s was not found.", field);
 		WebOverlay overlay = (WebOverlay) jcmp.getClientProperty(MY_WEB_OVERLAY);
 		return overlay;
+	}
+
+	/**
+	 * set the title/description for this panel based of the value retrieved from
+	 * the value of the model.
+	 * 
+	 * @param titleFieldName       - title field value
+	 * @param descriptionFieldName - description field value
+	 */
+	public void setTitleDescriptionFrom(String titleFieldName, String descriptionFieldName) {
+		String titleString = model.getString(titleFieldName);
+		String descriptionString = descriptionFieldName == null ? null : model.getString(descriptionFieldName);
+		setTitleDescription(titleString, descriptionString);
+	}
+
+	/**
+	 * return a list with all input components as those were inserted during
+	 * {@link #addInputComponent(JComponent, boolean, boolean)} phase
+	 * 
+	 * @return - list of input components
+	 */
+	public List<JComponent> getInputComponents() {
+		List<JComponent> components = new ArrayList<>();
+		for (String cName : componentsAsInserted) {
+			components.add(fieldComponetMap.get(cName));
+		}
+		return components;
 	}
 
 	public JLabel getLabel(String field) {
@@ -273,10 +303,10 @@ public class TUIFormPanel extends TUIPanel {
 	}
 
 	/**
-	 * return the instance of the {@link Model} setted whit all values introduced as
-	 * input in this compoment. The model must be setted initialy using the method
+	 * return the instance of the {@link Model} set whit all values introduced as
+	 * input in this component. The model must be set initially using the method
 	 * {@link #setModel(Model)}. All field values will be copied as are in the input
-	 * window. Only attributes present in the input window will be copyed to the
+	 * window. Only attributes present in the input window will be copied to the
 	 * model.
 	 * 
 	 * @return the Model with all attributes set.
@@ -391,8 +421,8 @@ public class TUIFormPanel extends TUIPanel {
 
 	/**
 	 * Registers all input component for settings auto-save. All WebComponent that
-	 * suport {@link SettingsMethods} will be registred. the client property
-	 * <code>settingsProcessor</code> muss be setted whit a valid instance of
+	 * Support {@link SettingsMethods} will be registered. the client property
+	 * <code>settingsProcessor</code> must be setter whit a valid instance of
 	 * {@link Configuration}.
 	 * 
 	 * <p>
@@ -468,9 +498,9 @@ public class TUIFormPanel extends TUIPanel {
 
 	/**
 	 * this method is invoked by any default save action previous to continue normal
-	 * operation. use this method to perform additional UI validation. if this method
-	 * return <code>false</code>, the action will not continue the normal flow of
-	 * operations and all
+	 * operation. use this method to perform additional UI validation. if this
+	 * method return <code>false</code>, the action will not continue the normal
+	 * flow of operations and all
 	 * 
 	 * @return
 	 */

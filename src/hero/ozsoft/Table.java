@@ -34,23 +34,16 @@
 
 package hero.ozsoft;
 
-import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
-import java.util.List;
 
 import javax.swing.*;
 
 import org.jdesktop.application.*;
 
-import com.alee.laf.checkbox.*;
-import com.alee.laf.combobox.*;
-import com.alee.laf.toolbar.*;
-import com.alee.managers.settings.*;
+import com.alee.utils.*;
 
 import core.*;
-
-import gui.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.actions.*;
 
@@ -70,15 +63,6 @@ public class Table extends Task<Void, Void> {
 	/** Whether players will always call the showdown, or fold when no chance. */
 	private static final boolean ALWAYS_CALL_SHOWDOWN = false;
 
-	/**
-	 * valid action when a villain or hero loose the battle: End the simulation. public static final String GAME_OVER =
-	 * "gameOver";
-	 */
-	/**
-	 * valid action when a villain or hero loose the battle: Refill the player chips artificially allowing the simulation
-	 * to continue public static final String REFILL = "refill";
-	 */
-
 	/** The simulation continue to the end. */
 	private static final String DO_NOTHING = "DO_NOTHING";
 
@@ -88,8 +72,7 @@ public class Table extends Task<Void, Void> {
 	/** current capacity of the table */
 	public static final int CAPACITY = 8;
 
-	/** Min. Num. of player for {@link #DO_NOTHING} action. */
-	// private static int MIN_PLAYERS = 1 + (CAPACITY / 2);
+	/** Min. Num. of player for {@link #RESTAR} action. */
 	private static int MIN_PLAYERS = 5;
 
 	/** Table type (poker variant). */
@@ -144,8 +127,6 @@ public class Table extends Task<Void, Void> {
 	private int simulationsHand;
 	private String whenPlayerLose = DO_NOTHING;
 
-	private WebToolBar toolBar;
-
 	public Table(TableType type, int buyIn, int bigBlind) {
 		super(Alesia.getInstance());
 		TActionsFactory.insertActions(this);
@@ -160,24 +141,6 @@ public class Table extends Task<Void, Void> {
 		simulationsHand = 100000;
 
 		// create control components
-		NumericTextField simHands = TUIUtils.getNumericTextField("simHands", "100000", 6, null);
-		WebCheckBox pauseCheckBox = TUIUtils.getWebCheckBox("Wenn Hero ist dran, pause");
-		pauseCheckBox.addActionListener(ap -> pauseWhenHero = pauseCheckBox.isSelected());
-		WebComboBox speedComboBox = TUIUtils.getWebComboBox("speedComboBox", "sim.table.speed");
-		speedComboBox.addActionListener(
-				ap -> speed = Integer.parseInt(((TSEntry) speedComboBox.getSelectedItem()).getKey()));
-		WebComboBox actionComboBox = TUIUtils.getWebComboBox("actionComboBox", "sim.table.actions");
-		actionComboBox.addActionListener(
-				ap -> whenPlayerLose = ((TSEntry) actionComboBox.getSelectedItem()).getKey());
-		// Alesia.getInstance().getContext().getActionMap(object);
-		toolBar = TUIUtils.getWebToolBar();
-		toolBar.add(actionComboBox, speedComboBox, simHands, pauseCheckBox);
-		// register settings
-		for (Component cmp : toolBar.getComponents()) {
-			JComponent jcmp = (JComponent) cmp;
-			Configuration<?> cnf = (Configuration<?>) jcmp.getClientProperty("settingsProcessor");
-			((SettingsMethods) jcmp).registerSettings(cnf);
-		}
 	}
 
 	/**
@@ -198,14 +161,10 @@ public class Table extends Task<Void, Void> {
 		return actor.publicClone();
 	}
 
-	public WebToolBar getControlPanel() {
-		return toolBar;
-	}
-
 	/**
 	 * return the current round expressed in cards numbers. 2 = preflop, 5 = Flop, 6 = Turn, 7 = River
 	 * 
-	 * @return # of dealed cards
+	 * @return # of dealt cards
 	 */
 	public int getCurrentRound() {
 		return board.size() + (holeCardsDealed == true ? 2 : 0);
@@ -217,10 +176,6 @@ public class Table extends Task<Void, Void> {
 		// ArrayList<Player> tmp = new ArrayList<>();
 		// players.forEach(p -> tmp.add(p.publicClone()));
 		return players;
-	}
-
-	public int getSimulationsHand() {
-		return simulationsHand;
 	}
 
 	public int getSpeed() {
@@ -309,7 +264,7 @@ public class Table extends Task<Void, Void> {
 		int playersToAct = activePlayers.size();
 		// Determine the initial player and bet size.
 		if (board.size() == 0) {
-			// Pre-Flop; player left of big blind starts, bet is the big blind.
+			// PreFlop; player left of big blind starts, bet is the big blind.
 			bet = bigBlind;
 		} else {
 			// Otherwise, player left of dealer starts, no initial bet.
@@ -343,15 +298,10 @@ public class Table extends Task<Void, Void> {
 				Set<PlayerAction> allowedActions = getAllowedActions(actor);
 				action = actor.getClient().act(minBet, bet, allowedActions);
 
-				// ist hero, Pause
+				// is hero, Pause or continue
 				if ("Hero".equals(actor.getName()))
 					while (pauseWhenHero) {
-						try {
-							Thread.sleep(100);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+						ThreadUtils.sleepSafely(100);
 					}
 
 				// // Verify chosen action to guard against broken clients (accidental or on purpose).

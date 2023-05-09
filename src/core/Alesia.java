@@ -147,7 +147,7 @@ public class Alesia extends Application {
 
 	/**
 	 * Look in the Alesia.properties file, look for the property "Alesia.database.file.name" and load an return the list
-	 * of all prperties found in that file. This file contain all data base connection information.
+	 * of all properties found in that file. This file contain all data base connection information.
 	 * 
 	 * @return all properties found in the database properties files
 	 */

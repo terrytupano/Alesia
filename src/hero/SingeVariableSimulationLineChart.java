@@ -22,7 +22,6 @@ public class SingeVariableSimulationLineChart extends JDialog {
 		super(Alesia.getInstance().mainFrame);
 		JFreeChart jFreeChart = createChart(createDataset(resultName));
 		JPanel jPanel = new ChartPanel(jFreeChart);
-		jPanel.setPreferredSize(new Dimension(1000, 600));
 		setContentPane(jPanel);
 	}
 
@@ -34,7 +33,7 @@ public class SingeVariableSimulationLineChart extends JDialog {
 			String pName = client.getString("trooper");
 			LazyList<SimulationResult> statistics = SimulationResult.find("name = ? AND trooper = ?", resultName,
 					pName);
-			// retrive the first element of the statistical series and append the aditional value field
+			// Retrieve the first element of the statistical series and append the additional value field
 			String av = statistics.size() > 0 ? statistics.get(0).getString("aditionalValue") : "";
 			XYSeries xYSeries = new XYSeries(pName + "\n(" + av + ")");
 			xYSeriesCollection.addSeries(xYSeries);

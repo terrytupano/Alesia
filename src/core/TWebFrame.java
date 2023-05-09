@@ -14,6 +14,7 @@ import com.alee.laf.rootpane.*;
 import com.alee.laf.window.*;
 import com.alee.managers.settings.*;
 import com.alee.managers.style.*;
+import com.jgoodies.common.base.*;
 
 import gui.wlaf.*;
 
@@ -101,8 +102,10 @@ public class TWebFrame extends WebFrame {
 	public Rectangle getBoundByFactor(double factor) {
 		return getBoundByFactor(factor, factor);
 	}
+	
+	
 	/**
-	 * Return a {@link Rectangle} center on this frame {@link GraphicsConfiguration} and size based on the sith and
+	 * Return a {@link Rectangle} center on this frame {@link GraphicsConfiguration} and size based on the with and
 	 * height arguments.
 	 * 
 	 * @param withFactor - width factor

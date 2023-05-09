@@ -77,6 +77,15 @@ public abstract class Bot implements Client {
 		this.hand = new UoAHand(myHole.toString() + " " + hand.toString());
 		this.pot = pot + bet;
 	}
+	
+	/**
+	 * return a {@link Trooper} instance configured to run as Bot inside the simulation table.
+	 * 
+	 * @param simulationTable - the environment in witch the trooper run
+	 * @param trooperP - the parameters that the trooper must follow.
+	 * 
+	 * @return the trooper
+	 */
 
 	public Trooper getSimulationTrooper(Table simulationTable, TrooperParameter trooperP) {
 		this.trooper = new Trooper();

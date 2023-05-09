@@ -42,7 +42,10 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		addInputComponent(TUIUtils.getNumericTextField("playTime", model, columns), false, true);
 		addInputComponent(TUIUtils.getNumericTextField("playUntil", model, columns), false, true);
 
-//		JComponent component = TUIUtils.getListItems(getInputComponents());
+		setTitleDescriptionFrom("trooper", "description");
+		
+		JComponent component = TUIUtils.getListItems(getInputComponents());
+		
 //		String tit = TStringUtils.getString(fieldName);
 //		String msg = TStringUtils.getString(fieldName + ".tt");
 
@@ -66,7 +69,7 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		builder.append(TStringUtils.getString("takeOpportunity"), getInputComponent("takeOpportunity"), 5);
 
 		JPanel panel = builder.getPanel();
-		setBodyComponent(panel);
+		setBodyComponent(component);
 		setFooterActions("update");
 	}
 

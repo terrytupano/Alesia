@@ -20,7 +20,6 @@ public class MultiVariableSimulationBarChar extends JDialog {
 		super(Alesia.getInstance().mainFrame);
 		JFreeChart jFreeChart = createChart(createDataset(resutlName));
 		JPanel jPanel = new ChartPanel(jFreeChart);
-		jPanel.setPreferredSize(new Dimension(1000, 600));
 		setContentPane(jPanel);
 	}
 

@@ -46,19 +46,39 @@ public class TUIPanel extends WebPanel {
 
 	double aspectRatio = ASPECT_RATION_DEFAULT;
 	private WebToolBar toolBar;
+	private WebLabel titleLabel;
+	private WebLabel descriptionLabel;
 
 	public TUIPanel() {
 		super(new BorderLayout());
 		this.allActions = new Vector<>();
 		this.toolBar = TUIUtils.getWebToolBar();
+		this.titleLabel = TUIUtils.getH1Title("terry");
+		this.descriptionLabel = TUIUtils.getH3Label("Descrption for terry");
+
 		// set the toolbar visible only on add actions
 		toolBar.setVisible(false);
+
 		bodyComponent = new WebLabel("Terry");
 		footerComponent = new WebButton("Terry");
+		WebPanel northPanel = TUIUtils.getInFormLayout(titleLabel, descriptionLabel, toolBar);
+		northPanel.setBorder(TUIUtils.DOUBLE_EMPTY_BORDER);
 
-		add(toolBar, BorderLayout.NORTH);
+		add(northPanel, BorderLayout.NORTH);
 		add(bodyComponent, BorderLayout.CENTER);
 		add(footerComponent, BorderLayout.SOUTH);
+	}
+
+	/**
+	 * set the title and description values for this panel
+	 * 
+	 * @param title - the title
+	 * @param description - the description
+	 */
+	public void setTitleDescription(String title, String description) {
+		titleLabel.setText(title);
+		if (description != null)
+			descriptionLabel.setText(description);
 	}
 
 	/**
