@@ -77,7 +77,7 @@ public class ConsolePanel extends WebPanel {
 		// wtb.registerSettings(new Configuration<ButtonState>("Console.showWarnMessage"));
 		// gp.add(wtb);
 
-		toolbar.add(comboBox, TUIUtils.getWebButtonForToolBar(actionMap.get("cleanConsole")));
+		toolbar.add(comboBox, TUIUtils.getButtonForToolBar(actionMap.get("cleanConsole")));
 
 //		editorPane.setSize(Short.MAX_VALUE, Short.MAX_VALUE);
 		editorPane.setText(blanck);

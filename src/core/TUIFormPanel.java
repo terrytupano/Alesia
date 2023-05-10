@@ -1,4 +1,4 @@
-package gui;
+package core;
 
 import java.awt.*;
 import java.util.*;
@@ -21,7 +21,7 @@ import com.jgoodies.common.base.*;
 import com.jgoodies.validation.*;
 import com.jgoodies.validation.view.*;
 
-import core.*;
+import gui.*;
 import gui.wlaf.*;
 
 /**
@@ -35,6 +35,10 @@ import gui.wlaf.*;
  */
 public class TUIFormPanel extends TUIPanel {
 
+	public static final String ACCEPTCHANGES = "acceptChanges";
+	public static final String CANCELCHANGES = "cancelChanges";
+	public static final String UPDATECHANGES = "updateChanges";
+	
 	private static final String MY_LABEL = "myLabel";
 	private static final String MY_WEB_OVERLAY = "myWebOverlay";
 
@@ -51,15 +55,9 @@ public class TUIFormPanel extends TUIPanel {
 		this.temporalStorage = new HashMap<>();
 		this.validationResult = new ValidationResult();
 		this.mandatory = new TValidationMessage("validationMessage.mandatory");
-		this.listEmpty = new TValidationMessage("validationMessage.listEmpty");
+		this.listEmpty = new TValidationMessage("validationMessage.listEmpty");		
 	}
 
-	@org.jdesktop.application.Action
-	public void acept() {
-		if (validateFields()) {
-			System.out.println("TUIFormPanel.acept()");
-		}
-	}
 
 	protected void addInputComponent(JComponent cmp) {
 		addInputComponent(cmp, false, true);
@@ -74,7 +72,7 @@ public class TUIFormPanel extends TUIPanel {
 	protected void addInputComponent(String fieldName, JComponent component, boolean required, boolean enable) {
 		fieldComponetMap.put(fieldName, component);
 		componentsAsInserted.add(fieldName);
-		JLabel jl = TUIUtils.getJLabel(fieldName, required, enable);
+		JLabel jl = TUIUtils.getLabel(fieldName, required, enable);
 		WebOverlay overlay = new WebOverlay(component);
 		component.putClientProperty(MY_LABEL, jl);
 		component.putClientProperty("isRequired", required);
@@ -93,7 +91,7 @@ public class TUIFormPanel extends TUIPanel {
 			}
 		}
 	}
-
+	
 	private void checkDateFields() {
 		List<JComponent> jcmplist = new ArrayList<>(fieldComponetMap.values());
 		for (JComponent jcmp : jcmplist) {
@@ -411,8 +409,10 @@ public class TUIFormPanel extends TUIPanel {
 		// }
 		// }
 
-		if (!validationResult.isEmpty())
-			return false;
+		if (!validationResult.isEmpty()) {
+			Alesia.showNotification("validationMessage.updateError"); 
+			return false;			
+		}
 
 		// todos los pasos ok, habilitar default button
 		setEnableActions("isCommint", "true", true);
@@ -455,10 +455,6 @@ public class TUIFormPanel extends TUIPanel {
 				((SettingsMethods) cmp).registerSettings(cnf);
 			}
 		}
-	}
-
-	public void setAceptAction(Action acept) {
-		putClientProperty("aceptAction", acept);
 	}
 
 	/**

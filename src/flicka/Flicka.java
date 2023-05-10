@@ -123,7 +123,7 @@ public class Flicka {
 		dockablePane.registerSettings(
 				new com.alee.managers.settings.Configuration<DockablePaneState>("FlickaDockablePane"));
 
-		Alesia.getInstance().getMainPanel().showPanel(dockablePane);
+		Alesia.getMainPanel().showPanel(dockablePane);
 	}
 
 	/**

@@ -8,7 +8,7 @@
  * Contributors:
  *     terry - initial API and implementation
  ******************************************************************************/
-package gui;
+package core;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -20,8 +20,8 @@ import javax.swing.Action;
 
 import org.jdesktop.application.*;
 
-import com.alee.extended.panel.*;
 import com.alee.laf.button.*;
+import com.alee.laf.grouping.*;
 import com.alee.laf.label.*;
 import com.alee.laf.panel.*;
 import com.alee.laf.toolbar.*;
@@ -31,8 +31,6 @@ import com.alee.utils.*;
 import com.jgoodies.common.base.*;
 import com.jgoodies.forms.layout.*;
 
-import core.*;
-
 public class TUIPanel extends WebPanel {
 
 	public static double ASPECT_RATION_NONE = 0.0;
@@ -40,7 +38,8 @@ public class TUIPanel extends WebPanel {
 	public static double ASPECT_RATION_DEFAULT = 1.6666;
 	public static double ASPECT_RATION_WIDE = 1.7777;
 	protected Vector<Action> allActions;
-	private JComponent bodyComponent, footerComponent;
+	private JComponent bodyComponent;
+	private WebPanel footerPanel;
 
 	private WebDialog dialog;
 
@@ -53,32 +52,28 @@ public class TUIPanel extends WebPanel {
 		super(new BorderLayout());
 		this.allActions = new Vector<>();
 		this.toolBar = TUIUtils.getWebToolBar();
-		this.titleLabel = TUIUtils.getH1Title("terry");
+		this.titleLabel = TUIUtils.getH1Label("terry");
 		this.descriptionLabel = TUIUtils.getH3Label("Descrption for terry");
+		this.footerPanel = new WebPanel();
+		BoxLayout layout = new BoxLayout(footerPanel, BoxLayout.LINE_AXIS);
+		footerPanel.setLayout(layout);
+		footerPanel.add(Box.createHorizontalGlue());
 
 		// set the toolbar visible only on add actions
 		toolBar.setVisible(false);
 
 		bodyComponent = new WebLabel("Terry");
-		footerComponent = new WebButton("Terry");
+		footerPanel.add(new WebButton("Terry"));
 		WebPanel northPanel = TUIUtils.getInFormLayout(titleLabel, descriptionLabel, toolBar);
 		northPanel.setBorder(TUIUtils.DOUBLE_EMPTY_BORDER);
 
 		add(northPanel, BorderLayout.NORTH);
 		add(bodyComponent, BorderLayout.CENTER);
-		add(footerComponent, BorderLayout.SOUTH);
+		add(footerPanel, BorderLayout.SOUTH);
 	}
 
-	/**
-	 * set the title and description values for this panel
-	 * 
-	 * @param title - the title
-	 * @param description - the description
-	 */
-	public void setTitleDescription(String title, String description) {
-		titleLabel.setText(title);
-		if (description != null)
-			descriptionLabel.setText(description);
+	public WebPanel getFooterPanel() {
+		return footerPanel;
 	}
 
 	/**
@@ -88,21 +83,26 @@ public class TUIPanel extends WebPanel {
 	 */
 	public void addToolBarAction(Action action) {
 		allActions.add(action);
-		WebButton wb = TUIUtils.getWebButtonForToolBar(action);
+		WebButton wb = TUIUtils.getButtonForToolBar(action);
 		toolBar.add(wb);
 		toolBar.setVisible(true);
 	}
 
-	public void addToolBarActions(Action... actions) {
-		addToolBarActions(Arrays.asList(actions));
+	public void addToolBarAction(String action) {
+		addToolBarAction(TActionsFactory.getAction(action));
 	}
 
-	/**
-	 * perform {@link #addToolBarActions(List)} whit all the actions inside map
-	 * argument
-	 * 
-	 * @param map - instance of actionMap
-	 */
+	public void addToolBarActions(Action... actions) {
+		GroupPane toolBarPane = new GroupPane();
+		for (Action action : actions) {
+			allActions.add(action);
+			WebButton save = TUIUtils.getButtonForToolBar(action);
+			toolBarPane.add(save);
+		}
+		toolBar.add(toolBarPane);
+		toolBar.setVisible(true);
+	}
+
 	public void addToolBarActions(ActionMap map) {
 		ArrayList<javax.swing.Action> actions = new ArrayList<>();
 		for (Object key : map.keys()) {
@@ -112,17 +112,9 @@ public class TUIPanel extends WebPanel {
 	}
 
 	public void addToolBarActions(List<Action> actions) {
-		for (Action act : actions) {
-			addToolBarAction(act);
-		}
+		addToolBarActions(actions.toArray(new Action[0]));
 	}
 
-	/**
-	 * perform {@link #addToolBarActions(List)} with the actions name found in
-	 * {@link TActionsFactory}
-	 * 
-	 * @param actions - action name array
-	 */
 	public void addToolBarActions(String... actions) {
 		addToolBarActions(TActionsFactory.getActions(actions));
 	}
@@ -151,7 +143,7 @@ public class TUIPanel extends WebPanel {
 			// dialog.setTitle(" ");
 			return dialog;
 		}
-		dialog = new WebDialog(StyleId.dialogDecorated, Alesia.getInstance().getMainFrame());
+		dialog = new WebDialog(StyleId.dialogDecorated, Alesia.getMainFrame());
 
 		dialog.setModal(true);
 		dialog.setResizable(false);
@@ -162,7 +154,7 @@ public class TUIPanel extends WebPanel {
 			setDialogAspectRatio();
 		else
 			dialog.pack();
-		dialog.setLocationRelativeTo(Alesia.getInstance().getMainFrame());
+		dialog.setLocationRelativeTo(Alesia.getMainFrame());
 		return dialog;
 	}
 
@@ -214,6 +206,10 @@ public class TUIPanel extends WebPanel {
 		this.aspectRatio = customValue;
 	}
 
+	public void setBodyComponent(JComponent body) {
+		setBodyComponent(body, false);
+	}
+
 	public void setBodyComponent(JComponent body, boolean withBorder) {
 		if (bodyComponent != null) {
 			remove(bodyComponent);
@@ -223,10 +219,6 @@ public class TUIPanel extends WebPanel {
 			bodyComponent.setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
 
 		add(body, BorderLayout.CENTER);
-	}
-
-	public void setBodyComponent(JComponent body) {
-		setBodyComponent(body, false);
 	}
 
 	protected void setDialogAspectRatio() {
@@ -253,15 +245,15 @@ public class TUIPanel extends WebPanel {
 	}
 
 	/**
-	 * Enable/Disable all the actions present in this component acordint to
-	 * parametars pass as arguments.
+	 * Enable/Disable all the actions present in this component according to
+	 * Parameters pass as arguments.
 	 * <p>
-	 * For example. the class {@link TUIFormPanel} has the <code>Acept </code>
-	 * action. this action has a paremeter
+	 * For example. the class {@link TUIFormPanel} has the <code>Accept </code>
+	 * action. this action has a parameter
 	 * <code>acept.Action.isCommint = true</code> that mark this action as an action
-	 * for commit changes to the sistem.
+	 * for commit changes to the system.
 	 * <p>
-	 * call this metodo
+	 * call this method
 	 * <code>enableInternalActions("isCommint", "true", false)</code> means that all
 	 * actions whit property <code>.isCommit = true</code> will be disabled
 	 * 
@@ -280,14 +272,13 @@ public class TUIPanel extends WebPanel {
 	}
 
 	/**
-	 * set an standard footer area for components intended to input data.
+	 * add to the current {@link #footerPanel} a {@link GroupPane} with all actions
+	 * passed as argument.
 	 * 
-	 * @param actions Actions to add
+	 * @param actions - the actions to add
 	 */
-	public void setFooterActions(Action... actions) {
+	public void addFooterActions(Action... actions) {
 		Vector<JComponent> components = new Vector<>();
-		// component to stretch
-		components.add(new WebLabel());
 		for (Action act : actions) {
 			allActions.add(act);
 			TUIUtils.overRideIcons(TUIUtils.TOOL_BAR_ICON_SIZE, Color.black, act);
@@ -295,11 +286,12 @@ public class TUIPanel extends WebPanel {
 			components.add(wb);
 		}
 
-		GroupPanel groupPanel = new GroupPanel(GroupingType.fillFirst, true,
-				components.toArray(new JComponent[components.size()]));
 		SwingUtils.equalizeComponentsWidth(components);
-		groupPanel.setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
-		setFooterComponent(groupPanel);
+		GroupPane groupPane = new GroupPane(components.toArray(new WebButton[0]));
+		groupPane.setBackground(Color.black);
+		groupPane.setOpaque(true);
+//		groupPane.setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
+		footerPanel.add(groupPane);
 	}
 
 	/**
@@ -309,24 +301,23 @@ public class TUIPanel extends WebPanel {
 	 * 
 	 * @param actions list of actions
 	 */
-	public void setFooterActions(String... actions) {
+	public void addFooterActions(String... actions) {
 		List<Action> alist = TActionsFactory.getActions(actions);
-		setFooterActions(alist.toArray(new Action[0]));
+		addFooterActions(alist.toArray(new Action[0]));
 	}
 
-	public void setFooterComponent(JComponent footer) {
-		if (footerComponent != null) {
-			remove(footerComponent);
-		}
-		this.footerComponent = footer;
-//		// add decoration
-//		footerComponent.setOpaque(true);
-//		footerComponent.setBackground(getBackground().brighter());
-//		Border border = footer.getBorder();
-//		MatteBorder border2 = new MatteBorder(1, 0, 0, 0, Color.GRAY);
-//		CompoundBorder border3 = new CompoundBorder(border2, border);
-//		footerComponent.setBorder(border3);
-		add(footerComponent, BorderLayout.SOUTH);
+	/**
+	 * replace the current {@link #footerPanel} in the current layout with this new
+	 * component
+	 * <p>
+	 * NOTE: the all {@link #footerPanel} is not more visible and out control of
+	 * this class
+	 * 
+	 * @param footer - the new footer component
+	 */
+	public void setFooterComponent2(JComponent footer) {
+		remove(footerPanel);
+		add(footer, BorderLayout.SOUTH);
 	}
 
 	/**
@@ -334,10 +325,32 @@ public class TUIPanel extends WebPanel {
 	 * no visible
 	 * 
 	 * @param msgId   - message id for text
-	 * @param msgData - Sustitution data
+	 * @param msgData - Substitution data
 	 */
 	public void setMessage(String msgId, Object... msgData) {
-		setMessage(msgId, false, msgData);
+//		setMessage(msgId, false, msgData);
+	}
+
+	/**
+	 * set the title and description values for this panel
+	 * 
+	 * @param title       - the title
+	 * @param description - the description
+	 */
+	public void setTitleDescription(String title, String description) {
+		titleLabel.setText(title);
+		if (description != null)
+			descriptionLabel.setText(description);
+	}
+
+	public String getString(String stringKey) {
+		return TStringUtils.getString(stringKey);
+	}
+
+	public void setTitleDescriptionFrom(String action) {		
+		String title = getString(action + ".Action.text"); 
+		String description  = getString(action + ".Action.shortDescription"); 
+		setTitleDescription(title, description);
 	}
 
 	@org.jdesktop.application.Action

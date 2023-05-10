@@ -42,6 +42,11 @@ public class ListItem extends JPanel implements MouseListener {
 		add(rightPanel, BorderLayout.EAST);
 	}
 
+	public ListItem(Action action) {
+		this();
+		setAction(action);
+	}
+
 	public void setIcon(Icon icon) {
 		iconLabel.setIcon(icon);
 	}
@@ -71,6 +76,14 @@ public class ListItem extends JPanel implements MouseListener {
 		setRightComponent(label);
 	}
 
+	/**
+	 * return an instance of {@link ListItem} special for input data in a form.
+	 * 
+	 * @param fieldName      - the field name of the input component
+	 * @param rightComponent - the input component for "input data"
+	 * 
+	 * @return the item
+	 */
 	public static ListItem getItemForField(String fieldName, JComponent rightComponent) {
 		String tit = TStringUtils.getString(fieldName);
 		String msg = TStringUtils.getString(fieldName + ".tt");

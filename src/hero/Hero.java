@@ -124,7 +124,8 @@ public class Hero {
 	@org.jdesktop.application.Action
 	public void gameSimulator(ActionEvent event) {
 		GameSimulatorPanel simulatorPanel = new GameSimulatorPanel();
-		Alesia.getInstance().getMainPanel().showPanel(simulatorPanel);
+		simulatorPanel.setTitleDescriptionFrom("gameSimulator");
+		Alesia.getMainPanel().showPanel(simulatorPanel);
 	}
 
 	public ArrayList<javax.swing.Action> getUI() {
@@ -140,10 +141,10 @@ public class Hero {
 	public void heroPanel(ActionEvent event) {
 		// if there a instance of trooper current active, return the same pane
 		if (activeTrooper != null && activeTrooper.isStarted()) {
-			Alesia.getInstance().getMainPanel().showPanel(heroPanel);
+			Alesia.getMainPanel().showPanel(heroPanel);
 		} else {
 			heroPanel = new HeroPanel();
-			Alesia.getInstance().getMainPanel().showPanel(heroPanel);
+			Alesia.getMainPanel().showPanel(heroPanel);
 			initTrooperEnvironment();
 		}
 	}
@@ -159,7 +160,7 @@ public class Hero {
 	public void preFlopCardsRange(ActionEvent event) {
 		// this method is called by #savePreflopRange
 		PreFlopCardsPanel panel = new PreFlopCardsPanel();
-		Alesia.getInstance().getMainPanel().showPanel(panel);
+		Alesia.getMainPanel().showPanel(panel);
 	}
 
 	@org.jdesktop.application.Action
@@ -169,7 +170,7 @@ public class Hero {
 
 		// live trooper need the target table window
 		if (windows.isEmpty()) {
-			JOptionPane.showMessageDialog(Alesia.getInstance().getMainFrame(), "No active window found", "Error",
+			JOptionPane.showMessageDialog(Alesia.getMainFrame(), "No active window found", "Error",
 					JOptionPane.ERROR_MESSAGE);
 			WebToggleButton tb = (WebToggleButton) TActionsFactory.getAbstractButton(event);
 			tb.setSelected(false);
@@ -202,7 +203,7 @@ public class Hero {
 			}
 		}
 
-		Alesia.getInstance().getMainFrame().setBounds(10, 65, 620, 900);
+		Alesia.getMainFrame().setBounds(10, 65, 620, 900);
 		// TResources.performCMDOWCommand(winds.get(0).getKey(), "/siz 1200 1200 /mov " + monitorWith + 630 + " 65 ");
 		TResources.performCMDOWCommand(windows.get(0).getKey(), "/siz 1200 1200 /mov 630 65 ");
 		initTrooperEnvironment();
@@ -214,7 +215,7 @@ public class Hero {
 		AbstractButton ab = (AbstractButton) event.getSource();
 		PreFlopCardsPanel rangePanel = SwingUtils.getFirstParent(ab, PreFlopCardsPanel.class);
 		TSEntry selR = rangePanel.getSelectedRange();
-		String nameDesc = (String) JOptionPane.showInputDialog(Alesia.getInstance().getMainFrame(),
+		String nameDesc = (String) JOptionPane.showInputDialog(Alesia.getMainFrame(),
 				"Write the name and a shor description for this range. \nThe name an description muss be coma separated.",
 				"Save", JOptionPane.PLAIN_MESSAGE, null, null, selR.getKey() + "," + selR.getValue());
 		// save
@@ -224,7 +225,7 @@ public class Hero {
 		// correct format ?
 		String[] nam_desc = nameDesc.split("[,]");
 		if (nam_desc.length == 1) {
-			JOptionPane.showMessageDialog(Alesia.getInstance().getMainFrame(), "Format error", "Error",
+			JOptionPane.showMessageDialog(Alesia.getMainFrame(), "Format error", "Error",
 					JOptionPane.ERROR_MESSAGE);
 			return;
 		}
@@ -262,7 +263,7 @@ public class Hero {
 	public void testAreasScreen(ActionEvent event) {
 		if (activeTrooper != null) {
 			if (activeTrooper.getSensorsArray().getReadSourceFile() == null) {
-				JOptionPane.showMessageDialog(Alesia.getInstance().getMainFrame(), "No screenshot file has been setted",
+				JOptionPane.showMessageDialog(Alesia.getMainFrame(), "No screenshot file has been setted",
 						"Error", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
@@ -280,7 +281,7 @@ public class Hero {
 	@org.jdesktop.application.Action
 	public void uoAEvaluator(ActionEvent event) {
 		UoAPanel aPanel = new UoAPanel();
-		Alesia.getInstance().getMainPanel().showPanel(aPanel);
+		Alesia.getMainPanel().showPanel(aPanel);
 	}
 
 	private void initTrooperEnvironment() {

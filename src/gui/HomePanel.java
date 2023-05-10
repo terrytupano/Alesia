@@ -34,7 +34,7 @@ public class HomePanel extends WebPanel {
 		centerPanel.setLayout(new VerticalFlowLayout(TUIUtils.STANDAR_GAP,TUIUtils.STANDAR_GAP,true,  false));
 
 		// splash component
-		JComponent splash = Alesia.getInstance().mainFrame.getSplash();
+		JComponent splash = Alesia.getMainFrame().getSplash();
 		
 		// footer actions
 		southPanel = new WebPanel();
@@ -70,17 +70,17 @@ public class HomePanel extends WebPanel {
 
 	@org.jdesktop.application.Action
 	public void about(ActionEvent event) {
-		Alesia.getInstance().getMainPanel().showPanel(new AboutPanel());
+		Alesia.getMainPanel().showPanel(new AboutPanel());
 	}
 
 	@org.jdesktop.application.Action
 	public void uiManager(ActionEvent event) {
 		UIManagerDefaults man = new UIManagerDefaults();
-		Alesia.getInstance().getMainPanel().showPanel(man.getContentPane());
+		Alesia.getMainPanel().showPanel(man.getContentPane());
 	}
 
 	@org.jdesktop.application.Action
 	public void magnifier(ActionEvent event) {
-		magnifier.displayOrDispose(Alesia.getInstance().mainFrame);
+		magnifier.displayOrDispose(Alesia.getMainFrame());
 	}
 }

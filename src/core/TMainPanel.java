@@ -28,6 +28,7 @@ import com.alee.extended.transition.effects.slide.*;
 import com.alee.laf.grouping.*;
 import com.alee.laf.label.*;
 import com.alee.laf.panel.*;
+import com.alee.laf.scroll.*;
 import com.alee.laf.toolbar.*;
 import com.alee.utils.*;
 import com.jgoodies.common.base.*;
@@ -68,11 +69,11 @@ public class TMainPanel extends WebPanel {
 		WebLabel pd = new WebLabel(TStringUtils.getAboutAppShort(), TResources.getSmallIcon("alpha.png"));
 		statusBar.add(pd);
 		statusBar.addSpacing();
-		statusBar.addToEnd(Alesia.getInstance().taskManager.getProgressBar());
+		statusBar.addToEnd(Alesia.getTaskManager().getProgressBar());
 
 		transitionPanel = new ComponentTransition();
 		// add the initial content of the frame splash
-		transitionPanel.setContent(Alesia.getInstance().getMainFrame().getContentPane());
+		transitionPanel.setContent(Alesia.getMainFrame().getContentPane());
 
 		// Transition effect
 		effect = new SlideTransitionEffect();
@@ -148,10 +149,17 @@ public class TMainPanel extends WebPanel {
 	}
 
 	/**
-	 * show the component in this
+	 * show the component in this container as a new component in the sequence.
 	 * 
-	 * @param newComponent
+	 * @param newComponent - the component to show
+	 * @param inScroll     - if the component must be wrapped in a
+	 *                     {@link WebScrollPane}
 	 */
+	public void showInScrollPanel(JComponent newComponent) {
+		WebScrollPane pane = TUIUtils.getWebScrollPane(newComponent);
+		showPanel(pane, Direction.left);
+	}
+
 	public void showPanel(JComponent newComponent) {
 		showPanel(newComponent, Direction.left);
 	}
@@ -162,8 +170,20 @@ public class TMainPanel extends WebPanel {
 		cmpCounter = components.size() - 1;
 		syncNavActions();
 
+		// TODO: temporal impl find only the first one
+		Component toobarCmp = newComponent;
+		if (newComponent instanceof JScrollPane) {
+			JScrollPane pane = (JScrollPane) newComponent;
+			for (Component c : pane.getComponents()) {
+				if (c instanceof TUIPanel) {
+					toobarCmp = pane.getViewport().getView();
+					break;
+				}
+			}
+		}
+
 		// remove the toolbar from the source and add to this component
-		if (newComponent instanceof TUIPanel) {
+		if (toobarCmp instanceof TUIPanel) {
 			TUIPanel tuiPanel = (TUIPanel) newComponent;
 			if (tuiPanel.getToolBar().getComponentCount() > 0)
 				toolBar.addSeparator();
@@ -171,23 +191,12 @@ public class TMainPanel extends WebPanel {
 			for (Component component : components) {
 				toolBar.add(component);
 			}
-		}
-
-		// auto select listener for model select property
-		List<Container> cnts = SwingUtils.collectAllContainers(newComponent);
-		for (Container cnt : cnts) {
-			if (cnt instanceof TUIListPanel)
-				((TUIListPanel) cnt).init();
-
-			if (cnt instanceof PropertyChangeListener && cnt instanceof TUIListPanel) {
-				PropertyChangeListener pcl = (PropertyChangeListener) cnt;
-				addChangeListener(TUIListPanel.MODEL_SELECTED, pcl);
-			}
+			// remove decorations
+			tuiPanel.getToolBar().setVisible(false);
 		}
 
 		transitionPanel.performTransition(newComponent);
 	}
-	
 
 	/**
 	 * Utility method to perform {@link UIListPanel#freshen()} in an active instance

@@ -52,7 +52,7 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 	private WindowAdapter adapter;
 
 	public TTaskMonitor(Task task, boolean allowBg) {
-		super(task, Task.BlockingScope.WINDOW, Alesia.getInstance().getMainPanel());
+		super(task, Task.BlockingScope.WINDOW, Alesia.getMainPanel());
 		webPopup = new WebPopup<>();
 		webPopup.setPadding(4);
 		webPopup.setResizable(false);
@@ -75,7 +75,7 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 
 
 		};
-		Alesia.getInstance().mainFrame.addWindowListener(adapter);
+		Alesia.getMainFrame().addWindowListener(adapter);
 
 		this.busyPanel = new BusyPanel();
 		this.task = task;
@@ -130,7 +130,7 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 		if (e.getSource() == cancel) {
 			task.cancel(true);
 			webPopup.hidePopup();
-			Alesia.getInstance().mainFrame.removeWindowListener(adapter);
+			Alesia.getMainFrame().removeWindowListener(adapter);
 		}
 		if (e.getSource() == background) {
 			webPopup.hidePopup();
@@ -139,16 +139,16 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 
 	private void  showPopUp() {
 		// FIXME: why i need to do this ???????? im using the right component????
-		Rectangle recAle = Alesia.getInstance().mainFrame.getBounds();
+		Rectangle recAle = Alesia.getMainFrame().getBounds();
 		Rectangle recPop = new Rectangle(webPopup.getPreferredSize());
 		int x = (int) (recAle.getCenterX() - recPop.getCenterX());
 		int y = (int) (recAle.getCenterY() - recPop.getHeight() * 2);
-		webPopup.showPopup(Alesia.getInstance().mainFrame, x, y);
+		webPopup.showPopup(Alesia.getMainFrame(), x, y);
 	}
 	@Override
 	protected void block() {
-		oldGlassPanel = Alesia.getInstance().getMainFrame().getGlassPane();
-		Alesia.getInstance().getMainFrame().setGlassPane(busyPanel);
+		oldGlassPanel = Alesia.getMainFrame().getGlassPane();
+		Alesia.getMainFrame().setGlassPane(busyPanel);
 		busyPanel.setVisible(true);
 		showPopUp();
 	}
@@ -157,8 +157,8 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 	protected void unblock() {
 		webPopup.hidePopup();
 		busyPanel.setVisible(false);
-		Alesia.getInstance().mainFrame.removeWindowListener(adapter);
-		Alesia.getInstance().getMainFrame().setGlassPane(oldGlassPanel);
+		Alesia.getMainFrame().removeWindowListener(adapter);
+		Alesia.getMainFrame().setGlassPane(oldGlassPanel);
 	}
 
 	/**
@@ -231,7 +231,7 @@ public class TTaskMonitor extends InputBlocker implements ActionListener, Proper
 
 			Graphics2D ig2 = mOffscreenImage.createGraphics();
 			ig2.setClip(g.getClip());
-			Alesia.getInstance().mainFrame.getContentPane().paint(ig2);
+			Alesia.getMainFrame().getContentPane().paint(ig2);
 			ig2.dispose();
 			Graphics2D g2 = (Graphics2D) g;
 			g2.drawImage(mOffscreenImage, mOperation, 0, 0);

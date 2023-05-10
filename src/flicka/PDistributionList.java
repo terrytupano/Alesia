@@ -20,6 +20,7 @@ import javax.swing.*;
 import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 
+import core.*;
 import datasource.*;
 
 import gui.*;

@@ -28,8 +28,8 @@ public class TWebFileChooserField extends WebFileChooserField implements FilesSe
 	public TWebFileChooserField(String f) {
 		super();
 		this.file = f;
-		this.fileDialog = new FileDialog(Alesia.getInstance().getMainFrame(), "Save", FileDialog.SAVE);
-		fileDialog.setLocationRelativeTo(Alesia.getInstance().getMainFrame());
+		this.fileDialog = new FileDialog(Alesia.getMainFrame(), "Save", FileDialog.SAVE);
+		fileDialog.setLocationRelativeTo(Alesia.getMainFrame());
 		addSelectedFilesListener(this);
 		// override button
 		chooseButton = getChooseButton();

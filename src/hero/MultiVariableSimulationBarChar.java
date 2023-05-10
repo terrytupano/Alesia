@@ -17,7 +17,7 @@ import datasource.*;
 public class MultiVariableSimulationBarChar extends JDialog {
 
 	public MultiVariableSimulationBarChar(String resutlName) {
-		super(Alesia.getInstance().mainFrame);
+		super(Alesia.getMainFrame());
 		JFreeChart jFreeChart = createChart(createDataset(resutlName));
 		JPanel jPanel = new ChartPanel(jFreeChart);
 		setContentPane(jPanel);

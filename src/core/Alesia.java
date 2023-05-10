@@ -1,4 +1,5 @@
 package core;
+
 /*******************************************************************************
  * Copyright (C) 2017 terry.
  * All rights reserved. This program and the accompanying materials
@@ -41,11 +42,11 @@ import hero.*;
 
 public class Alesia extends Application {
 
-	public TWebFrame mainFrame;
+	private TWebFrame mainFrame;
 	public static Logger logger;
 
 	public ArrayList<Skin> skins;
-	public TTaskManager taskManager;
+	private TTaskManager taskManager;
 
 	private TMainPanel mainPanel;
 	private DB alesiaDB;
@@ -55,25 +56,29 @@ public class Alesia extends Application {
 		return (Alesia) a;
 	}
 
-	public TMainPanel getMainPanel() {
-		return mainPanel;
+	public static TTaskManager getTaskManager() {
+		return getInstance().taskManager;
+	}
+
+	public static TMainPanel getMainPanel() {
+		return getInstance().mainPanel;
 	}
 
 	public ResourceMap getResourceMap() {
 		return getInstance().getContext().getResourceMap();
 	}
 
-	public TWebFrame getMainFrame() {
-		return mainFrame;
+	public static TWebFrame getMainFrame() {
+		return getInstance().mainFrame;
 	}
 
 	public static void main(String[] args) {
-		Application.launch(Alesia.class, args);	
+		Application.launch(Alesia.class, args);
 	}
 
 	/**
-	 * Open and return an instacen of {@link DB} for the given prefix. The connection parameters must be in the
-	 * database.properties file or similar.
+	 * Open and return an instacen of {@link DB} for the given prefix. The
+	 * connection parameters must be in the database.properties file or similar.
 	 * 
 	 * @param name - prefix name of the conneciton parameters
 	 * @return instance of {@link DB}
@@ -110,7 +115,7 @@ public class Alesia extends Application {
 	public static Map<String, Object> showDialog(TUIFormPanel content, double withFactor, double heightFactor) {
 
 		String popOvertext = " ";
-		final WebPopOver popOver = new WebPopOver(Alesia.getInstance().getMainFrame());
+		final WebPopOver popOver = new WebPopOver(getMainFrame());
 		popOver.setModalityType(ModalityType.TOOLKIT_MODAL);
 		popOver.setMovable(false);
 		popOver.setLayout(new VerticalFlowLayout());
@@ -128,26 +133,27 @@ public class Alesia extends Application {
 		popOver.add(tit);
 		popOver.add(content);
 
-		// popOver.setLocationRelativeTo(Alesia.getInstance().getMainFrame());
+		// popOver.setLocationRelativeTo(Alesia.getMainFrame());
 		popOver.pack();
-		popOver.setLocationRelativeTo(Alesia.getInstance().getMainFrame());
+		popOver.setLocationRelativeTo(getMainFrame());
 		popOver.setVisible(true);
-		// popOver.show(Alesia.getInstance().getMainFrame());
+		// popOver.show(Alesia.getMainFrame());
 
 		return content.getValues();
 	}
 
 	public static void showNotification(String messageId, Object... arguments) {
 		TValidationMessage message = new TValidationMessage(messageId, arguments);
-		WebInnerNotification notification = NotificationManager.showInnerNotification(
-				Alesia.getInstance().getMainFrame(), message.formattedText(), message.getIcon(32));
+		WebInnerNotification notification = NotificationManager.showInnerNotification(getMainFrame(),
+				message.formattedText(), message.getIcon(32));
 		notification.setDisplayTime(message.getMiliSeconds());
 		message.playSound();
 	}
 
 	/**
-	 * Look in the Alesia.properties file, look for the property "Alesia.database.file.name" and load an return the list
-	 * of all properties found in that file. This file contain all data base connection information.
+	 * Look in the Alesia.properties file, look for the property
+	 * "Alesia.database.file.name" and load an return the list of all properties
+	 * found in that file. This file contain all data base connection information.
 	 * 
 	 * @return all properties found in the database properties files
 	 */
@@ -169,7 +175,7 @@ public class Alesia extends Application {
 	 * Retrieve global identificator from <code>wmic</code>
 	 * 
 	 * @param gid - global id
-	 * @param vn - variable name
+	 * @param vn  - variable name
 	 * 
 	 * @return variable value
 	 */
@@ -177,7 +183,7 @@ public class Alesia extends Application {
 		String rval = null;
 		try {
 			Runtime runtime = Runtime.getRuntime();
-			Process process = runtime.exec(new String[]{"wmic", gid, "get", vn});
+			Process process = runtime.exec(new String[] { "wmic", gid, "get", vn });
 			InputStream is = process.getInputStream();
 			Scanner sc = new Scanner(is);
 			while (sc.hasNext()) {
@@ -207,8 +213,9 @@ public class Alesia extends Application {
 	}
 
 	/**
-	 * check for another active instance of Alesia looking the current active windows. if another instance is found,
-	 * this method send cmd commands and end this current execution.
+	 * check for another active instance of Alesia looking the current active
+	 * windows. if another instance is found, this method send cmd commands and end
+	 * this current execution.
 	 * 
 	 * @see TResources#getActiveWindows(String)
 	 * @see TResources#performCMDOWCommand(String, String)
@@ -248,7 +255,8 @@ public class Alesia extends Application {
 		logger = Logger.getLogger("Alesia");
 		logger.info("Wellcome to Alesia.");
 
-		// update alesia.propertyes to environment variables. this step is performed here
+		// update alesia.propertyes to environment variables. this step is performed
+		// here
 		// for convenience
 		try {
 			Properties prp = new Properties();
@@ -298,10 +306,10 @@ public class Alesia extends Application {
 		alist.addAll(flicka.getUI());
 
 		homePanel.setActions(alist);
-		
+
 		mainPanel.showPanel(homePanel);
 //		mainPanel.showPanel(new HeroPanel());
-		Alesia.getInstance().getMainFrame().setContentPane(mainPanel);
+		Alesia.getMainFrame().setContentPane(mainPanel);
 	}
 
 	@Override
@@ -329,7 +337,8 @@ public class Alesia extends Application {
 		// WebLookAndFeel.install(FlatSkin.class);
 		// WebLookAndFeel.install(MaterialSkin.class);
 		// WebLookAndFeel.install(WebDarkSkin.class);
-		// StyleManager.addExtensions(new XmlSkinExtension(new ClassResource(Alesia.class,
+		// StyleManager.addExtensions(new XmlSkinExtension(new
+		// ClassResource(Alesia.class,
 		// "resources/SimpleExtension.xml")));
 		// ProprietaryUtils.setupAATextInfo(UIManager.getDefaults());
 
@@ -345,9 +354,11 @@ public class Alesia extends Application {
 		// Turn off the anti-aliasing function of the text
 		// defaultTextRenderingHints only works on the title bar of the form
 		// textRenderingHints works on the controls in the form
-		// StyleConstants.defaultTextRenderingHints = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING,
+		// StyleConstants.defaultTextRenderingHints = new
+		// RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING,
 		// RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
-		// StyleConstants.textRenderingHints = new RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING,
+		// StyleConstants.textRenderingHints = new
+		// RenderingHints(RenderingHints.KEY_TEXT_ANTIALIASING,
 		// RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
 
 		mainFrame = new TWebFrame();

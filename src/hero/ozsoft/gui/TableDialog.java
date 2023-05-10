@@ -74,7 +74,7 @@ public class TableDialog extends JDialog implements Client {
 	 * Constructor.
 	 */
 	public TableDialog(Table table) {
-		super(Alesia.getInstance().mainFrame);
+		super(Alesia.getMainFrame());
 		this.table = table;
 		// cache all cards
 		List<File> files = FileUtils.findFilesRecursively(TResources.USER_DIR+ Constants.PLAY_CARDS, f -> true);

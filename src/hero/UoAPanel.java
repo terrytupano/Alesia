@@ -38,10 +38,10 @@ public class UoAPanel extends TUIPanel {
 		this.console = new TConsoleTextArea();
 		this.cardsPanel = new CardsPanel();
 
-		WebButton evaluateHandButton = TUIUtils.getWebButtonForToolBar(this, "evaluateHand");
-		WebButton resetTableButton = TUIUtils.getWebButtonForToolBar(this, "resetTable");
-		WebButton setRandomHandButton = TUIUtils.getWebButtonForToolBar(this, "setRandomHand");
-		WebButton setExampleFromOMPaperButton = TUIUtils.getWebButtonForToolBar(this, "setExampleFromOMPaper");
+		WebButton evaluateHandButton = TUIUtils.getButtonForToolBar(this, "evaluateHand");
+		WebButton resetTableButton = TUIUtils.getButtonForToolBar(this, "resetTable");
+		WebButton setRandomHandButton = TUIUtils.getButtonForToolBar(this, "setRandomHand");
+		WebButton setExampleFromOMPaperButton = TUIUtils.getButtonForToolBar(this, "setExampleFromOMPaper");
 
 		GroupPane pane = new GroupPane(tauSpinner, evaluateHandButton, setRandomHandButton, setExampleFromOMPaperButton, resetTableButton);
 

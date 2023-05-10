@@ -19,7 +19,7 @@ import hero.ozsoft.*;
 public class SingeVariableSimulationLineChart extends JDialog {
 
 	public SingeVariableSimulationLineChart(String resultName) {
-		super(Alesia.getInstance().mainFrame);
+		super(Alesia.getMainFrame());
 		JFreeChart jFreeChart = createChart(createDataset(resultName));
 		JPanel jPanel = new ChartPanel(jFreeChart);
 		setContentPane(jPanel);

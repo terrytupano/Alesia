@@ -101,8 +101,8 @@ public class TActionsFactory {
 	}
 
 	/**
-	 * retrive the instance of {@link ApplicationAction} inside of the
-	 * {@link ActionEvent} pass as argument. this method throw and exeption if the
+	 * Retrieve the instance of {@link ApplicationAction} inside of the
+	 * {@link ActionEvent} pass as argument. this method throw and exception if the
 	 * source of the event is not an {@link AbstractButton}
 	 * 
 	 * @param event - event
@@ -125,7 +125,7 @@ public class TActionsFactory {
 	@Action
 	public void fileChooserOpen(ActionEvent event) {
 		ApplicationAction me = getMe(event);
-		FileDialog dialog = new FileDialog(Alesia.getInstance().getMainFrame(), null, FileDialog.LOAD);
+		FileDialog dialog = new FileDialog(Alesia.getMainFrame(), null, FileDialog.LOAD);
 		dialog.setMultipleMode(false);
 		dialog.setVisible(true);
 		String sf = dialog.getFile();
@@ -146,7 +146,7 @@ public class TActionsFactory {
 	@Action
 	public void fileChooserSave(ActionEvent event) {
 		ApplicationAction me = getMe(event);
-		FileDialog dialog = new FileDialog(Alesia.getInstance().getMainFrame(), null, FileDialog.SAVE);
+		FileDialog dialog = new FileDialog(Alesia.getMainFrame(), null, FileDialog.SAVE);
 		dialog.setMultipleMode(false);
 		dialog.setVisible(true);
 		String sf = dialog.getFile();
@@ -157,25 +157,34 @@ public class TActionsFactory {
 		}
 	}
 
-	/**
-	 * standar comit action. this action:
-	 * <ul>
-	 * <li>if the containr of the action is an instance of {@link TUIFormPanel} this
-	 * acction perform {@link TUIFormPanel#validateFields()} and perform
-	 * {@link JDialog#dispose()} if the validation is ok
-	 * 
-	 * </ul>
-	 * 
-	 * @param event
-	 */
+	public static TUIFormPanel getTuiFormPanel(ActionEvent event) {
+		Component component = (Component) event.getSource();
+//		ApplicationAction me = (ApplicationAction) component.getAction();
+		TUIFormPanel formPanel = SwingUtils.getFirstParent(component, TUIFormPanel.class);
+		if (formPanel == null)
+			throw new IllegalArgumentException("the ActionEvent was no originatet in an instance of TUIFormPanel.");
+		return formPanel;
+	}
+
 	@Action
-	public void acept(ActionEvent event) {
-		AbstractButton src = (AbstractButton) event.getSource();
-		ApplicationAction me = (ApplicationAction) src.getAction();
-		TUIFormPanel cnt = SwingUtils.getFirstParent((JComponent) src, TUIFormPanel.class);
-		boolean val = ((TUIFormPanel) cnt).validateFields();
-		if (val) {
-			disposeDialog(cnt, me);
+	public void cancelChanges() {
+		Alesia.getMainPanel().previous(null);
+	}
+
+	@Action
+	public void updateChanges(ActionEvent event) {
+		TUIFormPanel formPanel = getTuiFormPanel(event);
+		if (formPanel.validateFields()) {
+			formPanel.getModel().save();
+		}
+	}
+
+	@Action
+	public void acceptChanges(ActionEvent event) {
+		TUIFormPanel formPanel = getTuiFormPanel(event);
+		if (formPanel.validateFields()) {
+			formPanel.getModel().save();
+			Alesia.getMainPanel().previous(null);
 		}
 	}
 
@@ -253,7 +262,7 @@ public class TActionsFactory {
 
 		LocalProperty lsel = getLastSelected(group);
 		TSEntry tels = lsel == null ? null : new TSEntry(lsel.getId().toString(), lsel.getString("name"));
-		TSEntry sel = (TSEntry) JOptionPane.showInputDialog(Alesia.getInstance().getMainFrame(),
+		TSEntry sel = (TSEntry) JOptionPane.showInputDialog(Alesia.getMainFrame(),
 				"Select the elements to load", "Load", JOptionPane.PLAIN_MESSAGE, null, te.toArray(), tels);
 
 		// save the last selected and store the value from db in the loadPerformed
@@ -306,7 +315,7 @@ public class TActionsFactory {
 		AbstractButton src = (AbstractButton) event.getSource();
 		Object[] options = { TStringUtils.getString("deleteModel.Action.confirm"),
 				TStringUtils.getString("deleteModel.Action.cancel") };
-		int o = JOptionPane.showOptionDialog(Alesia.getInstance().getMainFrame(),
+		int o = JOptionPane.showOptionDialog(Alesia.getMainFrame(),
 				TStringUtils.getString("deleteModel.Action.message"),
 				TStringUtils.getString("deleteModel.Action.title"), JOptionPane.DEFAULT_OPTION,
 				JOptionPane.WARNING_MESSAGE, null, options, options[1]);
@@ -344,7 +353,7 @@ public class TActionsFactory {
 		LocalProperty lss = getLastSelected(group);
 		String ls = lss == null ? null : lss.getString("name");
 
-		String savn = (String) JOptionPane.showInputDialog(Alesia.getInstance().getMainFrame(), "Write the name",
+		String savn = (String) JOptionPane.showInputDialog(Alesia.getMainFrame(), "Write the name",
 				"Save", JOptionPane.PLAIN_MESSAGE, null, null, ls);
 
 		// save & update last selected

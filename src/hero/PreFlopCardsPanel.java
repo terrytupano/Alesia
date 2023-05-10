@@ -40,7 +40,7 @@ public class PreFlopCardsPanel extends TUIPanel {
 		panel.add(createRangePanel());
 		preflopsComboBox.registerSettings(new Configuration<ComboBoxState>(getClass().getName() + ".rangeComboBox"));
 
-		WebButton save = TUIUtils.getWebButtonForToolBar(TActionsFactory.getAction("savePreflopRange"));
+		WebButton save = TUIUtils.getButtonForToolBar(TActionsFactory.getAction("savePreflopRange"));
 		GroupPane toolBarPane = new GroupPane(save, preflopsComboBox);
 
 		getToolBar().add(toolBarPane);

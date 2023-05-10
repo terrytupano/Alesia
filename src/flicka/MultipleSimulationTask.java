@@ -31,7 +31,7 @@ public class MultipleSimulationTask extends Task<Void, Void> {
 			selector.select();
 		}
 		selector.printStats();
-		Alesia.getInstance().getMainPanel().signalFreshgen(StatisticsList.class);
+		Alesia.getMainPanel().signalFreshgen(StatisticsList.class);
 		return null;
 	}
 }

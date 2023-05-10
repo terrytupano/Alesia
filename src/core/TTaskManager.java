@@ -105,7 +105,7 @@ class CheckInactivity implements Runnable, MouseMotionListener {
 	CheckInactivity() {
 		// signOut = SystemVariables.getintVar("signout") * 60 * 1000;
 		// lastMouseMove = System.currentTimeMillis();
-		// Alesia.getInstance().getMainFrame().addMouseMotionListener(this);
+		// Alesia.getMainFrame().addMouseMotionListener(this);
 
 	}
 	@Override

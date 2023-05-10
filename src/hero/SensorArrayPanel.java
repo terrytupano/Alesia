@@ -61,8 +61,8 @@ public class SensorArrayPanel extends WebPanel {
 		imageTypeComboBox.registerSettings(new Configuration<ComboBoxState>("SensorPanel.imageType"));
 		sensorTypeComboBox.registerSettings(new Configuration<ComboBoxState>("SensorPanel.filter"));
 
-		WebButton testPpt = TUIUtils.getWebButtonForToolBar(TActionsFactory.getAction("testAreasPpt"));
-		WebButton testScreeen = TUIUtils.getWebButtonForToolBar(TActionsFactory.getAction("testAreasScreen"));
+		WebButton testPpt = TUIUtils.getButtonForToolBar(TActionsFactory.getAction("testAreasPpt"));
+		WebButton testScreeen = TUIUtils.getButtonForToolBar(TActionsFactory.getAction("testAreasScreen"));
 
 		GroupPane groupPane = TUIUtils.getGroupPane(screensComboBox, testScreeen);
 		GroupPane groupPane2 = new GroupPane(sensorTypeComboBox, imageTypeComboBox);

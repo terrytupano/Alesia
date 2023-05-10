@@ -56,10 +56,10 @@ public class RaceRecord extends TUIFormPanel {
 			addInputComponent(TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("reend_pos")),
 					true, true);
 			List<TSEntry> ele = Flicka.getElemets("rehorse", "*none");
-			WebComboBox jcb = TUIUtils.getWebComboBox("ttrehorse", ele, model.getString("rehorse"));
+			WebComboBox jcb = TUIUtils.getComboBox("ttrehorse", ele, model.getString("rehorse"));
 			addInputComponent("rehorse", jcb, true, true);
 			ele = Flicka.getElemets("rejockey", "tentry.none");
-			jcb = TUIUtils.getWebComboBox("ttrejockey", ele, model.getString("rejockey"));
+			jcb = TUIUtils.getComboBox("ttrejockey", ele, model.getString("rejockey"));
 			addInputComponent("rejockey", jcb, true, true);
 			addInputComponent(
 					TUIUtils.getWebFormattedTextField(model, listPanel.getColumnMetadata().get("rejockey_weight")),
@@ -79,7 +79,7 @@ public class RaceRecord extends TUIFormPanel {
 		panel = mode == EVENT ? getEventInputComponents() : panel;
 		panel = mode == BASIC ? getElementInputComponents() : panel;
 		setBodyComponent(panel);
-		setFooterActions("acept", "cancel");
+		addFooterActions("acept", "cancel");
 		preValidate();
 	}
 

@@ -6,6 +6,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.table.*;
 
+import core.*;
 import datasource.*;
 
 import gui.*;
@@ -39,7 +40,7 @@ public class RaceRecordFromTable extends TUIFormPanel implements ActionListener 
 		jTable.setCellSelectionEnabled(true);
 		// jTable.setColumnSelectionAllowed(true);
 		setBodyComponent(new JScrollPane(jTable));
-		setFooterActions("acept", "cancel");
+		addFooterActions("acept", "cancel");
 		preValidate();
 	}
 
