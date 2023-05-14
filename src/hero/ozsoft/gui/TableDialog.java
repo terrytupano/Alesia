@@ -19,23 +19,19 @@ package hero.ozsoft.gui;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
 import java.util.*;
 import java.util.List;
 
 import javax.swing.*;
 
-import com.alee.api.resource.*;
 import com.alee.extended.layout.*;
 import com.alee.laf.button.*;
-import com.alee.utils.*;
 import com.jgoodies.forms.builder.*;
 import com.jgoodies.forms.factories.*;
 import com.jgoodies.forms.layout.FormLayout;
 
 import core.*;
 import gui.*;
-import hero.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.*;
 import hero.ozsoft.actions.*;
@@ -76,14 +72,7 @@ public class TableDialog extends JDialog implements Client {
 	public TableDialog(Table table) {
 		super(Alesia.getMainFrame());
 		this.table = table;
-		// cache all cards
-		List<File> files = FileUtils.findFilesRecursively(TResources.USER_DIR+ Constants.PLAY_CARDS, f -> true);
-		for (File file : files) {
-			FileResource resource = new FileResource(file);
-			Constants.CARDS_BUFFER.put(file.getName().substring(0, file.getName().length() - 4),
-					ImageUtils.loadImageIcon(resource));
-		}
-		boardPanel = new BoardPanel();
+		this.boardPanel = new BoardPanel();
 		this.players = table.getPlayers();
 		playerPanels = new HashMap<String, PlayerPanel>();
 
@@ -96,53 +85,40 @@ public class TableDialog extends JDialog implements Client {
 			chairs.put(player.getChair(), panel);
 		}
 
-		// the player "Hero" allays the test subject. this element is handled by this class but the
-		// Decision is dispacht to proxiClient
+		// the player "Hero" allays the test subject. this element is handled by this
+		// class but the
+		// Decision is dispatched to proxiClient
 		heroPlayer = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
 		this.proxyClient = heroPlayer.getClient();
 		heroPlayer.setClient(this);
 
+		// cancel the associated table on close
 		WindowAdapter wa = new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
 				table.cancel(true);
-
 			};
 		};
-
 		addWindowListener(wa);
-		// ActionListener al = new ActionListener() {
-		// public void actionPerformed(ActionEvent e) {
-		// WebButton btn = (WebButton) e.getSource();
-		//
-		// }
-		// };
 
 		// control panel
 		outConsole = new TConsoleTextArea();
 		WebButton endGame = new WebButton(ap -> dispose());
-		endGame.setIcon(TUIUtils.getSmallFontIcon('\ue047'));
+		endGame.setIcon(TUIUtils.getToolBarFontIcon('\ue047'));
 
 		WebButton stepButton = new WebButton();
-		stepButton.setIcon(TUIUtils.getSmallFontIcon('\ue0e4'));
+		stepButton.setIcon(TUIUtils.getToolBarFontIcon('\ue0e4'));
 
 		JPanel controlPanel = new JPanel(new BorderLayout(5, 5));
 		controlPanel.setOpaque(false);
-		// controlPanel.add(table.getControlPanel(), BorderLayout.NORTH);
 		controlPanel.add(TUIUtils.getSmartScroller(outConsole), BorderLayout.CENTER);
 
 		JPanel jp = new JPanel(new VerticalFlowLayout());
 		jp.setOpaque(false);
-//		JToolBar tool = table.getControlPanel();
-//		for (Component cmp : tool.getComponents()) {
-//			JComponent jcmp = (JComponent) cmp;
-//			jp.add(jcmp);
-//		}
-
-		// jp.add(TUIUtils.getStartPauseToggleButton(ap -> table.pause(!table.isPaused())));
-		// jp.add(stepButton);
+		jp.add(endGame);
+		jp.add(stepButton);
 		controlPanel.add(jp, BorderLayout.EAST);
 
-		// set ui components
+		// set the table components
 		FormLayout layout = new FormLayout("center:90dlu, center:90dlu, center:90dlu, center:90dlu",
 				"center:pref, 3dlu, center:pref, 3dlu, center:pref, 3dlu, center:pref, 3dlu, fill:80dlu");
 		// PanelBuilder builder = new PanelBuilder(layout, new FormDebugPanel());
@@ -207,7 +183,7 @@ public class TableDialog extends JDialog implements Client {
 		// boardPanel.waitForUserInput();
 
 		// TODO: temporal. avoid log detail messages
-		String[] dets = {"blind", "deals", "calls", "checks", "bets", "folds", "raises"};
+		String[] dets = { "blind", "deals", "calls", "checks", "bets", "folds", "raises" };
 		boolean log = true;
 		for (String det : dets)
 			log = message.contains(det) ? false : log;
@@ -283,18 +259,24 @@ public class TableDialog extends JDialog implements Client {
 		}
 	}
 
-	/*
-	 * 
-	 * @Override public void setVisible(boolean b) { // only show this dialo when the table speed value is >0. this
-	 * allow doinbackground show the dialog if (table.getSpeed() > Table.RUN_BACKGROUND) super.setVisible(b); else {
-	 * TTaskMonitor ttm = new TTaskMonitor(table, false); table.setInputBlocker(ttm); } }
-	 * 
+	/**
+	 * only show this dialog, when the table speed value is >0. this
+	@Override
+	public void setVisible(boolean b) {
+		if (table.getSpeed() > 0)
+			super.setVisible(b);
+		else {
+			TTaskMonitor ttm = new TTaskMonitor(table);
+			table.setInputBlocker(ttm);
+		}
+	}
 	 */
 
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		// boardPanel.setMessage("Please select an action:");
-		// return controlPanel.getUserInput(minBet, humanPlayer.getCash(), allowedActions);
+		// return controlPanel.getUserInput(minBet, humanPlayer.getCash(),
+		// allowedActions);
 
 		//
 		return proxyClient.act(minBet, currentBet, allowedActions);

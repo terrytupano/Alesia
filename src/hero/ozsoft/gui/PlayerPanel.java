@@ -23,6 +23,7 @@ import javax.swing.*;
 
 import com.alee.extended.layout.*;
 
+import core.*;
 import hero.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.*;
@@ -112,8 +113,8 @@ public class PlayerPanel extends JPanel {
 			UoAHand hand = player.getHand();
 			if (hand.size() == 2) {
 				// Visible cards.
-				card1Label.setIcon(Constants.CARDS_BUFFER.get(hand.getCard(1).toString()));
-				card2Label.setIcon(Constants.CARDS_BUFFER.get(hand.getCard(2).toString()));
+				card1Label.setIcon(TResources.getIcon(Constants.PLAY_CARDS + hand.getCard(1).toString()+".png"));
+				card2Label.setIcon(TResources.getIcon(Constants.PLAY_CARDS + hand.getCard(2).toString()+".png"));
 			} else {
 				// Hidden cards (face-down).
 				card1Label.setIcon(Constants.CARD_BACK_ICON);

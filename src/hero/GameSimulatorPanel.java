@@ -7,7 +7,6 @@ import java.util.*;
 import java.util.List;
 
 import javax.swing.*;
-import javax.swing.Action;
 import javax.swing.event.*;
 
 import org.javalite.activejdbc.*;
@@ -23,16 +22,14 @@ import core.*;
 import datasource.*;
 import hero.ozsoft.*;
 import hero.ozsoft.bots.*;
-import hero.ozsoft.gui.*;
 
 public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionListener {
 
 	private PokerSimulatorPanel pokerSimulatorPanel;
 	private WebList trooperList;
-	private List<Table> tables;
+	private TaskGroup taskGroup;
 
 	public GameSimulatorPanel() {
-		this.tables = new ArrayList<>();
 		this.pokerSimulatorPanel = new PokerSimulatorPanel();
 
 		// to today, i need only 1 simulation parameter
@@ -45,14 +42,11 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 		addInputComponent(TUIUtils.getWebTextField("simulationName", model, columns), true, true);
 		addInputComponent(TUIUtils.getWebTextField("simulationVariable", model, columns), true, true);
 		addInputComponent(TUIUtils.getNumericTextField("simulationsHands", model, columns), true, true);
-		addInputComponent(TUIUtils.getSwitch("pauseOnHero", model.getBoolean("pauseOnHero")));
 		addInputComponent(TUIUtils.getComboBox("speed", "simulation.speed", model.getString("speed")));
+		addInputComponent(TUIUtils.getSpinner("numOfTasks", model, 1, 5));
 
 		TActionsFactory.insertActions(this);
-//		addToolBarActions(UPDATECHANGES, CANCELCHANGES);
-//		addToolBarActions("backrollHistory", "startSimulation");
 
-//		setTitleDescriptionFrom("trooper", "description");
 		WebPanel panel = TUIUtils.getFormListItems(getInputComponents());
 		GroupPane groupPane = TUIUtils.getPlayStopToggleButtons("startSimulation", "stopSimulation", "pauseSimulation");
 
@@ -83,7 +77,7 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 
 			// Retrieve the first element of the statistical series to detect, the type of
 			// graph
-			Alesia.getInstance().openDB("hero");
+			Alesia.openDB();
 			SimulationResult sample = SimulationResult.findFirst("name = ? AND trooper = ?", resultName, "Hero");
 			JDialog chartDialog;
 			if (sample.get("aditionalValue") != null) {
@@ -137,24 +131,23 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 
 	@org.jdesktop.application.Action
 	public void pauseSimulation() {
-		tables.forEach(t -> t.pause(true));
+//		taskGroup.pause(true);
 	}
 
 	public void setTrooper(Trooper trooper) {
 		pokerSimulatorPanel.setTrooper(trooper);
 	}
 
-	@org.jdesktop.application.Action(block = BlockingScope.ACTION)
-	// @org.jdesktop.application.Action(block = BlockingScope.WINDOW)
-	// @org.jdesktop.application.Action
+//	@org.jdesktop.application.Action(block = BlockingScope.ACTION)
+	@org.jdesktop.application.Action(block = BlockingScope.WINDOW)
 	public Task<Void, Void> startSimulation(ActionEvent event) {
 		try {
 			// save current changes
-			if (!validateFields())
+			if (!save())
 				return null;
 
 			// check if are active simulations
-			if (!tables.isEmpty()) {
+			if (taskGroup != null) {
 				Alesia.showNotification("hero.msg05");
 				return null;
 			}
@@ -176,32 +169,31 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 
 			// WARNING: order by chair is important. this is take into account in simulation
 			LazyList<TrooperParameter> tparms = TrooperParameter.findAll().orderBy("chair");
-
-			TrooperParameter hero = TrooperParameter.findFirst("trooper = ?", "Hero");
-			int buy = hero.getDouble("buyIn").intValue();
-			int bb = hero.getDouble("bigBlind").intValue();
-			Table table = new Table(TableType.NO_LIMIT, buy, bb);
-			for (TrooperParameter tparm : tparms) {
-				if (tparm.getBoolean("isActive")) {
-					String tName = tparm.getString("trooper");
-					String bCls = tparm.getString("client");
-					Class<?> cls = Class.forName("hero.ozsoft.bots." + bCls);
-					// Constructor cons = cls.getConstructor(String.class);
-					// Bot bot = (Bot) cons.newInstance(name);
-//					 @SuppressWarnings("deprecation")
-					Bot bot = (Bot) cls.newInstance();
-					Trooper trooper = bot.getSimulationTrooper(table, tparm);
-					Player player = new Player(tName, buy, bot, tparm.getInteger("chair"));
-					table.addPlayer(player);
-					if ("Hero".equals(tName))
-						setTrooper(trooper);
+			SimulationParameters parameters = (SimulationParameters) getModel();
+			this.taskGroup = new TaskGroup();
+			
+			for (int i = 0; i < parameters.getInteger("numOfTasks"); i++) {
+				Table table = new Table(parameters);
+				for (TrooperParameter trooperParm : tparms) {
+					if (trooperParm.getBoolean("isActive")) {
+						String tName = trooperParm.getString("trooper");
+						String clazz = trooperParm.getString("client");
+						Class<?> cls = Class.forName("hero.ozsoft.bots." + clazz);
+						int cash = parameters.getInteger("buyIn");
+						// Constructor cons = cls.getConstructor(String.class);
+						// Bot bot = (Bot) cons.newInstance(name);
+						// @SuppressWarnings("deprecation")
+						Bot bot = (Bot) cls.newInstance();
+						Trooper trooper = bot.getSimulationTrooper(table, trooperParm, parameters);
+						Player player = new Player(tName, cash, bot, trooperParm.getInteger("chair"));
+						table.addPlayer(player);
+						if (trooperParm.isHero())
+							setTrooper(trooper);
+					}
 				}
+				taskGroup.addTable(table);
 			}
-
-			TableDialog dialog = new TableDialog(table);
-			dialog.setVisible(true);
-			tables.add(table);
-			return table;
+			return taskGroup;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -210,9 +202,8 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 
 	@org.jdesktop.application.Action
 	public void stopSimulation() {
-		tables.forEach(t -> t.cancel(true));
-		tables.clear();
-		System.out.println("GameSimulatorPanel.stopSimulation()");
+		taskGroup.cancel(true);
+		taskGroup = null;
 	}
 
 	@Override

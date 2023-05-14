@@ -259,17 +259,6 @@ public class TStringUtils {
 		// + SystemVariables.getStringVar("updateID");
 	}
 
-	public static String getRecordId() {
-		long mill = System.currentTimeMillis();
-		// long nanos = System.nanoTime();
-		// until better solution, ensure unleast 1 mill from previous method call
-		try {
-			Thread.sleep(1);
-		} catch (InterruptedException e) {
-		}
-		return Long.toHexString(mill);
-	}
-
 	/**
 	 * Given a text and a wildcard pattern, implement wildcard pattern matching
 	 * algorithm that finds if wildcard pattern

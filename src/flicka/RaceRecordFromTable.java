@@ -41,7 +41,6 @@ public class RaceRecordFromTable extends TUIFormPanel implements ActionListener 
 		// jTable.setColumnSelectionAllowed(true);
 		setBodyComponent(new JScrollPane(jTable));
 		addFooterActions("acept", "cancel");
-		preValidate();
 	}
 
 	public void updateRecords() {

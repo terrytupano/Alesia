@@ -64,10 +64,6 @@ public class BoardPanel extends JPanel {
 		betLabel.setHorizontalAlignment(JLabel.CENTER);
 		potLabel = new JLabel("Pot: ");
 		potLabel.setHorizontalAlignment(JLabel.CENTER);
-
-		// Font font = potLabel.getFont();
-		// font = font.deriveFont(font.getSize() + 3);
-		// betLabel.setFont(font);
 		potLabel.setFont(potLabel.getFont().deriveFont(14f));
 
 		JPanel labels = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));

@@ -34,7 +34,7 @@ import gui.*;
 public class Flicka {
 
 	public Flicka() {
-		Alesia.getInstance().openDB("flicka");
+//		Alesia.openDB("flicka");
 		TActionsFactory.insertActions(this);
 	}
 
@@ -52,7 +52,7 @@ public class Flicka {
 		// MultipleSimulationTask t = new MultipleSimulationTask(models);
 		// TTaskMonitor ttm = new TTaskMonitor(t);
 		DoNothingTask t = new DoNothingTask();
-		TTaskMonitor ttm = new TTaskMonitor(t, true);
+		TTaskMonitorWindow ttm = new TTaskMonitorWindow(t);
 		t.setInputBlocker(ttm);
 		return t;
 	}

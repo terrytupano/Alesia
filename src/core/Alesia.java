@@ -17,6 +17,7 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
+import javax.swing.*;
 import javax.swing.Action;
 
 import org.apache.commons.logging.impl.*;
@@ -77,20 +78,21 @@ public class Alesia extends Application {
 	}
 
 	/**
-	 * Open and return an instacen of {@link DB} for the given prefix. The
+	 * Open and return an instance of {@link DB} for the given prefix. The
 	 * connection parameters must be in the database.properties file or similar.
 	 * 
-	 * @param name - prefix name of the conneciton parameters
+	 * @param name - prefix name of the connection parameters
 	 * @return instance of {@link DB}
 	 * @see #getDBProperties()
 	 */
-	public void openDB(String name) {
-		// if the database is allready open, do nothig
+	public static void openDB() {
+		String name = "hero";
+		// if the database is already open, do nothing
 		List<String> conNames = DB.getCurrrentConnectionNames();
 		if (conNames.contains(name))
 			return;
 
-		Properties orgPrp = getDBProperties();
+		Properties orgPrp = getInstance(). getDBProperties();
 
 		// remove all properties except those who star whit "name"
 		Set<Object> keys = orgPrp.keySet();
@@ -112,34 +114,32 @@ public class Alesia extends Application {
 		db.open(drv, url, properties);
 	}
 
-	public static Map<String, Object> showDialog(TUIFormPanel content, double withFactor, double heightFactor) {
-
-		String popOvertext = " ";
+	public static void showDialog(String title, JComponent content, double sizeFactor) {
 		final WebPopOver popOver = new WebPopOver(getMainFrame());
 		popOver.setModalityType(ModalityType.TOOLKIT_MODAL);
 		popOver.setMovable(false);
+		popOver.setMargin ( 10 );
 		popOver.setLayout(new VerticalFlowLayout());
-		final WebImage icon = new WebImage(TUIUtils.getSmallFontIcon('\uf00d'));
-		final WebLabel titleLabel = new WebLabel(popOvertext, WebLabel.CENTER);
-		final WebButton closeButton = new WebButton(TUIUtils.getSmallFontIcon('\uf00d'), new ActionListener() {
+		final WebImage icon = new WebImage(TResources.getSmallIcon(TWebFrame.APP_ICON));
+		final WebLabel titleLabel = new WebLabel(title, WebLabel.CENTER);
+		final WebButton closeButton = new WebButton(TUIUtils.getSmallFontIcon('\ue5cd'), new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				popOver.dispose();
 			}
 		});
-		popOver.setUndecorated(true);
+
+//		popOver.setUndecorated(true);
 		GroupPanel tit = new GroupPanel(GroupingType.fillMiddle, 4, icon, titleLabel, closeButton);
 		tit.setMargin(0, 0, 10, 0);
 		popOver.add(tit);
 		popOver.add(content);
 
-		// popOver.setLocationRelativeTo(Alesia.getMainFrame());
-		popOver.pack();
+//		popOver.pack();
+		popOver.setSize(getMainFrame().getBoundByFactor(sizeFactor).getSize());
 		popOver.setLocationRelativeTo(getMainFrame());
 		popOver.setVisible(true);
 		// popOver.show(Alesia.getMainFrame());
-
-		return content.getValues();
 	}
 
 	public static void showNotification(String messageId, Object... arguments) {

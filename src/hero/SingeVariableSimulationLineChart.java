@@ -27,7 +27,7 @@ public class SingeVariableSimulationLineChart extends JDialog {
 
 	private static XYDataset createDataset(String resultName) {
 		XYSeriesCollection xYSeriesCollection = new XYSeriesCollection();
-		Alesia.getInstance().openDB("hero");
+		Alesia.openDB();
 		LazyList<TrooperParameter> troopers = TrooperParameter.findAll();
 		for (TrooperParameter client : troopers) {
 			String pName = client.getString("trooper");

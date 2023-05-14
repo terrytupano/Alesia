@@ -87,7 +87,7 @@ public abstract class Bot implements Client {
 	 * @return the trooper
 	 */
 
-	public Trooper getSimulationTrooper(Table simulationTable, TrooperParameter trooperP) {
+	public Trooper getSimulationTrooper(Table simulationTable, TrooperParameter trooperP, SimulationParameters simulationParameters) {
 		this.trooper = new Trooper();
 		this.trooper.setSimulationTable(simulationTable);
 		this.pokerSimulator = trooper.getPokerSimulator();
@@ -95,10 +95,10 @@ public abstract class Bot implements Client {
 		this.trooperName = trooperParameter.getString("trooper");
 
 		// simulation name 
-		this.simulationName = "Oportunities - phi2 flop turn und river";
+		this.simulationName = simulationParameters.getString("simulationName");
 
 		// for single variable simulation
-		this.aditionalValue = "phi2";
+		this.aditionalValue = simulationParameters.getString("simulationVariable");
 
 		// for mutivariable simulation
 //		 this.simulationVariables = new ArrayList<>();
@@ -185,7 +185,7 @@ public abstract class Bot implements Client {
 	}
 
 	private void multiVariableBackrollSnapSchot() {
-		Alesia.getInstance().openDB("hero");
+		Alesia.openDB();
 
 		long cnt = SimulationResult.count("name = ? ", simulationName);
 
@@ -255,31 +255,31 @@ public abstract class Bot implements Client {
 	private static Map<String, List<Integer>> varAndList = new Hashtable<>();
 
 	private void singleVariableBackrollSnapSchot() {
-		Alesia.getInstance().openDB("hero");
+		Alesia.openDB();
 		LazyList<SimulationResult> last = SimulationResult
 				.where("name = ? AND trooper = ?", simulationName, trooperName).orderBy("id DESC").limit(1);
-		SimulationResult statistic = SimulationResult.create("name", simulationName, "trooper", trooperName);
+		SimulationResult result = SimulationResult.create("name", simulationName, "trooper", trooperName);
 
 		if (last.size() > 0) {
-			statistic.copyFrom(last.get(0));
+			result.copyFrom(last.get(0));
 		} else {
 			// insert 0 element for a correct graphics and posterior list selection
-			statistic.set("hands", 0);
-			statistic.set("wins", 0);
-			statistic.set("ratio", 0);
-			statistic.setString("aditionalValue", trooperParameter.get(aditionalValue));
-			statistic.insert();
-			statistic = SimulationResult.create("name", simulationName, "trooper", trooperName);
+			result.set("hands", 0);
+			result.set("wins", 0);
+			result.set("ratio", 0);
+			result.setString("aditionalValue", trooperParameter.get(aditionalValue));
+			result.insert();
+			result = SimulationResult.create("name", simulationName, "trooper", trooperName);
 		}
 
-		int hands = handsT + (statistic.getInteger("hands") == null ? 0 : statistic.getInteger("hands"));
-		statistic.set("hands", hands);
-		double wins = statistic.getDouble("wins") == null ? 0 : statistic.getDouble("wins");
+		int hands = handsT + (result.getInteger("hands") == null ? 0 : result.getInteger("hands"));
+		result.set("hands", hands);
+		double wins = result.getDouble("wins") == null ? 0 : result.getDouble("wins");
 		wins = wins + player.getCash() - buyIn;
-		statistic.set("wins", wins);
+		result.set("wins", wins);
 		double bb = wins / (bigBlind * 1.0);
-		statistic.set("ratio", bb / (hands * 1.0));
-		statistic.setString("aditionalValue", trooperParameter.get(aditionalValue));
-		statistic.insert();
+		result.set("ratio", bb / (hands * 1.0));
+		result.setString("aditionalValue", trooperParameter.get(aditionalValue));
+		result.insert();
 	}
 }

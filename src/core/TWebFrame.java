@@ -14,7 +14,6 @@ import com.alee.laf.rootpane.*;
 import com.alee.laf.window.*;
 import com.alee.managers.settings.*;
 import com.alee.managers.style.*;
-import com.jgoodies.common.base.*;
 
 import gui.wlaf.*;
 
@@ -23,6 +22,8 @@ public class TWebFrame extends WebFrame {
 
 	private JComponent splashPanel;
 	private WebLabel splashIncrementLabel;
+	
+	public static final String APP_ICON = "target-icon.png";
 
 	public TWebFrame() {
 		super();
@@ -44,8 +45,8 @@ public class TWebFrame extends WebFrame {
 		setTitle(TStringUtils.getString("title"));
 		Vector<Image> icons = new Vector<>();
 
-		icons.add(TResources.getIcon("target-icon.png", 16).getImage());
-		icons.add(TResources.getIcon("target-icon.png", 32).getImage());
+		icons.add(TResources.getIcon(APP_ICON, 16).getImage());
+		icons.add(TResources.getIcon(APP_ICON, 32).getImage());
 		setIconImages(icons);
 		WindowAdapter ad = new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {

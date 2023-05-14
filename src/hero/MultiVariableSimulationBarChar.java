@@ -25,7 +25,7 @@ public class MultiVariableSimulationBarChar extends JDialog {
 
 	private static DefaultCategoryDataset createDataset(String resultName) {
 		DefaultCategoryDataset categoryDataset = new DefaultCategoryDataset();
-		Alesia.getInstance().openDB("hero");
+		Alesia.openDB();
 		// AND trooper != 'Hero' avoid the marker (0 element inserted in simulation)
 		LazyList<SimulationResult> statistics = SimulationResult.find("name = ? AND trooper != 'Hero'", resultName).orderBy("ratio");
 		for (SimulationResult result : statistics) {

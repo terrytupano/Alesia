@@ -273,7 +273,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 			pokerSimulator.clearEnvironment();
 			sensorsArray.clearEnvironment();
 			// read trooper variables again (her because i can on the fly update
-			Alesia.getInstance().openDB("hero");
+			Alesia.openDB();
 			trooperParameter = TrooperParameter.findFirst("trooper = ?", "Hero");
 		}
 		reactToOportunity = PokerSimulator.NO_CARDS_DEALT;
@@ -405,7 +405,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	 * <li>All-in
 	 * <li>5 more actions that range from raise to the value close to All-in.
 	 * <p>
-	 * for a total of 9 posible actions
+	 * for a total of 9 possible actions
 	 * 
 	 * @param maximum - the upper bound to consider
 	 */
@@ -444,9 +444,9 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 			// TODO:
 			// when tha call to this method, the parameter maximum = chips is valid val <
 			// meximus because tha all in
-			// acction will take kare of maximum chip. but when maximum is another value,
-			// the comparation mus be <=
-			// TEMPORAL: try to incorporate the las element
+			// Action will take care of maximum chip. but when maximum is another value,
+			// the comparation must be <=
+			// TEMPORAL: try to incorporate the last element
 			double max2 = (imax == chips) ? imax : imax + 0.01;
 
 			for (int c = 0; (c < step && (tick + ammoinc) < max2); c++) {

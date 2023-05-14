@@ -19,7 +19,7 @@ public class MultipleSimulationTask extends Task<Void, Void> {
 	}
 	@Override
 	protected Void doInBackground() throws Exception {
-		Alesia.getInstance().openDB("flicka");
+//		Alesia.openDB("flicka");
 		selector.clearTables();
 		// int max = models.length;
 		int step = 0;

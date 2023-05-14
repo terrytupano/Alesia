@@ -34,24 +34,25 @@
 
 package hero.ozsoft;
 
-import java.awt.event.*;
 import java.util.*;
 
-import javax.swing.*;
-
+import org.apache.commons.math3.stat.descriptive.*;
 import org.jdesktop.application.*;
 
 import com.alee.utils.*;
 
 import core.*;
+import datasource.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.actions.*;
+import hero.ozsoft.gui.*;
 
 /**
  * Limit Texas Hold'em poker table. <br />
  * <br />
  * 
- * This class forms the heart of the poker engine. It controls the game flow for a single poker table.
+ * This class forms the heart of the poker engine. It controls the game flow for
+ * a single poker table.
  * 
  * @author Oscar Stigter
  */
@@ -66,7 +67,10 @@ public class Table extends Task<Void, Void> {
 	/** The simulation continue to the end. */
 	private static final String DO_NOTHING = "DO_NOTHING";
 
-	/** if the table has fewer players than allowed (field {@link #MIN_PLAYERS}), the simulation is restarted */
+	/**
+	 * if the table has fewer players than allowed (field {@link #MIN_PLAYERS}), the
+	 * simulation is restarted
+	 */
 	private static final String RESTAR = "RESTAR";
 
 	/** current capacity of the table */
@@ -106,43 +110,58 @@ public class Table extends Task<Void, Void> {
 
 	/** The minimum bet in the current hand. */
 	private int minBet;
-	
+
 	/** The current bet in the current hand. */
 	private int bet;
-	
+
 	/** All pots in the current hand (main pot and any side pots). */
 	private final List<Pot> pots;
-	
+
 	/** The player who bet or raised last (aggressor). */
 	private Player lastBettor;
-	
+
 	/** Number of raises in the current betting round. */
 	private int raises;
 
 	/** num of current played hands */
 	private int numOfHand;
-	private int speed;
 	public int buyIn, bigBlind;
-	private boolean paused, pauseWhenHero;
-	private int simulationsHand;
-	private String whenPlayerLose = DO_NOTHING;
+	public int simulationsHand;
+	private boolean pauseTask, pauseHero, pausePlayer;
+	private String whenPlayerLose;
+	private SimulationParameters simulationParameters;
+	private TTaskMonitor taskMonitor;
 
-	public Table(TableType type, int buyIn, int bigBlind) {
+	/** compute hands x seg. */
+	private DescriptiveStatistics statistics;
+
+	public Table(SimulationParameters parameters) {
 		super(Alesia.getInstance());
-		TActionsFactory.insertActions(this);
-		this.tableType = type;
-		this.bigBlind = bigBlind;
-		this.buyIn = buyIn;
+		this.simulationParameters = parameters;
+		this.simulationsHand = simulationParameters.getInteger("simulationsHands");
+		this.tableType = TableType.NO_LIMIT;
+		this.statistics = new DescriptiveStatistics(100); // to include DB access time.
 		players = new ArrayList<Player>(CAPACITY);
 		activePlayers = new ArrayList<Player>(CAPACITY);
 		deck = new UoADeck();
 		pots = new ArrayList<Pot>();
 		board = new UoAHand();
-		simulationsHand = 100000;
+		whenPlayerLose = RESTAR;
 
-		// create control components
+		// set task strings
+		setTitle("Table simulation");
+		setDescription("Description fo the simulation");
+		setMessage("Simulation initialization ...");
+
+		this.bigBlind = parameters.getInteger("bigBlind");
+		this.buyIn = parameters.getInteger("buyIn");
+		this.taskMonitor = new TTaskMonitor(this);
 	}
 
+	public TTaskMonitor getTaskMonitor() {
+		return taskMonitor;
+	}
+	
 	/**
 	 * Adds a player.
 	 * 
@@ -150,51 +169,6 @@ public class Table extends Task<Void, Void> {
 	 */
 	public void addPlayer(Player player) {
 		players.add(player);
-	}
-
-	/**
-	 * return a copy of the current player (the player in turn)
-	 * 
-	 * @return the current player
-	 */
-	public Player getActor() {
-		return actor.publicClone();
-	}
-
-	/**
-	 * return the current round expressed in cards numbers. 2 = preflop, 5 = Flop, 6 = Turn, 7 = River
-	 * 
-	 * @return # of dealt cards
-	 */
-	public int getCurrentRound() {
-		return board.size() + (holeCardsDealed == true ? 2 : 0);
-	}
-	public int getNumOfHand() {
-		return numOfHand;
-	}
-	public List<Player> getPlayers() {
-		// ArrayList<Player> tmp = new ArrayList<>();
-		// players.forEach(p -> tmp.add(p.publicClone()));
-		return players;
-	}
-
-	public int getSpeed() {
-		return speed;
-	}
-
-	public boolean isPaused() {
-		return paused;
-	}
-
-	@org.jdesktop.application.Action
-	public void pause(ActionEvent event) {
-		pause(true);
-		JToggleButton tb = (JToggleButton) event.getSource();
-		tb.setSelected(isPaused());
-	}
-
-	public void pause(boolean pause) {
-		this.paused = pause;
 	}
 
 	/**
@@ -282,8 +256,10 @@ public class Table extends Task<Void, Void> {
 		notifyBoardUpdated();
 
 		while (playersToAct > 0) {
-			// pause ?
-			if (paused) {
+			// this pause allow me to see what is going on inside a hand for every player
+			// TODO: (old implementation from table.s control buttons)
+			if (pausePlayer) {
+				ThreadUtils.sleepSafely(100);
 				continue;
 			}
 
@@ -298,18 +274,22 @@ public class Table extends Task<Void, Void> {
 				Set<PlayerAction> allowedActions = getAllowedActions(actor);
 				action = actor.getClient().act(minBet, bet, allowedActions);
 
-				// is hero, Pause or continue
+				// this pause allow me to see what is going on inside a hand only when hero is
+				// about to act TODO: (old implementation from table.s control buttons)
 				if ("Hero".equals(actor.getName()))
-					while (pauseWhenHero) {
+					while (pauseHero) {
 						ThreadUtils.sleepSafely(100);
 					}
 
-				// // Verify chosen action to guard against broken clients (accidental or on purpose).
+				// // Verify chosen action to guard against broken clients (accidental or on
+				// purpose).
 				// if (!allowedActions.contains(action)) {
-				// if (action instanceof BetAction && !allowedActions.contains(PlayerAction.BET)) {
+				// if (action instanceof BetAction &&
+				// !allowedActions.contains(PlayerAction.BET)) {
 				// throw new IllegalStateException(
 				// String.format("Player '%s' acted with illegal Bet action", actor));
-				// } else if (action instanceof RaiseAction && !allowedActions.contains(PlayerAction.RAISE)) {
+				// } else if (action instanceof RaiseAction &&
+				// !allowedActions.contains(PlayerAction.RAISE)) {
 				// throw new IllegalStateException(
 				// String.format("Player '%s' acted with illegal Raise action", actor));
 				// }
@@ -396,6 +376,115 @@ public class Table extends Task<Void, Void> {
 		notifyBoardUpdated();
 		notifyPlayersUpdated(false);
 	}
+
+	@Override
+	protected Void doInBackground() throws Exception {
+		for (Player player : players) {
+			player.getClient().joinedTable(tableType, bigBlind, players);
+		}
+		dealerPosition = -1;
+		actorPosition = -1;
+		boolean endedByHero = false;
+		numOfHand = 0;
+
+		// canceled or simulate a finite num of hands
+		// while (!isCancelled() && (simulationsHand = 0)(simulationsHand > 0 &&
+		// numOfHand < simulationsHand)) {
+		for (numOfHand = 1; (numOfHand < simulationsHand && !isCancelled() && !endedByHero)
+				|| (simulationsHand == 0 && !isCancelled() && !endedByHero); numOfHand++) {
+			// pause ?
+			if (pauseTask) {
+				ThreadUtils.sleepSafely(100);
+				continue;
+			}
+
+			long time1 = System.currentTimeMillis();
+
+			// Counts active players
+			int actp = 0;
+			for (Player player : players) {
+				if (player.getCash() >= bigBlind) {
+					actp++;
+				}
+			}
+
+			if (RESTAR.equals(whenPlayerLose) && actp < MIN_PLAYERS) {
+				String msg = "Hand: " + numOfHand
+						+ ", The table has less players that allow. Restartting the hole table.";
+				notifyMessage(msg);
+				for (Player player2 : players) {
+					player2.resetHand();
+					player2.setCash(buyIn);
+				}
+			}
+
+			// when a single player loose
+			for (Player player : players) {
+				if (player.getCash() < bigBlind) {
+
+					// when is Hero, end the simulation??
+					// if (player.getName().equals("Hero") && GAME_OVER.equals(whenPlayerLose)) {
+					// endedByHero = true;
+					// break;
+					// }
+
+					// if (REFILL.equals(whenPlayerLose)) {
+					// String msg = "Hand # " + numOfHand + ": " + player.getName()
+					// + " lost the battle. Refilling cash " + buyIn;
+					// notifyMessage(msg);
+					// notifyMessage(REFILL);
+					// player.resetHand();
+					// player.setCash(buyIn);
+					// }
+
+					// if (RESTAR.equals(whenPlayerLose)) {
+					// String msg = "Hand: " + numOfHand + ": " + player.getName()
+					// + " lost the battle. Restartting the hole table.";
+					// notifyMessage(msg);
+					// for (Player player2 : players) {
+					// player2.resetHand();
+					// player2.setCash(buyIn);
+					// }
+					// }
+				}
+			}
+
+			// DONT MOVE. actions alter player.s cash
+			int noOfActivePlayers = 0;
+			for (Player player : players) {
+				if (player.getCash() >= bigBlind) {
+					noOfActivePlayers++;
+				}
+			}
+
+			if (noOfActivePlayers > 1) {
+				playHand();
+			} else {
+				// end the simulation when there is no more active players. if the flow reach
+				// this point, is probably because whenPlayerLose = DO_NOTHING
+				break;
+			}
+
+			statistics.addValue((System.currentTimeMillis() - time1) / 1000d);
+			String speed = TResources.twoDigitFormat.format(statistics.getMean());
+			firePropertyChange(PROP_MESSAGE, null, "Played Hands: " + numOfHand + " Speed: " + speed + " Sec/Hand");
+			setProgress(numOfHand, 0, simulationsHand);
+		}
+
+		// Game over.
+		board.makeEmpty();
+		pots.clear();
+		bet = 0;
+		notifyBoardUpdated();
+		for (Player player : players) {
+			player.resetHand();
+		}
+		notifyPlayersUpdated(false);
+		Alesia.showNotification("hero.msg04", numOfHand);
+		notifyMessage("Game over.");
+		return null;
+	}
+
 	/**
 	 * Performs the showdown.
 	 */
@@ -445,7 +534,8 @@ public class Table extends Task<Void, Void> {
 				} else if (firstToShow) {
 					// First player must always show.
 					doShow = true;
-					bestHandValue = UoAHandEvaluator.rankHand(hand);;
+					bestHandValue = UoAHandEvaluator.rankHand(hand);
+					;
 					firstToShow = false;
 				} else {
 					// Remaining players only show when having a chance to win.
@@ -531,7 +621,7 @@ public class Table extends Task<Void, Void> {
 							Integer oldShare = potDivision.get(winner);
 							if (oldShare != null) {
 								potDivision.put(winner, oldShare + 1);
-								// System.out.format("[DEBUG] %s receives an odd chip from the pot.\n", winner);
+								System.out.format("[DEBUG] %s receives an odd chip from the pot.\n", winner);
 								oddChips--;
 							}
 						}
@@ -564,6 +654,16 @@ public class Table extends Task<Void, Void> {
 			// throw new IllegalStateException("Incorrect pot division!");
 		}
 	}
+
+	/**
+	 * return a copy of the current player (the player in turn)
+	 * 
+	 * @return the current player
+	 */
+	public Player getActor() {
+		return actor.publicClone();
+	}
+
 	/**
 	 * Returns the allowed actions of a specific player.
 	 * 
@@ -601,6 +701,31 @@ public class Table extends Task<Void, Void> {
 	}
 
 	/**
+	 * return the current round expressed in cards numbers. 2 = preflop, 5 = Flop, 6
+	 * = Turn, 7 = River
+	 * 
+	 * @return # of dealt cards
+	 */
+	public int getCurrentRound() {
+		return board.size() + (holeCardsDealed == true ? 2 : 0);
+	}
+
+	public List<Player> getPlayers() {
+		// ArrayList<Player> tmp = new ArrayList<>();
+		// players.forEach(p -> tmp.add(p.publicClone()));
+		return players;
+	}
+
+	public int getSpeed() {
+		return simulationParameters.getInteger("speed");
+	}
+
+	public TableDialog getTableDialog() {
+		TableDialog dialog = new TableDialog(this);
+		return dialog;
+	}
+
+	/**
 	 * Returns the total pot size.
 	 * 
 	 * @return The total pot size.
@@ -611,6 +736,10 @@ public class Table extends Task<Void, Void> {
 			totalPot += pot.getValue();
 		}
 		return totalPot;
+	}
+
+	public boolean isPaused() {
+		return pauseTask;
 	}
 
 	/**
@@ -627,7 +756,7 @@ public class Table extends Task<Void, Void> {
 	 * Notifies listeners with a custom game message.
 	 * 
 	 * @param message The formatted message.
-	 * @param args Any arguments.
+	 * @param args    Any arguments.
 	 */
 	private void notifyMessage(String message, Object... args) {
 		message = String.format(message, args);
@@ -635,6 +764,7 @@ public class Table extends Task<Void, Void> {
 			player.getClient().messageReceived(message);
 		}
 	}
+
 	/**
 	 * Notifies clients that a player has acted.
 	 */
@@ -649,7 +779,8 @@ public class Table extends Task<Void, Void> {
 	 * Notifies clients that one or more players have been updated. <br />
 	 * <br />
 	 * 
-	 * A player's secret information is only sent its own client; other clients see only a player's public information.
+	 * A player's secret information is only sent its own client; other clients see
+	 * only a player's public information.
 	 * 
 	 * @param showdown Whether we are at the showdown phase.
 	 */
@@ -663,6 +794,10 @@ public class Table extends Task<Void, Void> {
 				playerToNotify.getClient().playerUpdated(player);
 			}
 		}
+	}
+
+	public void pause(boolean pause) {
+		this.pauseTask = pause;
 	}
 
 	/**
@@ -714,6 +849,7 @@ public class Table extends Task<Void, Void> {
 			}
 		}
 	}
+
 	/**
 	 * Posts the big blind.
 	 */
@@ -734,6 +870,7 @@ public class Table extends Task<Void, Void> {
 		notifyBoardUpdated();
 		notifyPlayerActed();
 	}
+
 	/**
 	 * Resets the game for a new hand.
 	 */
@@ -786,114 +923,5 @@ public class Table extends Task<Void, Void> {
 		for (Player player : players) {
 			player.getClient().actorRotated(actor);
 		}
-	}
-
-	@Override
-	protected Void doInBackground() throws Exception {
-		try {
-			for (Player player : players) {
-				player.getClient().joinedTable(tableType, bigBlind, players);
-			}
-			dealerPosition = -1;
-			actorPosition = -1;
-			boolean endedByHero = false;
-			numOfHand = 0;
-			// canceled or simulate a finite num of hands
-			// while (!isCancelled() && (simulationsHand = 0)(simulationsHand > 0 && numOfHand < simulationsHand)) {
-			for (numOfHand = 1; (numOfHand < simulationsHand && !isCancelled() && !endedByHero)
-					|| (simulationsHand == 0 && !isCancelled() && !endedByHero); numOfHand++) {
-				// pause ?
-				if (paused) {
-					Thread.sleep(100);
-					continue;
-				}
-
-				// Counts active players
-				int actp = 0;
-				for (Player player : players) {
-					if (player.getCash() >= bigBlind) {
-						actp++;
-					}
-				}
-
-				if (RESTAR.equals(whenPlayerLose) && actp < MIN_PLAYERS) {
-					String msg = "Hand: " + numOfHand
-							+ ", The table has less players that allow. Restartting the hole table.";
-					notifyMessage(msg);
-					for (Player player2 : players) {
-						player2.resetHand();
-						player2.setCash(buyIn);
-					}
-				}
-
-				// when a single player loose
-				for (Player player : players) {
-					if (player.getCash() < bigBlind) {
-
-						// when is Hero, end the simulation??
-						// if (player.getName().equals("Hero") && GAME_OVER.equals(whenPlayerLose)) {
-						// endedByHero = true;
-						// break;
-						// }
-
-						// if (REFILL.equals(whenPlayerLose)) {
-						// String msg = "Hand # " + numOfHand + ": " + player.getName()
-						// + " lost the battle. Refilling cash " + buyIn;
-						// notifyMessage(msg);
-						// notifyMessage(REFILL);
-						// player.resetHand();
-						// player.setCash(buyIn);
-						// }
-
-						// if (RESTAR.equals(whenPlayerLose)) {
-						// String msg = "Hand: " + numOfHand + ": " + player.getName()
-						// + " lost the battle. Restartting the hole table.";
-						// notifyMessage(msg);
-						// for (Player player2 : players) {
-						// player2.resetHand();
-						// player2.setCash(buyIn);
-						// }
-						// }
-					}
-				}
-
-				// DONT MOVE. actions alter player.s cash
-				int noOfActivePlayers = 0;
-				for (Player player : players) {
-					if (player.getCash() >= bigBlind) {
-						noOfActivePlayers++;
-					}
-				}
-
-				if (noOfActivePlayers > 1) {
-					playHand();
-					Player hero = players.stream().filter(p -> p.getName().equals("Hero")).findFirst().get();
-//					message(DO_NOTHING, getTaskListeners());
-					firePropertyChange(PROP_MESSAGE, numOfHand, "# of Players: " + noOfActivePlayers + " played Hands: "
-							+ numOfHand + " Hero Chips: " + hero.getCash());
-					if (simulationsHand > 0) {
-						setProgress(numOfHand, 1, simulationsHand);
-					}
-				} else {
-					break;
-				}
-			}
-
-			// Game over.
-			board.makeEmpty();
-			pots.clear();
-			bet = 0;
-			notifyBoardUpdated();
-			for (Player player : players) {
-				player.resetHand();
-			}
-			notifyPlayersUpdated(false);
-			Alesia.showNotification("hero.msg04", numOfHand);
-			notifyMessage("Game over.");
-		} catch (Exception e) {
-			if (!(e instanceof InterruptedException))
-				e.printStackTrace();
-		}
-		return null;
 	}
 }

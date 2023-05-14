@@ -1,4 +1,4 @@
-package hero.ozsoft;
+package hero;
 
 import java.awt.*;
 import java.util.*;

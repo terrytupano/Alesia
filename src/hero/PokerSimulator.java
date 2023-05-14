@@ -98,7 +98,6 @@ public class PokerSimulator {
 		this.sensorStatus = new Hashtable<>();
 		this.variableList = new TreeMap<>();
 		this.performaceStatistic = new DescriptiveStatistics(10);
-
 	}
 
 	void setLive(boolean isLive) {
@@ -556,7 +555,7 @@ public class PokerSimulator {
 
 	/**
 	 * perform the PokerProphesier simulation. Call this method when all the cards
-	 * on the table has been setted using {@link #addCard(String, String)} this
+	 * on the table has been set using {@link #addCard(String, String)} this
 	 * method will create the {@link HoleCards} and the {@link CommunityCards} (if
 	 * is available). After the simulation, the adapters are updated and can be
 	 * consulted and the report are up to date

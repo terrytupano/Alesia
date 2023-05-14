@@ -38,6 +38,7 @@ import com.alee.extended.date.*;
 import com.alee.extended.filechooser.*;
 import com.alee.extended.image.*;
 import com.alee.extended.layout.*;
+import com.alee.extended.layout.FormLayout;
 import com.alee.extended.list.*;
 import com.alee.extended.panel.*;
 import com.alee.laf.*;
@@ -59,19 +60,19 @@ import com.alee.utils.swing.*;
 import com.jgoodies.common.base.*;
 import com.jgoodies.forms.builder.*;
 import com.jgoodies.forms.factories.*;
+import com.jgoodies.forms.layout.*;
 
 import gui.*;
 import gui.jgoodies.*;
 import gui.wlaf.*;
 import javafx.scene.control.*;
 
-/**
- * static methods for grapichal user interfaces utils
- * 
- * @author terry
- * 
- */
 public class TUIUtils {
+
+	public static double ASPECT_RATION_NONE = 0.0;
+	public static double ASPECT_RATION_NARROW = 1.3333;
+	public static double ASPECT_RATION_DEFAULT = 1.6666;
+	public static double ASPECT_RATION_WIDE = 1.7777;
 
 	public static final int H_GAP = 4;
 	public static final int V_GAP = 4;
@@ -178,6 +179,24 @@ public class TUIUtils {
 		}
 	}
 
+	public static GroupPanel getFooterGroupPanel(Action... actions) {
+		Vector<JComponent> components = new Vector<>();
+		for (Action act : actions) {
+			TUIUtils.overRideIcons(TUIUtils.TOOL_BAR_ICON_SIZE, Color.black, act);
+			WebButton wb = new WebButton(act);
+			components.add(wb);
+		}
+
+		SwingUtils.equalizeComponentsWidth(components);
+		GroupPane groupPane = new GroupPane(components.toArray(new WebButton[0]));
+		GroupPanel groupPanel = new GroupPanel(GroupingType.fillFirst, true, new JLabel(), groupPane);
+
+		MatteBorder border = new MatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY);
+		groupPanel.setBorder(new CompoundBorder(border, TUIUtils.STANDAR_EMPTY_BORDER));
+//		groupPanel.setBorder(border);
+		return groupPanel;
+	}
+
 	/**
 	 * este metodo da formato estandar a una instancia de <code>JLabel</code> segun
 	 * los argumentos
@@ -243,6 +262,14 @@ public class TUIUtils {
 		overRideIcons(TOOL_BAR_ICON_SIZE, action);
 //		WebButton button = new WebButton(StyleId.buttonHover, action);
 		WebButton button = new WebButton(action);
+		button.setText(null);
+		return button;
+	}
+
+	public static WebButton getSmallButton(String action) {
+		Action action2 = TActionsFactory.getAction(action);
+		overRideIcons(TOOL_BAR_ICON_SIZE, action2);
+		WebButton button = new WebButton(action2);
 		button.setText(null);
 		return button;
 	}
@@ -652,8 +679,12 @@ public class TUIUtils {
 				TActionsFactory.getAction(pause));
 	}
 
-	public static Icon getSmallFontIcon(char unicode) {
+	public static Icon getToolBarFontIcon(char unicode) {
 		return new ImageIcon(buildImage(unicode, TOOL_BAR_ICON_SIZE, Color.BLACK));
+	}
+
+	public static Icon getSmallFontIcon(char unicode) {
+		return new ImageIcon(buildImage(unicode, 16, Color.BLACK));
 	}
 
 	/**
@@ -675,12 +706,12 @@ public class TUIUtils {
 
 	public static WebToggleButton getStartPauseToggleButton(Action action, ActionListener listener) {
 		WebToggleButton startPause = new WebToggleButton();
-		startPause.setSelectedIcon(TUIUtils.getSmallFontIcon('\ue037'));
+		startPause.setSelectedIcon(TUIUtils.getToolBarFontIcon('\ue037'));
 		if (action != null) {
 			startPause.setAction(action);
 			// overRideToolBarButton(startPause);
 		} else {
-			startPause.setIcon(TUIUtils.getSmallFontIcon('\ue034'));
+			startPause.setIcon(TUIUtils.getToolBarFontIcon('\ue034'));
 		}
 		if (listener != null)
 			startPause.addActionListener(listener);
@@ -986,13 +1017,22 @@ public class TUIUtils {
 		return scrollPane;
 	}
 
-	public static WebSpinner getWebSpinner(String name, int val, int min, int max, int step) {
+	public static WebSpinner getSpinner(String fieldName, Model model, int min, int max) {
+		int val = model.getInteger(fieldName);
+		val = val < min ? min : val;
+		return getSpinner(fieldName, val, min, max, 1);
+	}
+
+	public static WebSpinner getSpinner(String name, int val, int min, int max, int step) {
 		SpinnerNumberModel sModel = new SpinnerNumberModel(val, min, max, step);
 		WebSpinner spinner = new WebSpinner(sModel);
-		// spinner.setValue(val);
 		spinner.setName(name);
 		spinner.putClientProperty("settingsProcessor", new Configuration<TextComponentState>(name));
 		setToolTip(name, spinner);
+		JComponent editor = spinner.getEditor();
+		JTextField field = ((JSpinner.DefaultEditor) editor).getTextField();
+		field.setColumns(5);
+		field.setHorizontalAlignment(JTextField.RIGHT);
 		return spinner;
 	}
 
@@ -1196,6 +1236,60 @@ public class TUIUtils {
 					cmp.setToolTipText(tooltip);
 			}
 		}
+	}
+
+	public static JPanel getLineLayoutPanel(JLabel westComponet, Component firstLine, Component secondLine,
+			Component eastComponet) {
+//		JPanel panel = new JPanel();
+		com.jgoodies.forms.layout.FormLayout layout = new com.jgoodies.forms.layout.FormLayout(
+				"pref, 96dlu:grow, right:pref", "p, 2dlu, p");
+		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
+//		builder.opaque(true);
+		CellConstraints cc = new CellConstraints();
+		builder.add(westComponet, cc.xywh(1, 1, 1, 3));
+		builder.add(firstLine, cc.xy(2, 1));
+		builder.add(secondLine, cc.xy(2, 3));
+		builder.add(eastComponet, cc.xywh(3, 1, 1, 3, "center, top"));
+		return builder.build();
+
+	}
+
+	public static void setDialogAspectRatio(JDialog dialog, double aspectRation) {
+		int targetHeight;
+		Dimension size;
+		dialog.pack();
+		if (aspectRation == ASPECT_RATION_NONE)
+			return;
+		do {
+			size = dialog.getSize();
+			targetHeight = (int) Math.round(size.width / aspectRation);
+			if (size.height == targetHeight)
+				return;
+			if (size.height < targetHeight) {
+				dialog.setSize(size.width, targetHeight);
+				return;
+			}
+			dialog.setSize(size.width + 10, size.height);
+//			dialog.validate();
+//			dialog.invalidate();
+			Dimension dialogPrefSize = dialog.getPreferredSize();
+			int newPrefHeight = dialogPrefSize.height;
+			dialog.setSize((dialog.getSize()).width, newPrefHeight);
+		} while (size.height > targetHeight);
+	}
+
+	public static JDialog getDialog(String title, Component centerComponent, String cancelAction) {
+		JDialog dialog = new JDialog();
+		dialog = new JDialog(Alesia.getMainFrame());
+		dialog.setTitle(title);
+		dialog.setIconImage(TResources.getSmallIcon(TWebFrame.APP_ICON).getImage());
+		dialog.getContentPane().setLayout(new BorderLayout());
+
+		Action cancel = TActionsFactory.getAction(cancelAction);
+		dialog.add(centerComponent, BorderLayout.CENTER);
+		dialog.add(getFooterGroupPanel(cancel), BorderLayout.SOUTH);
+		dialog.pack();
+		return dialog;
 	}
 
 }

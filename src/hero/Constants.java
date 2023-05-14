@@ -1,7 +1,6 @@
 package hero;
 
 import java.awt.*;
-import java.util.*;
 
 import javax.swing.*;
 
@@ -17,7 +16,6 @@ public class Constants {
 	public static final Icon BUTTON_ABSENT_ICON = TResources.getIcon("/dealer_placeholder.png");
 	public static final Icon CARD_PLACEHOLDER_ICON = TResources.getIcon("/playCards/placeholder.png");
 	public static final Icon CARD_BACK_ICON = TResources.getIcon("/playCards/cardback.png");
-	public static final Map<String, ImageIcon> CARDS_BUFFER = new HashMap<String, ImageIcon>();
 	public static final int CARD_WIDTH = CARD_BACK_ICON.getIconWidth();
 	public static final int CARD_HEIGHT = CARD_BACK_ICON.getIconHeight();
 	public static final Dimension CARD_DIMENSION = new Dimension(CARD_WIDTH, CARD_HEIGHT);

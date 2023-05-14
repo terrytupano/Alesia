@@ -1,4 +1,5 @@
 package core;
+
 /*******************************************************************************
  * Copyright (C) 2017 terry.
  * All rights reserved. This program and the accompanying materials
@@ -10,10 +11,7 @@ package core;
  *     terry - initial API and implementation
  ******************************************************************************/
 
-
 import java.awt.*;
-import java.awt.event.*;
-import java.beans.*;
 import java.util.List;
 
 import javax.swing.Timer;
@@ -22,14 +20,16 @@ import org.jdesktop.application.*;
 
 import com.alee.laf.progressbar.*;
 
-public class TTaskManager implements PropertyChangeListener {
+public class TTaskManager {
 
 	private WebProgressBar progressBar;
-	private int poolSize = 3;
+	private int poolSize = 10;
 	private TaskMonitor monitor;
+	private TaskService taskService;
 
 	public TTaskManager() {
 		this.monitor = Alesia.getInstance().getContext().getTaskMonitor();
+		this.taskService = Alesia.getInstance().getContext().getTaskService();
 		if (progressBar == null) {
 			progressBar = new WebProgressBar(0, poolSize);
 			progressBar.setStringPainted(true);
@@ -41,8 +41,13 @@ public class TTaskManager implements PropertyChangeListener {
 		}
 	}
 
+	public TaskService getTaskService() {
+		return taskService;
+	}
+
 	/**
-	 * return the progress bar used by this class to update the status of active task, queue task, etc.
+	 * return the progress bar used by this class to update the status of active
+	 * task, queue task, etc.
 	 * 
 	 * @return progress bar
 	 */
@@ -53,7 +58,8 @@ public class TTaskManager implements PropertyChangeListener {
 	/**
 	 * return <code>true</code> if the Alesia Environment can perform one more task.
 	 * 
-	 * @return <code>true</code> for 1 more, <code>false</code> if the Environment is already a full capacity
+	 * @return <code>true</code> for 1 more, <code>false</code> if the Environment
+	 *         is already a full capacity
 	 */
 	public boolean suporMoreTask() {
 		List<Task> tasks = monitor.getTasks();
@@ -72,58 +78,4 @@ public class TTaskManager implements PropertyChangeListener {
 		Color c = new Color(Color.HSBtoRGB(f, .85f, .85f));
 		progressBar.setForeground(c);
 	}
-
-	@Override
-	public void propertyChange(PropertyChangeEvent evt) {
-		String propertyName = evt.getPropertyName();
-
-		if ("started".equals(propertyName)) {
-
-		}
-		if ("done".equals(propertyName)) {
-
-		}
-		if ("message".equals(propertyName)) {
-			// String text = (String) (evt.getNewValue());
-
-		}
-		if ("progress".equals(propertyName)) {
-			// int value = (Integer) (evt.getNewValue());
-		}
-	}
-}
-
-/**
- * check the inactivity time. If this time es reach, display signin dialgog
- * 
- * @author terry
- */
-class CheckInactivity implements Runnable, MouseMotionListener {
-	private static long lastMouseMove;
-	private static int signOut;
-
-	CheckInactivity() {
-		// signOut = SystemVariables.getintVar("signout") * 60 * 1000;
-		// lastMouseMove = System.currentTimeMillis();
-		// Alesia.getMainFrame().addMouseMotionListener(this);
-
-	}
-	@Override
-	public void run() {
-		// if (((System.currentTimeMillis() - lastMouseMove) > signOut) && (Session.getUser() != null)) {
-		if (((System.currentTimeMillis() - lastMouseMove) > signOut)) {
-			// TAbstractAction.shutdown();
-			// System.exit(0);
-			// Exit.shutdown();
-		}
-	}
-	@Override
-	public void mouseDragged(MouseEvent e) {
-
-	}
-
-	@Override
-	public void mouseMoved(MouseEvent e) {
-		lastMouseMove = System.currentTimeMillis();
-	}
-}
+} 

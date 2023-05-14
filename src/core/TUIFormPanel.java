@@ -38,7 +38,7 @@ public class TUIFormPanel extends TUIPanel {
 	public static final String ACCEPTCHANGES = "acceptChanges";
 	public static final String CANCELCHANGES = "cancelChanges";
 	public static final String UPDATECHANGES = "updateChanges";
-	
+
 	private static final String MY_LABEL = "myLabel";
 	private static final String MY_WEB_OVERLAY = "myWebOverlay";
 
@@ -55,9 +55,8 @@ public class TUIFormPanel extends TUIPanel {
 		this.temporalStorage = new HashMap<>();
 		this.validationResult = new ValidationResult();
 		this.mandatory = new TValidationMessage("validationMessage.mandatory");
-		this.listEmpty = new TValidationMessage("validationMessage.listEmpty");		
+		this.listEmpty = new TValidationMessage("validationMessage.listEmpty");
 	}
-
 
 	protected void addInputComponent(JComponent cmp) {
 		addInputComponent(cmp, false, true);
@@ -91,7 +90,7 @@ public class TUIFormPanel extends TUIPanel {
 			}
 		}
 	}
-	
+
 	private void checkDateFields() {
 		List<JComponent> jcmplist = new ArrayList<>(fieldComponetMap.values());
 		for (JComponent jcmp : jcmplist) {
@@ -203,7 +202,7 @@ public class TUIFormPanel extends TUIPanel {
 			String s = ((TWebFileChooserField) jcmp).getSelectedFile();
 			val = s == null ? "*none" : s;
 			return val;
-		}
+		} 
 		// selector de registros
 		// if (jcmp instanceof AssistedJTextField) {
 
@@ -217,6 +216,12 @@ public class TUIFormPanel extends TUIPanel {
 		// boolean (WebSwitch)
 		if (jcmp instanceof WebSwitch) {
 			val = ((WebSwitch) jcmp).isSelected();
+			return val;
+		}
+
+		// JSpinner only for integer values
+		if (jcmp instanceof JSpinner) {
+			val = (Integer) ((JSpinner) jcmp).getValue();
 			return val;
 		}
 
@@ -371,22 +376,15 @@ public class TUIFormPanel extends TUIPanel {
 	 */
 
 	/**
-	 * Inicia la validacion estandar de datos. Cualquier error encontrado durante
-	 * esta secuencia de validacion, presentara el mensaje e inhabilitara el boton
-	 * marcado como {@link TConstants#DEFAULT_BUTTON}
-	 * <ol>
-	 * <li>Toda instancia de {@link JComboBox} debe contener elementos
-	 * <li>Campos de entrada obligatoria.
-	 * <li>Componentes de fecha/hora
-	 * <li>Instancias de {@link ExtendedJLabel} marcados como obligatorios.
-	 * <p>
-	 * Si todas las validaciones has sido superadas, se llama a {@link #validate()}
+	 * check all input components inside this form checking form input error. if
+	 * any, the {@link #validationResult} contain all error messages. if this method
+	 * return <code>false</code>, the input information is not consistent and should
+	 * not be saved.
 	 * 
-	 * @param src - Objecto origen del evento que inicio la prevalidacion. puede ser
-	 *            null
-	 * 
+	 * @return <code>true</code> OK. <code>false</code> the information should not
+	 *         be saved.
 	 */
-	public boolean preValidate() {
+	public boolean validateFields() {
 		validationResult = new ValidationResult();
 
 		setEnableActions("isCommint", "true", false);
@@ -409,14 +407,30 @@ public class TUIFormPanel extends TUIPanel {
 		// }
 		// }
 
+		// error found?
 		if (!validationResult.isEmpty()) {
-			Alesia.showNotification("validationMessage.updateError"); 
-			return false;			
+			return false;
 		}
 
-		// todos los pasos ok, habilitar default button
+		// all ok
 		setEnableActions("isCommint", "true", true);
 		return true;
+	}
+
+	/**
+	 * shortcut to save the current model. this method perform
+	 * {@link #validateFields()} and save the model if all is ok. if not, this
+	 * method show a notification indicating something is wrong.
+	 * 
+	 * @return <code>true</code> model saved, <code>false</code> no ok.
+	 */
+	public boolean save() {
+		boolean save = validateFields();
+		if (save)
+			getModel().save();
+		else
+			Alesia.showNotification("validationMessage.updateError");
+		return save;
 	}
 
 	/**
@@ -490,17 +504,5 @@ public class TUIFormPanel extends TUIPanel {
 		overlay.addOverlay(
 				new AlignedOverlay(overlayLabel, BoxOrientation.right, BoxOrientation.top, new Insets(0, 0, 0, 3)));
 		message.playSound();
-	}
-
-	/**
-	 * this method is invoked by any default save action previous to continue normal
-	 * operation. use this method to perform additional UI validation. if this
-	 * method return <code>false</code>, the action will not continue the normal
-	 * flow of operations and all
-	 * 
-	 * @return
-	 */
-	public boolean validateFields() {
-		return preValidate();
 	}
 }

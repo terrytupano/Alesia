@@ -38,7 +38,7 @@ public class Hero {
 
 	public Hero() {
 		TActionsFactory.insertActions(this);
-		Alesia.getInstance().openDB("hero");
+		Alesia.openDB();
 		Locale.setDefault(Locale.ENGLISH);
 	}
 
@@ -124,7 +124,7 @@ public class Hero {
 	@org.jdesktop.application.Action
 	public void gameSimulator(ActionEvent event) {
 		GameSimulatorPanel simulatorPanel = new GameSimulatorPanel();
-		simulatorPanel.setTitleDescriptionFrom("gameSimulator");
+		simulatorPanel.setTitleDescriptionFromAction("gameSimulator");
 		Alesia.getMainPanel().showPanel(simulatorPanel);
 	}
 
@@ -285,7 +285,6 @@ public class Hero {
 	}
 
 	private void initTrooperEnvironment() {
-//		simulationTable = null;
 		activeTrooper = new Trooper();
 		heroPanel.setTrooper(activeTrooper);
 	}

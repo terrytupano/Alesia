@@ -11,7 +11,6 @@
 package core;
 
 import java.awt.*;
-import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 
@@ -29,21 +28,16 @@ import com.alee.laf.window.*;
 import com.alee.managers.style.*;
 import com.alee.utils.*;
 import com.jgoodies.common.base.*;
-import com.jgoodies.forms.layout.*;
 
 public class TUIPanel extends WebPanel {
 
-	public static double ASPECT_RATION_NONE = 0.0;
-	public static double ASPECT_RATION_NARROW = 1.3333;
-	public static double ASPECT_RATION_DEFAULT = 1.6666;
-	public static double ASPECT_RATION_WIDE = 1.7777;
 	protected Vector<Action> allActions;
 	private JComponent bodyComponent;
 	private WebPanel footerPanel;
 
 	private WebDialog dialog;
 
-	double aspectRatio = ASPECT_RATION_DEFAULT;
+	double aspectRatio = TUIUtils. ASPECT_RATION_DEFAULT;
 	private WebToolBar toolBar;
 	private WebLabel titleLabel;
 	private WebLabel descriptionLabel;
@@ -72,8 +66,39 @@ public class TUIPanel extends WebPanel {
 		add(footerPanel, BorderLayout.SOUTH);
 	}
 
-	public WebPanel getFooterPanel() {
-		return footerPanel;
+	/**
+	 * add to the current {@link #footerPanel} a {@link GroupPane} with all actions
+	 * passed as argument.
+	 * 
+	 * @param actions - the actions to add
+	 */
+	public void addFooterActions(Action... actions) {
+		Vector<JComponent> components = new Vector<>();
+		for (Action act : actions) {
+			allActions.add(act);
+			TUIUtils.overRideIcons(TUIUtils.TOOL_BAR_ICON_SIZE, Color.black, act);
+			WebButton wb = new WebButton(act);
+			components.add(wb);
+		}
+
+		SwingUtils.equalizeComponentsWidth(components);
+		GroupPane groupPane = new GroupPane(components.toArray(new WebButton[0]));
+		groupPane.setBackground(Color.black);
+		groupPane.setOpaque(true);
+//		groupPane.setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
+		footerPanel.add(groupPane);
+	}
+
+	/**
+	 * set an standard footer area for components intended to input data.
+	 * <p>
+	 * NOTE: the actions bust be located in {@link TActionsFactory} class
+	 * 
+	 * @param actions list of actions
+	 */
+	public void addFooterActions(String... actions) {
+		List<Action> alist = TActionsFactory.getActions(actions);
+		addFooterActions(alist.toArray(new Action[0]));
 	}
 
 	/**
@@ -119,21 +144,6 @@ public class TUIPanel extends WebPanel {
 		addToolBarActions(TActionsFactory.getActions(actions));
 	}
 
-	protected void computeAndSetInitialDialogSize() {
-		if (getPreferredSize().width <= 0) {
-			dialog.pack();
-			return;
-		}
-		// dialog.addNotify();
-		int targetWidth = Sizes.dialogUnitXAsPixel(getPreferredSize().width, dialog);
-		dialog.setSize(targetWidth, 2147483647);
-		dialog.validate();
-		invalidateComponentTree(this);
-		Dimension dialogPrefSize = dialog.getPreferredSize();
-		int targetHeight = dialogPrefSize.height;
-		dialog.setSize(targetWidth, targetHeight);
-	}
-
 	public final WebDialog createDialog(boolean setAspectRatio) {
 		// Preconditions.checkState(EventQueue.isDispatchThread(), "You must create and
 		// show dialogs from the
@@ -149,9 +159,9 @@ public class TUIPanel extends WebPanel {
 		dialog.setResizable(false);
 		dialog.setContentPane(this);
 		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		computeAndSetInitialDialogSize();
+//		computeAndSetInitialDialogSize();
 		if (setAspectRatio)
-			setDialogAspectRatio();
+			TUIUtils.setDialogAspectRatio(dialog, aspectRatio);
 		else
 			dialog.pack();
 		dialog.setLocationRelativeTo(Alesia.getMainFrame());
@@ -166,23 +176,16 @@ public class TUIPanel extends WebPanel {
 		return bodyComponent;
 	}
 
+	public WebPanel getFooterPanel() {
+		return footerPanel;
+	}
+
+	public String getString(String stringKey) {
+		return TStringUtils.getString(stringKey);
+	}
+
 	public WebToolBar getToolBar() {
 		return toolBar;
-	}
-
-	private void invalidateComponentTree(Component c) {
-		invalidate();
-		// if (c instanceof Container) {
-		// Container container = (Container) c;
-		// for (Component child : container.getComponents())
-		// invalidateComponentTree(child);
-		// container.invalidate();
-		// }
-	}
-
-	@org.jdesktop.application.Action
-	public void refreshList(ActionEvent event) {
-
 	}
 
 	public void setAllEnabledBut(boolean enabled, String... names) {
@@ -221,29 +224,6 @@ public class TUIPanel extends WebPanel {
 		add(body, BorderLayout.CENTER);
 	}
 
-	protected void setDialogAspectRatio() {
-		int targetHeight;
-		Dimension size;
-		if (getAspectRatio() == ASPECT_RATION_NONE)
-			return;
-		do {
-			size = dialog.getSize();
-			targetHeight = (int) Math.round(size.width / getAspectRatio());
-			if (size.height == targetHeight)
-				return;
-			if (size.height < targetHeight) {
-				dialog.setSize(size.width, targetHeight);
-				return;
-			}
-			dialog.setSize(size.width + 10, size.height);
-			dialog.validate();
-			invalidateComponentTree(this);
-			Dimension dialogPrefSize = dialog.getPreferredSize();
-			int newPrefHeight = dialogPrefSize.height;
-			dialog.setSize((dialog.getSize()).width, newPrefHeight);
-		} while (size.height > targetHeight);
-	}
-
 	/**
 	 * Enable/Disable all the actions present in this component according to
 	 * Parameters pass as arguments.
@@ -269,41 +249,6 @@ public class TUIPanel extends WebPanel {
 			if (isc != null && isc.equals(value))
 				aa.setEnabled(enable);
 		}
-	}
-
-	/**
-	 * add to the current {@link #footerPanel} a {@link GroupPane} with all actions
-	 * passed as argument.
-	 * 
-	 * @param actions - the actions to add
-	 */
-	public void addFooterActions(Action... actions) {
-		Vector<JComponent> components = new Vector<>();
-		for (Action act : actions) {
-			allActions.add(act);
-			TUIUtils.overRideIcons(TUIUtils.TOOL_BAR_ICON_SIZE, Color.black, act);
-			WebButton wb = new WebButton(act);
-			components.add(wb);
-		}
-
-		SwingUtils.equalizeComponentsWidth(components);
-		GroupPane groupPane = new GroupPane(components.toArray(new WebButton[0]));
-		groupPane.setBackground(Color.black);
-		groupPane.setOpaque(true);
-//		groupPane.setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
-		footerPanel.add(groupPane);
-	}
-
-	/**
-	 * set an standard footer area for components intended to input data.
-	 * <p>
-	 * NOTE: the actions bust be located in {@link TActionsFactory} class
-	 * 
-	 * @param actions list of actions
-	 */
-	public void addFooterActions(String... actions) {
-		List<Action> alist = TActionsFactory.getActions(actions);
-		addFooterActions(alist.toArray(new Action[0]));
 	}
 
 	/**
@@ -343,19 +288,16 @@ public class TUIPanel extends WebPanel {
 			descriptionLabel.setText(description);
 	}
 
-	public String getString(String stringKey) {
-		return TStringUtils.getString(stringKey);
-	}
-
-	public void setTitleDescriptionFrom(String action) {		
-		String title = getString(action + ".Action.text"); 
-		String description  = getString(action + ".Action.shortDescription"); 
+	/**
+	 * set the title/description for this panel based on an action. the information
+	 * is read from the action.s properties
+	 * 
+	 * @param action - the action
+	 */
+	public void setTitleDescriptionFromAction(String action) {
+		String title = getString(action + ".Action.text");
+		String description = getString(action + ".Action.shortDescription");
 		setTitleDescription(title, description);
-	}
-
-	@org.jdesktop.application.Action
-	public void treeDot(ActionEvent event) {
-
 	}
 
 }

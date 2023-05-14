@@ -8,7 +8,7 @@ import hero.ozsoft.*;
 import hero.ozsoft.actions.*;
 
 /**
- * wraper between Poker simulator and Hero trooper
+ * Wrapper between Poker simulator and Hero trooper
  * 
  */
 public class HeroBot extends Bot {

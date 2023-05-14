@@ -10,3 +10,7 @@ showdown
 bot
 min
 num
+ok
+seg
+temp
+callable

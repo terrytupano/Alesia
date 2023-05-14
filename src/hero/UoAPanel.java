@@ -32,7 +32,7 @@ public class UoAPanel extends TUIPanel {
 
 	public UoAPanel() {
 		super();
-		this.tauSpinner = TUIUtils.getWebSpinner("tau", 15, 0, 100, 5);
+		this.tauSpinner = TUIUtils.getSpinner("tau", 15, 0, 100, 5);
 
 //		setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
 		this.console = new TConsoleTextArea();

@@ -80,7 +80,6 @@ public class RaceRecord extends TUIFormPanel {
 		panel = mode == BASIC ? getElementInputComponents() : panel;
 		setBodyComponent(panel);
 		addFooterActions("acept", "cancel");
-		preValidate();
 	}
 
 	private JPanel getFullInputComponents() {
