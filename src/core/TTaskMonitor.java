@@ -19,6 +19,7 @@ import org.jdesktop.application.*;
 
 import com.alee.laf.button.*;
 import com.alee.laf.label.*;
+import com.alee.managers.style.*;
 
 public class TTaskMonitor implements PropertyChangeListener {
 
@@ -34,20 +35,22 @@ public class TTaskMonitor implements PropertyChangeListener {
 		task.addPropertyChangeListener(this);
 		this.progressLabel = new WebLabel(task.getMessage());
 		this.progressBar = new JProgressBar();
-		progressBar.setStringPainted(false);
+		progressBar.setStringPainted(true);
 		progressBar.setMinimum(0);
 		progressBar.setValue(0);
 		progressBar.setMaximum(100);
 		progressBar.setIndeterminate(true);
 
 		JLabel leftLabel = new JLabel(TResources.getIcon("wait.png", 32));
-		this.cancelButton = TUIUtils.getSmallButton("cancelTask");
+		this.cancelButton = TUIUtils.getSmallButton("cancelTask", Color.RED);
+		cancelButton.setStyleId(StyleId.buttonIconHover);
+//		cancelButton.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
 		this.taskPanel = TUIUtils.getLineLayoutPanel(leftLabel, progressLabel, progressBar, cancelButton);
 		taskPanel.setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
 
 		// TODO: temp. use TUIUtils.setDialogAspectRatio or
 		// Alesia.getMainFrame().getBoundByFactor
-		taskPanel.setPreferredSize(new Dimension(340, 0));
+		taskPanel.setPreferredSize(new Dimension(340, 60));
 	}
 
 	public JPanel getTaskPanel() {
@@ -65,26 +68,31 @@ public class TTaskMonitor implements PropertyChangeListener {
 	 */
 	public void propertyChange(PropertyChangeEvent e) {
 		String propertyName = e.getPropertyName();
-		if (Task.PROP_STARTED.equals(propertyName)) {
-			progressLabel.setText("Task status: " + propertyName);
-			progressBar.setEnabled(true);
-			progressBar.setIndeterminate(true);
-		}
+		progressLabel.setText("Task status: " + propertyName);
+
 		if (Task.PROP_COMPLETED.equals(propertyName) || Task.PROP_DONE.equals(propertyName)
 				|| Task.PROP_USERCANCANCEL.equals(propertyName)) {
-			progressLabel.setText("Task status: " + propertyName);
 			progressBar.setEnabled(false);
+			progressLabel.setEnabled(false);
 		}
+		// if this monitor is part of a task group update no more the remain status. use
+		// the status of progress bar because iscanceled or isdone methods don.t work
+		// due time of cancellation and remained job inside of task
+		if (!progressBar.isEnabled())
+			return;
+
+		if (Task.PROP_STARTED.equals(propertyName)) {
+			progressBar.setIndeterminate(true);
+		}
+
 		if (Task.PROP_MESSAGE.equals(propertyName)) {
 			String text = (String) (e.getNewValue());
 			progressLabel.setText(text);
 		}
 		if ("progress".equals(propertyName)) {
 			int value = (Integer) (e.getNewValue());
-			progressBar.setEnabled(true);
 			progressBar.setIndeterminate(false);
 			progressBar.setValue(value);
-			progressBar.setStringPainted(true);
 		}
 	}
 

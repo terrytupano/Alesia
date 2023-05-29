@@ -182,20 +182,20 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	 */
 	private boolean checkOpportunities() {
 		String txt = null;
-		String op = trooperParameter.getString("takeOpportunity");
+		String oportunity = trooperParameter.getString("takeOpportunity");
 
 		if (reactToOportunity == pokerSimulator.street) {
 			txt = prevReactionMessage + " Reacting!!!";
 		} else {
 
-			// pre flop
+			// preflop
 			if (pokerSimulator.street == PokerSimulator.HOLE_CARDS_DEALT) {
 				int phi = trooperParameter.getInteger("phi");
 				preflopCardsModel.setPercentage(phi);
 				if (preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
 					txt = "Current Hole cards in oportunity range.";
 					reactToOportunity = pokerSimulator.street;
-					if (phi > 0 && ("takeNoO".equals(op) || "takePosFlop".equals(op))) {
+					if (phi > 0 && ("takeNoO".equals(oportunity) || "takePosFlop".equals(oportunity))) {
 						prevReactionMessage = txt;
 						txt = null;
 					}
@@ -211,7 +211,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 					if (rankBehind <= phi4) {
 						txt = "rankBehind <= " + phi4 + " %";
 						reactToOportunity = pokerSimulator.street;
-						if ("takeNoO".equals(op) || "takePreFlop".equals(op)) {
+						if ("takeNoO".equals(oportunity) || "takePreFlop".equals(oportunity)) {
 							prevReactionMessage = txt;
 							txt = null;
 						}
@@ -221,7 +221,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 				if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true) {
 					txt = "Is the Nuts.";
 					reactToOportunity = pokerSimulator.street;
-					if ("takeNoO".equals(op) || "takePreFlop".equals(op)) {
+					if ("takeNoO".equals(oportunity) || "takePreFlop".equals(oportunity)) {
 						prevReactionMessage = txt;
 						txt = null;
 					}
@@ -394,6 +394,8 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 				|| sensorsArray.isSensorEnabled("raise");
 	}
 
+	/** the number of step to divide the raise values */
+	public static int STEPS = 5;
 	/**
 	 * 
 	 * this method fill the global variable {@link #availableActions} whit all
@@ -418,7 +420,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		double chips = pokerSimulator.heroChips;
 		double pot = pokerSimulator.potValue;
 
-		// fail safe: the maximun can.t be greater as chips.
+		// fail safe: the maximum can.t be greater as chips.
 		double imax = maximum > chips ? chips : maximum;
 
 		if (call >= 0 && call <= imax)
@@ -439,8 +441,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 			// check for int or double values for blinds
 			boolean isInt = (Double.valueOf(bb)).intValue() == bb && (Double.valueOf(bb)).intValue() == sb;
 			double tick = raise;
-			int step = 5;
-			double ammoinc = imax / (step * 1.0);
+			double ammoinc = imax / (STEPS * 1.0);
 			// TODO:
 			// when tha call to this method, the parameter maximum = chips is valid val <
 			// meximus because tha all in
@@ -449,7 +450,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 			// TEMPORAL: try to incorporate the last element
 			double max2 = (imax == chips) ? imax : imax + 0.01;
 
-			for (int c = 0; (c < step && (tick + ammoinc) < max2); c++) {
+			for (int c = 0; (c < STEPS && (tick + ammoinc) < max2); c++) {
 				tick += ammoinc;
 				// round value to look natural (dont write 12345. write 12340 or 12350)
 				if (isInt)
@@ -484,25 +485,17 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		// double HS_n = (double) pokerSimulator.uoAEvaluation.get("HS_n");
 		double winProb = (double) pokerSimulator.uoAEvaluation.get("winProb");
 
-		boolean newFormula = trooperParameter.getBoolean("ammoFormula");
 		double ammo = 0;
-		if (newFormula) {
-			ammo = (winProb + Ppot) * pokerSimulator.potValue;
-			String txt1 = String.format("ammo =  (%1.3f + %1.3f) * %7.2f = %7.2f ", winProb, Ppot,
-					pokerSimulator.potValue, ammo);
-			setVariableAndLog(EXPLANATION, txt1);
-		} else {
-			double rPot = winProb * pokerSimulator.potValue;
-			double invPot = Ppot * (pokerSimulator.potValue - rPot);
-			ammo = rPot + invPot;
-			String txt1 = String.format("ammo = (%1.3f * %7.2f) + (%1.3f * %7.2f) = %7.2f", winProb,
-					pokerSimulator.potValue, Ppot, (pokerSimulator.potValue - rPot), ammo);
-			// String txt1 = String.format("(%1.3f * %7.2f) = %7.2f, (%1.3f * %7.2f) = %7.2f
-			// ammo = %7.2f", winProb,
-			// pokerSimulator.potValue, rPot, Ppot, (pokerSimulator.potValue - rPot),
-			// invPot, ammo);
-			setVariableAndLog(EXPLANATION, txt1);
-		}
+		double rPot = winProb * pokerSimulator.potValue;
+		double invPot = Ppot * (pokerSimulator.potValue - rPot);
+		ammo = rPot + invPot;
+		String txt1 = String.format("ammo = (%1.3f * %7.2f) + (%1.3f * %7.2f) = %7.2f", winProb,
+				pokerSimulator.potValue, Ppot, (pokerSimulator.potValue - rPot), ammo);
+		// String txt1 = String.format("(%1.3f * %7.2f) = %7.2f, (%1.3f * %7.2f) = %7.2f
+		// ammo = %7.2f", winProb,
+		// pokerSimulator.potValue, rPot, Ppot, (pokerSimulator.potValue - rPot),
+		// invPot, ammo);
+		setVariableAndLog(EXPLANATION, txt1);
 
 		// no calculation for 0 values
 		if (ammo == 0 || winProb == 0) {
@@ -555,8 +548,10 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	private void setPreflopActions() {
 		availableActions.clear();
 		// 220902 reconnBand = 30
-		double base = pokerSimulator.bigBlind * trooperParameter.getDouble("reconnBase");
-		double band = pokerSimulator.bigBlind * trooperParameter.getDouble("reconnBand");
+		double factorBase = trooperParameter.getInteger("reconnBase") / 100d;
+		double factorBand = trooperParameter.getInteger("reconnBand") / 100d;
+		double base = pokerSimulator.heroChips * factorBase;
+		double band = pokerSimulator.heroChips * factorBand;
 
 		// 220302: CURRENT SIMULATION TAU PARAMETER VARIATION (STRICK PREPLOP, NO
 		// OPORTUNITY)
@@ -770,7 +765,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		TrooperAction act = getSubOptimalAction();
 		// Normally the cost is know. but sometimes(like in opportunities) not
 		currentHandCost += act.amount;
-		setVariableAndLog("trooper.Acumulated cost",twoDigitFormat.format(currentHandCost));
+		setVariableAndLog("trooper.Acumulated cost", twoDigitFormat.format(currentHandCost));
 		// robot actuator perform the log
 		if (simulationTable == null)
 			robotActuator.perform(act);

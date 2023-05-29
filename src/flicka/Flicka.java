@@ -23,12 +23,10 @@ import org.jdesktop.application.Task.*;
 import com.alee.api.data.*;
 import com.alee.extended.dock.*;
 import com.alee.extended.tab.*;
-import com.alee.laf.window.*;
 import com.alee.utils.*;
 
 import core.*;
 import datasource.*;
-
 import gui.*;
 
 public class Flicka {
@@ -52,8 +50,8 @@ public class Flicka {
 		// MultipleSimulationTask t = new MultipleSimulationTask(models);
 		// TTaskMonitor ttm = new TTaskMonitor(t);
 		DoNothingTask t = new DoNothingTask();
-		TTaskMonitorWindow ttm = new TTaskMonitorWindow(t);
-		t.setInputBlocker(ttm);
+//		TTaskMonitorWindow ttm = new TTaskMonitorWindow(t);
+//		t.setInputBlocker(ttm);
 		return t;
 	}
 
@@ -61,7 +59,7 @@ public class Flicka {
 	public void raceFromTable(ActionEvent event) {
 		TUIListPanel tuilp = SwingUtils.getFirstParent((JComponent) event.getSource(), TUIListPanel.class);
 		RaceRecordFromTable rmft = new RaceRecordFromTable((Race) tuilp.getModel());
-		WebDialog dlg = rmft.createDialog(false);
+		JDialog dlg = rmft.createDialog(false);
 		dlg.setVisible(true);
 		ApplicationAction aa = (ApplicationAction) rmft.getClientProperty("actionPerformed");
 		if (aa != null && aa.getName().equals("acept")) {
@@ -82,8 +80,8 @@ public class Flicka {
 
 	@org.jdesktop.application.Action
 	public void countEndPositions(ActionEvent event) {
-		DBExplorer instance = SwingUtils.getFirstParent((AbstractButton) event.getSource(), DBExplorer.class);
-		Selector.checkReend_posAndRecpsFields(instance.getModels());
+//		DBExplorer instance = SwingUtils.getFirstParent((AbstractButton) event.getSource(), DBExplorer.class);
+//		Selector.checkReend_posAndRecpsFields(instance.getModels());
 	}
 
 	private WebDockableFrame getWebDockableFrame(JComponent cmp, String title, String iconName) {

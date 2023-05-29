@@ -46,7 +46,8 @@ public class ChenBasicBot extends Bot {
 	private TableType tableType;
 
 	public ChenBasicBot() {
-		this((int) (Math.random() * 100d), (int) (Math.random() * 100d));
+		this.tightness = Table.getShuffleVariable();
+		this.aggression = Table.getShuffleVariable();
 	}
 	
 	/**

@@ -45,7 +45,7 @@ public class DBExplorer extends TUIListPanel {
 		// setMessage("flicka.msg01");
 		Function<String, List<Model>> f = (par -> filterReslr());
 		setDBParameters(f, Race.getMetaModel().getColumnMetadata());
-		getWebTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		getTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 	}
 
 	private List<Model> filterReslr() {

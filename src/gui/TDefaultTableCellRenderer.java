@@ -23,13 +23,6 @@ import core.*;
 
 
 
-/**
- * Extension de <code>DefaultTableCellRenderer</code> que usa una instancia de <code>ExtendedJLabel</code> para
- * presentar diversos valores. adicionalmente esta clase establece 2 colores por omision para presentar las celdas pares
- * e impares en distintos colores permitiendo mejor visibilidad.
- * 
- * 
- */
 public class TDefaultTableCellRenderer extends DefaultTableCellRenderer {
 
 	protected Color odd_color, pair_color;

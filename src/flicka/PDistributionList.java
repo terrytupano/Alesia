@@ -31,7 +31,7 @@ public class PDistributionList extends TUIListPanel implements PropertyChangeLis
 //		this toolbar hat new ExportToFileAction(this, "") warum???
 //		setToolBar(TActionsFactory.getActions("deleteModel"));
 		setColumns("pdrace;pdvalue;pdhits;pdmasscenter;pdprediction;pddecision;pdevent");
-		getWebTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		getTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 	}
 
 
@@ -67,7 +67,7 @@ public class PDistributionList extends TUIListPanel implements PropertyChangeLis
 				}
 			}
 		};
-		setDefaultRenderer(tdcr);
+//		setDefaultRenderer(tdcr);
 		Function<String, List<Model>> f = (par -> PDistribution.findAll().orderBy("pdprediction"));
 		setDBParameters(f, PDistribution.getMetaModel().getColumnMetadata());
 	}

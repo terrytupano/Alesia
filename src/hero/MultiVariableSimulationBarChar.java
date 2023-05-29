@@ -12,25 +12,37 @@ import org.jfree.data.category.*;
 
 import core.*;
 import datasource.*;
-
+import tech.tablesaw.aggregate.*;
+import tech.tablesaw.api.*;
+import tech.tablesaw.io.json.*;
 
 public class MultiVariableSimulationBarChar extends JDialog {
 
-	public MultiVariableSimulationBarChar(String resutlName) {
+	public MultiVariableSimulationBarChar(String simulationName) {
 		super(Alesia.getMainFrame());
-		JFreeChart jFreeChart = createChart(createDataset(resutlName));
+		JFreeChart jFreeChart = createChart(createDataset(simulationName));
 		JPanel jPanel = new ChartPanel(jFreeChart);
 		setContentPane(jPanel);
 	}
 
 	private static DefaultCategoryDataset createDataset(String resultName) {
+		SimulationParameters parameters = SimulationParameters.findFirst("simulationName = ?", resultName);
+		LazyList<SimulationResult> statistics = parameters.get(SimulationResult.class, "hands != ?", 0);
+		String json = statistics.toJson(false);
+		JsonReader reader = new JsonReader();
+		Table table = reader.read(JsonReadOptions.builderFromString(json).build());
+		table = table.summarize("hands", "wins", "ratio", AggregateFunctions.sum).by("multiAditionalValues");
+		table = table.sortOn("Sum [ratio]");
+//		System.out.println(table);
+
+		// only the # best results
+		table = table.rowCount() > 20 ? table.last(20) : table;
 		DefaultCategoryDataset categoryDataset = new DefaultCategoryDataset();
-		Alesia.openDB();
-		// AND trooper != 'Hero' avoid the marker (0 element inserted in simulation)
-		LazyList<SimulationResult> statistics = SimulationResult.find("name = ? AND trooper != 'Hero'", resultName).orderBy("ratio");
-		for (SimulationResult result : statistics) {
-			categoryDataset.addValue(result.getInteger("wins"), "", result.getString("multiAditionalValues"));
+		for (int i = 0; i < table.rowCount(); i++) {
+			Row row = table.row(i);
+			categoryDataset.addValue(row.getDouble("Sum [ratio]"), "", row.getString("multiAditionalValues"));
 		}
+
 		return categoryDataset;
 	}
 
@@ -49,8 +61,7 @@ public class MultiVariableSimulationBarChar extends JDialog {
 		plot.setForegroundAlpha(0.85F);
 
 		CategoryAxis categoryAxis = categoryPlot.getDomainAxis();
-		categoryAxis
-				.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(0.5235987755982988D));
+		categoryAxis.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(1D));
 
 		chart.getLegend().setVisible(false);
 		chart.setBackgroundPaint(Color.WHITE);

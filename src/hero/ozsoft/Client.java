@@ -57,7 +57,7 @@ public interface Client {
 	void joinedTable(TableType type, int bigBlind, List<Player> players);
 
 	/**
-	 * Handles the start of a new hand. This methos in invoqued to all players
+	 * Handles the start of a new hand. This methods in invoked to all players
 	 * 
 	 * @param dealer The dealer of the current hand
 	 */

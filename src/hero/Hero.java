@@ -36,12 +36,6 @@ public class Hero {
 //	private static Table simulationTable;
 //	private GameSimulatorPanel simulatorPanel;
 
-	public Hero() {
-		TActionsFactory.insertActions(this);
-		Alesia.openDB();
-		Locale.setDefault(Locale.ENGLISH);
-	}
-
 	public static Action getLoadAction() {
 		Action load = TActionsFactory.getAction("fileChooserOpen");
 		load.addPropertyChangeListener(evt -> {
@@ -120,33 +114,25 @@ public class Hero {
 		return srcocd;
 	}
 
-
-	@org.jdesktop.application.Action
-	public void gameSimulator(ActionEvent event) {
-		GameSimulatorPanel simulatorPanel = new GameSimulatorPanel();
-		simulatorPanel.setTitleDescriptionFromAction("gameSimulator");
-		Alesia.getMainPanel().showPanel(simulatorPanel);
+	public Hero() {
+		TActionsFactory.insertActions(this);
+		Alesia.openDB();
+		Locale.setDefault(Locale.ENGLISH);
 	}
+
 
 	public ArrayList<javax.swing.Action> getUI() {
 		ArrayList<Action> alist = new ArrayList<>();
-		alist.add(TActionsFactory.getAction("heroPanel"));
-		alist.add(TActionsFactory.getAction("uoAEvaluator"));
-		alist.add(TActionsFactory.getAction("preFlopCardsRange"));
-		alist.add(TActionsFactory.getAction("gameSimulator"));
+		alist.add(TActionsFactory.getAction("showHeroPanel"));
+		alist.add(TActionsFactory.getAction("showUoaEvaluatorPanel"));
+		alist.add(TActionsFactory.getAction("showPreFlopCardsPanel"));
+		alist.add(TActionsFactory.getAction("showGameSimulatorPanel"));
 		return alist;
 	}
 
-	@org.jdesktop.application.Action
-	public void heroPanel(ActionEvent event) {
-		// if there a instance of trooper current active, return the same pane
-		if (activeTrooper != null && activeTrooper.isStarted()) {
-			Alesia.getMainPanel().showPanel(heroPanel);
-		} else {
-			heroPanel = new HeroPanel();
-			Alesia.getMainPanel().showPanel(heroPanel);
-			initTrooperEnvironment();
-		}
+	private void initTrooperEnvironment() {
+		activeTrooper = new Trooper();
+		heroPanel.setTrooper(activeTrooper);
 	}
 
 	@org.jdesktop.application.Action
@@ -154,13 +140,6 @@ public class Hero {
 		if (activeTrooper != null) {
 			activeTrooper.pause(true);
 		}
-	}
-
-	@org.jdesktop.application.Action
-	public void preFlopCardsRange(ActionEvent event) {
-		// this method is called by #savePreflopRange
-		PreFlopCardsPanel panel = new PreFlopCardsPanel();
-		Alesia.getMainPanel().showPanel(panel);
 	}
 
 	@org.jdesktop.application.Action
@@ -241,9 +220,43 @@ public class Hero {
 		}
 
 		rangePanel.getPreflopCardsRange().saveInDB(nam_desc[0], nam_desc[1]);
-		preFlopCardsRange(null);
+		showPreFlopCardsPanel();
 	}
 
+	@org.jdesktop.application.Action
+	public void showGameSimulatorPanel(ActionEvent event) {
+		GameSimulatorPanel simulatorPanel = new GameSimulatorPanel();
+		simulatorPanel.setTitleDescriptionFromAction("showGameSimulatorPanel");
+		Alesia.getMainPanel().showPanel(simulatorPanel);
+	}
+
+	@org.jdesktop.application.Action
+	public void showHeroPanel() {
+		// if there a instance of trooper current active, return the same pane
+		if (activeTrooper != null && activeTrooper.isStarted()) {
+			Alesia.getMainPanel().showPanel(heroPanel);
+		} else {
+			heroPanel = new HeroPanel();
+			Alesia.getMainPanel().showPanel(heroPanel);
+			initTrooperEnvironment();
+		}
+	}
+
+
+	@org.jdesktop.application.Action
+	public void showPreFlopCardsPanel() {
+		// this method is called by #savePreflopRange
+		PreFlopCardsPanel panel = new PreFlopCardsPanel();
+		panel.setTitleDescriptionFromAction("showPreFlopCardsPanel");
+		Alesia.getMainPanel().showPanel(panel);
+	}
+
+	@org.jdesktop.application.Action
+	public void showUoaEvaluatorPanel(ActionEvent event) {
+		UoAPanel aPanel = new UoAPanel();
+		aPanel.setTitleDescriptionFromAction("showUoaEvaluatorPanel");
+		Alesia.getMainPanel().showPanel(aPanel);
+	}
 
 	@org.jdesktop.application.Action
 	public void stopTrooper(ActionEvent event) {
@@ -276,17 +289,6 @@ public class Hero {
 		initTrooperEnvironment();
 		activeTrooper.getSensorsArray().setReadSource(SensorsArray.FROM_FILE);
 		return activeTrooper;
-	}
-
-	@org.jdesktop.application.Action
-	public void uoAEvaluator(ActionEvent event) {
-		UoAPanel aPanel = new UoAPanel();
-		Alesia.getMainPanel().showPanel(aPanel);
-	}
-
-	private void initTrooperEnvironment() {
-		activeTrooper = new Trooper();
-		heroPanel.setTrooper(activeTrooper);
 	}
 
 }

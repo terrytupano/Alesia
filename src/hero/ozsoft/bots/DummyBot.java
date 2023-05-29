@@ -43,6 +43,6 @@ public class DummyBot extends Bot {
 
 	@Override
 	public void handStarted(Player dealer) {
-		// TODO Auto-generated method stub
+
 	}
 }

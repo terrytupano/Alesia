@@ -8,7 +8,7 @@
   <hero.PreFlopCardsPanel.rangeComboBox type="ComboBoxState" selectedIndex="0"/>
   <preflopRekonAmmo.hand type="TextComponentState" text="10" caretPosition="2"/>
   <plugins.hero.utils.PreFlopCardsRangePanel.rangeComboBox type="ComboBoxState" selectedIndex="2"/>
-  <speedComboBox type="ComboBoxState" selectedIndex="0"/>
+  <speedComboBox type="ComboBoxState" selectedIndex="2"/>
   <rememberUser type="string">admin</rememberUser>
   <bigBlid type="string"></bigBlid>
   <table.bigBlid type="TextComponentState" text="2000" caretPosition="4"/>
@@ -27,6 +27,7 @@
   <minHandForOportunity type="ComboBoxState" selectedIndex="3"/>
   <smallBlid type="string"></smallBlid>
   <table.buyIn type="TextComponentState" text="200000" caretPosition="6"/>
+  <simulation.speed type="ComboBoxState" selectedIndex="1"/>
   <decisionMethod type="ComboBoxState" selectedIndex="0"/>
   <UserLogIn.rememberUser type="ButtonState" selected="true"/>
   <logging.level type="ComboBoxState" selectedIndex="3"/>
@@ -52,7 +53,7 @@
       </DockableList>
     </root>
   </FlickaDockablePane>
-  <TWebFrame type="WindowState" location="1963,83" size="494,868" state="0"/>
+  <TWebFrame type="WindowState" location="1970,55" size="580,877" state="0"/>
   <simHands type="TextComponentState" text="100000" caretPosition="6"/>
   <takeOpportunity type="ButtonState" selected="true"/>
   <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>

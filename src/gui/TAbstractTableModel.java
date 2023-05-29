@@ -21,8 +21,8 @@ public class TAbstractTableModel extends AbstractTableModel {
 
 	private List<Model> lazyList;
 	private TableRowSorter<TAbstractTableModel> tableRowSorter;
-	private boolean allowCellEdit;
-	private Map<String, Map<String,String>> referenceColumns;
+	private boolean editable;
+	private Map<String, Map<String, String>> referenceColumns;
 	private Vector<String> attributeNames;
 	private Function<String, List<Model>> function;
 
@@ -30,17 +30,30 @@ public class TAbstractTableModel extends AbstractTableModel {
 	 * new instance
 	 * 
 	 * @param function - the function that will process and retrive the result
-	 * @param colums - column information for this list
+	 * @param colums   - column information for this list
 	 */
 	public TAbstractTableModel(Function<String, List<Model>> function, Map<String, ColumnMetadata> colums) {
 		setDBParameters(function, colums);
 	}
 
+	@Override
+	public void fireTableDataChanged() {
+		this.lazyList = function.apply(null);
+		super.fireTableDataChanged();
+	}
+
+	@Override
+	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+		Model model = getModelAt(rowIndex);
+		String field = attributeNames.elementAt(columnIndex);
+		model.set(field, aValue);
+	}
+
 	/**
 	 * set the need parameter for this instance.
 	 * 
-	 * @param function - the function that process and retrive the result
-	 * @param colums - column information for this list
+	 * @param function - the function that process and retrieve the result
+	 * @param colums   - column information for this list
 	 */
 	public void setDBParameters(Function<String, List<Model>> function, Map<String, ColumnMetadata> colums) {
 		this.function = function;
@@ -48,8 +61,10 @@ public class TAbstractTableModel extends AbstractTableModel {
 		this.referenceColumns = new HashMap<>();
 		this.attributeNames = new Vector<>(colums.keySet());
 	}
+
 	/**
-	 * Return the indix of the model pass as argument. if the model is not in the list, return -1
+	 * Return the index of the model pass as argument. if the model is not in the
+	 * list, return -1
 	 * 
 	 * @param model - {@link Model} to find
 	 * 
@@ -57,32 +72,6 @@ public class TAbstractTableModel extends AbstractTableModel {
 	 */
 	public int indexOf(Model model) {
 		return lazyList.indexOf(model);
-	}
-
-	public void freshen() {
-		if (lazyList == null) {
-			return;
-		}
-		int bef_rc = lazyList.size();
-		lazyList = function.apply(null);
-		int aft_rc = lazyList.size();
-		tableRowSorter.allRowsChanged();
-		if (aft_rc == 0) {
-			return;
-		}
-		if (bef_rc != aft_rc) {
-			fireTableDataChanged();
-		} else {
-			try {
-				tableRowSorter.allRowsChanged();
-				fireTableRowsUpdated(0, aft_rc - 1);
-			} catch (Exception e) {
-				// temporal
-				fireTableDataChanged();
-				System.out.println("--------");
-				// e.printStackTrace();
-			}
-		}
 	}
 
 	@Override
@@ -129,13 +118,15 @@ public class TAbstractTableModel extends AbstractTableModel {
 		Object rv = model.get(atn);
 
 		// check the reference by column
-		Map<String,String> map = referenceColumns.get(atn);
+		Map<String, String> map = referenceColumns.get(atn);
 		if (map != null) {
 			Object rv1 = map.get(rv);
-			// 180311: rv.tostring to allow from number, bool to key from TEntrys ( that are generaly created from
+			// 180311: rv.tostring to allow from number, bool to key from TEntrys ( that are
+			// generaly created from
 			// propeties files) only if previous request is null
 			rv1 = (rv1 == null) ? map.get(rv.toString()) : rv1;
-			// 180416: if no reference found, remark the value (NOTE: temp: not fully tested. wath about numbers or
+			// 180416: if no reference found, remark the value (NOTE: temp: not fully
+			// tested. wath about numbers or
 			// tentry columns??
 			rv = (rv1 == null) ? "<html><FONT COLOR='#FF0000'><i>" + rv + "</html>" : rv1;
 		}
@@ -144,29 +135,21 @@ public class TAbstractTableModel extends AbstractTableModel {
 
 	@Override
 	public boolean isCellEditable(int row, int column) {
-		// TODO: Check later.
-		// String atn = attributeNames.get(column);
-		// Model m = lazyList.get(row);
-		// String keys[] = m.getCompositeKeys();
-		boolean ispk = false;
-		// for (String k : keys) {
-		// ispk = atn.equals(k) ? true : ispk;
-		// }
-		// cell is editable iff allow cell edit and is not a keyfield
-		return allowCellEdit && !ispk;
+		return editable;
 	}
 
 	public void setCellEditable(boolean ce) {
-		allowCellEdit = ce;
+		editable = ce;
 	}
 
 	/**
-	 * Asociate a sublist of values for the internal value in this model. when the column value is request by JTable,
-	 * the internal value is mapped whit this list to return the meaning of the value instead the value itselft
+	 * Associate a sublist of values for the internal value in this model. when the
+	 * column value is request by JTable, the internal value is mapped whit this
+	 * list to return the meaning of the value instead the value itself
 	 * 
 	 * @param refc - an instance of {@link Hashtable}
 	 */
-	public void setReferenceColumn(Map<String, Map<String,String>> colums) {
+	public void setReferenceColumn(Map<String, Map<String, String>> colums) {
 		referenceColumns = colums;
 	}
 

@@ -13,6 +13,7 @@ package core;
 
 import java.awt.*;
 import java.util.List;
+import java.util.concurrent.*;
 
 import javax.swing.Timer;
 
@@ -22,14 +23,14 @@ import com.alee.laf.progressbar.*;
 
 public class TTaskManager {
 
+	public final static int CORE_POOL_SIZE = 5;
+	private final static int poolSize = 3 + CORE_POOL_SIZE; // 3 from default
 	private WebProgressBar progressBar;
-	private int poolSize = 10;
 	private TaskMonitor monitor;
-	private TaskService taskService;
+//	private TaskService taskService;
 
 	public TTaskManager() {
 		this.monitor = Alesia.getInstance().getContext().getTaskMonitor();
-		this.taskService = Alesia.getInstance().getContext().getTaskService();
 		if (progressBar == null) {
 			progressBar = new WebProgressBar(0, poolSize);
 			progressBar.setStringPainted(true);
@@ -42,6 +43,13 @@ public class TTaskManager {
 	}
 
 	public TaskService getTaskService() {
+		ThreadPoolExecutor executor = new ThreadPoolExecutor(CORE_POOL_SIZE, // corePool size
+				7, // maximumPool size
+				1L, TimeUnit.SECONDS, // non-core threads time to live
+				new LinkedBlockingQueue<Runnable>());
+		TaskService taskService = new TaskService("Simulations service", executor);
+//		this.taskService = Alesia.getInstance().getContext().getTaskService();
+		Alesia.getInstance().getContext().addTaskService(taskService);
 		return taskService;
 	}
 
@@ -62,20 +70,22 @@ public class TTaskManager {
 	 *         is already a full capacity
 	 */
 	public boolean suporMoreTask() {
+		@SuppressWarnings("rawtypes")
 		List<Task> tasks = monitor.getTasks();
 		int ac = (int) tasks.stream().filter(t -> t.isStarted()).count();
 		return ac < poolSize;
 	}
 
 	private void updateTaskBar() {
+		@SuppressWarnings("rawtypes")
 		List<Task> tasks = monitor.getTasks();
-		int ac = (int) tasks.stream().filter(t -> t.isStarted()).count();
-		int qz = (int) tasks.stream().filter(t -> t.isPending()).count();
+		long ac = tasks.stream().filter(t -> t.isStarted()).count();
+		long qz = tasks.stream().filter(t -> t.isPending()).count();
 		progressBar.setEnabled(ac > 0);
-		progressBar.setValue(ac);
-		progressBar.setString("Actives: " + ac + " waiting: " + qz);
+		progressBar.setValue((int) ac);
+		progressBar.setString("     Actives: " + ac + " waiting: " + qz + "     "); // add some space
 		float f = Math.abs((float) ((ac * .3 / poolSize) - .3)); // from green to red
 		Color c = new Color(Color.HSBtoRGB(f, .85f, .85f));
 		progressBar.setForeground(c);
 	}
-} 
+}

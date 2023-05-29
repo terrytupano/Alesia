@@ -13,8 +13,6 @@ import hero.ozsoft.actions.*;
  */
 public class HeroBot extends Bot {
 
-	// private DescriptiveStatistics statistics;
-
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		pokerSimulator.sensorStatus.put("call", true);

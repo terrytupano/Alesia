@@ -35,7 +35,7 @@ public class RaceList extends TUIListPanel implements PropertyChangeListener {
 		// newFromTable.setIcon("newFromTable");
 		setColumns("restar_lane;rehorse;rejockey;reend_pos;rejockey_weight;recps");
 		setIconParameters("-1; ");
-		getWebTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		getTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 	}
 
 	@Override

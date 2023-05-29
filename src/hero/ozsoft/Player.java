@@ -26,7 +26,8 @@ import hero.ozsoft.actions.*;
  * A Texas Hold'em player. <br />
  * <br />
  * 
- * The player's actions are delegated to a {@link Client}, which can be either human-controlled or AI-controlled (bot).
+ * The player's actions are delegated to a {@link Client}, which can be either
+ * human-controlled or AI-controlled (bot).
  * 
  * @author Oscar Stigter
  */
@@ -52,17 +53,17 @@ public class Player {
 
 	/** Last action performed. */
 	private PlayerAction action;
-	
-	/**the chair in the table for this player*/
+
+	/** the chair in the table for this player */
 	private int chair;
 
 	/**
 	 * Constructor.
 	 * 
-	 * @param name The player's name.
-	 * @param cash The player's starting amount of cash.
+	 * @param name   The player's name.
+	 * @param cash   The player's starting amount of cash.
 	 * @param client The client application.
-	 * @param chair The chair in the table for this player.
+	 * @param chair  The chair in the table for this player.
 	 */
 	public Player(String name, int cash, Client client, int chair) {
 		this.name = name;
@@ -72,6 +73,7 @@ public class Player {
 		hand = new UoAHand();
 		resetHand();
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof Player))
@@ -162,9 +164,8 @@ public class Player {
 	 */
 	public void payCash(int amount) {
 		if (amount > cash) {
-			System.err.println("Player asked to pay more cash than he owns!");
-			// TODO: comented to allow the simulation to continue
-			// throw new IllegalStateException("Player asked to pay more cash than he owns!");
+			throw new IllegalStateException(
+					"Player '" + name + "' asked to pay more cash than he owns!. amount: " + amount);
 		}
 		cash -= amount;
 	}
@@ -240,7 +241,8 @@ public class Player {
 	}
 
 	/**
-	 * Sets the hole cards. calling this metod with null argument remove the cards (fold)
+	 * Sets the hole cards. calling this metod with null argument remove the cards
+	 * (fold)
 	 * 
 	 * @param cards - cards or <code>null</code>
 	 */
@@ -260,9 +262,9 @@ public class Player {
 	}
 
 	/**
-	 * Terry: set method for cash allos reinit for mutiple simulation.
+	 * Terry: set method for cash allows multiple simulation.
 	 * 
-	 * @param cash - the cas
+	 * @param cash - the cash
 	 */
 	public void setCash(int cash) {
 		this.cash = cash;

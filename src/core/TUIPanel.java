@@ -37,7 +37,7 @@ public class TUIPanel extends WebPanel {
 
 	private WebDialog dialog;
 
-	double aspectRatio = TUIUtils. ASPECT_RATION_DEFAULT;
+	double aspectRatio = TUIUtils.ASPECT_RATION_DEFAULT;
 	private WebToolBar toolBar;
 	private WebLabel titleLabel;
 	private WebLabel descriptionLabel;
@@ -101,30 +101,22 @@ public class TUIPanel extends WebPanel {
 		addFooterActions(alist.toArray(new Action[0]));
 	}
 
-	/**
-	 * add a new action at the end of the toolbar panel
-	 * 
-	 * @param action - the action
-	 */
-	public void addToolBarAction(Action action) {
-		allActions.add(action);
-		WebButton wb = TUIUtils.getButtonForToolBar(action);
-		toolBar.add(wb);
-		toolBar.setVisible(true);
-	}
-
-	public void addToolBarAction(String action) {
-		addToolBarAction(TActionsFactory.getAction(action));
-	}
-
 	public void addToolBarActions(Action... actions) {
+		addToolBarActions(false, actions);
+	}
+
+	public void addToolBarActions(boolean grouped, Action... actions) {
 		GroupPane toolBarPane = new GroupPane();
 		for (Action action : actions) {
 			allActions.add(action);
 			WebButton save = TUIUtils.getButtonForToolBar(action);
-			toolBarPane.add(save);
+			if (grouped)
+				toolBarPane.add(save);
+			else
+				toolBar.add(save);
 		}
-		toolBar.add(toolBarPane);
+		if (grouped)
+			toolBar.add(toolBarPane);
 		toolBar.setVisible(true);
 	}
 
@@ -263,17 +255,6 @@ public class TUIPanel extends WebPanel {
 	public void setFooterComponent2(JComponent footer) {
 		remove(footerPanel);
 		add(footer, BorderLayout.SOUTH);
-	}
-
-	/**
-	 * Same as {@link #setMessage(String, boolean, Object...)} but set the toolbar
-	 * no visible
-	 * 
-	 * @param msgId   - message id for text
-	 * @param msgData - Substitution data
-	 */
-	public void setMessage(String msgId, Object... msgData) {
-//		setMessage(msgId, false, msgData);
 	}
 
 	/**

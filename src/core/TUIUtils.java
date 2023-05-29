@@ -262,14 +262,20 @@ public class TUIUtils {
 		overRideIcons(TOOL_BAR_ICON_SIZE, action);
 //		WebButton button = new WebButton(StyleId.buttonHover, action);
 		WebButton button = new WebButton(action);
+		button.setName(action.getValue(Action.NAME).toString());
 		button.setText(null);
 		return button;
 	}
 
 	public static WebButton getSmallButton(String action) {
+		return getSmallButton(action, Color.BLACK);
+	}
+
+	public static WebButton getSmallButton(String action, Color color) {
 		Action action2 = TActionsFactory.getAction(action);
-		overRideIcons(TOOL_BAR_ICON_SIZE, action2);
+		overRideIcons(16, color, action2);
 		WebButton button = new WebButton(action2);
+		button.setName(action);
 		button.setText(null);
 		return button;
 	}
@@ -378,7 +384,7 @@ public class TUIUtils {
 
 	/**
 	 * Create a list of {@link ListItem} for form display. the title and text for
-	 * the item is retrieved from the rightComponents
+	 * the item is retrieved from the rightComponents name
 	 * 
 	 * @param height          - the max height for the item
 	 * @param rightComponents - the input component for the items
@@ -658,11 +664,11 @@ public class TUIUtils {
 	 */
 	public static GroupPane getPlayStopToggleButtons(Action star, Action stop, Action pause) {
 		WebToggleButton playButton = TUIUtils.getWebToggleButton(star);
-		playButton.setName(Action.NAME);
+		playButton.setName(star.getValue(Action.NAME).toString());
 		WebToggleButton stopButton = TUIUtils.getWebToggleButton(stop);
-		stopButton.setName(Action.NAME);
+		stopButton.setName(stop.getValue(Action.NAME).toString());
 		WebToggleButton pauseButton = TUIUtils.getWebToggleButton(pause);
-		pauseButton.setName(Action.NAME);
+		pauseButton.setName(pause.getValue(Action.NAME).toString());
 		GroupPane pane = new GroupPane(playButton, stopButton, pauseButton);
 
 		stopButton.setSelected(true);
@@ -672,6 +678,19 @@ public class TUIUtils {
 		group.add(pauseButton);
 
 		return pane;
+	}
+
+	public static List<WebToggleButton> getToggleButtons(String... actions) {
+		List<WebToggleButton> buttons = new ArrayList<>();
+		ButtonGroup group = new ButtonGroup();
+		for (String action2 : actions) {
+			Action action = TActionsFactory.getAction(action2);
+			WebToggleButton button = getWebToggleButton(action);
+			button.setName(action.getValue(Action.NAME).toString());
+			buttons.add(button);
+			group.add(button);
+		}
+		return buttons;
 	}
 
 	public static GroupPane getPlayStopToggleButtons(String star, String stop, String pause) {
@@ -1058,12 +1077,18 @@ public class TUIUtils {
 	}
 
 	public static WebTextField getWebTextField(String name, String value, int colums) {
-		WebTextField textField = new WebTextField(colums);
+		WebTextField textField = new WebTextField();
 		textField.setDocument(new TPlainDocument(value, colums));
 		textField.setText(value);
 		textField.setName(name);
 		textField.putClientProperty("settingsProcessor", new Configuration<TextComponentState>(name));
 		setToolTip(name, textField);
+
+		// normalize size
+		int col = colums;
+		col = (col < 5) ? 5 : col;
+		col = (col > 20) ? 20 : col;
+		textField.setColumns(col);
 		return textField;
 	}
 
@@ -1171,15 +1196,7 @@ public class TUIUtils {
 		}
 	}
 
-	/**
-	 * establece dimenciones para los componentes. Si una instancia de
-	 * <code>JTextField</code> sobrepasa las 30 columnas, no se modifica el ancho ya
-	 * que se asume que se ve mejor. ademas, si componente de texto es menor a las 5
-	 * colummas, se redondea a 5
-	 * 
-	 * @param jtc - componente de texto
-	 * @param col - columnas
-	 */
+
 	public static void setDimensionForTextComponent(JComponent jtc, int col) {
 		col = (col < 5) ? 5 : col;
 		col = (col > 50) ? 50 : col;
@@ -1241,15 +1258,23 @@ public class TUIUtils {
 	public static JPanel getLineLayoutPanel(JLabel westComponet, Component firstLine, Component secondLine,
 			Component eastComponet) {
 //		JPanel panel = new JPanel();
+		WebPanel eastPanel = new WebPanel();
+		BoxLayout layout2 = new BoxLayout(eastPanel, BoxLayout.Y_AXIS);
+		eastPanel.setLayout(layout2);
+		eastPanel.add(Box.createVerticalGlue());
+		eastPanel.add(eastComponet);
+		eastPanel.add(Box.createVerticalGlue());
+
 		com.jgoodies.forms.layout.FormLayout layout = new com.jgoodies.forms.layout.FormLayout(
-				"pref, 96dlu:grow, right:pref", "p, 2dlu, p");
+				"pref, 5dlu, 96dlu:grow, 5dlu, right:pref", "p, 2dlu, p");
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
 //		builder.opaque(true);
 		CellConstraints cc = new CellConstraints();
 		builder.add(westComponet, cc.xywh(1, 1, 1, 3));
-		builder.add(firstLine, cc.xy(2, 1));
-		builder.add(secondLine, cc.xy(2, 3));
-		builder.add(eastComponet, cc.xywh(3, 1, 1, 3, "center, top"));
+		builder.add(firstLine, cc.xy(3, 1));
+		builder.add(secondLine, cc.xy(3, 3));
+		builder.add(eastPanel, cc.xywh(5, 1, 1, 3));
+//		builder.add(eastComponet, cc.xywh(5, 1, 1, 3, "center, top"));
 		return builder.build();
 
 	}
@@ -1278,16 +1303,18 @@ public class TUIUtils {
 		} while (size.height > targetHeight);
 	}
 
-	public static JDialog getDialog(String title, Component centerComponent, String cancelAction) {
+	public static JDialog getDialog(String title, Component centerComponent, String... actions) {
 		JDialog dialog = new JDialog();
 		dialog = new JDialog(Alesia.getMainFrame());
 		dialog.setTitle(title);
 		dialog.setIconImage(TResources.getSmallIcon(TWebFrame.APP_ICON).getImage());
 		dialog.getContentPane().setLayout(new BorderLayout());
-
-		Action cancel = TActionsFactory.getAction(cancelAction);
 		dialog.add(centerComponent, BorderLayout.CENTER);
-		dialog.add(getFooterGroupPanel(cancel), BorderLayout.SOUTH);
+		if (actions != null) {
+			List<Action> actions2 = TActionsFactory.getActions(actions);
+			dialog.add(getFooterGroupPanel(actions2.toArray(new Action[0])), BorderLayout.SOUTH);
+		}
+		dialog.setResizable(false);
 		dialog.pack();
 		return dialog;
 	}

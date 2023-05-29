@@ -13,7 +13,6 @@ import com.jgoodies.forms.layout.*;
 
 import core.*;
 import datasource.*;
-import gui.*;
 
 /**
  * Panel with all configuration parameters for the trooper.
@@ -43,7 +42,6 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		addInputComponent(TUIUtils.getSwitch("strictPreflop", model.getBoolean("strictPreflop")));
 		addInputComponent(
 				TUIUtils.getComboBox("takeOpportunity", "take.oportutiny", model.getString("takeOpportunity")));
-		addInputComponent(TUIUtils.getSwitch("ammoFormula", model.getBoolean("ammoFormula")));
 		addInputComponent(TUIUtils.getNumericTextField("phi", model, columns), true, true);
 		addInputComponent(TUIUtils.getNumericTextField("phi4", model, columns), true, true);
 

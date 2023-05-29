@@ -37,15 +37,17 @@ package hero.ozsoft;
 import java.util.*;
 
 import org.apache.commons.math3.stat.descriptive.*;
+import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 
 import com.alee.utils.*;
 
 import core.*;
 import datasource.*;
+import hero.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.actions.*;
-import hero.ozsoft.gui.*;
+import hero.ozsoft.bots.*;
 
 /**
  * Limit Texas Hold'em poker table. <br />
@@ -79,6 +81,16 @@ public class Table extends Task<Void, Void> {
 	/** Min. Num. of player for {@link #RESTAR} action. */
 	private static int MIN_PLAYERS = 5;
 
+	public static final String PAUSE_TASK = "PAUSE_TASK";
+
+	public static final String PAUSE_HERO = "PAUSE_HERO";
+
+	public static final String PAUSE_PLAYER = "PAUSE_PLAYER";
+
+	public static final String RESUME_ALL = "RESUME_ALL";
+
+	private static ThreadLocal<List<Integer>> threadLocal = new ThreadLocal<>();
+
 	/** Table type (poker variant). */
 	private final TableType tableType;
 
@@ -107,29 +119,29 @@ public class Table extends Task<Void, Void> {
 
 	/** The acting player. */
 	private Player actor;
-
 	/** The minimum bet in the current hand. */
 	private int minBet;
-
 	/** The current bet in the current hand. */
 	private int bet;
-
 	/** All pots in the current hand (main pot and any side pots). */
 	private final List<Pot> pots;
-
 	/** The player who bet or raised last (aggressor). */
 	private Player lastBettor;
-
 	/** Number of raises in the current betting round. */
 	private int raises;
-
 	/** num of current played hands */
 	private int numOfHand;
+
 	public int buyIn, bigBlind;
+
 	public int simulationsHand;
+
 	private boolean pauseTask, pauseHero, pausePlayer;
+
 	private String whenPlayerLose;
+
 	private SimulationParameters simulationParameters;
+
 	private TTaskMonitor taskMonitor;
 
 	/** compute hands x seg. */
@@ -147,6 +159,7 @@ public class Table extends Task<Void, Void> {
 		pots = new ArrayList<Pot>();
 		board = new UoAHand();
 		whenPlayerLose = RESTAR;
+		threadLocal.set(getShuffleList());
 
 		// set task strings
 		setTitle("Table simulation");
@@ -158,10 +171,6 @@ public class Table extends Task<Void, Void> {
 		this.taskMonitor = new TTaskMonitor(this);
 	}
 
-	public TTaskMonitor getTaskMonitor() {
-		return taskMonitor;
-	}
-	
 	/**
 	 * Adds a player.
 	 * 
@@ -411,11 +420,24 @@ public class Table extends Task<Void, Void> {
 			if (RESTAR.equals(whenPlayerLose) && actp < MIN_PLAYERS) {
 				String msg = "Hand: " + numOfHand
 						+ ", The table has less players that allow. Restartting the hole table.";
-				notifyMessage(msg);
+				threadLocal.set(getShuffleList());
 				for (Player player2 : players) {
+					Client client = player2.getClient();
+					// interactive environment client can be an instance of tableDialog
+					Bot bot = null;
+					if (client instanceof TableDialog)
+						bot = (Bot) ((TableDialog) client).getProxyClient();
+					else
+						bot = (Bot) player2.getClient();
+
+					Alesia.openDB();
+					insertZeroElement();
+					simulationParameters.add(bot.getBackrollSnapSchot());
+
 					player2.resetHand();
 					player2.setCash(buyIn);
 				}
+				notifyMessage(msg);
 			}
 
 			// when a single player loose
@@ -621,7 +643,7 @@ public class Table extends Task<Void, Void> {
 							Integer oldShare = potDivision.get(winner);
 							if (oldShare != null) {
 								potDivision.put(winner, oldShare + 1);
-								System.out.format("[DEBUG] %s receives an odd chip from the pot.\n", winner);
+//								System.out.format("[DEBUG] %s receives an odd chip from the pot.\n", winner);
 								oddChips--;
 							}
 						}
@@ -716,13 +738,14 @@ public class Table extends Task<Void, Void> {
 		return players;
 	}
 
-	public int getSpeed() {
-		return simulationParameters.getInteger("speed");
-	}
-
 	public TableDialog getTableDialog() {
 		TableDialog dialog = new TableDialog(this);
+		setInputBlocker(dialog);
 		return dialog;
+	}
+
+	public TTaskMonitor getTaskMonitor() {
+		return taskMonitor;
 	}
 
 	/**
@@ -739,7 +762,7 @@ public class Table extends Task<Void, Void> {
 	}
 
 	public boolean isPaused() {
-		return pauseTask;
+		return pauseTask || pauseHero || pausePlayer;
 	}
 
 	/**
@@ -796,8 +819,16 @@ public class Table extends Task<Void, Void> {
 		}
 	}
 
-	public void pause(boolean pause) {
-		this.pauseTask = pause;
+	public void pause(String pauseType) {
+		pauseHero = false;
+		pausePlayer = false;
+		pauseTask = false;
+		if (RESUME_ALL.equals(pauseType))
+			return;
+
+		pauseHero = PAUSE_HERO.equals(pauseType);
+		pausePlayer = PAUSE_PLAYER.equals(pauseType);
+		pauseTask = PAUSE_TASK.equals(pauseType);
 	}
 
 	/**
@@ -924,4 +955,58 @@ public class Table extends Task<Void, Void> {
 			player.getClient().actorRotated(actor);
 		}
 	}
+
+	/** determine how fine the simulation variables will be */
+	private static int GRAIN = 10;
+
+	/**
+	 * return shuffle list of integers based on range [0, 100] / {@link #GRAIN}
+	 * 
+	 * @return the shuffle list
+	 */
+	public static List<Integer> getShuffleList() {
+		List<Integer> integers = new ArrayList<>();
+		int step = 100 / GRAIN;
+		for (int i = 0; i < GRAIN; i++) {
+			integers.add(step + i * step);
+		}
+		Collections.shuffle(integers);
+		return integers;
+	}
+
+	/**
+	 * return the next assignable value from {@link Table#getShuffleList()} if the
+	 * list is depleted, this method build a new list and return the next new value
+	 * 
+	 * @return the new value
+	 */
+	public static int getShuffleVariable() {
+		if (threadLocal.get().isEmpty())
+			threadLocal.set(getShuffleList());
+		int value = threadLocal.get().remove(0);
+		return value;
+	}
+
+	private void insertZeroElement() {
+		if (zeroElementCreated)
+			return;
+		// check if previous simulation the element was added
+		LazyList<SimulationResult> results = simulationParameters.get(SimulationResult.class,
+				"trooper = ? and hands = ?", "Hero", 0);
+		if (results.isEmpty()) {
+			SimulationResult sts = SimulationResult.create("trooper", "Hero");
+			sts.set("hands", 0);
+			sts.set("wins", 0);
+			sts.set("ratio", 0);
+			simulationParameters.add(sts);
+		}
+		this.zeroElementCreated = true;
+	}
+
+	/*
+	 * Mark if the zero element was already created inside or on a previous
+	 * simulation
+	 */
+	private boolean zeroElementCreated;
+
 }

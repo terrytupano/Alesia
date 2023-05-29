@@ -19,96 +19,114 @@ package hero.ozsoft.bots;
 
 import java.util.*;
 
+import hero.*;
 import hero.ozsoft.*;
 import hero.ozsoft.actions.*;
 
 /**
  * Auto mutable Alpha and Tau parameters bot.
  * 
- * Current implementation acts purely on the bot's hole cards, based on <code>Tau</code> parameter of Original preflop
- * Distribution. and <code>alpha</code> mutable parameter selection. Only <b>hero</b> ist allow to mutate every 100
- * hands. All other players will be randomly created with random parameters.
+ * Current implementation acts purely on the bot's hole cards, based on
+ * <code>Tau</code> parameter of Original preflop Distribution. and
+ * <code>alpha</code> mutable parameter selection. Only <b>hero</b> ist allow to
+ * mutate every 100 hands. All other players will be randomly created with
+ * random parameters.
  * 
- * <li>combined with a configurable level of tightness (when to play or fold a hand ) and aggression (how much to bet or
- * raise in case of good cards or when bluffing). <br />
+ * <li>combined with a configurable level of tightness (when to play or fold a
+ * hand ) and aggression (how much to bet or raise in case of good cards or when
+ * bluffing). <br />
  * <br />
  * </ul>
  * 
  */
 public class BasicBot extends Bot {
 
-	private Properties UoAEvaluation;
+	private PreflopCardsModel preflopCardsModel = new PreflopCardsModel();
+	/** Tightness (0 = loose, 100 = tight). */
+	private int tau;
 
-	public Properties getUoAEvaluation() {
-		return UoAEvaluation;
+	/** Betting aggression (0 = safe, 100 = aggressive). */
+	private int alpha;
+
+	private Random random = new Random();
+
+	// // TODO: check Poker Expected Value (EV) Formula: EV = (%W * $W) � (%L * $L)
+	// // https://www.splitsuit.com/simple-poker-expected-value-formula
+	public BasicBot() {
+//		this.tau = Table.getShuffleVariable();
+//		this.alpha = Table.getShuffleVariable();
 	}
-	
+
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
-		PlayerAction action = null;
 
-		// // No choice, must check.
-		// if (allowedActions.size() == 1)
-		// return PlayerAction.CHECK;
+		// No choice, must check.
+		if (allowedActions.size() == 1)
+			return PlayerAction.CHECK;
+
+		this.tau = trooperParameter.getInteger("tau");
+		this.alpha = trooperParameter.getInteger("aggression");
+		preflopCardsModel.setPercentage(tau);
+
+		// apply tau parameter
+		if (!preflopCardsModel.containsHand(myHole)) {
+			return PlayerAction.FOLD;
+		}
+
+		return getAction(minBet, currentBet, allowedActions);
+
+//		int street = -1;
+//		street = hand.size() == 2 ? 2 : street; // pre-flop
+//		street = hand.size() == 5 ? 3 : street; // flop
+//		street = hand.size() == 6 ? 3 : street; // turn
+//		street = hand.size() == 7 ? 1 : street; // river
+//
+//		double cash = (double) player.getCash();
+//		int actV = (int) villans.stream().filter(p -> p.hasCards()).count();
+//
+//		Map<String, Object> uoaEvaluation = PokerSimulator.getEvaluation(myHole, communityHand, actV, cash / bigBlind);
+//		double q = (Double) uoaEvaluation.getOrDefault("rankBehind%", 0.0);
+
+//		add a1 to a4
+		// idea for future simulation:
+		// - simulate the optimal upperboud of handsranks:
+		// motiviation: better probability calculation when there is extremely rare to
+		// find a hand like royal flush or straith flus
 		//
-		// // Bad hole cards; play tight. SEE tau parameter
-		// if (!preflopCardsModel.containsHand(myHole)) {
-		// return PlayerAction.FOLD;
-		// }
+		// - simulation to compute the preflop % based on num of villans (the result
+		// were something like villans*10)
 		//
-		// /**
-		// * in order to try to unify rank and EV en preflop (not expresed in 0,1 range else as a factor of wins) the
-		// * upper bound of the base calculation will now be a factor from the top. the idea is after certain point, the
-		// * rank will be > 1. in original preflop distribution 39 of 168 (23,21%) preflopgrups haven ev>0
-		// */
-		// // a Ace High Straight Flush
-		// // double baseRank = 2970356d;
-		//
-		// // 23,21% of a Ace High Straight Flush
-		// double baseRank = 2280937d;
-		//
-		// // low base rank to allow simulation: Three of a Kind, Aces
-		// // double baseRank = 1116018d;
-		// // a Full House, Twos over Threes
-		// // double baseRank = 2227759d;
-		//
-		// // baseRange to comparation: Three of a Kind, Eights
-		// // int baseRank = 1115012;
-		// double r = (double) UoAHandEvaluator.rankHand(hand);
-		// double evHand = r / baseRank;
-		// int S = -1;
-		// S = hand.size() == 2 ? 2 : S; // pre-flop
-		// S = hand.size() == 5 ? 3 : S; // flop
-		// S = hand.size() == 6 ? 3 : S; // turn
-		// S = hand.size() == 7 ? 1 : S; // river
-		//
-		// // TODO: check Poker Expected Value (EV) Formula: EV = (%W * $W) � (%L * $L)
-		// // https://www.splitsuit.com/simple-poker-expected-value-formula
-		//
-		// double cash = (double) player.getCash();
-		// UoAEvaluation = PokerSimulator.getEvaluation(myHole, communityHand);
-		// double q = (Double) UoAEvaluation.getOrDefault("HSBehind%", 0.0);
+//		read: artikle über Return on Investment (ROI)
+//		lowe limit in roi formula: 10% lower limmit in a bussines is 30% (read literature about it) maybe is util to make a table with detail investments 
+//		make a ROI formula: ROI = (Winnings - Investment) / Investment take into acount any moment in play when bet > lower limitn (roucht 10%)of roi , fold hero mus play until lower limit but once the limit is errreichen, dont gepardice any more also consider playtime 
+
 		// q = q / 100;
-		// double p = 1 - q;
-		// double cashInDanger = cash * q;
+//		 double p = 1 - q;
+//		 double cashInDanger = cash * q;
 		//
 		// /**
-		// * pp implementation: this constant muss expres th number of BB allow to pull or pusch implementation. (maxx
-		// * recon ammunitions). this implemntation read th EV value from preflopdistribution and compute the inverse of
-		// * danger (positive EV, hat -danger value). diferenty of normal danger after preflop. preflop danger is
+		// * pp implementation: this constant muss expres th number of BB allow to pull
+		// or pusch implementation. (maxx
+		// * recon ammunitions). this implemntation read th EV value from
+		// preflopdistribution and compute the inverse of
+		// * danger (positive EV, hat -danger value). diferenty of normal danger after
+		// preflop. preflop danger is
 		// * incremental. meaning every previous call/bet increaase the chanse of Fold
 		// */
 		//
 		// /**
-		// * ppMax represent the max number of ammo allow to expend to see the flop- when the preflop is good, this
+		// * ppMax represent the max number of ammo allow to expend to see the flop-
+		// when the preflop is good, this
 		// allos
 		// * multiples call/reise
 		// */
 		// int ppMax = 20 * bigBlind;
 		//
 		// /**
-		// * ppBase is a minimun allow to see the preflop. whe the ppMax * ev value are negative but not so far, ppBase
-		// * allow Hero to call a number of bb calls in order to se the flop. when another villa, try to steal the pot,
+		// * ppBase is a minimun allow to see the preflop. whe the ppMax * ev value are
+		// negative but not so far, ppBase
+		// * allow Hero to call a number of bb calls in order to se the flop. when
+		// another villa, try to steal the pot,
 		// * the the value of the equation is so negative thtat hero Fold
 		// */
 		// int ppBase = 0;
@@ -145,24 +163,8 @@ public class BasicBot extends Bot {
 		// amount = amount < minBet ? minBet : amount;
 		// // ------------------
 		//
-		// if (currentBet < amount) {
-		// if (allowedActions.contains(PlayerAction.BET)) {
-		// action = new BetAction(amount);
-		// } else if (allowedActions.contains(PlayerAction.RAISE)) {
-		// action = new RaiseAction(amount);
-		// } else if (allowedActions.contains(PlayerAction.CALL)) {
-		// action = PlayerAction.CALL;
-		// } else {
-		// action = PlayerAction.CHECK;
-		// }
-		// } else {
-		// if (allowedActions.contains(PlayerAction.CALL)) {
-		// action = PlayerAction.CALL;
-		// } else {
-		// action = PlayerAction.CHECK;
-		// }
-		// }
-		return action;
+
+//		return null;
 	}
 
 	@Override
@@ -173,6 +175,60 @@ public class BasicBot extends Bot {
 	@Override
 	public void handStarted(Player dealer) {
 		// TODO Auto-generated method stub
-		
+
+	}
+
+	/**
+	 * return a {@link PlayerAction} based on the current {@link #alpha} value. this
+	 * method create a internal list of possibles check/call/bet/raise values based
+	 * on {@link #alpha}. when alpha <- 0, this method will return lowers actions's
+	 * values. if alpha -> 100 this method will select more often high values
+	 * 
+	 * @return
+	 */
+	public PlayerAction getAction(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
+		List<PlayerAction> actions = new ArrayList<>();
+
+		int bet = Math.max(minBet, currentBet);
+		int amount = Double.valueOf(player.getCash() * (alpha / 100d)).intValue();
+
+//		int steps = 10;
+//		List<Integer> integers = new ArrayList<>();
+//		for (int i = 0; i < steps; i++) {
+//			amount += cashToBet / steps;
+//			integers.add(amount);
+//		}
+
+		// if someone aggression is more that i can bare, check if i can or fold
+//		if (cashToBet < minBet) {
+//			if (allowedActions.contains(PlayerAction.CHECK))
+//				return PlayerAction.CHECK;
+//			if (allowedActions.contains(PlayerAction.FOLD))
+//				return PlayerAction.FOLD;
+//		}
+
+//		if (cashToBet < minBet) {
+//			return PlayerAction.ALL_IN;
+//		}
+
+		if (allowedActions.contains(PlayerAction.CHECK))
+			actions.add(PlayerAction.CHECK);
+		if (allowedActions.contains(PlayerAction.CALL))
+			actions.add(PlayerAction.CALL);
+		if (bet < amount) {
+			if (allowedActions.contains(PlayerAction.BET))
+				actions.add(new BetAction(amount));
+			if (allowedActions.contains(PlayerAction.RAISE))
+				actions.add(new RaiseAction(amount));
+		}
+
+		// if there is no more option, fold
+		if (actions.isEmpty())
+			actions.add(PlayerAction.FOLD);
+
+		PlayerAction action = actions.get(random.nextInt(actions.size()));
+//		if (action instanceof BetAction || action instanceof RaiseAction)
+//			System.out.println("BasicBot.getAction()");
+		return action;
 	}
 }

@@ -35,7 +35,7 @@ public class TaskDialog extends InputBlocker {
 	}
 
 	@org.jdesktop.application.Action
-	public void cancelTask() {
+	public void cancelTasks() {
 		unblock();
 	}
 
@@ -43,7 +43,7 @@ public class TaskDialog extends InputBlocker {
 	protected void block() {
 		oldGlassPanel = Alesia.getMainFrame().getGlassPane();
 		Alesia.getMainFrame().setGlassPane(busyPanel);
-		this.dialog = TUIUtils.getDialog("Tasks", taskGroup.getTaskPanel(), "cancelTask");
+		this.dialog = TUIUtils.getDialog("Tasks controler dialog", taskGroup.getTaskPanel(), "showBankrollHistory", "cancelTasks");
 
 		// cancel the associated table on close
 		WindowAdapter wa = new WindowAdapter() {
@@ -61,7 +61,7 @@ public class TaskDialog extends InputBlocker {
 	@Override
 	protected void unblock() {
 		dialog.dispose();
-		taskGroup.cancel(false);
+		taskGroup.cancel(true);
 		busyPanel.setVisible(false);
 		Alesia.getMainFrame().setGlassPane(oldGlassPanel);
 	}

@@ -13,9 +13,11 @@ import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 import org.jdesktop.application.Task.*;
 
+import com.alee.laf.button.*;
 import com.alee.laf.grouping.*;
 import com.alee.laf.list.*;
 import com.alee.laf.panel.*;
+import com.alee.laf.text.*;
 import com.alee.managers.style.*;
 
 import core.*;
@@ -27,10 +29,12 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 
 	private PokerSimulatorPanel pokerSimulatorPanel;
 	private WebList trooperList;
-	private TaskGroup taskGroup;
+	private TroopersTable troopersTable;
+	private WebTextField shuffleTextField;
 
 	public GameSimulatorPanel() {
 		this.pokerSimulatorPanel = new PokerSimulatorPanel();
+		TActionsFactory.insertActions(this);
 
 		// to today, i need only 1 simulation parameter
 		LazyList<SimulationParameters> list = SimulationParameters.findAll();
@@ -40,58 +44,75 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 		setModel(model);
 
 		addInputComponent(TUIUtils.getWebTextField("simulationName", model, columns), true, true);
-		addInputComponent(TUIUtils.getWebTextField("simulationVariable", model, columns), true, true);
 		addInputComponent(TUIUtils.getNumericTextField("simulationsHands", model, columns), true, true);
-		addInputComponent(TUIUtils.getComboBox("speed", "simulation.speed", model.getString("speed")));
-		addInputComponent(TUIUtils.getSpinner("numOfTasks", model, 1, 5));
+		addInputComponent(TUIUtils.getSpinner("numOfTasks", model, 1, TTaskManager.CORE_POOL_SIZE));
 
-		TActionsFactory.insertActions(this);
+		shuffleTextField = TUIUtils.getWebTextField("simulationVariable", model, columns);
+		WebButton shuffleButton = TUIUtils.getSmallButton("shuffleVariable");
+		GroupPane groupPane = new GroupPane(shuffleTextField, shuffleButton);
+		groupPane.setName("simulationVariable");
 
-		WebPanel panel = TUIUtils.getFormListItems(getInputComponents());
-		GroupPane groupPane = TUIUtils.getPlayStopToggleButtons("startSimulation", "stopSimulation", "pauseSimulation");
+		List<JComponent> components = getInputComponents();
+		components.add(groupPane);
 
-		addToolBarAction("backrollHistory");
-		getToolBar().add(groupPane);
+		WebPanel panel = TUIUtils.getFormListItems(components);
+
+		addToolBarActions("bankrollHistory", "deleteAndStartSimulation", "startSimulation");
 
 //		ListItem item = new ListItem(TActionsFactory.getAction("showPokerSimulator"));
 //		panel.add(item, FormLayout.LINE);
 
-		setBodyComponent(panel);
+		this.troopersTable = new TroopersTable();
+
+		WebPanel panel2 = new WebPanel(new BorderLayout());
+		panel2.add(panel, BorderLayout.NORTH);
+		panel2.add(troopersTable, BorderLayout.CENTER);
+
+		setBodyComponent(panel2);
 	}
 
 	@org.jdesktop.application.Action
-	public void showPokerSimulator() {
-		Alesia.getMainPanel().showPanel(pokerSimulatorPanel);
-	}
-
-	@org.jdesktop.application.Action
-	public void backrollHistory() {
-		LazyList<SimulationResult> results = SimulationResult.find("trooper = ? AND hands = ?", "Hero", 0);
+	public void bankrollHistory() {
+		LazyList<SimulationParameters> parameters = SimulationParameters.findAll();
 		ArrayList<String> names = new ArrayList<>();
-		results.forEach(sr -> names.add(sr.getString("name")));
+		parameters.forEach(sp -> names.add(sp.getString("simulationName")));
 		String[] possibleValues = names.toArray(new String[0]);
 		Object selectedValue = JOptionPane.showInputDialog(Alesia.getMainFrame(), "Choose one", "Input",
 				JOptionPane.INFORMATION_MESSAGE, null, possibleValues, possibleValues[0]);
 		if (selectedValue != null) {
 			String resultName = selectedValue.toString();
-
-			// Retrieve the first element of the statistical series to detect, the type of
-			// graph
-			Alesia.openDB();
-			SimulationResult sample = SimulationResult.findFirst("name = ? AND trooper = ?", resultName, "Hero");
-			JDialog chartDialog;
-			if (sample.get("aditionalValue") != null) {
-				chartDialog = new SingeVariableSimulationLineChart(resultName);
-			} else {
-				chartDialog = new MultiVariableSimulationBarChar(resultName);
-			}
-			Rectangle bound = Alesia.getMainFrame().getBoundByFactor(0.7);
-			chartDialog.setSize(bound.getSize());
-//			chartDialog.pack();
-			GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
-			chartDialog.setLocationRelativeTo(Alesia.getMainFrame());
-			chartDialog.setVisible(true);
+			showBankrollHistoryImpl(resultName);
 		}
+	}
+
+	public boolean checkVariables() {
+		boolean ok = true;
+		Map<String, ColumnMetadata> columns = TrooperParameter.getMetaModel().getColumnMetadata();
+		String[] variables2 = shuffleTextField.getText().split(",");
+		for (String variable : variables2) {
+			if (!columns.containsKey(variable)) {
+				Alesia.showNotification("simulation.msg01", variable);
+				ok = false;
+			}
+		}
+		return ok;
+	}
+
+	@org.jdesktop.application.Action
+	public Task<Void, Void> deleteAndStartSimulation() {
+		// save current changes
+		if (!save())
+			return null;
+		SimulationParameters parameters = (SimulationParameters) getModel();
+		parameters.cleanSimulation();
+		return startSimulation();
+	}
+
+	@Override
+	public Model getModel() {
+		Model model = super.getModel();
+		model.set("simulationVariable", shuffleTextField.getText());
+		return model;
 	}
 
 	private WebList getTrooperList() {
@@ -129,28 +150,69 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 		return list;
 	}
 
-	@org.jdesktop.application.Action
-	public void pauseSimulation() {
-//		taskGroup.pause(true);
-	}
-
 	public void setTrooper(Trooper trooper) {
 		pokerSimulatorPanel.setTrooper(trooper);
 	}
 
-//	@org.jdesktop.application.Action(block = BlockingScope.ACTION)
+	@org.jdesktop.application.Action
+	public void showBankrollHistory() {
+		showBankrollHistoryImpl(getModel().getString("simulationName"));
+	}
+
+	private void showBankrollHistoryImpl(String simulationName) {
+		// Retrieve the first element of the statistical series to detect, the type of
+		// graph
+		Alesia.openDB();
+		SimulationParameters parameters = SimulationParameters.findFirst("simulationName = ?", simulationName);
+		if (parameters == null) {
+			Alesia.showNotification("hero.msg06", simulationName);
+			return;
+		}
+
+		JDialog chartDialog;
+
+		if (parameters.isSingleVariable()) {
+			chartDialog = new SingeVariableSimulationLineChart(simulationName);
+		} else {
+			chartDialog = new MultiVariableSimulationBarChar(simulationName);
+		}
+		Rectangle bound = Alesia.getMainFrame().getBoundByFactor(0.7);
+		chartDialog.setSize(bound.getSize());
+		GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
+		chartDialog.setLocationRelativeTo(Alesia.getMainFrame());
+		chartDialog.setVisible(true);
+
+	}
+
+	@org.jdesktop.application.Action
+	public void showPokerSimulator() {
+		Alesia.getMainPanel().showPanel(pokerSimulatorPanel);
+	}
+
+	@org.jdesktop.application.Action
+	public void shuffleVariable() {
+		boolean ok = checkVariables();
+		if (!ok)
+			return;
+		LazyList<TrooperParameter> parameters = TrooperParameter.findAll();
+		String[] variables = shuffleTextField.getText().split(",");
+		for (String variable : variables) {
+			List<Integer> integers = Table.getShuffleList();
+			for (TrooperParameter trooperParameter : parameters) {
+				trooperParameter.set(variable, integers.remove(0));
+				trooperParameter.save();
+			}
+		}
+		troopersTable.refresh();
+	}
+
 	@org.jdesktop.application.Action(block = BlockingScope.WINDOW)
-	public Task<Void, Void> startSimulation(ActionEvent event) {
+	public Task<Void, Void> startSimulation() {
 		try {
 			// save current changes
 			if (!save())
 				return null;
 
-			// check if are active simulations
-			if (taskGroup != null) {
-				Alesia.showNotification("hero.msg05");
-				return null;
-			}
 			// check max task
 			if (!Alesia.getTaskManager().suporMoreTask()) {
 				Alesia.showNotification("hero.msg03");
@@ -168,11 +230,14 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 			}
 
 			// WARNING: order by chair is important. this is take into account in simulation
+			// & in tableDialog players place
 			LazyList<TrooperParameter> tparms = TrooperParameter.findAll().orderBy("chair");
 			SimulationParameters parameters = (SimulationParameters) getModel();
-			this.taskGroup = new TaskGroup();
-			
-			for (int i = 0; i < parameters.getInteger("numOfTasks"); i++) {
+			TaskGroup taskGroup = new TaskGroup();
+			Table oneTable = null;
+			int numOfTask = parameters.getInteger("numOfTasks");
+
+			for (int i = 0; i < numOfTask; i++) {
 				Table table = new Table(parameters);
 				for (TrooperParameter trooperParm : tparms) {
 					if (trooperParm.getBoolean("isActive")) {
@@ -191,19 +256,29 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 							setTrooper(trooper);
 					}
 				}
-				taskGroup.addTable(table);
+				if (numOfTask == 1)
+					oneTable = table;
+				else
+					taskGroup.addTable(table);
 			}
-			return taskGroup;
+
+			// if there is only 1 task, show the table dialog
+			if (numOfTask == 1) {
+				oneTable.getTableDialog();
+				return oneTable;
+			} else
+				return taskGroup;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
 
-	@org.jdesktop.application.Action
-	public void stopSimulation() {
-		taskGroup.cancel(true);
-		taskGroup = null;
+	@Override
+	public boolean validateFields() {
+		boolean ok = super.validateFields();
+		boolean ok1 = checkVariables();
+		return ok && ok1;
 	}
 
 	@Override

@@ -26,7 +26,6 @@ import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 import org.jdesktop.application.Action;
 
-import com.alee.laf.window.*;
 import com.alee.utils.*;
 import com.jgoodies.common.base.*;
 
@@ -73,16 +72,16 @@ public class TActionsFactory {
 		}
 	}
 
-	public static javax.swing.Action getAction(String key) {
-		return instance.actionMap.get(key);
+	public static javax.swing.Action getAction(String action) {
+		return instance.actionMap.get(action);
 	}
 
-	public static List<javax.swing.Action> getActions(String... keys) {
-		ArrayList<javax.swing.Action> actions = new ArrayList<>();
-		for (String key : keys) {
-			actions.add(getAction(key));
+	public static List<javax.swing.Action> getActions(String... actions) {
+		ArrayList<javax.swing.Action> actions2 = new ArrayList<>();
+		for (String key : actions) {
+			actions2.add(getAction(key));
 		}
-		return actions;
+		return actions2;
 	}
 
 	/**
@@ -286,7 +285,7 @@ public class TActionsFactory {
 		ApplicationAction me = (ApplicationAction) src.getAction();
 		TUIListPanel tuilp = SwingUtils.getFirstParent((JComponent) event.getSource(), TUIListPanel.class);
 		TUIFormPanel tuifp = tuilp.getTUIFormPanel(me);
-		WebDialog dlg = tuifp.createDialog(false);
+		JDialog dlg = tuifp.createDialog(false);
 		dlg.setVisible(true);
 		ApplicationAction aa = (ApplicationAction) tuifp.getClientProperty(ACTION_PERFORMED);
 		if (aa != null && aa.getName().equals("acept")) {
@@ -301,7 +300,7 @@ public class TActionsFactory {
 		ApplicationAction me = (ApplicationAction) src.getAction();
 		TUIListPanel tuilp = SwingUtils.getFirstParent((JComponent) event.getSource(), TUIListPanel.class);
 		TUIFormPanel tuifp = tuilp.getTUIFormPanel(me);
-		WebDialog dlg = tuifp.createDialog(false);
+		JDialog dlg = tuifp.createDialog(false);
 		dlg.setVisible(true);
 		ApplicationAction aa = (ApplicationAction) tuifp.getClientProperty(ACTION_PERFORMED);
 		if (aa != null && aa.getName().equals("acept")) {

@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.jdesktop.application.*;
 
-import com.alee.extended.layout.*;
 import com.alee.laf.panel.*;
 
 import hero.ozsoft.*;
@@ -19,44 +18,41 @@ import hero.ozsoft.*;
  */
 public class TaskGroup extends Task<Void, Void> {
 	private List<Table> tables;
-	private WebPanel taskPanel;
 
 	public TaskGroup() {
 		super(Alesia.getInstance());
 		this.tables = new ArrayList<>();
-		this.taskPanel= new WebPanel(new VerticalFlowLayout(VerticalFlowLayout.MIDDLE, 0, 0, true, false));
-//		vertical.add(titleLabel);
-//		vertical.add(descriptionLabel);		
 		setInputBlocker(new TaskDialog(this));
 	}
 
 	public void addTable(Table table) {
 		tables.add(table);
-		taskPanel.add(table.getTaskMonitor().getTaskPanel());
-		Alesia.getTaskManager().getTaskService().execute(table);
+//		Alesia.getTaskManager().getTaskService().execute(table);
 	}
 
 	public WebPanel getTaskPanel() {
-		return taskPanel;
+		WebPanel panel = new WebPanel(new GridLayout(tables.size(), 1));
+		tables.forEach(t -> panel.add(t.getTaskMonitor().getTaskPanel()));
+		return panel;
 	}
 
 	public void pause(boolean pause) {
-		tables.forEach(t -> t.pause(pause));
+		tables.forEach(t -> t.pause(Table.PAUSE_TASK));
 	}
 
 	@Override
 	protected void cancelled() {
-		tables.forEach(t -> t.cancel(false));
+		tables.forEach(t -> t.cancel(true));
+//		getTaskService().shutdown();
 	}
 
 	@Override
 	protected Void doInBackground() throws Exception {
-		boolean allDone = false;
-		while (!allDone) {
+		long done = 0;
+		tables.forEach(t -> Alesia.getTaskManager().getTaskService().execute(t));
+		while (done < tables.size()) {
 			Thread.sleep(1000);
-			for (Table table : tables) {
-				allDone = table.isCancelled() || table.isDone() ? true : allDone;
-			}
+			done = tables.stream().filter(t -> t.isCancelled() || t.isDone()).count();
 		}
 		return null;
 	}

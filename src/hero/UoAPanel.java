@@ -46,7 +46,6 @@ public class UoAPanel extends TUIPanel {
 		GroupPane pane = new GroupPane(tauSpinner, evaluateHandButton, setRandomHandButton, setExampleFromOMPaperButton, resetTableButton);
 
 		getToolBar().add(pane);
-		add(cardsPanel, BorderLayout.NORTH);
 		WebPanel webPanel = new WebPanel(new BorderLayout());
 		webPanel.add(cardsPanel, BorderLayout.NORTH);
 		webPanel.add(TUIUtils.getSmartScroller(console), BorderLayout.CENTER);
@@ -97,9 +96,9 @@ public class UoAPanel extends TUIPanel {
 		}
 
 		console.append("Hole cards: " + myHole + " Comunity cards: " + comunity + "\n");
-		int tau = (Integer) tauSpinner.getValue();
+		int bigBlinds = (Integer) tauSpinner.getValue();
 
-		Map<String, Object> evaluationResult = PokerSimulator.getEvaluation(myHole, comunity, 1, tau, 10000, 1000);
+		Map<String, Object> evaluationResult = PokerSimulator.getEvaluation(myHole, comunity, 1, bigBlinds);
 		// Add Chen score
 		evaluationResult.put("Chen Score", PokerSimulator.getChenScore(myHole));
 

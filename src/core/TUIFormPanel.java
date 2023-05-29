@@ -473,7 +473,7 @@ public class TUIFormPanel extends TUIPanel {
 
 	/**
 	 * the the enable/disable status for the couple {@link JLabel} and
-	 * {@link JComponent} asociated whit this field name.
+	 * {@link JComponent} associated whit this field name.
 	 * 
 	 * @param field  - field name of the input component
 	 * @param enable - enable/disable value

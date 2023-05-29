@@ -16,7 +16,7 @@ public class BusyPanel extends WebPanel {
 	private BufferedImage mOffscreenImage;
 	private BufferedImageOp mOperation;
 
-	BusyPanel() {
+	public BusyPanel() {
 		setOpaque(false);
 		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		MouseInputListener blockMouseEvents = new MouseInputAdapter() {
