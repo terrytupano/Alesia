@@ -18,8 +18,8 @@ import gui.*;
 public class TroopersTable extends TUIListPanel {
 
 	public TroopersTable() {
-		setColumns("trooper", "client", "tau", "strictPreflop", "tightness", "aggression", "reconnBase", "reconnBand", "takeOpportunity", "phi",
-				"phi4");
+		setColumns("trooper", "client", "tau", "alpha", "strictPreflop", "reconnBase", "reconnBand", "takeOpportunity",
+				"phi", "phi4");
 
 		Function<String, List<Model>> function = (par -> TrooperParameter.findAll());
 		setDBParameters(function, TrooperParameter.getMetaModel().getColumnMetadata());

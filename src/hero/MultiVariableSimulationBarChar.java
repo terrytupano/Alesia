@@ -31,7 +31,7 @@ public class MultiVariableSimulationBarChar extends JDialog {
 		String json = statistics.toJson(false);
 		JsonReader reader = new JsonReader();
 		Table table = reader.read(JsonReadOptions.builderFromString(json).build());
-		table = table.summarize("hands", "wins", "ratio", AggregateFunctions.sum).by("multiAditionalValues");
+		table = table.summarize("hands", "wins", "ratio", AggregateFunctions.sum).by("variables");
 		table = table.sortOn("Sum [ratio]");
 //		System.out.println(table);
 
@@ -40,7 +40,7 @@ public class MultiVariableSimulationBarChar extends JDialog {
 		DefaultCategoryDataset categoryDataset = new DefaultCategoryDataset();
 		for (int i = 0; i < table.rowCount(); i++) {
 			Row row = table.row(i);
-			categoryDataset.addValue(row.getDouble("Sum [ratio]"), "", row.getString("multiAditionalValues"));
+			categoryDataset.addValue(row.getDouble("Sum [ratio]"), "", row.getString("variables"));
 		}
 
 		return categoryDataset;

@@ -20,6 +20,7 @@ package hero.ozsoft.bots;
 import java.util.*;
 
 import hero.*;
+import hero.Trooper.*;
 import hero.ozsoft.*;
 import hero.ozsoft.actions.*;
 
@@ -50,11 +51,9 @@ public class BasicBot extends Bot {
 
 	private Random random = new Random();
 
-	// // TODO: check Poker Expected Value (EV) Formula: EV = (%W * $W) � (%L * $L)
-	// // https://www.splitsuit.com/simple-poker-expected-value-formula
+
 	public BasicBot() {
-//		this.tau = Table.getShuffleVariable();
-//		this.alpha = Table.getShuffleVariable();
+
 	}
 
 	@Override
@@ -64,41 +63,28 @@ public class BasicBot extends Bot {
 		if (allowedActions.size() == 1)
 			return PlayerAction.CHECK;
 
-		this.tau = trooperParameter.getInteger("tau");
-		this.alpha = trooperParameter.getInteger("aggression");
+		this.tau = simulationVariables.get("tau");
+		this.alpha = simulationVariables.get("alpha");
 		preflopCardsModel.setPercentage(tau);
+//		if ("Hero".equals(trooperName))
+//			System.out.println("table: " + table.getTableId() + " Hero: tau = " + tau + ", " + "alpha: " + alpha);
 
 		// apply tau parameter
 		if (!preflopCardsModel.containsHand(myHole)) {
 			return PlayerAction.FOLD;
 		}
 
-		return getAction(minBet, currentBet, allowedActions);
+		//TODO: hasCard method don't say if the villain folded his cards -------------------------------------------------- !!!!!!!!!
+		int activeVillains = (int) villains.stream().filter(p -> p.hasCards()).count();
 
-//		int street = -1;
-//		street = hand.size() == 2 ? 2 : street; // pre-flop
-//		street = hand.size() == 5 ? 3 : street; // flop
-//		street = hand.size() == 6 ? 3 : street; // turn
-//		street = hand.size() == 7 ? 1 : street; // river
-//
-//		double cash = (double) player.getCash();
-//		int actV = (int) villans.stream().filter(p -> p.hasCards()).count();
-//
-//		Map<String, Object> uoaEvaluation = PokerSimulator.getEvaluation(myHole, communityHand, actV, cash / bigBlind);
-//		double q = (Double) uoaEvaluation.getOrDefault("rankBehind%", 0.0);
+		double cash = (double) player.getCash();
+		List<TrooperAction> actions = Bot.loadActions(minBet, currentBet, cash, allowedActions);
+		Map<String, Object> evaluation = PokerSimulator.getEvaluation(myHole, communityHand, activeVillains, cash / bigBlind);
+		PotOdd potOdd = Trooper.potOdd(pot, actions, evaluation);
+		SubOptimalAction subOptimalAction = Trooper.getAction(potOdd.availableActions,
+				SubOptimalAction.TRIANGULAR, alpha);
 
-//		add a1 to a4
-		// idea for future simulation:
-		// - simulate the optimal upperboud of handsranks:
-		// motiviation: better probability calculation when there is extremely rare to
-		// find a hand like royal flush or straith flus
-		//
-		// - simulation to compute the preflop % based on num of villans (the result
-		// were something like villans*10)
-		//
-//		read: artikle über Return on Investment (ROI)
-//		lowe limit in roi formula: 10% lower limmit in a bussines is 30% (read literature about it) maybe is util to make a table with detail investments 
-//		make a ROI formula: ROI = (Winnings - Investment) / Investment take into acount any moment in play when bet > lower limitn (roucht 10%)of roi , fold hero mus play until lower limit but once the limit is errreichen, dont gepardice any more also consider playtime 
+		return getPlayerAction(subOptimalAction.action, allowedActions);
 
 		// q = q / 100;
 //		 double p = 1 - q;
@@ -174,61 +160,6 @@ public class BasicBot extends Bot {
 
 	@Override
 	public void handStarted(Player dealer) {
-		// TODO Auto-generated method stub
-
-	}
-
-	/**
-	 * return a {@link PlayerAction} based on the current {@link #alpha} value. this
-	 * method create a internal list of possibles check/call/bet/raise values based
-	 * on {@link #alpha}. when alpha <- 0, this method will return lowers actions's
-	 * values. if alpha -> 100 this method will select more often high values
-	 * 
-	 * @return
-	 */
-	public PlayerAction getAction(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
-		List<PlayerAction> actions = new ArrayList<>();
-
-		int bet = Math.max(minBet, currentBet);
-		int amount = Double.valueOf(player.getCash() * (alpha / 100d)).intValue();
-
-//		int steps = 10;
-//		List<Integer> integers = new ArrayList<>();
-//		for (int i = 0; i < steps; i++) {
-//			amount += cashToBet / steps;
-//			integers.add(amount);
-//		}
-
-		// if someone aggression is more that i can bare, check if i can or fold
-//		if (cashToBet < minBet) {
-//			if (allowedActions.contains(PlayerAction.CHECK))
-//				return PlayerAction.CHECK;
-//			if (allowedActions.contains(PlayerAction.FOLD))
-//				return PlayerAction.FOLD;
-//		}
-
-//		if (cashToBet < minBet) {
-//			return PlayerAction.ALL_IN;
-//		}
-
-		if (allowedActions.contains(PlayerAction.CHECK))
-			actions.add(PlayerAction.CHECK);
-		if (allowedActions.contains(PlayerAction.CALL))
-			actions.add(PlayerAction.CALL);
-		if (bet < amount) {
-			if (allowedActions.contains(PlayerAction.BET))
-				actions.add(new BetAction(amount));
-			if (allowedActions.contains(PlayerAction.RAISE))
-				actions.add(new RaiseAction(amount));
-		}
-
-		// if there is no more option, fold
-		if (actions.isEmpty())
-			actions.add(PlayerAction.FOLD);
-
-		PlayerAction action = actions.get(random.nextInt(actions.size()));
-//		if (action instanceof BetAction || action instanceof RaiseAction)
-//			System.out.println("BasicBot.getAction()");
-		return action;
+		// Not implemented.
 	}
 }

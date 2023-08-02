@@ -68,7 +68,7 @@ public class PokerSimulator {
 
 	public int stimatedVillanTau;
 
-	public final Properties uoAEvaluation = new Properties();
+	public final Map<String, Object> evaluation = new Hashtable<>();
 
 	// private long lastStepMillis;
 	private Hashtable<Integer, String> streetNames = new Hashtable<>();
@@ -181,6 +181,14 @@ public class PokerSimulator {
 		return Math.round(score);
 	}
 
+	/**
+	 * return the evaluation computed based on {@link UoAHandEvaluator}
+	 * 
+	 * @param holeCardsv     - my cards
+	 * @param communityCards - table's cards
+	 * 
+	 * @return the evaluation
+	 */
 	public static Map<String, Object> getUoAEvaluation(UoAHand holeCards, UoAHand communityCards) {
 		UoAHandEvaluator evaluator = new UoAHandEvaluator();
 		UoAHand allCards = new UoAHand(holeCards + " " + communityCards);
@@ -588,23 +596,23 @@ public class PokerSimulator {
 		cardsBuffer.forEach((key, val) -> currentHand.addCard(new UoACard(val)));
 		street = currentHand.size();
 
-		uoAEvaluation.clear();
-		uoAEvaluation.putAll(getEvaluation(holeCards, communityCards, opponents, heroChips / bigBlind));
+		evaluation.clear();
+		evaluation.putAll(getEvaluation(holeCards, communityCards, opponents, heroChips / bigBlind));
 
 		// WARNING: theses values ARE NOT available in preflop
-		double Ppot = (double) uoAEvaluation.getOrDefault("PPot", 0.0);
+		double Ppot = (double) evaluation.getOrDefault("PPot", 0.0);
 		// Npot = (double) uoAEvaluation.getOrDefault("NPot", 0.0);
-		double winProb_n = (double) uoAEvaluation.getOrDefault("winProb", 0.0);
+		double winProb_n = (double) evaluation.getOrDefault("winProb", 0.0);
 		// HS_n = (double) uoAEvaluation.getOrDefault("HS_n", 0.0);
-		double rankA = (double) uoAEvaluation.getOrDefault("rankAhead%", 0.0);
-		double rankB = (double) uoAEvaluation.getOrDefault("rankBehind%", 0.0);
+		double rankA = (double) evaluation.getOrDefault("rankAhead%", 0.0);
+		double rankB = (double) evaluation.getOrDefault("rankBehind%", 0.0);
 
 		// update the simulation result to the console
 		String text = "rankAhead " + twoDigitFormat.format(rankA) + " rankBehind " + twoDigitFormat.format(rankB);
 		variableList.put("simulator.Hand Ranks", text);
 
 		text = "winProb " + percentageFormat.format(winProb_n) + " Ppot " + percentageFormat.format(Ppot) + " "
-				+ uoAEvaluation.get("name");
+				+ evaluation.get("name");
 		variableList.put("simulator.Evaluation", text);
 
 		text = "Hole " + holeCards.toString() + " Comunity " + communityCards + " Current " + currentHand.toString();

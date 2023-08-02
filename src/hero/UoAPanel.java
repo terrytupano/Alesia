@@ -98,22 +98,22 @@ public class UoAPanel extends TUIPanel {
 		console.append("Hole cards: " + myHole + " Comunity cards: " + comunity + "\n");
 		int bigBlinds = (Integer) tauSpinner.getValue();
 
-		Map<String, Object> evaluationResult = PokerSimulator.getEvaluation(myHole, comunity, 1, bigBlinds);
+		Map<String, Object> evaluation = PokerSimulator.getEvaluation(myHole, comunity, 1, bigBlinds);
 		// Add Chen score
-		evaluationResult.put("Chen Score", PokerSimulator.getChenScore(myHole));
+		evaluation.put("Chen Score", PokerSimulator.getChenScore(myHole));
 
 		// all elements instance of List are array of uoAHand. override this property
 		// and show only a sublist
-		Set<String> keys = evaluationResult.keySet();
+		Set<String> keys = evaluation.keySet();
 		for (String key : keys) {
-			if (evaluationResult.get(key) instanceof List) {
+			if (evaluation.get(key) instanceof List) {
 				@SuppressWarnings("unchecked")
-				List<UoAHand> l = (List<UoAHand>) evaluationResult.get(key);
+				List<UoAHand> l = (List<UoAHand>) evaluation.get(key);
 				String examp = PokerSimulator.parseHands(l.subList(0, Math.min(l.size(), 10)));
-				evaluationResult.put(key, examp);
+				evaluation.put(key, examp);
 			}
 		}
 
-		console.print(evaluationResult);
+		console.print(evaluation);
 	}
 }

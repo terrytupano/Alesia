@@ -241,7 +241,7 @@ public class Player {
 	}
 
 	/**
-	 * Sets the hole cards. calling this metod with null argument remove the cards
+	 * Sets the hole cards. calling this method with null argument remove the cards
 	 * (fold)
 	 * 
 	 * @param cards - cards or <code>null</code>

@@ -13,7 +13,7 @@
 	<classpathentry kind="lib" path="lib/activejdbc-2.3.1-j8.jar" sourcepath="lib/activejdbc-2.3.1-j8-sources.jar"/>
 	<classpathentry kind="lib" path="lib/commons-logging-1.2.jar"/>
 	<classpathentry kind="lib" path="lib/jgoodies-common-1.8.1.jar" sourcepath="lib/jgoodies-common-1.8.1-sources.jar"/>
-	<classpathentry kind="lib" path="lib/commons-math3-3.6.1.jar"/>
+	<classpathentry kind="lib" path="lib/commons-math3-3.6.1.jar" sourcepath="lib/commons-math3-3.6.1-sources.jar"/>
 	<classpathentry kind="lib" path="lib/commons-text-1.9.jar"/>
 	<classpathentry kind="lib" path="lib/burlap-3.0.1-jar-with-dependencies.jar" sourcepath="lib/jfreechart-1.5.0-sources.jar"/>
 	<classpathentry kind="lib" path="lib/jgoodies-forms-1.8.0.jar" sourcepath="lib/jgoodies-forms-1.8.0-sources.jar"/>

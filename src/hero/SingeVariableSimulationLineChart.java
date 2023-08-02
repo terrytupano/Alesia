@@ -34,7 +34,7 @@ public class SingeVariableSimulationLineChart extends JDialog {
 			LazyList<SimulationResult> statistics = SimulationResult.find("name = ? AND trooper = ?", resultName,
 					pName);
 			// Retrieve the first element of the statistical series and append the additional value field
-			String av = statistics.size() > 0 ? statistics.get(0).getString("aditionalValue") : "";
+			String av = statistics.size() > 0 ? statistics.get(0).getString("variables") : "";
 			XYSeries xYSeries = new XYSeries(pName + "\n(" + av + ")");
 			xYSeriesCollection.addSeries(xYSeries);
 			for (SimulationResult sts : statistics) {

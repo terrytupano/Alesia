@@ -45,7 +45,7 @@ public class SensorsArray {
 	 * 
 	 * @see #TYPE_CARDS
 	 */
-	public final static String TYPE_VILLANS = "Villans";
+	public final static String TYPE_VILLAINS = "Villans";
 
 	/**
 	 * Read/see only cards areas. this type is only for hero cards and community cards
@@ -126,7 +126,7 @@ public class SensorsArray {
 	 */
 	public int getActiveSeats() {
 		int av = 0;
-		for (int i = 1; i <= getVillans(); i++) {
+		for (int i = 1; i <= getVillains(); i++) {
 			av += isSeatActive(i) ? 1 : 0;
 		}
 		// at this point at least must be 1 villains active set
@@ -141,9 +141,9 @@ public class SensorsArray {
 	 * @see #isActive(int)
 	 * @see #getActiveSeats()
 	 */
-	public int getActiveVillans() {
+	public int getActiveVillains() {
 		int av = 0;
-		for (int i = 1; i <= getVillans(); i++) {
+		for (int i = 1; i <= getVillains(); i++) {
 			if (isActive(i))
 				av++;
 		}
@@ -156,7 +156,7 @@ public class SensorsArray {
 	 * @return where the dealer button are or -1 for a fail in thable position detection
 	 */
 	public int getDealerButtonPosition() {
-		int vil = getVillans();
+		int vil = getVillains();
 		int bp = -1;
 		bp = getSensor("hero.button").isEnabled() ? 0 : -1;
 		for (int i = 1; i <= vil; i++) {
@@ -252,7 +252,7 @@ public class SensorsArray {
 	 * 
 	 * @return total villains
 	 */
-	public int getVillans() {
+	public int getVillains() {
 		return (int) screenSensors.keySet().stream().filter(sn -> sn.startsWith("villan") && sn.contains("name"))
 				.count();
 	}
@@ -280,7 +280,7 @@ public class SensorsArray {
 	 * the action
 	 * 
 	 * @param villanId - the seat as configured in the ppt file. villan1 is at hero.s left
-	 * @see #getActiveVillans()
+	 * @see #getActiveVillains()
 	 * @return numers of villains active seats
 	 */
 	public boolean isSeatActive(int villanId) {
@@ -360,7 +360,7 @@ public class SensorsArray {
 			slist = allSensors.stream().filter(ss -> ss.isButtonArea()).collect(Collectors.toList());
 			readSensors(false, slist);
 
-			pokerSimulator.setTablePosition(getDealerButtonPosition(), getActiveVillans());
+			pokerSimulator.setTablePosition(getDealerButtonPosition(), getActiveVillains());
 			pokerSimulator.setPotValue(getSensor("pot").getNumericOCR());
 			pokerSimulator.setCallValue(getSensor("hero.call").getNumericOCR());
 			pokerSimulator.setHeroChips(getSensor("hero.chips").getNumericOCR());
@@ -385,7 +385,7 @@ public class SensorsArray {
 					pokerSimulator.cardsBuffer.put(ss.getName(), ocr);
 			}
 
-			pokerSimulator.setNunOfOpponets(getActiveVillans());
+			pokerSimulator.setNunOfOpponets(getActiveVillains());
 			pokerSimulator.runSimulation();
 		}
 	}

@@ -2,6 +2,7 @@ package hero.ozsoft.bots;
 
 import java.util.*;
 
+import datasource.*;
 import hero.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.*;
@@ -21,7 +22,6 @@ public class HeroBot extends Bot {
 		pokerSimulator.sensorStatus.put("allIn", true);
 		pokerSimulator.sensorStatus.put("raise.slider", true);
 
-		// pokerSimulator.setHeroChips(players.in);
 		pokerSimulator.setCallValue(minBet);
 		if (allowedActions.contains(PlayerAction.CHECK))
 			pokerSimulator.setCallValue(0);
@@ -29,15 +29,16 @@ public class HeroBot extends Bot {
 		pokerSimulator.setPotValue(pot);
 		pokerSimulator.setHeroChips(player.getCash());
 		pokerSimulator.setRaiseValue(minBet * 2);
-		int actV = (int) villans.stream().filter(p -> p.hasCards()).count();
+		int actV = (int) villains.stream().filter(p -> p.hasCards()).count();
 		pokerSimulator.setNunOfOpponets(actV);
 		pokerSimulator.setTablePosition(dealer, actV);
 
 		// long t1 = System.currentTimeMillis();
 		pokerSimulator.runSimulation();
-		TrooperAction act = trooper.getSimulationAction(trooperParameter);
+		TrooperParameter parameter = new TrooperParameter();
+		parameter.fromMap(simulationVariables);
+		TrooperAction act = trooper.getSimulationAction(parameter);
 		// statistics.addValue(System.currentTimeMillis() - t1);
-
 		PlayerAction action = null;
 		if (act.equals(TrooperAction.FOLD))
 			action = PlayerAction.FOLD;
@@ -58,6 +59,7 @@ public class HeroBot extends Bot {
 		if (action == null)
 			throw new IllegalArgumentException("Hero bot has no correct action selected. Trooper action was" + act);
 		return action;
+
 	}
 
 	@Override
@@ -85,7 +87,7 @@ public class HeroBot extends Bot {
 
 	@Override
 	public void handStarted(Player dealer) {
-		this.dealer = villans.indexOf(dealer) + 1;
+		this.dealer = villains.indexOf(dealer) + 1;
 		pokerSimulator.bigBlind = bigBlind;
 		pokerSimulator.smallBlind = bigBlind / 2;
 		pokerSimulator.buyIn = buyIn;

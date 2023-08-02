@@ -7,6 +7,7 @@ import datasource.*;
 import hero.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.*;
+import hero.ozsoft.actions.*;
 
 /**
  * Base class for all Texas Hold'em poker bot implementations. this base
@@ -22,7 +23,8 @@ public abstract class Bot implements Client {
 	protected PokerSimulator pokerSimulator;
 	protected Trooper trooper;
 	protected Player player;
-	protected List<Player> villans;
+	/** the villains for this bot. e.g if this bot is Oscar, Hero is a villains */
+	protected List<Player> villains;
 	protected int bigBlind;
 	protected int dealer;
 	protected int pot;
@@ -34,51 +36,15 @@ public abstract class Bot implements Client {
 	protected int street = 0;
 	/** keep track the current match cost. the cumulative cost of all actions */
 	protected int matchCost = 0;
-	protected TrooperParameter trooperParameter;
+	protected Table table;
+	protected HashMap<String, Integer> simulationVariables;
 	private int prevCash;
 	/** track the # of hands */
 	private int handsT;
-	private String simulationName;
-	private String aditionalValue;
-	private List<String> simulationVariables;
 
 	@Override
 	public void actorRotated(Player actor) {
 		// TODO Auto-generated method stub
-	}
-
-	public SimulationResult getBackrollSnapSchot() {
-		boolean singleVariable = simulationVariables == null;
-		SimulationResult statistic = null;
-		if (singleVariable) {
-			// aditionalvalue is the variable name
-			statistic = SimulationResult.create("trooper", trooperName, "aditionalValue",
-					trooperParameter.get(aditionalValue));
-		} else {
-			// build multiAditionalValues field based on simulated field and current values
-			Map<String, Object> map = new TreeMap<>();
-			for (String sVar : simulationVariables)
-				map.put(sVar, trooperParameter.get(sVar));
-
-			// multiAditionalValues is the names of the list of variables
-			statistic = SimulationResult.create("trooper", trooperName, "multiAditionalValues", map.toString());
-		}
-
-		statistic.set("hands", handsT);
-		double wins = player.getCash() - buyIn;
-		statistic.set("wins", wins);
-		double ratio = wins / handsT;
-		statistic.set("ratio", ratio);
-
-		// new simulation parameters
-		if (!singleVariable) {
-			for (String variable : simulationVariables) {
-				Integer newValue = Table.getShuffleVariable();
-				trooperParameter.set(variable, newValue);
-			}
-		}
-
-		return statistic;
 	}
 
 	@Override
@@ -88,36 +54,103 @@ public abstract class Bot implements Client {
 		this.pot = pot + bet;
 	}
 
+	public SimulationResult getBackrollSnapSchot() {
+		SimulationResult statistic = SimulationResult.create("trooper", trooperName, "variables",
+				simulationVariables.toString());
+
+		statistic.set("tableId", table.getTableId());
+		statistic.set("hands", handsT);
+		double wins = player.getCash() - buyIn;
+		statistic.set("wins", wins);
+		double ratio = wins / handsT;
+		statistic.set("ratio", ratio);
+
+		// new simulation parameters
+		for (String key : simulationVariables.keySet()) {
+			Integer newValue = table.getShuffleVariable();
+			simulationVariables.put(key, newValue);
+		}
+
+		return statistic;
+	}
+
+	public PlayerAction getPlayerAction(TrooperAction trooperAction, Set<PlayerAction> allowedActions) {
+		if (trooperAction.equals(TrooperAction.FOLD))
+			return PlayerAction.FOLD;
+		if (trooperAction.equals(TrooperAction.CHECK))
+			return PlayerAction.CHECK;
+		if (trooperAction.name.equals("call") && trooperAction.amount > 0) {
+			if (allowedActions.contains(PlayerAction.CALL))
+				return new CallAction((int) trooperAction.amount);
+			if (allowedActions.contains(PlayerAction.BET))
+				return new BetAction((int) trooperAction.amount);
+		}
+		if (trooperAction.name.equals("raise") || trooperAction.name.equals("pot")
+				|| trooperAction.name.equals("allIn")) {
+			if (allowedActions.contains(PlayerAction.RAISE))
+				return new RaiseAction((int) trooperAction.amount);
+			if (allowedActions.contains(PlayerAction.BET))
+				return new BetAction((int) trooperAction.amount);
+		}
+
+		throw new IllegalArgumentException("No correct action selected. Trooper action was" + trooperAction);
+	}
+
+	/**
+	 * Equivalent of Trooper.loadActions(double)
+	 * 
+	 * @param minBet         - the minimum bet
+	 * @param currentBet     - the current bet
+	 * @param cashToBet      - the cash to bet
+	 * @param allowedActions - the actions
+	 * 
+	 * @return available actions to execute
+	 */
+	public static List<TrooperAction> loadActions(int minBet, int currentBet, double cashToBet,
+			Set<PlayerAction> allowedActions) {
+		List<TrooperAction> actions = new ArrayList<>();
+
+		int bet = Math.max(minBet, currentBet);
+		List<Double> doubles = Trooper.getRaiseSteps(bet, cashToBet);
+
+		if (allowedActions.contains(PlayerAction.CHECK))
+			actions.add(TrooperAction.CHECK);
+		if (allowedActions.contains(PlayerAction.CALL))
+			actions.add(new TrooperAction("call", 0));
+		if (allowedActions.contains(PlayerAction.BET) || allowedActions.contains(PlayerAction.RAISE))
+			doubles.forEach(d -> actions.add(new TrooperAction("raise", d)));
+
+		// if there is no more option, fold
+		if (actions.isEmpty())
+			actions.add(TrooperAction.FOLD);
+
+		return actions;
+	}
+
 	/**
 	 * return a {@link Trooper} instance configured to run as Bot inside the
 	 * simulation table.
 	 * 
-	 * @param simulationTable - the environment in witch the trooper run
-	 * @param trooperP        - the parameters that the trooper must follow.
+	 * @param table    - the environment in witch the trooper run
+	 * @param trooperP - the parameters that the trooper must follow.
 	 * 
 	 * @return the trooper
 	 */
 
-	public Trooper getSimulationTrooper(Table simulationTable, TrooperParameter trooperP,
+	public Trooper getSimulationTrooper(Table table, TrooperParameter trooperP,
 			SimulationParameters simulationParameters) {
+		this.table = table;
 		this.trooper = new Trooper();
-		this.trooper.setSimulationTable(simulationTable);
+		this.trooper.setSimulationTable(table);
 		this.pokerSimulator = trooper.getPokerSimulator();
-		this.trooperParameter = trooperP;
-		this.trooperName = trooperParameter.getString("trooper");
-
-		// simulation name
-		this.simulationName = simulationParameters.getString("simulationName");
+		this.trooperName = trooperP.getString("trooper");
+		this.simulationVariables = new HashMap<>();
 
 		// according to the variable comma separated values (1 or more) this simulation
 		// is simple or multi variable simulation
 		String[] variables = simulationParameters.getString("simulationVariable").split(",");
-		if (variables.length == 1) {
-			// for single variable simulation
-			this.aditionalValue = simulationParameters.getString("simulationVariable");
-		} else {
-			// for multiple variable simulation
-			this.simulationVariables = Arrays.asList(variables);
+		for (String var : variables) {
+			simulationVariables.put(var, Integer.valueOf(trooperP.getString(var)));
 		}
 
 		return trooper;
@@ -125,9 +158,9 @@ public abstract class Bot implements Client {
 
 	@Override
 	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
-		this.villans = new ArrayList<>(players);
+		this.villains = new ArrayList<>(players);
 		this.player = players.stream().filter(p -> trooperName.equals(p.getName())).findFirst().get();
-		villans.remove(player);
+		villains.remove(player);
 		this.bigBlind = bigBlind;
 		this.buyIn = player.getCash();
 		this.myHole = new UoAHand();

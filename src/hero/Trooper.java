@@ -48,42 +48,120 @@ import hero.ozsoft.bots.*;
  */
 public class Trooper extends Task<Void, Map<String, Object>> {
 
+	/**
+	 * encapsulate the pot odd decision make by
+	 * {@link Trooper#potOdd(double, List, Map)}
+	 */
+	public static class PotOdd {
+		public double potValue;
+		public List<TrooperAction> availableActions = new ArrayList<>();
+		public String explanation;
+	}
+
 	/** fired when trooper need to notify an step */
 	public static final String STEP = "STEP";
-
-	private static DecimalFormat twoDigitFormat = TResources.twoDigitFormat;
-	private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 	public static final String EXPLANATION = "aa.Explanation";
 	public static final String STATUS = "aa.Trooper Status";
 	public static final String ACTION_PERFORMED = "trooper.Action performed";
 	public static final String ACTIONS = "trooper.Actions";
+	/** the number of step to divide the raise values */
+	public static int STEPS = 5;
+
+	private static DecimalFormat twoDigitFormat = TResources.twoDigitFormat;
+	private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+
+	/**
+	 * return the raise steps list. All the steps values are from > value < to. this
+	 * method assume that the "from" value is = raise and "to" value are all in. the
+	 * # of returned elements inside the list is determined by the {@value #STEPS}
+	 * 
+	 * @param from - raise value
+	 * @param to   - all in value
+	 * 
+	 * @return the list
+	 */
+	public static List<Double> getRaiseSteps(double from, double to) {
+		double amount = (to - from);
+		double inc = amount / STEPS;
+		List<Double> doubles = new ArrayList<>();
+		for (int i = 1; i < STEPS; i++) {
+			amount += inc;
+			doubles.add(amount);
+		}
+		return doubles;
+	}
+
+	/**
+	 * Compute the pot odds based on the formula from <strong>MoP page 54</strong>.
+	 * the returned instance {@link PotOdd} will contain a list with only the
+	 * actions with +EV.
+	 * 
+	 * @param potValue         - the current pot
+	 * @param availableActions - preselected actions
+	 * @param uoAEvaluation    - the current situation evaluation
+	 * @return the decision make by this method
+	 */
+	public static PotOdd potOdd(double potValue, List<TrooperAction> availableActions,
+			Map<String, Object> uoAEvaluation) {
+		PotOdd potOdd = new PotOdd();
+		potOdd.potValue = potValue;
+		double Ppot = (double) uoAEvaluation.get("PPot");
+		// double NPot = (double) pokerSimulator.uoAEvaluation.get("NPot");
+		// double RPot = (double) pokerSimulator.uoAEvaluation.get("RPot");
+		// double HS_n = (double) pokerSimulator.uoAEvaluation.get("HS_n");
+		double winProb = (double) uoAEvaluation.get("winProb");
+
+		double rPot = winProb * potValue;
+		double invPot = Ppot * (potValue - rPot);
+		double ammunitions = rPot + invPot;
+		potOdd.explanation = String.format("ammo = (%1.3f * %7.2f) + (%1.3f * %7.2f) = %7.2f", winProb, potOdd.potValue,
+				Ppot, (potOdd.potValue - rPot), ammunitions);
+
+		// no calculation for 0 values
+		if (ammunitions <= 0 || winProb <= 0) {
+			potOdd.availableActions.clear();
+			potOdd.explanation = String.format("No posible decision for values prob = %1.3f or amunitions = %7.2f",
+					winProb, ammunitions);
+			return potOdd;
+		}
+
+		for (TrooperAction act : potOdd.availableActions) {
+//			double ev = (winProb + Ppot) * ammunitions - act.amount;
+			double ev = winProb * ammunitions - act.amount;
+			act.expectedValue = ev;
+		}
+		// remove all negative values
+		potOdd.availableActions = new ArrayList<>(availableActions);
+		potOdd.availableActions.removeIf(ta -> ta.expectedValue < 0);
+		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
+		return potOdd;
+	}
 
 	private PokerSimulator pokerSimulator;
 	private SensorsArray sensorsArray;
 	private RobotActuator robotActuator;
 	private List<TrooperAction> availableActions;
 	private int countdown = 5;
+
 	private int handsCounter = 0;
 	private long time1;
 	private DescriptiveStatistics outGameStats;
 	private DescriptiveStatistics performaceStatistic;
-
 	private boolean paused = false;
 	private int reactToOportunity;
 	private String prevReactionMessage;
 	// This variable is ONLY used and cleaned by ensuregametable method
 	private String lastHoleCards = "";
 	private double maxRekonAmmo;
-	private double currentHandCost;
+	private double currentHandCost;;
 	private double playUntil;
 	private long playTime;
-	private String subObtimalDist;
-	private TrooperParameter trooperParameter;;
-	private int numOfVillans;
+	private String distributionName;
+	private TrooperParameter trooperParameter;
+	private int numOfvillains;
 	private GameRecorder gameRecorder;
 	private PreflopCardsModel preflopCardsModel = new PreflopCardsModel("pokerStar");
 	private Table simulationTable;
-
 	private long startDate;
 
 	public Trooper() {
@@ -92,82 +170,40 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		this.pokerSimulator = new PokerSimulator();
 		this.sensorsArray = new SensorsArray(pokerSimulator);
 		this.robotActuator = new RobotActuator(this);
-		this.numOfVillans = sensorsArray.getVillans();
-		this.gameRecorder = new GameRecorder(this, numOfVillans);
+		this.numOfvillains = sensorsArray.getVillains();
+		this.gameRecorder = new GameRecorder(this, numOfvillains);
 		this.outGameStats = new DescriptiveStatistics(10);
 		this.performaceStatistic = new DescriptiveStatistics(10);
 		this.handsCounter = 0;
 		this.playUntil = 0;
 		this.trooperParameter = null;
-		this.subObtimalDist = "Triangular";
+		this.distributionName = SubOptimalAction.TRIANGULAR;
+	}
+
+	/**
+	 * perform the action. At this point, the game table is waiting for the hero
+	 * action.
+	 * 
+	 */
+	protected TrooperAction act() {
+		setVariableAndLog(STATUS, "Acting ...");
+		int alpha = trooperParameter.getInteger("alpha");
+		SubOptimalAction subOptimalAction = Trooper.getAction(availableActions, distributionName, alpha);
+		pokerSimulator.setVariable(ACTION_PERFORMED, subOptimalAction.action);
+		pokerSimulator.setVariable(ACTIONS, subOptimalAction.sampledActions);
+
+		// Normally the cost is know. but sometimes(like in opportunities) not
+		currentHandCost += subOptimalAction.action.amount;
+		setVariableAndLog("trooper.Acumulated cost", twoDigitFormat.format(currentHandCost));
+		// robot actuator perform the log
+		if (simulationTable == null)
+			robotActuator.perform(subOptimalAction.action);
+		return subOptimalAction.action;
 	}
 
 	public void cancelTrooper(boolean interrupt) {
 		setVariableAndLog(STATUS, "Trooper Canceled.");
 		super.cancel(interrupt);
-	}
-
-	/**
-	 * return the minimum Tau value of all active villains
-	 * 
-	 * @return min tau value
-	 */
-	public int getMinActiveTau() {
-		List<GamePlayer> list = gameRecorder.getPlayers();
-		int tau = list.stream().filter(p -> p.isActive()).mapToInt(p -> p.getTau()).min().orElse(100);
-		return tau;
-	}
-
-	public PokerSimulator getPokerSimulator() {
-		return pokerSimulator;
-	}
-
-	public SensorsArray getSensorsArray() {
-		return sensorsArray;
-	}
-
-	/**
-	 * link between {@link HeroBot} an this instance. this method perform all the
-	 * decisions and return the action that he want to execute in simulation
-	 * environment.
-	 * 
-	 * @param tropperParameter - instance of {@link TrooperParameter} whit all
-	 *                         simulation parameters
-	 * 
-	 * @return the action to perform
-	 */
-	public TrooperAction getSimulationAction(TrooperParameter tropperParameter) {
-		this.trooperParameter = tropperParameter;
-		playTime = System.currentTimeMillis() - startDate;
-		clearEnvironment();
-
-		// for simulation purpose, allays read the assessment
-		for (int i = 0; i < Table.CAPACITY; i++)
-			readPlayerStat();
-
-		decide();
-		return act();
-	}
-
-	public Table getSimulationTable() {
-		return simulationTable;
-	}
-
-	public boolean isPaused() {
-		return paused;
-	}
-
-	public void pause(boolean pause) {
-		this.paused = pause;
-		setVariableAndLog(STATUS, paused ? "Trooper paused" : "Trooper resumed");
-	}
-
-	public void setSimulationTable(Table simulationTable) {
-		this.simulationTable = simulationTable;
-		pokerSimulator.setLive(false);
-		this.numOfVillans = Table.CAPACITY - 1;
-		this.gameRecorder = new GameRecorder(this, numOfVillans);
-
 	}
 
 	/**
@@ -207,7 +243,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 				// river
 				int phi4 = trooperParameter.getInteger("phi4");
 				if (phi4 > 0 && pokerSimulator.street == PokerSimulator.RIVER_CARD_DEALT) {
-					double rankBehind = ((double) pokerSimulator.uoAEvaluation.get("rankBehind%"));
+					double rankBehind = ((double) pokerSimulator.evaluation.get("rankBehind%"));
 					if (rankBehind <= phi4) {
 						txt = "rankBehind <= " + phi4 + " %";
 						reactToOportunity = pokerSimulator.street;
@@ -218,7 +254,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 					}
 				}
 				// Always
-				if ((boolean) pokerSimulator.uoAEvaluation.get("isTheNut") == true) {
+				if ((boolean) pokerSimulator.evaluation.get("isTheNut") == true) {
 					txt = "Is the Nuts.";
 					reactToOportunity = pokerSimulator.street;
 					if ("takeNoO".equals(oportunity) || "takePreFlop".equals(oportunity)) {
@@ -235,8 +271,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 
 		if (txt != null) {
 			setVariableAndLog(EXPLANATION, "--- OPORTUNITY DETECTED " + txt + " ---");
-			// subObtimalDist = "UniformReal";
-			subObtimalDist = "Oportunity";
+			distributionName = SubOptimalAction.OPORTUNITY;
 			loadActions(pokerSimulator.heroChips);
 
 			// 221201: due to high variance in getSuboptimalAction plus real money players
@@ -254,7 +289,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 			}
 
 			// to this point, if available actions are empty, means hero is responding a
-			// extreme hihgt raise. that mean maybe hero is weak. at this point raise mean
+			// extreme high raise. that mean maybe hero is weak. at this point raise mean
 			// all in. (call actions is not considerer because is not opportunity)
 			if (availableActions.size() == 0 && pokerSimulator.raiseValue >= 0)
 				availableActions.add(new TrooperAction("raise", pokerSimulator.raiseValue));
@@ -338,6 +373,112 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		}
 	}
 
+	@Override
+	protected Void doInBackground() throws Exception {
+		clearEnvironment();
+		startDate = System.currentTimeMillis();
+		while (!isCancelled()) {
+			if (paused) {
+				Thread.sleep(100);
+				continue;
+			}
+			// count down before start
+			if (countdown > 0) {
+				countdown--;
+				setVariableAndLog(STATUS, "start in " + countdown);
+				Thread.sleep(1000);
+				continue;
+			}
+
+			boolean ingt = watchEnvironment();
+
+			// if watchEnvironment() method return false, dismiss the trooper.
+			if (!ingt) {
+				setVariableAndLog(EXPLANATION, "Tropper dismiss.");
+				return null;
+			}
+			long t1 = System.currentTimeMillis();
+
+			// TODO: used for reweight. not implemented
+			// pokerSimulator.stimatedVillanTau = getMinActiveTau();
+			pokerSimulator.stimatedVillanTau = 50;
+
+			// at this point i must decide and act
+			setVariableAndLog(STATUS, "Reading NUMBERS ...");
+			// MANDATORY ORDEN FIRST NUMBER AND THEN CARDS
+			sensorsArray.read(SensorsArray.TYPE_NUMBERS);
+			setVariableAndLog(STATUS, "Reading CARDS ...");
+			sensorsArray.read(SensorsArray.TYPE_CARDS);
+			availableActions.clear();
+			setVariableAndLog(STATUS, "Deciding ...");
+
+			decide();
+			act();
+
+			performaceStatistic.addValue(System.currentTimeMillis() - t1);
+			String troperS = twoDigitFormat.format(performaceStatistic.getMean() / 1000D);
+			String sensorS = twoDigitFormat.format(sensorsArray.performaceStatistic.getMean() / 1000D);
+			String simulatorS = twoDigitFormat.format(pokerSimulator.performaceStatistic.getMean() / 1000D);
+			pokerSimulator.setVariable("aa.Performance",
+					"Tesseract " + sensorS + "s. Trooper " + troperS + "s. Simulator " + simulatorS + "s.");
+
+		}
+		return null;
+	}
+
+	/**
+	 * return the minimum Tau value of all active villains
+	 * 
+	 * @return min tau value
+	 */
+	public int getMinActiveTau() {
+		List<GamePlayer> list = gameRecorder.getPlayers();
+		int tau = list.stream().filter(p -> p.isActive()).mapToInt(p -> p.getTau()).min().orElse(100);
+		return tau;
+	}
+
+	public PokerSimulator getPokerSimulator() {
+		return pokerSimulator;
+	}
+
+	public SensorsArray getSensorsArray() {
+		return sensorsArray;
+	}
+
+	/**
+	 * link between {@link HeroBot} an this instance. this method perform all the
+	 * decisions and return the action that he want to execute in simulation
+	 * environment.
+	 * 
+	 * @param tropperParameter - instance of {@link TrooperParameter} whit all
+	 *                         simulation parameters
+	 * 
+	 * @return the action to perform
+	 */
+	public TrooperAction getSimulationAction(TrooperParameter tropperParameter) {
+		this.trooperParameter = tropperParameter;
+		playTime = System.currentTimeMillis() - startDate;
+		clearEnvironment();
+
+		// for simulation purpose, allays read the assessment
+		for (int i = 0; i < Table.CAPACITY; i++)
+			readPlayerStat();
+
+		decide();
+		return act();
+	}
+
+	public Table getSimulationTable() {
+		return simulationTable;
+	}
+
+	public static class SubOptimalAction {
+		public static String TRIANGULAR = "TRIANGULAR";
+		public static String OPORTUNITY = "OPORTUNITY";
+		public TrooperAction action;
+		public List<TEntry<TrooperAction, Double>> sampledActions;
+	}
+
 	/**
 	 * this method retrieve the amount of chips of all currently active villains.
 	 * the 0 position is the amount of chips computed and the index 1 is the number
@@ -351,7 +492,22 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	 * Idee von zukünftige Aggression.
 	 */
 
-	private TrooperAction getSubOptimalAction() {
+	/**
+	 * return the action to be follow based on statistic sample of the
+	 * availableActions parameters and the distribution name. the idea behind this
+	 * method is to make a random decision but this decision is close to random that
+	 * confuse the Villains. this method will not return the optimal action based on
+	 * EV, but a value that resemble that.
+	 * 
+	 * @param availableActions - the actions
+	 * @param distributionName - the name of the distribution to use in the decision
+	 *                         process.
+	 * @param mode             - the mode parameter in TriangularDistribution
+	 * 
+	 * @return sub optimal decision
+	 */
+	public static SubOptimalAction getSubOptimalAction2(List<TrooperAction> availableActions, String distributionName,
+			double mode) {
 
 		// double b = ammo + alpha * ammo; // agresive: b > ammo
 		// b = b == 0 ? 1 : b; // avoid error when alpha is extreme low
@@ -359,34 +515,62 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		// TriangularDistribution td = new TriangularDistribution(0, c, b);
 		// int amount = (int) td.sample();
 
-		Vector<TEntry<TrooperAction, Double>> actProb = new Vector<>();
-		availableActions.forEach((ta) -> actProb.add(new TEntry<TrooperAction, Double>(ta, ta.amount)));
-		Collections.sort(actProb, Collections.reverseOrder());
+		Vector<TEntry<TrooperAction, Double>> sampledActions = new Vector<>();
+		availableActions.forEach((ta) -> sampledActions.add(new TEntry<TrooperAction, Double>(ta, ta.amount)));
+		Collections.sort(sampledActions, Collections.reverseOrder());
 
 		int elements = availableActions.size();
-		double winProb = (double) pokerSimulator.uoAEvaluation.getOrDefault("winProb", 0.0);
-		double hs = winProb * elements;
-		// double mode = (hs > 1) ? elements : hs * elements;
-		double mode = (hs > 1) ? 0 : hs * elements;
-		AbstractRealDistribution tdist = new TriangularDistribution(0, mode, elements);
-		if (subObtimalDist.equals("UniformReal"))
-			tdist = new UniformRealDistribution(0, elements);
-		if (subObtimalDist.equals("Oportunity"))
-			tdist = new TriangularDistribution(0, 0, elements);
+		double hs = mode * elements;
+		double mode1 = (hs > 1) ? 0 : hs * elements;
+		AbstractRealDistribution distribution = new TriangularDistribution(0, mode1, elements);
+		if (SubOptimalAction.OPORTUNITY.equals(distributionName))
+			distribution = new TriangularDistribution(0, 0, elements);
 		int[] singletos = new int[elements];
 		double[] probabilities = new double[elements];
 		for (int i = 0; i < elements; i++) {
 			singletos[i] = i;
-			TEntry<TrooperAction, Double> te = actProb.elementAt(i);
-			probabilities[i] = tdist.probability(i, i + 1);
+			TEntry<TrooperAction, Double> te = sampledActions.elementAt(i);
+			probabilities[i] = distribution.probability(i, i + 1);
 			te.setValue(probabilities[i]);
 		}
 
-		int ele = (int) tdist.sample();
-		TrooperAction selact = actProb.elementAt(ele).getKey();
-		pokerSimulator.setVariable(ACTION_PERFORMED, selact);
-		pokerSimulator.setVariable(ACTIONS, actProb);
-		return selact;
+		int ele = (int) distribution.sample();
+		SubOptimalAction subOptimalAction = new SubOptimalAction();
+		subOptimalAction.action = sampledActions.elementAt(ele).getKey();
+		subOptimalAction.sampledActions = sampledActions;
+		return subOptimalAction;
+	}
+
+	public static SubOptimalAction getAction(List<TrooperAction> availableActions, String distributionName, int alpha) {
+		List<TEntry<TrooperAction, Double>> sampledActions = new ArrayList<>();
+		for (TrooperAction ta : availableActions) {
+			sampledActions.add(new TEntry<TrooperAction, Double>(ta, ta.amount));
+		}
+		Collections.sort(sampledActions, Collections.reverseOrder());
+
+//		 double b = ammo + alpha * ammo; // agresive: b > ammo
+		// double c = alpha < 0 ? b : ammo; // K sugestions allways as upperbound
+		// TriangularDistribution td = new TriangularDistribution(0, c, b);
+		// int amount = (int) td.sample();
+
+		int b = sampledActions.size() * alpha / 100;
+		b = b == 0 ? 1 : b; // avoid error when alpha is extreme low
+		sampledActions = sampledActions.subList(0, b);
+		AbstractRealDistribution distribution = new TriangularDistribution(0, 0, b);
+		if (SubOptimalAction.OPORTUNITY.equals(distributionName))
+			distribution = new TriangularDistribution(0, 0, availableActions.size());
+
+		for (int i = 0; i < b; i++) {
+			TEntry<TrooperAction, Double> te = sampledActions.get(i);
+			double prob = distribution.probability(i, i + 1);
+			te.setValue(prob);
+		}
+
+		int ele = (int) distribution.sample();
+		SubOptimalAction subOptimalAction = new SubOptimalAction();
+		subOptimalAction.action = sampledActions.get(ele).getKey();
+		subOptimalAction.sampledActions = sampledActions;
+		return subOptimalAction;
 	}
 
 	private boolean isMyTurnToPlay() {
@@ -394,8 +578,10 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 				|| sensorsArray.isSensorEnabled("raise");
 	}
 
-	/** the number of step to divide the raise values */
-	public static int STEPS = 5;
+	public boolean isPaused() {
+		return paused;
+	}
+
 	/**
 	 * 
 	 * this method fill the global variable {@link #availableActions} whit all
@@ -405,7 +591,8 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	 * <li>Raise
 	 * <li>Pot
 	 * <li>All-in
-	 * <li>5 more actions that range from raise to the value close to All-in.
+	 * <li>{@link #STEPS} more actions that range from raise to the value close to
+	 * All-in.
 	 * <p>
 	 * for a total of 9 possible actions
 	 * 
@@ -413,7 +600,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	 */
 	private void loadActions(double maximum) {
 		availableActions.clear();
-		subObtimalDist = "Triangular";
+		distributionName = SubOptimalAction.TRIANGULAR;
 
 		double call = pokerSimulator.callValue;
 		double raise = pokerSimulator.raiseValue;
@@ -441,20 +628,12 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 			// check for int or double values for blinds
 			boolean isInt = (Double.valueOf(bb)).intValue() == bb && (Double.valueOf(bb)).intValue() == sb;
 			double tick = raise;
-			double ammoinc = imax / (STEPS * 1.0);
-			// TODO:
-			// when tha call to this method, the parameter maximum = chips is valid val <
-			// meximus because tha all in
-			// Action will take care of maximum chip. but when maximum is another value,
-			// the comparation must be <=
-			// TEMPORAL: try to incorporate the last element
-			double max2 = (imax == chips) ? imax : imax + 0.01;
 
-			for (int c = 0; (c < STEPS && (tick + ammoinc) < max2); c++) {
-				tick += ammoinc;
-				// round value to look natural (dont write 12345. write 12340 or 12350)
+			List<Double> doubles = Trooper.getRaiseSteps(raise, imax);
+			for (Double double1 : doubles) {
+				// round value to look natural (don't write 12345. write 12340 or 12350)
 				if (isInt)
-					tick = ((int) (tick / 10)) * 10;
+					tick = ((int) (double1 / 10)) * 10;
 				String txt = isInt ? "" + (int) tick : twoDigitFormat.format(tick);
 				availableActions.add(new TrooperAction("raise", "raise.text:dc;raise.text:k=" + txt + ";raise", tick));
 			}
@@ -467,51 +646,20 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		Hero.heroLogger.info(message);
 	}
 
-	/**
-	 * Compute the EV for all actions inside of the global variable
-	 * {@link #availableActions}. after this method, the list contain only the
-	 * actions with +EV. *
-	 * <p>
-	 * to comply with rule 1, this method retrieve his probability from
-	 * {@link PokerSimulator#getProbability()
-	 * 
-	 * <h5>MoP page 54</h5>
-	 * 
-	 */
-	private void potOdd() {
-		double Ppot = (double) pokerSimulator.uoAEvaluation.get("PPot");
-		// double NPot = (double) pokerSimulator.uoAEvaluation.get("NPot");
-		// double RPot = (double) pokerSimulator.uoAEvaluation.get("RPot");
-		// double HS_n = (double) pokerSimulator.uoAEvaluation.get("HS_n");
-		double winProb = (double) pokerSimulator.uoAEvaluation.get("winProb");
+	public void pause(boolean pause) {
+		this.paused = pause;
+		setVariableAndLog(STATUS, paused ? "Trooper paused" : "Trooper resumed");
+	}
 
-		double ammo = 0;
-		double rPot = winProb * pokerSimulator.potValue;
-		double invPot = Ppot * (pokerSimulator.potValue - rPot);
-		ammo = rPot + invPot;
-		String txt1 = String.format("ammo = (%1.3f * %7.2f) + (%1.3f * %7.2f) = %7.2f", winProb,
-				pokerSimulator.potValue, Ppot, (pokerSimulator.potValue - rPot), ammo);
-		// String txt1 = String.format("(%1.3f * %7.2f) = %7.2f, (%1.3f * %7.2f) = %7.2f
-		// ammo = %7.2f", winProb,
-		// pokerSimulator.potValue, rPot, Ppot, (pokerSimulator.potValue - rPot),
-		// invPot, ammo);
-		setVariableAndLog(EXPLANATION, txt1);
+	private void potOdd() {
+		PotOdd potOdd = Trooper.potOdd(pokerSimulator.potValue, availableActions, pokerSimulator.evaluation);
+		setVariableAndLog(EXPLANATION, potOdd.explanation);
 
 		// no calculation for 0 values
-		if (ammo == 0 || winProb == 0) {
-			availableActions.clear();
-			logInfo(String.format("No posible decision for values prob = %1.3f or amunitions = %7.2f", winProb, ammo));
-			return;
-		}
+		if (potOdd.availableActions.isEmpty())
+			logInfo(potOdd.explanation);
 
-		for (TrooperAction act : availableActions) {
-			double ev = (winProb + Ppot) * ammo - act.amount;
-			act.expectedValue = ev;
-		}
-		// remove all negative values
-		// double beta = trooperParameter.getDouble("beta");
-		availableActions.removeIf(ta -> ta.expectedValue < 0);
-		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
+		this.availableActions = potOdd.availableActions;
 	}
 
 	/**
@@ -603,6 +751,14 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		setVariableAndLog(EXPLANATION, txt1);
 	}
 
+	public void setSimulationTable(Table simulationTable) {
+		this.simulationTable = simulationTable;
+		pokerSimulator.setLive(false);
+		this.numOfvillains = Table.CAPACITY - 1;
+		this.gameRecorder = new GameRecorder(this, numOfvillains);
+
+	}
+
 	private void setVariableAndLog(String key, String value) {
 		// append the play time to the status (visual purpose only)
 		if (STATUS.equals(key)) {
@@ -623,6 +779,19 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		}
 
 		firePropertyChange(Trooper.STEP, null, pokerSimulator.getVariables());
+	}
+
+	/**
+	 * This method is invoked during the idle phase (after {@link #act()} and before
+	 * {@link #decide()}. use this method to perform large computations.
+	 */
+	protected void think() {
+		// setVariableAndLog(STATUS, "Reading villains ...");
+		// sensorsArray.readVillan();
+		// 191020: ayer ya la implementacion por omision jugo una partida completa y
+		// estuvo a punto de vencer a la
+		// chatarra de Texas poker - poker holdem. A punto de vencer porque jugaba tan
+		// lento que me aburri del sueno :D
 	}
 
 	/**
@@ -753,88 +922,5 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		}
 		setVariableAndLog(EXPLANATION, "Can.t reach the main gametable.");
 		return false;
-	}
-
-	/**
-	 * perform the action. At this point, the game table is waiting for the hero
-	 * action.
-	 * 
-	 */
-	protected TrooperAction act() {
-		setVariableAndLog(STATUS, "Acting ...");
-		TrooperAction act = getSubOptimalAction();
-		// Normally the cost is know. but sometimes(like in opportunities) not
-		currentHandCost += act.amount;
-		setVariableAndLog("trooper.Acumulated cost", twoDigitFormat.format(currentHandCost));
-		// robot actuator perform the log
-		if (simulationTable == null)
-			robotActuator.perform(act);
-		return act;
-	}
-
-	@Override
-	protected Void doInBackground() throws Exception {
-		clearEnvironment();
-		startDate = System.currentTimeMillis();
-		while (!isCancelled()) {
-			if (paused) {
-				Thread.sleep(100);
-				continue;
-			}
-			// count down before start
-			if (countdown > 0) {
-				countdown--;
-				setVariableAndLog(STATUS, "start in " + countdown);
-				Thread.sleep(1000);
-				continue;
-			}
-
-			boolean ingt = watchEnvironment();
-
-			// if watchEnvironment() method return false, dismiss the trooper.
-			if (!ingt) {
-				setVariableAndLog(EXPLANATION, "Tropper dismiss.");
-				return null;
-			}
-			long t1 = System.currentTimeMillis();
-
-			// TODO: used for reweight. not implemented
-			// pokerSimulator.stimatedVillanTau = getMinActiveTau();
-			pokerSimulator.stimatedVillanTau = 50;
-
-			// at this point i must decide and act
-			setVariableAndLog(STATUS, "Reading NUMBERS ...");
-			// MANDATORY ORDEN FIRST NUMBER AND THEN CARDS
-			sensorsArray.read(SensorsArray.TYPE_NUMBERS);
-			setVariableAndLog(STATUS, "Reading CARDS ...");
-			sensorsArray.read(SensorsArray.TYPE_CARDS);
-			availableActions.clear();
-			setVariableAndLog(STATUS, "Deciding ...");
-
-			decide();
-			act();
-
-			performaceStatistic.addValue(System.currentTimeMillis() - t1);
-			String troperS = twoDigitFormat.format(performaceStatistic.getMean() / 1000D);
-			String sensorS = twoDigitFormat.format(sensorsArray.performaceStatistic.getMean() / 1000D);
-			String simulatorS = twoDigitFormat.format(pokerSimulator.performaceStatistic.getMean() / 1000D);
-			pokerSimulator.setVariable("aa.Performance",
-					"Tesseract " + sensorS + "s. Trooper " + troperS + "s. Simulator " + simulatorS + "s.");
-
-		}
-		return null;
-	}
-
-	/**
-	 * This method is invoked during the idle phase (after {@link #act()} and before
-	 * {@link #decide()}. use this method to perform large computations.
-	 */
-	protected void think() {
-		// setVariableAndLog(STATUS, "Reading villans ...");
-		// sensorsArray.readVillan();
-		// 191020: ayer ya la implementacion por omision jugo una partida completa y
-		// estuvo a punto de vencer a la
-		// chatarra de Texas poker - poker holdem. A punto de vencer porque jugaba tan
-		// lento que me aburri del sueno :D
 	}
 }

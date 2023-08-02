@@ -142,13 +142,15 @@ public class Table extends Task<Void, Void> {
 
 	private SimulationParameters simulationParameters;
 
-	private TTaskMonitor taskMonitor;
+	/** in simulation, identify this table with one unique id */
+	private int tableId;
 
 	/** compute hands x seg. */
 	private DescriptiveStatistics statistics;
 
-	public Table(SimulationParameters parameters) {
+	public Table(int tableId, SimulationParameters parameters) {
 		super(Alesia.getInstance());
+		this.tableId = tableId;
 		this.simulationParameters = parameters;
 		this.simulationsHand = simulationParameters.getInteger("simulationsHands");
 		this.tableType = TableType.NO_LIMIT;
@@ -168,7 +170,10 @@ public class Table extends Task<Void, Void> {
 
 		this.bigBlind = parameters.getInteger("bigBlind");
 		this.buyIn = parameters.getInteger("buyIn");
-		this.taskMonitor = new TTaskMonitor(this);
+	}
+
+	public int getTableId() {
+		return tableId;
 	}
 
 	/**
@@ -395,6 +400,7 @@ public class Table extends Task<Void, Void> {
 		actorPosition = -1;
 		boolean endedByHero = false;
 		numOfHand = 0;
+		Alesia.openDB();
 
 		// canceled or simulate a finite num of hands
 		// while (!isCancelled() && (simulationsHand = 0)(simulationsHand > 0 &&
@@ -430,13 +436,11 @@ public class Table extends Task<Void, Void> {
 					else
 						bot = (Bot) player2.getClient();
 
-					Alesia.openDB();
-					insertZeroElement();
+//					insertZeroElement();
 					simulationParameters.add(bot.getBackrollSnapSchot());
-
 					player2.resetHand();
 					player2.setCash(buyIn);
-				}
+				}				
 				notifyMessage(msg);
 			}
 
@@ -671,9 +675,7 @@ public class Table extends Task<Void, Void> {
 
 		// Sanity check.
 		if (totalWon != totalPot) {
-			System.err.println("WARNING: Incorrect pot division!");
-			// TODO: commented to allow the simulation to continue
-			// throw new IllegalStateException("Incorrect pot division!");
+			throw new IllegalStateException("Incorrect pot division!");
 		}
 	}
 
@@ -742,10 +744,6 @@ public class Table extends Task<Void, Void> {
 		TableDialog dialog = new TableDialog(this);
 		setInputBlocker(dialog);
 		return dialog;
-	}
-
-	public TTaskMonitor getTaskMonitor() {
-		return taskMonitor;
 	}
 
 	/**
@@ -967,8 +965,10 @@ public class Table extends Task<Void, Void> {
 	public static List<Integer> getShuffleList() {
 		List<Integer> integers = new ArrayList<>();
 		int step = 100 / GRAIN;
-		for (int i = 0; i < GRAIN; i++) {
-			integers.add(step + i * step);
+		// e.g: if GRAIN = 10 what i want is 10,20,...,90 because in simulation i want
+		// to test the ranges [0,10], [11,20], ... [91,100]
+		for (int i = 1; i < GRAIN; i++) {
+			integers.add(step * i);
 		}
 		Collections.shuffle(integers);
 		return integers;
@@ -980,7 +980,7 @@ public class Table extends Task<Void, Void> {
 	 * 
 	 * @return the new value
 	 */
-	public static int getShuffleVariable() {
+	public int getShuffleVariable() {
 		if (threadLocal.get().isEmpty())
 			threadLocal.set(getShuffleList());
 		int value = threadLocal.get().remove(0);
@@ -995,6 +995,7 @@ public class Table extends Task<Void, Void> {
 				"trooper = ? and hands = ?", "Hero", 0);
 		if (results.isEmpty()) {
 			SimulationResult sts = SimulationResult.create("trooper", "Hero");
+			sts.set("tableId", getTableId());
 			sts.set("hands", 0);
 			sts.set("wins", 0);
 			sts.set("ratio", 0);

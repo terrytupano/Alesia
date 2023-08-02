@@ -65,7 +65,6 @@ import com.jgoodies.forms.layout.*;
 import gui.*;
 import gui.jgoodies.*;
 import gui.wlaf.*;
-import javafx.scene.control.*;
 
 public class TUIUtils {
 

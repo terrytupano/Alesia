@@ -238,7 +238,7 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 			int numOfTask = parameters.getInteger("numOfTasks");
 
 			for (int i = 0; i < numOfTask; i++) {
-				Table table = new Table(parameters);
+				Table table = new Table(i, parameters);
 				for (TrooperParameter trooperParm : tparms) {
 					if (trooperParm.getBoolean("isActive")) {
 						String tName = trooperParm.getString("trooper");
