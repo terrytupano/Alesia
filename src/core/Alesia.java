@@ -74,6 +74,7 @@ public class Alesia extends Application {
 	}
 
 	public static void main(String[] args) {
+		AlesiaInstrument.instrument();
 		Application.launch(Alesia.class, args);
 	}
 

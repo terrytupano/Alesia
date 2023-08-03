@@ -17,28 +17,28 @@ import hero.ozsoft.actions.*;
  */
 public abstract class Bot implements Client {
 
-	/** Number of hole cards. */
-	protected static final int NO_OF_HOLE_CARDS = 2;
 	protected static Hashtable<String, Object> parm1 = new Hashtable<>();
 	protected PokerSimulator pokerSimulator;
 	protected Trooper trooper;
 	protected Player player;
-	/** the villains for this bot. e.g if this bot is Oscar, Hero is a villains */
-	protected List<Player> villains;
 	protected int bigBlind;
 	protected int dealer;
 	protected int pot;
 	protected int buyIn;
 	protected String trooperName;
 	protected UoAHand myHole, communityHand, hand;
+	protected Table table;
+	protected HashMap<String, Integer> simulationVariables;
+	private int prevCash;
 
+	/** Number of hole cards. */
+	protected static final int NO_OF_HOLE_CARDS = 2;
+	/** the villains for this bot. e.g if this bot is Oscar, Hero is a villains */
+	protected List<Player> villains;
 	/** poker street. preFlop=0, Flop=1 ... */
 	protected int street = 0;
 	/** keep track the current match cost. the cumulative cost of all actions */
 	protected int matchCost = 0;
-	protected Table table;
-	protected HashMap<String, Integer> simulationVariables;
-	private int prevCash;
 	/** track the # of hands */
 	private int handsT;
 

@@ -49,7 +49,6 @@ public class SensorsArray {
 
 	/**
 	 * Read/see only cards areas. this type is only for hero cards and community cards
-	 * 
 	 */
 	public final static String TYPE_CARDS = "Cards";
 	/**

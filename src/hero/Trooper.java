@@ -105,6 +105,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 			Map<String, Object> uoAEvaluation) {
 		PotOdd potOdd = new PotOdd();
 		potOdd.potValue = potValue;
+		potOdd.availableActions = new ArrayList<>(availableActions);
 		double Ppot = (double) uoAEvaluation.get("PPot");
 		// double NPot = (double) pokerSimulator.uoAEvaluation.get("NPot");
 		// double RPot = (double) pokerSimulator.uoAEvaluation.get("RPot");
@@ -126,12 +127,11 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		}
 
 		for (TrooperAction act : potOdd.availableActions) {
-//			double ev = (winProb + Ppot) * ammunitions - act.amount;
+			// double ev = (winProb + Ppot) * ammunitions - act.amount;
 			double ev = winProb * ammunitions - act.amount;
 			act.expectedValue = ev;
 		}
 		// remove all negative values
-		potOdd.availableActions = new ArrayList<>(availableActions);
 		potOdd.availableActions.removeIf(ta -> ta.expectedValue < 0);
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 		return potOdd;
@@ -148,8 +148,6 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	private DescriptiveStatistics outGameStats;
 	private DescriptiveStatistics performaceStatistic;
 	private boolean paused = false;
-	private int reactToOportunity;
-	private String prevReactionMessage;
 	// This variable is ONLY used and cleaned by ensuregametable method
 	private String lastHoleCards = "";
 	private double maxRekonAmmo;
@@ -186,7 +184,6 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	 * 
 	 */
 	protected TrooperAction act() {
-		setVariableAndLog(STATUS, "Acting ...");
 		int alpha = trooperParameter.getInteger("alpha");
 		SubOptimalAction subOptimalAction = Trooper.getAction(availableActions, distributionName, alpha);
 		pokerSimulator.setVariable(ACTION_PERFORMED, subOptimalAction.action);
@@ -208,9 +205,8 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 
 	/**
 	 * this method check the opportunity parameter and act accordingly. when Hero is
-	 * in range of the parameter <code>Phi</code> and the hero cards are in range of
-	 * the PreFlop card distribution named <b>opportunity</b> this method will
-	 * return <code>true</code> and override the main variable
+	 * preflop or river and the hero cards are in range card (phi or phi4) this
+	 * method will return <code>true</code> and override the main variable
 	 * {@link #availableActions} and set only raise all actions for hero to take the
 	 * opportunity
 	 * 
@@ -218,55 +214,32 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	 */
 	private boolean checkOpportunities() {
 		String txt = null;
-		String oportunity = trooperParameter.getString("takeOpportunity");
+		boolean oportunity = trooperParameter.getBoolean("takeOpportunity");
+		if (!oportunity) {
+			setVariableAndLog(EXPLANATION, "Take oportunities = 'false'");
+			return false;
+		}
 
-		if (reactToOportunity == pokerSimulator.street) {
-			txt = prevReactionMessage + " Reacting!!!";
-		} else {
-
-			// preflop
-			if (pokerSimulator.street == PokerSimulator.HOLE_CARDS_DEALT) {
-				int phi = trooperParameter.getInteger("phi");
-				preflopCardsModel.setPercentage(phi);
-				if (preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
-					txt = "Current Hole cards in oportunity range.";
-					reactToOportunity = pokerSimulator.street;
-					if (phi > 0 && ("takeNoO".equals(oportunity) || "takePosFlop".equals(oportunity))) {
-						prevReactionMessage = txt;
-						txt = null;
-					}
-				}
+		// preflop
+		if (pokerSimulator.street == PokerSimulator.HOLE_CARDS_DEALT) {
+			int phi = trooperParameter.getInteger("phi");
+			preflopCardsModel.setPercentage(phi);
+			if (preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
+				txt = "Hole cards in oportunity range.";
 			}
-			// flop turn and river
-			if (pokerSimulator.street > PokerSimulator.HOLE_CARDS_DEALT) {
-
-				// river
-				int phi4 = trooperParameter.getInteger("phi4");
-				if (phi4 > 0 && pokerSimulator.street == PokerSimulator.RIVER_CARD_DEALT) {
-					double rankBehind = ((double) pokerSimulator.evaluation.get("rankBehind%"));
-					if (rankBehind <= phi4) {
-						txt = "rankBehind <= " + phi4 + " %";
-						reactToOportunity = pokerSimulator.street;
-						if ("takeNoO".equals(oportunity) || "takePreFlop".equals(oportunity)) {
-							prevReactionMessage = txt;
-							txt = null;
-						}
-					}
-				}
-				// Always
-				if ((boolean) pokerSimulator.evaluation.get("isTheNut") == true) {
-					txt = "Is the Nuts.";
-					reactToOportunity = pokerSimulator.street;
-					if ("takeNoO".equals(oportunity) || "takePreFlop".equals(oportunity)) {
-						prevReactionMessage = txt;
-						txt = null;
-					}
-				}
+		}
+		// river
+		if (pokerSimulator.street == PokerSimulator.RIVER_CARD_DEALT) {
+			int phi4 = trooperParameter.getInteger("phi4");
+			preflopCardsModel.setPercentage(phi4);
+			if (preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
+				txt = "River cards in oportunity range.";
 			}
 		}
 
-		if (reactToOportunity > PokerSimulator.NO_CARDS_DEALT && txt == null) {
-			setVariableAndLog(EXPLANATION, "--- REACTION PREPARED " + prevReactionMessage + " ---");
+		// Always
+		if ((boolean) pokerSimulator.evaluation.get("isTheNut") == true) {
+			txt = "Is the Nuts.";
 		}
 
 		if (txt != null) {
@@ -311,8 +284,6 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 			Alesia.openDB();
 			trooperParameter = TrooperParameter.findFirst("trooper = ?", "Hero");
 		}
-		reactToOportunity = PokerSimulator.NO_CARDS_DEALT;
-		prevReactionMessage = null;
 		maxRekonAmmo = -1;
 		currentHandCost = 0;
 		// subObtimalDist is clear with the loadactions method
@@ -403,16 +374,16 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 			// pokerSimulator.stimatedVillanTau = getMinActiveTau();
 			pokerSimulator.stimatedVillanTau = 50;
 
-			// at this point i must decide and act
-			setVariableAndLog(STATUS, "Reading NUMBERS ...");
+			// at this point i must decide and act.
 			// MANDATORY ORDEN FIRST NUMBER AND THEN CARDS
+			setVariableAndLog(STATUS, "Reading NUMBERS ...");
 			sensorsArray.read(SensorsArray.TYPE_NUMBERS);
 			setVariableAndLog(STATUS, "Reading CARDS ...");
 			sensorsArray.read(SensorsArray.TYPE_CARDS);
-			availableActions.clear();
 			setVariableAndLog(STATUS, "Deciding ...");
-
+			availableActions.clear();
 			decide();
+			setVariableAndLog(STATUS, "Acting ...");
 			act();
 
 			performaceStatistic.addValue(System.currentTimeMillis() - t1);
@@ -548,7 +519,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		}
 		Collections.sort(sampledActions, Collections.reverseOrder());
 
-//		 double b = ammo + alpha * ammo; // agresive: b > ammo
+		// double b = ammo + alpha * ammo; // agresive: b > ammo
 		// double c = alpha < 0 ? b : ammo; // K sugestions allways as upperbound
 		// TriangularDistribution td = new TriangularDistribution(0, c, b);
 		// int amount = (int) td.sample();

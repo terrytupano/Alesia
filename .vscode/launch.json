@@ -44,7 +44,7 @@
             "request": "launch",
             "mainClass": "core.Alesia",
             "projectName": "Alesia",
-            "preLaunchTask": "Run instrumentation"
+            // "preLaunchTask": "Run instrumentation"
         },
         {
             "type": "java",

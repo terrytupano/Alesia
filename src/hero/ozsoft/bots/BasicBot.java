@@ -43,6 +43,7 @@ import hero.ozsoft.actions.*;
 public class BasicBot extends Bot {
 
 	private PreflopCardsModel preflopCardsModel = new PreflopCardsModel();
+
 	/** Tightness (0 = loose, 100 = tight). */
 	private int tau;
 
