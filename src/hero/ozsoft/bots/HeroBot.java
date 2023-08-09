@@ -2,7 +2,6 @@ package hero.ozsoft.bots;
 
 import java.util.*;
 
-import datasource.*;
 import hero.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.*;
@@ -16,48 +15,56 @@ public class HeroBot extends Bot {
 
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
-		pokerSimulator.sensorStatus.put("call", true);
-		pokerSimulator.sensorStatus.put("raise", true);
-		pokerSimulator.sensorStatus.put("pot", true);
-		pokerSimulator.sensorStatus.put("allIn", true);
-		pokerSimulator.sensorStatus.put("raise.slider", true);
-
-		pokerSimulator.setCallValue(minBet);
-		if (allowedActions.contains(PlayerAction.CHECK))
-			pokerSimulator.setCallValue(0);
-
-		pokerSimulator.setPotValue(pot);
-		pokerSimulator.setHeroChips(player.getCash());
-		pokerSimulator.setRaiseValue(minBet * 2);
-		int actV = (int) villains.stream().filter(p -> p.hasCards()).count();
-		pokerSimulator.setNunOfOpponets(actV);
-		pokerSimulator.setTablePosition(dealer, actV);
-
-		// long t1 = System.currentTimeMillis();
-		pokerSimulator.runSimulation();
-		TrooperParameter parameter = new TrooperParameter();
-		parameter.fromMap(simulationVariables);
-		TrooperAction act = trooper.getSimulationAction(parameter);
-		// statistics.addValue(System.currentTimeMillis() - t1);
 		PlayerAction action = null;
-		if (act.equals(TrooperAction.FOLD))
-			action = PlayerAction.FOLD;
-		if (act.equals(TrooperAction.CHECK))
-			action = PlayerAction.CHECK;
-		if (act.name.equals("call") && act.amount > 0) {
-			if (allowedActions.contains(PlayerAction.CALL))
-				action = new CallAction((int) act.amount);
-			if (allowedActions.contains(PlayerAction.BET))
-				action = new BetAction((int) act.amount);
+		while (action == null) {
+			pokerSimulator.sensorStatus.put("call", true);
+			pokerSimulator.sensorStatus.put("raise", true);
+			pokerSimulator.sensorStatus.put("raise.pot", true);
+			pokerSimulator.sensorStatus.put("raise.allin", true);
+			pokerSimulator.sensorStatus.put("raise.slider", true);
+
+			pokerSimulator.setCallValue(minBet);
+			if (allowedActions.contains(PlayerAction.CHECK))
+				pokerSimulator.setCallValue(0);
+
+			pokerSimulator.setPotValue(pot);
+			pokerSimulator.setHeroChips(player.getCash());
+			pokerSimulator.setRaiseValue(minBet * 2);
+			int actV = (int) villains.stream().filter(p -> p.hasCards()).count();
+			pokerSimulator.setNunOfOpponets(actV);
+			pokerSimulator.setTablePosition(dealer, actV);
+
+			pokerSimulator.runSimulation();
+			trooperParameter.fromMap(simulationVariables);
+			TrooperAction act = trooper.getSimulationAction(trooperParameter);
+
+			if (act.equals(TrooperAction.FOLD))
+				action = PlayerAction.FOLD;
+			if (act.equals(TrooperAction.CHECK))
+				action = PlayerAction.CHECK;
+			if (act.name.equals("call") && act.amount > 0) {
+				if (allowedActions.contains(PlayerAction.CALL))
+					action = new CallAction((int) act.amount);
+				if (allowedActions.contains(PlayerAction.BET))
+					action = new BetAction((int) act.amount);
+			}
+			if (act.name.equals("raise") || act.name.equals("pot") || act.name.equals("allIn")) {
+				if (allowedActions.contains(PlayerAction.RAISE))
+					action = new RaiseAction((int) act.amount);
+				if (allowedActions.contains(PlayerAction.BET))
+					action = new BetAction((int) act.amount);
+			}
+
+			if (action == null)
+				throw new IllegalArgumentException("Hero bot has no correct action selected. Trooper action was" + act);
+
+
+
+			if (!(PlayerAction.CHECK.equals(action) || PlayerAction.FOLD.equals(action)) && act.amount < minBet
+					&& act.amount < player.getCash())
+				action = null;
+
 		}
-		if (act.name.equals("raise") || act.name.equals("pot") || act.name.equals("allIn")) {
-			if (allowedActions.contains(PlayerAction.RAISE))
-				action = new RaiseAction((int) act.amount);
-			if (allowedActions.contains(PlayerAction.BET))
-				action = new BetAction((int) act.amount);
-		}
-		if (action == null)
-			throw new IllegalArgumentException("Hero bot has no correct action selected. Trooper action was" + act);
 		return action;
 
 	}
@@ -69,6 +76,7 @@ public class HeroBot extends Bot {
 		// System.out.println("Avg descition method: "+statistics.getMean());
 		// }
 	}
+
 	@Override
 	public void boardUpdated(UoAHand hand, int bet, int pot) {
 		super.boardUpdated(hand, bet, pot);

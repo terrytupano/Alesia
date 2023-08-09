@@ -28,11 +28,11 @@ public class UoAPanel extends TUIPanel {
 
 	private CardsPanel cardsPanel;
 	private TConsoleTextArea console;
-	private WebSpinner tauSpinner;
+	private WebSpinner bbSpinner;
 
 	public UoAPanel() {
 		super();
-		this.tauSpinner = TUIUtils.getSpinner("tau", 15, 0, 100, 5);
+		this.bbSpinner = TUIUtils.getSpinner("bbSpinner", 10, 0, 100, 5);
 
 //		setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
 		this.console = new TConsoleTextArea();
@@ -43,7 +43,7 @@ public class UoAPanel extends TUIPanel {
 		WebButton setRandomHandButton = TUIUtils.getButtonForToolBar(this, "setRandomHand");
 		WebButton setExampleFromOMPaperButton = TUIUtils.getButtonForToolBar(this, "setExampleFromOMPaper");
 
-		GroupPane pane = new GroupPane(tauSpinner, evaluateHandButton, setRandomHandButton, setExampleFromOMPaperButton, resetTableButton);
+		GroupPane pane = new GroupPane(bbSpinner, evaluateHandButton, setRandomHandButton, setExampleFromOMPaperButton, resetTableButton);
 
 		getToolBar().add(pane);
 		WebPanel webPanel = new WebPanel(new BorderLayout());
@@ -81,26 +81,26 @@ public class UoAPanel extends TUIPanel {
 		console.clear();
 
 		UoAHand myHole = (UoAHand) parms.get("myHole");
-		// check hole hand
-		if (myHole.size() == 1) {
-			console.append(
-					"ERROR\nHole hand must contain 0 cards (for board evaluation)\nOR 2 cards for normal card evaluation.\n");
-			return;
-		}
+		// // check hole hand
+		// if (myHole.size() == 1) {
+		// 	console.append(
+		// 			"ERROR\nHole hand must contain 0 cards (for board evaluation)\nOR 2 cards for normal card evaluation.\n");
+		// 	return;
+		// }
 
 		UoAHand comunity = (UoAHand) parms.get("comunityCards");
-		// check community cards
-		if (comunity.size() < 3) {
-			console.append("ERROR\nComunity card must contain 3, 4 or 5 cards.\n");
-			return;
-		}
+		// // check community cards
+		// if (comunity.size() < 3) {
+		// 	console.append("ERROR\nComunity card must contain 3, 4 or 5 cards.\n");
+		// 	return;
+		// }
 
 		console.append("Hole cards: " + myHole + " Comunity cards: " + comunity + "\n");
-		int bigBlinds = (Integer) tauSpinner.getValue();
+		int bigBlinds = (Integer) bbSpinner.getValue();
 
 		Map<String, Object> evaluation = PokerSimulator.getEvaluation(myHole, comunity, 1, bigBlinds);
 		// Add Chen score
-		evaluation.put("Chen Score", PokerSimulator.getChenScore(myHole));
+		evaluation.put("chenScore", PokerSimulator.getChenScore(myHole));
 
 		// all elements instance of List are array of uoAHand. override this property
 		// and show only a sublist

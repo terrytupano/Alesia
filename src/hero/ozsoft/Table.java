@@ -436,7 +436,7 @@ public class Table extends Task<Void, Void> {
 					else
 						bot = (Bot) player2.getClient();
 
-//					insertZeroElement();
+						add the summarization phase. send a signal after backroll to pause the bot. after all bot are paused, perform summar and continue with the next simulation steps
 					simulationParameters.add(bot.getBackrollSnapSchot());
 					player2.resetHand();
 					player2.setCash(buyIn);
@@ -986,28 +986,4 @@ public class Table extends Task<Void, Void> {
 		int value = threadLocal.get().remove(0);
 		return value;
 	}
-
-	private void insertZeroElement() {
-		if (zeroElementCreated)
-			return;
-		// check if previous simulation the element was added
-		LazyList<SimulationResult> results = simulationParameters.get(SimulationResult.class,
-				"trooper = ? and hands = ?", "Hero", 0);
-		if (results.isEmpty()) {
-			SimulationResult sts = SimulationResult.create("trooper", "Hero");
-			sts.set("tableId", getTableId());
-			sts.set("hands", 0);
-			sts.set("wins", 0);
-			sts.set("ratio", 0);
-			simulationParameters.add(sts);
-		}
-		this.zeroElementCreated = true;
-	}
-
-	/*
-	 * Mark if the zero element was already created inside or on a previous
-	 * simulation
-	 */
-	private boolean zeroElementCreated;
-
 }

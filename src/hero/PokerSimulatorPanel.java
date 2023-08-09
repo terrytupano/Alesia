@@ -58,7 +58,7 @@ public class PokerSimulatorPanel extends WebPanel implements PropertyChangeListe
 //				});
 //			}
 			consoleTextArea.print(map);
-			setActionsData(map);
+			// setActionsData(map);
 		}
 	}
 

@@ -85,7 +85,6 @@ public class PreflopCardsModel {
 		upperBound = preflopCards.stream().mapToDouble(pfc -> pfc.getDouble("ev")).max().getAsDouble();
 		// delta with inverted sing
 		delta = -1.0 * preflopCards.stream().mapToDouble(pfc -> pfc.getDouble("ev")).min().getAsDouble();
-		delta += PokerSimulator.lowerBound;
 		// function displacement
 		upperBound = upperBound + delta;
 	}
@@ -173,13 +172,11 @@ public class PreflopCardsModel {
 	}
 
 	/**
-	 * if the cards are in selection range, this metod will return the Normalized
-	 * EV. if the cards are not in selection range, this metod return
-	 * {@link #lowerBound}
+	 * this metod will return the Normalized EV. 
 	 * 
 	 * @param cards - cards in {@link PreflopCardsModel} format
 	 * 
-	 * @return EV in [1,0] range
+	 * @return EV in [0,1] range
 	 */
 	public double getNormalizedEV(String cards) {
 		// double nev = PokerSimulator.lowerBound;

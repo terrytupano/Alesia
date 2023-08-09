@@ -25,7 +25,7 @@ public class SimulatorClientList extends TUIListPanel {
 
 	public SimulatorClientList() {
 //		addToolBarActions("newModel", "editModel", "deleteModel");
-		setColumns("trooper;chair;strictPreflop;tau;reconnBase;reconnBand;takeOpportunity;phi");
+		setColumns("trooper;chair;strictPreflop;tau;takeOpportunity;phi;phi4");
 		// setIconParameters("0;gender-;rehorsegender");
 	}
 

@@ -151,15 +151,13 @@ public class TEntry<K, V> implements Entry<K, V>, Serializable, Comparable<TEntr
 
 	@Override
 	public int compareTo(TEntry<K, V> o) {
-		return value.toString().compareTo(o.value.toString());
-//		if (o instanceof TEntry) {
-//			Comparable oval = (Comparable) o.getValue();
-//			Comparable valc = (Comparable) value;
-//			return valc.compareTo(oval);
-//		}
-//		// 20161109 que ladilla !!! parece que contamos may y le tumbaron 500 bs a mama
-//		// en el deposito de mercantil
-//		return 0;
+		if (o instanceof TEntry) {
+			Comparable<V> valc = (Comparable) value;
+			return valc.compareTo(o.value);
+		}
+		// 20161109 que ladilla !!! parece que contamos may y le tumbaron 500 bs a mama
+		// en el deposito de mercantil
+		return 0;
 	}
 
 }

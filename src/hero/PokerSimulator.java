@@ -34,14 +34,12 @@ public class PokerSimulator {
 	private static DecimalFormat twoDigitFormat = TResources.twoDigitFormat;
 
 	/** Static reference to the standard PF cards model for performance purpose */
-//	private static PreflopCardsModel preflopCardsModel = new PreflopCardsModel("pokerStar");
+	// private static PreflopCardsModel preflopCardsModel = new
+	// PreflopCardsModel("pokerStar");
 	/**
 	 * temporal storage for the incoming cards (simulator)
 	 */
 	public final Hashtable<String, String> cardsBuffer;
-
-	/** Constant min weight factor */
-	public static final double lowerBound = 0.01;
 
 	/**
 	 * enable/disable status for read sensors.
@@ -293,10 +291,17 @@ public class PokerSimulator {
 		 */
 
 		// NOT IMPLEMENTED set the tau value to compute re weight
-//			preflopCardsModel.setPercentage(sVillanTau);
+		// preflopCardsModel.setPercentage(sVillanTau);
 		Map<String, Object> result = new TreeMap<>();
+
+		// terry: this method is util with comunity cards. TODO: check whit paper
+		if (communityCards.size() == 0) {
+			return result;
+		}
+
 		UoAHand iBoard = new UoAHand();
-		int iterations = 50000;
+		int iterations = 100000;
+		result.put("iterations", iterations);
 		double ahead = 0, tied = 0, behind = 0;
 
 		// Hand potential array, each index represents ahead, tied, and behind.
@@ -412,8 +417,8 @@ public class PokerSimulator {
 		result.putAll(getHandPotential(holeCards, communityCards, opponents, 0));
 
 		result.put("ammoControlBBs", bigBlinds);
-		result.put("ammoControlCall", HeadsUpPushFold.getCall(bigBlinds, holeCards));
-		result.put("ammoControlPush", HeadsUpPushFold.getPush(bigBlinds, holeCards));
+		// result.put("ammoControlCall", HeadsUpPushFold.getCall(bigBlinds, holeCards));
+		// result.put("ammoControlPush", HeadsUpPushFold.getPush(bigBlinds, holeCards));
 
 		// with x to put an the end :)
 		result.put("xecution time", (System.currentTimeMillis() - t1));

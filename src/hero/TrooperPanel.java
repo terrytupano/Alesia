@@ -44,9 +44,6 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		addInputComponent(TUIUtils.getNumericTextField("phi", model, columns), true, true);
 		addInputComponent(TUIUtils.getNumericTextField("phi4", model, columns), true, true);
 
-		addInputComponent(TUIUtils.getNumericTextField("reconnBase", model, columns), true, true);
-		addInputComponent(TUIUtils.getNumericTextField("reconnBand", model, columns), true, true);
-
 		setTitleDescriptionFrom("trooper", "description");
 
 		JComponent component = TUIUtils.getFormListItems(getInputComponents());
@@ -67,8 +64,6 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		builder.appendSeparator("Preflop selection");
 		builder.append(TStringUtils.getString("strictPreflop"), getInputComponent("strictPreflop"));
 		builder.append(TStringUtils.getString("tau"), getInputComponent("tau"));
-		builder.append(TStringUtils.getString("reconnBase"), getInputComponent("reconnBase"));
-		builder.append(TStringUtils.getString("reconnBand"), getInputComponent("reconnBand"));
 
 		builder.appendSeparator("Oportunities");
 		builder.append(TStringUtils.getString("phi"), getInputComponent("phi"));

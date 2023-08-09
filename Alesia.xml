@@ -19,7 +19,6 @@
   <plugins.hero.utils.PreFlopCardsPanel.rangeComboBox type="ComboBoxState" selectedIndex="2"/>
   <postflopAmmoControl type="ComboBoxState" selectedIndex="0"/>
   <SensorPanel.filter type="ComboBoxState" selectedIndex="11"/>
-  <reconnBase type="TextComponentState" text="1" caretPosition="1"/>
   <bigBlindFactor type="ComboBoxState" selectedIndex="5"/>
   <actionComboBox type="ComboBoxState" selectedIndex="1"/>
   <plugins.hero.PreFlopCardsRangePanel.rangeComboBox type="ComboBoxState" selectedIndex="0"/>
@@ -32,7 +31,6 @@
   <UserLogIn.rememberUser type="ButtonState" selected="true"/>
   <logging.level type="ComboBoxState" selectedIndex="3"/>
   <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
-  <reconnBand type="TextComponentState" text="10" caretPosition="2"/>
   <buyIn type="string"></buyIn>
   <play.goal type="TextComponentState" text="300" caretPosition="3"/>
   <table.smallBlid type="TextComponentState" text="1000" caretPosition="4"/>

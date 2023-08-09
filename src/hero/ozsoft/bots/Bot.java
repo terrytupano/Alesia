@@ -26,9 +26,10 @@ public abstract class Bot implements Client {
 	protected int pot;
 	protected int buyIn;
 	protected String trooperName;
+	protected TrooperParameter trooperParameter ;
 	protected UoAHand myHole, communityHand, hand;
 	protected Table table;
-	protected HashMap<String, Integer> simulationVariables;
+	protected TreeMap<String, Integer> simulationVariables;
 	private int prevCash;
 
 	/** Number of hole cards. */
@@ -132,25 +133,26 @@ public abstract class Bot implements Client {
 	 * simulation table.
 	 * 
 	 * @param table    - the environment in witch the trooper run
-	 * @param trooperP - the parameters that the trooper must follow.
+	 * @param trooperParameter - the parameters that the trooper must follow.
 	 * 
 	 * @return the trooper
 	 */
 
-	public Trooper getSimulationTrooper(Table table, TrooperParameter trooperP,
+	public Trooper getSimulationTrooper(Table table, TrooperParameter trooperParameter,
 			SimulationParameters simulationParameters) {
 		this.table = table;
+		this.trooperParameter = trooperParameter;
 		this.trooper = new Trooper();
 		this.trooper.setSimulationTable(table);
 		this.pokerSimulator = trooper.getPokerSimulator();
-		this.trooperName = trooperP.getString("trooper");
-		this.simulationVariables = new HashMap<>();
+		this.trooperName = trooperParameter.getString("trooper");
+		this.simulationVariables = new TreeMap<>();
 
 		// according to the variable comma separated values (1 or more) this simulation
 		// is simple or multi variable simulation
 		String[] variables = simulationParameters.getString("simulationVariable").split(",");
 		for (String var : variables) {
-			simulationVariables.put(var, Integer.valueOf(trooperP.getString(var)));
+			simulationVariables.put(var, Integer.valueOf(trooperParameter.getString(var)));
 		}
 
 		return trooper;

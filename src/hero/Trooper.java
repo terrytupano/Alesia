@@ -81,8 +81,8 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	 * @return the list
 	 */
 	public static List<Double> getRaiseSteps(double from, double to) {
-		double amount = (to - from);
-		double inc = amount / STEPS;
+		double amount = from;
+		double inc = (to - from) / STEPS;
 		List<Double> doubles = new ArrayList<>();
 		for (int i = 1; i < STEPS; i++) {
 			amount += inc;
@@ -107,9 +107,6 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		potOdd.potValue = potValue;
 		potOdd.availableActions = new ArrayList<>(availableActions);
 		double Ppot = (double) uoAEvaluation.get("PPot");
-		// double NPot = (double) pokerSimulator.uoAEvaluation.get("NPot");
-		// double RPot = (double) pokerSimulator.uoAEvaluation.get("RPot");
-		// double HS_n = (double) pokerSimulator.uoAEvaluation.get("HS_n");
 		double winProb = (double) uoAEvaluation.get("winProb");
 
 		double rPot = winProb * potValue;
@@ -127,7 +124,6 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		}
 
 		for (TrooperAction act : potOdd.availableActions) {
-			// double ev = (winProb + Ppot) * ammunitions - act.amount;
 			double ev = winProb * ammunitions - act.amount;
 			act.expectedValue = ev;
 		}
@@ -432,11 +428,12 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		clearEnvironment();
 
 		// for simulation purpose, allays read the assessment
-		for (int i = 0; i < Table.CAPACITY; i++)
-			readPlayerStat();
+		// for (int i = 0; i < Table.CAPACITY; i++)
+		// readPlayerStat();
 
 		decide();
-		return act();
+		TrooperAction action = act();
+		return action;
 	}
 
 	public Table getSimulationTable() {
@@ -517,21 +514,24 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		for (TrooperAction ta : availableActions) {
 			sampledActions.add(new TEntry<TrooperAction, Double>(ta, ta.amount));
 		}
-		Collections.sort(sampledActions, Collections.reverseOrder());
-
+		Collections.sort(sampledActions);
 		// double b = ammo + alpha * ammo; // agresive: b > ammo
 		// double c = alpha < 0 ? b : ammo; // K sugestions allways as upperbound
 		// TriangularDistribution td = new TriangularDistribution(0, c, b);
 		// int amount = (int) td.sample();
 
-		int b = sampledActions.size() * alpha / 100;
-		b = b == 0 ? 1 : b; // avoid error when alpha is extreme low
-		sampledActions = sampledActions.subList(0, b);
-		AbstractRealDistribution distribution = new TriangularDistribution(0, 0, b);
-		if (SubOptimalAction.OPORTUNITY.equals(distributionName))
-			distribution = new TriangularDistribution(0, 0, availableActions.size());
+		int bandc = (int) Math.round(sampledActions.size() * alpha / 100d);
+		bandc = bandc == 0 ? 1 : bandc; // avoid error when alpha is extreme low
+		sampledActions = sampledActions.subList(0, bandc);
 
-		for (int i = 0; i < b; i++) {
+		if (bandc > 2)
+			System.out.println("Trooper.getAction()");
+
+		AbstractRealDistribution distribution = new TriangularDistribution(0, bandc, bandc);
+		if (SubOptimalAction.OPORTUNITY.equals(distributionName))
+			distribution = new TriangularDistribution(0, availableActions.size(), availableActions.size());
+
+		for (int i = 0; i < bandc; i++) {
 			TEntry<TrooperAction, Double> te = sampledActions.get(i);
 			double prob = distribution.probability(i, i + 1);
 			te.setValue(prob);
@@ -595,16 +595,17 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 
 		double sb = pokerSimulator.smallBlind;
 		double bb = pokerSimulator.bigBlind;
-		if (raise > 0 && pokerSimulator.isSensorEnabled("raise.slider")) {
+		if (raise > 0 && pot <= imax && pokerSimulator.isSensorEnabled("raise.slider")) {
 			// check for int or double values for blinds
 			boolean isInt = (Double.valueOf(bb)).intValue() == bb && (Double.valueOf(bb)).intValue() == sb;
 			double tick = raise;
 
 			List<Double> doubles = Trooper.getRaiseSteps(raise, imax);
 			for (Double double1 : doubles) {
+				tick = double1;
 				// round value to look natural (don't write 12345. write 12340 or 12350)
 				if (isInt)
-					tick = ((int) (double1 / 10)) * 10;
+					tick = ((int) (tick / 10)) * 10;
 				String txt = isInt ? "" + (int) tick : twoDigitFormat.format(tick);
 				availableActions.add(new TrooperAction("raise", "raise.text:dc;raise.text:k=" + txt + ";raise", tick));
 			}
@@ -666,15 +667,6 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	 */
 	private void setPreflopActions() {
 		availableActions.clear();
-		// 220902 reconnBand = 30
-		double factorBase = trooperParameter.getInteger("reconnBase") / 100d;
-		double factorBand = trooperParameter.getInteger("reconnBand") / 100d;
-		double base = pokerSimulator.heroChips * factorBase;
-		double band = pokerSimulator.heroChips * factorBand;
-
-		// 220302: CURRENT SIMULATION TAU PARAMETER VARIATION (STRICK PREPLOP, NO
-		// OPORTUNITY)
-		// 211205: the first real simulation, analysis and result: 30%
 		int tau = trooperParameter.getInteger("tau");
 		preflopCardsModel.setPercentage(tau);
 		String txt = "No strict Preflop.";
@@ -690,7 +682,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 
 		double nEv = preflopCardsModel.getNormalizedEV(pokerSimulator.holeCards);
 		if (maxRekonAmmo == -1) {
-			maxRekonAmmo = base + (band * nEv);
+			maxRekonAmmo = pokerSimulator.bigBlind + (pokerSimulator.heroChips * nEv);
 		}
 
 		double call = pokerSimulator.callValue;
@@ -718,7 +710,8 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 			return;
 		}
 
-		String txt1 = String.format(txt + " %7.2f + (%7.2f * %1.3f) = %7.2f", base, band, nEv, maxRekonAmmo);
+		String txt1 = String.format(txt + " %7.2f + (%7.2f * %1.3f) = %7.2f", pokerSimulator.bigBlind,
+				pokerSimulator.heroChips, nEv, maxRekonAmmo);
 		setVariableAndLog(EXPLANATION, txt1);
 	}
 
