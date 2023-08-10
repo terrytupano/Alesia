@@ -66,6 +66,7 @@ public class TTaskMonitor implements PropertyChangeListener {
 	 * The TaskMonitor (constructor arg) tracks a "foreground" task; this method is
 	 * called each time a foreground task property changes.
 	 */
+	@Override
 	public void propertyChange(PropertyChangeEvent e) {
 		String propertyName = e.getPropertyName();
 		progressLabel.setText("Task status: " + propertyName);

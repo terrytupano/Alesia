@@ -55,7 +55,7 @@ public abstract class Bot implements Client {
 		this.pot = pot + bet;
 	}
 
-	public SimulationResult getBackrollSnapSchot() {
+	public SimulationResult getBankrollSnapSchot() {
 		SimulationResult statistic = SimulationResult.create("trooper", trooperName, "variables",
 				simulationVariables.toString());
 

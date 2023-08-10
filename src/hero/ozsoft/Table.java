@@ -82,12 +82,10 @@ public class Table extends Task<Void, Void> {
 	private static int MIN_PLAYERS = 5;
 
 	public static final String PAUSE_TASK = "PAUSE_TASK";
-
 	public static final String PAUSE_HERO = "PAUSE_HERO";
-
 	public static final String PAUSE_PLAYER = "PAUSE_PLAYER";
-
 	public static final String RESUME_ALL = "RESUME_ALL";
+	public static final String BANKROLL_PAUSE = "BANKROLL_PAUSE";
 
 	private static ThreadLocal<List<Integer>> threadLocal = new ThreadLocal<>();
 
@@ -110,6 +108,9 @@ public class Table extends Task<Void, Void> {
 
 	/** The current dealer position. */
 	private int dealerPosition;
+
+	/** counter to perform summarization */
+	private int bankRollCounter;
 
 	/** The current dealer. */
 	private Player dealer;
@@ -400,6 +401,7 @@ public class Table extends Task<Void, Void> {
 		actorPosition = -1;
 		boolean endedByHero = false;
 		numOfHand = 0;
+		bankRollCounter = 0;
 		Alesia.openDB();
 
 		// canceled or simulate a finite num of hands
@@ -409,7 +411,7 @@ public class Table extends Task<Void, Void> {
 				|| (simulationsHand == 0 && !isCancelled() && !endedByHero); numOfHand++) {
 			// pause ?
 			if (pauseTask) {
-				ThreadUtils.sleepSafely(100);
+				ThreadUtils.sleepSafely(250);
 				continue;
 			}
 
@@ -436,11 +438,23 @@ public class Table extends Task<Void, Void> {
 					else
 						bot = (Bot) player2.getClient();
 
-						add the summarization phase. send a signal after backroll to pause the bot. after all bot are paused, perform summar and continue with the next simulation steps
-					simulationParameters.add(bot.getBackrollSnapSchot());
+					simulationParameters.add(bot.getBankrollSnapSchot());
+					bankRollCounter++;
 					player2.resetHand();
 					player2.setCash(buyIn);
-				}				
+				}
+
+				// fire bankroll pause and wait until the summarization process is finish
+				if (bankRollCounter >= 10000) {
+					// for the TTaskmonitor
+					firePropertyChange(PROP_MESSAGE, null, "Bankroll pause. Waiting for summarization ...");
+					// for the taskGroup
+					firePropertyChange(BANKROLL_PAUSE, false, true);
+				}
+				while (bankRollCounter >= 10000) {
+					ThreadUtils.sleepSafely(1000);
+				}
+
 				notifyMessage(msg);
 			}
 
@@ -509,6 +523,14 @@ public class Table extends Task<Void, Void> {
 		Alesia.showNotification("hero.msg04", numOfHand);
 		notifyMessage("Game over.");
 		return null;
+	}
+
+	public int getBankRollCounter() {
+		return bankRollCounter;
+	}
+	
+	public void resetBankRollCounter() {
+		this.bankRollCounter = 0;
 	}
 
 	/**
@@ -647,7 +669,7 @@ public class Table extends Task<Void, Void> {
 							Integer oldShare = potDivision.get(winner);
 							if (oldShare != null) {
 								potDivision.put(winner, oldShare + 1);
-//								System.out.format("[DEBUG] %s receives an odd chip from the pot.\n", winner);
+								// System.out.format("[DEBUG] %s receives an odd chip from the pot.\n", winner);
 								oddChips--;
 							}
 						}
