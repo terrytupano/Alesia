@@ -46,6 +46,8 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 		addInputComponent(TUIUtils.getWebTextField("simulationName", model, columns), true, true);
 		addInputComponent(TUIUtils.getNumericTextField("simulationsHands", model, columns), true, true);
 		addInputComponent(TUIUtils.getSpinner("numOfTasks", model, 1, TTaskManager.CORE_POOL_SIZE));
+		addInputComponent(TUIUtils.getSpinner("bankRollMax", model, 1, 1000));
+		addInputComponent(TUIUtils.getSpinner("minPlayers", model, 2, Table.CAPACITY));
 
 		shuffleTextField = TUIUtils.getWebTextField("simulationVariable", model, columns);
 		WebButton shuffleButton = TUIUtils.getSmallButton("shuffleVariable");
@@ -58,9 +60,6 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 		WebPanel panel = TUIUtils.getFormListItems(components);
 
 		addToolBarActions("bankrollHistory", "deleteAndStartSimulation", "startSimulation");
-
-//		ListItem item = new ListItem(TActionsFactory.getAction("showPokerSimulator"));
-//		panel.add(item, FormLayout.LINE);
 
 		this.troopersTable = new TroopersTable();
 

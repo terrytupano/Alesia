@@ -21,6 +21,7 @@ import javax.swing.*;
 
 import org.jdesktop.application.*;
 
+import com.alee.extended.magnifier.*;
 import com.alee.extended.statusbar.*;
 import com.alee.extended.transition.*;
 import com.alee.extended.transition.effects.*;
@@ -49,19 +50,23 @@ public class TMainPanel extends WebPanel {
 	private GroupPane leftAndHomeGroup;
 	private SlideTransitionEffect effect;
 	private HomePanel homePanel;
-	private ApplicationAction home, previous;
+	private ApplicationAction home, previous, magnifier;
 	private int cmpCounter;
 	private List<JComponent> components;
+		private MagnifierGlass magnifierGlass;
+
 
 	public TMainPanel() {
 		super(new BorderLayout());
 		ActionMap actionMap = Alesia.getInstance().getContext().getActionMap(this);
+		magnifierGlass = new MagnifierGlass();
 
 		// toolbar
 		this.previous = (ApplicationAction) actionMap.get("previous");
 		this.home = (ApplicationAction) actionMap.get("home");
+		this.magnifier = (ApplicationAction) actionMap.get("magnifier");
 		this.toolBar = TUIUtils.getWebToolBar();
-		this.leftAndHomeGroup = TUIUtils.getGroupPane(previous, home);
+		this.leftAndHomeGroup = TUIUtils.getGroupPane(previous, home, magnifier);
 		toolBar.add(leftAndHomeGroup);
 
 		// Status bar
@@ -138,6 +143,11 @@ public class TMainPanel extends WebPanel {
 	public void home(ActionEvent event) {
 		components.clear();
 		showPanel(homePanel, Direction.right);
+	}
+
+	@org.jdesktop.application.Action
+	public void magnifier(ActionEvent event) {
+		magnifierGlass.displayOrDispose(Alesia.getMainFrame());
 	}
 
 	@org.jdesktop.application.Action

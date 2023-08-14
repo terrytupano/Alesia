@@ -51,17 +51,23 @@ public class TaskGroup extends Task<Void, Void> implements PropertyChangeListene
 
 	@Override
 	protected Void doInBackground() throws Exception {
+		Alesia.openDB();
 		long done = 0;
 		tasks.forEach(t -> Alesia.getTaskManager().getTaskService().execute(t));
 		while (done < tasks.size()) {
 			Thread.sleep(1000);
 
-			// check bankRollPause
-			if (bankRollPause >= tasks.size())
-				performSummarization();
-
 			// check all done tasks
 			done = tasks.stream().filter(t -> t.isCancelled() || t.isDone()).count();
+
+			long active = tasks.size() - done;
+
+			// check bankRollPause
+			if (bankRollPause >= active) {
+				performSummarization();
+				tasks.forEach(t -> ((Table) t).resetBankRollCounter());
+			}
+
 		}
 		// sumarize the rest
 		performSummarization();
@@ -70,36 +76,37 @@ public class TaskGroup extends Task<Void, Void> implements PropertyChangeListene
 
 	private void performSummarization() {
 		// list of the unprocessed records
-		LazyList<SimulationResult> sourceList = SimulationResult.find("tableId != -1");
+		List<String> processed = new ArrayList<>();
+		LazyList<SimulationResult> sourceList = SimulationResult.find("tableId > ?", -1);
 		for (SimulationResult source : sourceList) {
+			String variables = source.getString("variables");
+			if (processed.contains(variables))
+				continue;
 			// retrive all records with the same variable value (processed included)
-			LazyList<SimulationResult> results2 = SimulationResult.find("variables = ?", source.getString("variables"));
-			// for only 1 element only mark it. form more as 1 elements, perform sum
-			if (!results2.isEmpty()) {
-				boolean mark = results2.size() == 1;
-				SimulationResult summe = new SimulationResult();
-				summe.copyFrom(source);
-				for (SimulationResult result2 : results2) {
-					summe.setInteger("simulation_parameter_id", 1);
-					summe.setInteger("tableId", -1);
-					summe.setString("trooper", "*");
+			LazyList<SimulationResult> sameVariables = SimulationResult.find("variables = ?", variables);
+			SimulationResult summe = new SimulationResult();
+			summe.setInteger("simulation_parameter_id", 1);
+			summe.setInteger("tableId", -1);
+			summe.setString("trooper", "*");
+			summe.setString("variables", variables);
+			summe.set("hands", 0);
+			summe.set("wins", 0);
+			summe.set("ratio", 0d);
+			for (SimulationResult sameVariable : sameVariables) {
+				int hands = summe.getInteger("hands") + sameVariable.getInteger("hands");
+				summe.set("hands", hands);
 
-					int hand = mark ? summe.getInteger("hands")
-							: summe.getInteger("hands") + result2.getInteger("hands");
-					summe.set("hands", hand);
+				int wins = summe.getInteger("wins") + sameVariable.getInteger("wins");
+				summe.set("wins", wins);
 
-					int wins = mark ? summe.getInteger("wins") : summe.getInteger("wins") + result2.getInteger("wins");
-					summe.set("wins", wins);
-
-					int ratio = mark ? summe.getInteger("ratio")
-							: summe.getInteger("ratio") + result2.getInteger("ratio");
-					summe.set("ratio", ratio);
-				}
-				summe.save();
-				SimulationResult.de
-				source.delete();
+				double ratio = summe.getDouble("ratio") + sameVariable.getDouble("ratio");
+				summe.set("ratio", ratio);
 			}
+			SimulationResult.delete("variables = ?", variables);
+			processed.add(variables);
+			summe.save();
 		}
+		bankRollPause = 0;
 	}
 
 	@Override

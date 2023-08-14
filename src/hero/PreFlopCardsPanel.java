@@ -8,14 +8,11 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 
 import com.alee.extended.layout.*;
-import com.alee.laf.button.*;
 import com.alee.laf.combobox.*;
-import com.alee.laf.grouping.*;
 import com.alee.laf.panel.*;
 import com.alee.managers.settings.*;
 
 import core.*;
-import gui.*;
 
 public class PreFlopCardsPanel extends TUIPanel {
 	private static final Color SELECTED_COLOR = Color.CYAN;
@@ -40,10 +37,6 @@ public class PreFlopCardsPanel extends TUIPanel {
 		panel.add(createRangePanel());
 		preflopsComboBox.registerSettings(new Configuration<ComboBoxState>(getClass().getName() + ".rangeComboBox"));
 
-		WebButton save = TUIUtils.getButtonForToolBar(TActionsFactory.getAction("savePreflopRange"));
-		GroupPane toolBarPane = new GroupPane(save, preflopsComboBox);
-
-		getToolBar().add(toolBarPane);
 		setBodyComponent(panel, true);
 	}
 

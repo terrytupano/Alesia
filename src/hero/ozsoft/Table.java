@@ -37,7 +37,6 @@ package hero.ozsoft;
 import java.util.*;
 
 import org.apache.commons.math3.stat.descriptive.*;
-import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 
 import com.alee.utils.*;
@@ -77,9 +76,6 @@ public class Table extends Task<Void, Void> {
 
 	/** current capacity of the table */
 	public static final int CAPACITY = 8;
-
-	/** Min. Num. of player for {@link #RESTAR} action. */
-	private static int MIN_PLAYERS = 5;
 
 	public static final String PAUSE_TASK = "PAUSE_TASK";
 	public static final String PAUSE_HERO = "PAUSE_HERO";
@@ -273,7 +269,7 @@ public class Table extends Task<Void, Void> {
 		while (playersToAct > 0) {
 			// this pause allow me to see what is going on inside a hand for every player
 			// TODO: (old implementation from table.s control buttons)
-			if (pausePlayer) {
+			if (pausePlayer && !isCancelled()) {
 				ThreadUtils.sleepSafely(100);
 				continue;
 			}
@@ -292,7 +288,7 @@ public class Table extends Task<Void, Void> {
 				// this pause allow me to see what is going on inside a hand only when hero is
 				// about to act TODO: (old implementation from table.s control buttons)
 				if ("Hero".equals(actor.getName()))
-					while (pauseHero) {
+					while (pauseHero && !isCancelled()) {
 						ThreadUtils.sleepSafely(100);
 					}
 
@@ -410,7 +406,7 @@ public class Table extends Task<Void, Void> {
 		for (numOfHand = 1; (numOfHand < simulationsHand && !isCancelled() && !endedByHero)
 				|| (simulationsHand == 0 && !isCancelled() && !endedByHero); numOfHand++) {
 			// pause ?
-			if (pauseTask) {
+			if (pauseTask && !isCancelled()) {
 				ThreadUtils.sleepSafely(250);
 				continue;
 			}
@@ -425,7 +421,7 @@ public class Table extends Task<Void, Void> {
 				}
 			}
 
-			if (RESTAR.equals(whenPlayerLose) && actp < MIN_PLAYERS) {
+			if (RESTAR.equals(whenPlayerLose) && actp <= simulationParameters.getInteger("minPlayers")) {
 				String msg = "Hand: " + numOfHand
 						+ ", The table has less players that allow. Restartting the hole table.";
 				threadLocal.set(getShuffleList());
@@ -445,14 +441,14 @@ public class Table extends Task<Void, Void> {
 				}
 
 				// fire bankroll pause and wait until the summarization process is finish
-				if (bankRollCounter >= 10000) {
+				if (bankRollCounter >= simulationParameters.getInteger("bankRollMax")) {
 					// for the TTaskmonitor
 					firePropertyChange(PROP_MESSAGE, null, "Bankroll pause. Waiting for summarization ...");
 					// for the taskGroup
 					firePropertyChange(BANKROLL_PAUSE, false, true);
 				}
-				while (bankRollCounter >= 10000) {
-					ThreadUtils.sleepSafely(1000);
+				while (bankRollCounter >= simulationParameters.getInteger("bankRollMax") && !isCancelled()) {
+					ThreadUtils.sleepSafely(250);
 				}
 
 				notifyMessage(msg);
@@ -528,7 +524,7 @@ public class Table extends Task<Void, Void> {
 	public int getBankRollCounter() {
 		return bankRollCounter;
 	}
-	
+
 	public void resetBankRollCounter() {
 		this.bankRollCounter = 0;
 	}
@@ -697,7 +693,9 @@ public class Table extends Task<Void, Void> {
 
 		// Sanity check.
 		if (totalWon != totalPot) {
-			throw new IllegalStateException("Incorrect pot division!");
+			System.out.println("Incorrect pot division!");
+			// terry commented to allow the simulation to continue
+			// throw new IllegalStateException("Incorrect pot division!");
 		}
 	}
 

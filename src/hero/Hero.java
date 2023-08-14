@@ -191,6 +191,9 @@ public class Hero {
 
 	@org.jdesktop.application.Action
 	public void savePreflopRange(ActionEvent event) {
+		/**
+		 * this method is no more util. only for educational purporse
+		 */
 		AbstractButton ab = (AbstractButton) event.getSource();
 		PreFlopCardsPanel rangePanel = SwingUtils.getFirstParent(ab, PreFlopCardsPanel.class);
 		TSEntry selR = rangePanel.getSelectedRange();
@@ -245,7 +248,6 @@ public class Hero {
 
 	@org.jdesktop.application.Action
 	public void showPreFlopCardsPanel() {
-		// this method is called by #savePreflopRange
 		PreFlopCardsPanel panel = new PreFlopCardsPanel();
 		panel.setTitleDescriptionFromAction("showPreFlopCardsPanel");
 		Alesia.getMainPanel().showPanel(panel);

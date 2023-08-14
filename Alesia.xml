@@ -51,7 +51,7 @@
       </DockableList>
     </root>
   </FlickaDockablePane>
-  <TWebFrame type="WindowState" location="1953,28" size="580,927" state="0"/>
+  <TWebFrame type="WindowState" location="1953,28" size="558,927" state="0"/>
   <simHands type="TextComponentState" text="100000" caretPosition="6"/>
   <takeOpportunity type="ButtonState" selected="true"/>
   <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>

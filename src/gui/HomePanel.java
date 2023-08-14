@@ -7,7 +7,6 @@ import java.util.List;
 import javax.swing.*;
 
 import com.alee.extended.layout.*;
-import com.alee.extended.magnifier.*;
 import com.alee.laf.panel.*;
 import com.alee.utils.*;
 
@@ -24,11 +23,9 @@ public class HomePanel extends WebPanel {
 
 	private ActionMap myMap;
 	private WebPanel centerPanel, southPanel;
-	private MagnifierGlass magnifier;
 	
 	public HomePanel() {
 		super(new BorderLayout(TUIUtils.STANDAR_GAP,TUIUtils.STANDAR_GAP));
-		magnifier = new MagnifierGlass();
 		centerPanel = new WebPanel();
 		TUIUtils.setEmptyBorder(this);
 		centerPanel.setLayout(new VerticalFlowLayout(TUIUtils.STANDAR_GAP,TUIUtils.STANDAR_GAP,true,  false));
@@ -79,8 +76,4 @@ public class HomePanel extends WebPanel {
 		Alesia.getMainPanel().showPanel(man.getContentPane());
 	}
 
-	@org.jdesktop.application.Action
-	public void magnifier(ActionEvent event) {
-		magnifier.displayOrDispose(Alesia.getMainFrame());
-	}
 }

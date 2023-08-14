@@ -17,11 +17,12 @@ public class HeroBot extends Bot {
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		PlayerAction action = null;
 		while (action == null) {
-			pokerSimulator.sensorStatus.put("call", true);
-			pokerSimulator.sensorStatus.put("raise", true);
-			pokerSimulator.sensorStatus.put("raise.pot", true);
-			pokerSimulator.sensorStatus.put("raise.allin", true);
-			pokerSimulator.sensorStatus.put("raise.slider", true);
+			int raiseValue = minBet * 2;
+			pokerSimulator.sensorStatus.put("call", player.getCash() >= minBet);
+			pokerSimulator.sensorStatus.put("raise", player.getCash() >= raiseValue);
+			pokerSimulator.sensorStatus.put("raise.pot", player.getCash() >= pot);
+			pokerSimulator.sensorStatus.put("raise.allin", player.getCash() >= minBet);
+			pokerSimulator.sensorStatus.put("raise.slider", player.getCash() >= minBet);
 
 			pokerSimulator.setCallValue(minBet);
 			if (allowedActions.contains(PlayerAction.CHECK))
@@ -29,7 +30,7 @@ public class HeroBot extends Bot {
 
 			pokerSimulator.setPotValue(pot);
 			pokerSimulator.setHeroChips(player.getCash());
-			pokerSimulator.setRaiseValue(minBet * 2);
+			pokerSimulator.setRaiseValue(raiseValue);
 			int actV = (int) villains.stream().filter(p -> p.hasCards()).count();
 			pokerSimulator.setNunOfOpponets(actV);
 			pokerSimulator.setTablePosition(dealer, actV);
@@ -58,8 +59,12 @@ public class HeroBot extends Bot {
 			if (action == null)
 				throw new IllegalArgumentException("Hero bot has no correct action selected. Trooper action was" + act);
 
+			// avoid Player '" + name + "' asked to pay more cash than he owns!
+			// if (!(PlayerAction.CHECK.equals(action) || PlayerAction.FOLD.equals(action)) && act.amount < minBet
+			// 		&& act.amount < player.getCash())
+			// 	action = null;
 
-
+			// avoid Illegal client action: raise less than minimum bet!
 			if (!(PlayerAction.CHECK.equals(action) || PlayerAction.FOLD.equals(action)) && act.amount < minBet
 					&& act.amount < player.getCash())
 				action = null;
