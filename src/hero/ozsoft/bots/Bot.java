@@ -26,7 +26,7 @@ public abstract class Bot implements Client {
 	protected int pot;
 	protected int buyIn;
 	protected String trooperName;
-	protected TrooperParameter trooperParameter ;
+	protected TrooperParameter trooperParameter;
 	protected UoAHand myHole, communityHand, hand;
 	protected Table table;
 	protected TreeMap<String, Integer> simulationVariables;
@@ -52,7 +52,7 @@ public abstract class Bot implements Client {
 	public void boardUpdated(UoAHand hand, int bet, int pot) {
 		this.communityHand = hand;
 		this.hand = new UoAHand(myHole.toString() + " " + hand.toString());
-		this.pot = pot + bet;
+		this.pot = pot;
 	}
 
 	public SimulationResult getBankrollSnapSchot() {
@@ -63,8 +63,6 @@ public abstract class Bot implements Client {
 		statistic.set("hands", handsT);
 		double wins = player.getCash() - buyIn;
 		statistic.set("wins", wins);
-		double ratio = wins / handsT;
-		statistic.set("ratio", ratio);
 
 		// new simulation parameters
 		for (String key : simulationVariables.keySet()) {
@@ -132,7 +130,7 @@ public abstract class Bot implements Client {
 	 * return a {@link Trooper} instance configured to run as Bot inside the
 	 * simulation table.
 	 * 
-	 * @param table    - the environment in witch the trooper run
+	 * @param table            - the environment in witch the trooper run
 	 * @param trooperParameter - the parameters that the trooper must follow.
 	 * 
 	 * @return the trooper

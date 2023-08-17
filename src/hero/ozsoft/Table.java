@@ -34,6 +34,7 @@
 
 package hero.ozsoft;
 
+import java.time.*;
 import java.util.*;
 
 import org.apache.commons.math3.stat.descriptive.*;
@@ -68,6 +69,9 @@ public class Table extends Task<Void, Void> {
 	/** The simulation continue to the end. */
 	private static final String DO_NOTHING = "DO_NOTHING";
 
+	/** determine how fine the simulation variables will be */
+	private static int GRAIN = 10;
+
 	/**
 	 * if the table has fewer players than allowed (field {@link #MIN_PLAYERS}), the
 	 * simulation is restarted
@@ -82,8 +86,6 @@ public class Table extends Task<Void, Void> {
 	public static final String PAUSE_PLAYER = "PAUSE_PLAYER";
 	public static final String RESUME_ALL = "RESUME_ALL";
 	public static final String BANKROLL_PAUSE = "BANKROLL_PAUSE";
-
-	private static ThreadLocal<List<Integer>> threadLocal = new ThreadLocal<>();
 
 	/** Table type (poker variant). */
 	private final TableType tableType;
@@ -151,14 +153,13 @@ public class Table extends Task<Void, Void> {
 		this.simulationParameters = parameters;
 		this.simulationsHand = simulationParameters.getInteger("simulationsHands");
 		this.tableType = TableType.NO_LIMIT;
-		this.statistics = new DescriptiveStatistics(100); // to include DB access time.
+		this.statistics = new DescriptiveStatistics(100);
 		players = new ArrayList<Player>(CAPACITY);
 		activePlayers = new ArrayList<Player>(CAPACITY);
 		deck = new UoADeck();
 		pots = new ArrayList<Pot>();
 		board = new UoAHand();
 		whenPlayerLose = RESTAR;
-		threadLocal.set(getShuffleList());
 
 		// set task strings
 		setTitle("Table simulation");
@@ -424,7 +425,7 @@ public class Table extends Task<Void, Void> {
 			if (RESTAR.equals(whenPlayerLose) && actp <= simulationParameters.getInteger("minPlayers")) {
 				String msg = "Hand: " + numOfHand
 						+ ", The table has less players that allow. Restartting the hole table.";
-				threadLocal.set(getShuffleList());
+				bankRollCounter++;
 				for (Player player2 : players) {
 					Client client = player2.getClient();
 					// interactive environment client can be an instance of tableDialog
@@ -435,17 +436,16 @@ public class Table extends Task<Void, Void> {
 						bot = (Bot) player2.getClient();
 
 					simulationParameters.add(bot.getBankrollSnapSchot());
-					bankRollCounter++;
 					player2.resetHand();
 					player2.setCash(buyIn);
 				}
 
 				// fire bankroll pause and wait until the summarization process is finish
 				if (bankRollCounter >= simulationParameters.getInteger("bankRollMax")) {
-					// for the TTaskmonitor
-					firePropertyChange(PROP_MESSAGE, null, "Bankroll pause. Waiting for summarization ...");
 					// for the taskGroup
 					firePropertyChange(BANKROLL_PAUSE, false, true);
+					// for the TTaskmonitor
+					firePropertyChange(PROP_MESSAGE, null, "Bankroll pause. Waiting for summarization ...");
 				}
 				while (bankRollCounter >= simulationParameters.getInteger("bankRollMax") && !isCancelled()) {
 					ThreadUtils.sleepSafely(250);
@@ -693,7 +693,7 @@ public class Table extends Task<Void, Void> {
 
 		// Sanity check.
 		if (totalWon != totalPot) {
-			System.out.println("Incorrect pot division!");
+			System.out.println(LocalDateTime.now() + " Incorrect pot division!");
 			// terry commented to allow the simulation to continue
 			// throw new IllegalStateException("Incorrect pot division!");
 		}
@@ -974,19 +974,16 @@ public class Table extends Task<Void, Void> {
 		}
 	}
 
-	/** determine how fine the simulation variables will be */
-	private static int GRAIN = 10;
-
 	/**
 	 * return shuffle list of integers based on range [0, 100] / {@link #GRAIN}
+	 * e.g: if GRAIN = 10 what i want is 10,20,...,90 because in simulation i want
+	 * to test the ranges [0,10], [11,20], ... [91,100]
 	 * 
 	 * @return the shuffle list
 	 */
 	public static List<Integer> getShuffleList() {
 		List<Integer> integers = new ArrayList<>();
 		int step = 100 / GRAIN;
-		// e.g: if GRAIN = 10 what i want is 10,20,...,90 because in simulation i want
-		// to test the ranges [0,10], [11,20], ... [91,100]
 		for (int i = 1; i < GRAIN; i++) {
 			integers.add(step * i);
 		}
@@ -995,15 +992,13 @@ public class Table extends Task<Void, Void> {
 	}
 
 	/**
-	 * return the next assignable value from {@link Table#getShuffleList()} if the
-	 * list is depleted, this method build a new list and return the next new value
+	 * return the next assignable value from {@link Table#getShuffleList()}
 	 * 
 	 * @return the new value
 	 */
 	public int getShuffleVariable() {
-		if (threadLocal.get().isEmpty())
-			threadLocal.set(getShuffleList());
-		int value = threadLocal.get().remove(0);
-		return value;
+		List<Integer> integers = getShuffleList();
+		int i = integers.get(0);
+		return i;
 	}
 }

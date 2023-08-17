@@ -524,8 +524,8 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		bandc = bandc == 0 ? 1 : bandc; // avoid error when alpha is extreme low
 		sampledActions = sampledActions.subList(0, bandc);
 
-		if (bandc > 2)
-			System.out.println("Trooper.getAction()");
+		// if (bandc > 2)
+		// 	System.out.println("Trooper.getAction()");
 
 		AbstractRealDistribution distribution = new TriangularDistribution(0, bandc, bandc);
 		if (SubOptimalAction.OPORTUNITY.equals(distributionName))
@@ -693,12 +693,12 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 			txt += " Checking.";
 		} else {
 			// can i call ?
-			if (call > 0 && (call + currentHandCost) < maxRekonAmmo) {
+			if (call > 0 && (call + currentHandCost) <= maxRekonAmmo) {
 				availableActions.add(new TrooperAction("call", call));
 				txt += " Calling.";
 			} else {
 				// the raise is marginal ??
-				if (raise != -1 && (raise + currentHandCost) < maxRekonAmmo) {
+				if (raise != -1 && (raise + currentHandCost) <= maxRekonAmmo) {
 					availableActions.add(new TrooperAction("raise", raise));
 					txt += " Raising.";
 				}

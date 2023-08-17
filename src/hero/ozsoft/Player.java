@@ -17,6 +17,7 @@
 
 package hero.ozsoft;
 
+import java.time.*;
 import java.util.*;
 
 import hero.UoAHandEval.*;
@@ -168,7 +169,7 @@ public class Player {
 			// throw new IllegalStateException(
 			// "Player '" + name + "' asked to pay more cash than he owns!. amount: " +
 			// amount);
-			System.out.println("Player '" + name + "' asked to pay more cash than he owns!. amount: " + amount);
+			System.out.println(LocalDateTime.now() + " Player '" + name + "' asked to pay more cash than he owns!. amount: " + amount);
 			amount = cash;
 		}
 		cash -= amount;

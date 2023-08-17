@@ -18,11 +18,15 @@ public class HeroBot extends Bot {
 		PlayerAction action = null;
 		while (action == null) {
 			int raiseValue = minBet * 2;
-			pokerSimulator.sensorStatus.put("call", player.getCash() >= minBet);
-			pokerSimulator.sensorStatus.put("raise", player.getCash() >= raiseValue);
-			pokerSimulator.sensorStatus.put("raise.pot", player.getCash() >= pot);
-			pokerSimulator.sensorStatus.put("raise.allin", player.getCash() >= minBet);
-			pokerSimulator.sensorStatus.put("raise.slider", player.getCash() >= minBet);
+			boolean callBol = player.getCash() >= minBet;
+			boolean raiseBol = callBol && player.getCash() >= raiseValue;
+			boolean potBol = callBol && player.getCash() >= pot;
+			boolean allinBol = callBol;
+			pokerSimulator.sensorStatus.put("call", callBol);
+			pokerSimulator.sensorStatus.put("raise", raiseBol);
+			pokerSimulator.sensorStatus.put("raise.pot", potBol);
+			pokerSimulator.sensorStatus.put("raise.allin", allinBol);
+			pokerSimulator.sensorStatus.put("raise.slider", allinBol);
 
 			pokerSimulator.setCallValue(minBet);
 			if (allowedActions.contains(PlayerAction.CHECK))
@@ -60,9 +64,10 @@ public class HeroBot extends Bot {
 				throw new IllegalArgumentException("Hero bot has no correct action selected. Trooper action was" + act);
 
 			// avoid Player '" + name + "' asked to pay more cash than he owns!
-			// if (!(PlayerAction.CHECK.equals(action) || PlayerAction.FOLD.equals(action)) && act.amount < minBet
-			// 		&& act.amount < player.getCash())
-			// 	action = null;
+			// if (!(PlayerAction.CHECK.equals(action) || PlayerAction.FOLD.equals(action))
+			// && act.amount < minBet
+			// && act.amount < player.getCash())
+			// action = null;
 
 			// avoid Illegal client action: raise less than minimum bet!
 			if (!(PlayerAction.CHECK.equals(action) || PlayerAction.FOLD.equals(action)) && act.amount < minBet
@@ -95,7 +100,6 @@ public class HeroBot extends Bot {
 			pokerSimulator.cardsBuffer.put("turn", hand.getCard(4).toString());
 		if (hand.getCard(5) != null)
 			pokerSimulator.cardsBuffer.put("river", hand.getCard(5).toString());
-		this.pot = pot + bet;
 	}
 
 	@Override
