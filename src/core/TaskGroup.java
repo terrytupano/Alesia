@@ -91,6 +91,7 @@ public class TaskGroup extends Task<Void, Void> implements PropertyChangeListene
 			summe.setString("variables", variables);
 			summe.set("hands", 0);
 			summe.set("wins", 0);
+			summe.set("ratio", 0);
 			for (SimulationResult sameVariable : sameVariables) {
 				int hands = summe.getInteger("hands") + sameVariable.getInteger("hands");
 				summe.set("hands", hands);
@@ -99,6 +100,8 @@ public class TaskGroup extends Task<Void, Void> implements PropertyChangeListene
 				summe.set("wins", wins);
 
 			}
+			double ratio = summe.getDouble("wins") / summe.getDouble("hands");
+			summe.set("ratio", ratio);
 			SimulationResult.delete("variables = ?", variables);
 			processed.add(variables);
 			summe.save();

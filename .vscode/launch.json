@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "ExampleGridWorld",
+            "request": "launch",
+            "mainClass": "edu.brown.cs.burlap.tutorials.domain.simple.ExampleGridWorld",
+            "projectName": "Alesia"
+        },
+        {
+            "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}"
@@ -43,8 +50,7 @@
             "name": "Alesia",
             "request": "launch",
             "mainClass": "core.Alesia",
-            "projectName": "Alesia",
-            // "preLaunchTask": "Run instrumentation"
+            "projectName": "Alesia"
         },
         {
             "type": "java",

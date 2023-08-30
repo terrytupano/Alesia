@@ -159,8 +159,6 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 	}
 
 	private void showBankrollHistoryImpl(String simulationName) {
-		// Retrieve the first element of the statistical series to detect, the type of
-		// graph
 		Alesia.openDB();
 		SimulationParameters parameters = SimulationParameters.findFirst("simulationName = ?", simulationName);
 		if (parameters == null) {

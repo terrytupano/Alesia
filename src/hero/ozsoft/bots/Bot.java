@@ -33,7 +33,7 @@ public abstract class Bot implements Client {
 	private int prevCash;
 
 	/** Number of hole cards. */
-	protected static final int NO_OF_HOLE_CARDS = 2;
+	protected static final int HOLE_CARDS = 2;
 	/** the villains for this bot. e.g if this bot is Oscar, Hero is a villains */
 	protected List<Player> villains;
 	/** poker street. preFlop=0, Flop=1 ... */
@@ -191,7 +191,8 @@ public abstract class Bot implements Client {
 
 		if (message.contains("is the dealer.")) {
 			matchCost = 0;
-			handsT++;
+			// clean myHole to allow correct traking in playerUpdated method
+			myHole = new UoAHand();
 		}
 
 		// Claudia deals the Flop.
@@ -217,7 +218,10 @@ public abstract class Bot implements Client {
 
 	@Override
 	public void playerUpdated(Player player) {
-		if (trooperName.equals(player.getName()) && player.getHand().size() == NO_OF_HOLE_CARDS) {
+		// update myHole cards only once. thas allow correct traking of # of hands
+		// played by this trooper
+		if (trooperName.equals(player.getName()) && player.getHand().size() == HOLE_CARDS && myHole.size() == 0) {
+			handsT++;
 			this.myHole = player.getHand();
 		}
 	}

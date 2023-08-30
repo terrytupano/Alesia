@@ -70,7 +70,7 @@ public class Table extends Task<Void, Void> {
 	private static final String DO_NOTHING = "DO_NOTHING";
 
 	/** determine how fine the simulation variables will be */
-	private static int GRAIN = 10;
+	private static int GRAIN = 20;
 
 	/**
 	 * if the table has fewer players than allowed (field {@link #MIN_PLAYERS}), the
@@ -401,9 +401,6 @@ public class Table extends Task<Void, Void> {
 		bankRollCounter = 0;
 		Alesia.openDB();
 
-		// canceled or simulate a finite num of hands
-		// while (!isCancelled() && (simulationsHand = 0)(simulationsHand > 0 &&
-		// numOfHand < simulationsHand)) {
 		for (numOfHand = 1; (numOfHand < simulationsHand && !isCancelled() && !endedByHero)
 				|| (simulationsHand == 0 && !isCancelled() && !endedByHero); numOfHand++) {
 			// pause ?

@@ -27,7 +27,7 @@ public class MultiVariableSimulationBarChar extends JDialog {
 
 	private static DefaultCategoryDataset createDataset(String resultName) {
 		SimulationParameters parameters = SimulationParameters.findFirst("simulationName = ?", resultName);
-		LazyList<SimulationResult> statistics = parameters.get(SimulationResult.class, "hands != ?", 0);
+		LazyList<SimulationResult> statistics = parameters.get(SimulationResult.class, "tableId = ?", -1);
 		String json = statistics.toJson(false);
 		JsonReader reader = new JsonReader();
 		Table table = reader.read(JsonReadOptions.builderFromString(json).build());
