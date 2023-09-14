@@ -2,7 +2,7 @@
 TODOS:
 ------------------------------------------
 
-on analisis time, first keep only the x max played hads. this remove noisy simulations parameters. the trooper with good estrategi, sollte those noisy parameters überwinden
+on analisis time, first keep only the x max played hads, this remove noisy simulations parameters, the trooper with good estrategi, sollte those noisy parameters überwinden
 
 
 		maintenance
@@ -18,12 +18,12 @@ on analisis time, first keep only the x max played hads. this remove noisy simul
 
 
 ICM calculation
-Independent Chip Model (ICM) is a model to calculate the dollar value of tournament chips. It is important that you understand the difference between expected value in chips (cEV) and expected value in dollars ($EV) if you are playing poker tournaments such as Sit and Go�s, Double or Nothing�s or MTT�s.
+Independent Chip Model (ICM) is a model to calculate the dollar value of tournament chips, It is important that you understand the difference between expected value in chips (cEV) and expected value in dollars ($EV) if you are playing poker tournaments such as Sit and Go�s, Double or Nothing�s or MTT�s,
 
 push/fold calculation
-Push-Fold Charts are mathematically solved hand ranges arranged into a simple chart to help you play perfect, preflop poker while short-stacked in tournaments. These charts are designed to be used when players are short-stacked, because players are in a �push-fold� mode: their preflop decisions are limited to �pushing� all-in or folding.
+Push-Fold Charts are mathematically solved hand ranges arranged into a simple chart to help you play perfect, preflop poker while short-stacked in tournaments, These charts are designed to be used when players are short-stacked, because players are in a �push-fold� mode: their preflop decisions are limited to �pushing� all-in or folding,
 
 Tournament Life Value
 
+"Model: datasource,TrooperParameter, table: 'trooper_parameters', attributes: 
 
-	

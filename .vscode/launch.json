@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "BasicBehavior",
+            "request": "launch",
+            "mainClass": "edu.brown.cs.burlap.tutorials.BasicBehavior",
+            "projectName": "Alesia"
+        },
+        {
+            "type": "java",
             "name": "ExampleGridWorld",
             "request": "launch",
             "mainClass": "edu.brown.cs.burlap.tutorials.domain.simple.ExampleGridWorld",
