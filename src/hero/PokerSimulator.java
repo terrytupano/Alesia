@@ -84,7 +84,7 @@ public class PokerSimulator {
 		streetNames.put(RIVER_CARD_DEALT, "River");
 
 		// Retrieve tables parameters direct from database
-		TrooperParameter hero = TrooperParameter.findFirst("trooper = ?", "Hero");
+		TrooperParameter hero = TrooperParameter.getHero();
 		this.isLive = true;
 		this.buyIn = hero.getDouble("buyIn");
 		this.bigBlind = hero.getDouble("bigBlind");

@@ -34,10 +34,12 @@
 
 package hero.ozsoft;
 
+import java.math.*;
 import java.time.*;
 import java.util.*;
 
 import org.apache.commons.math3.stat.descriptive.*;
+import org.javalite.activejdbc.*;
 import org.jdesktop.application.*;
 
 import com.alee.utils.*;
@@ -66,11 +68,8 @@ public class Table extends Task<Void, Void> {
 	/** Whether players will always call the showdown, or fold when no chance. */
 	private static final boolean ALWAYS_CALL_SHOWDOWN = false;
 
-	/** The simulation continue to the end. */
-	private static final String DO_NOTHING = "DO_NOTHING";
-
 	/** determine how fine the simulation variables will be */
-	private static int GRAIN = 20;
+	private static int GRAIN = 3;
 
 	/**
 	 * if the table has fewer players than allowed (field {@link #MIN_PLAYERS}), the
@@ -81,11 +80,15 @@ public class Table extends Task<Void, Void> {
 	/** current capacity of the table */
 	public static final int CAPACITY = 8;
 
+	/**
+	 * indicate the number of tables muss be simulated before partial result request
+	 */
+	public static final int PARTIAL_RESULT_LIMIT = 10;
+
 	public static final String PAUSE_TASK = "PAUSE_TASK";
 	public static final String PAUSE_HERO = "PAUSE_HERO";
 	public static final String PAUSE_PLAYER = "PAUSE_PLAYER";
 	public static final String RESUME_ALL = "RESUME_ALL";
-	public static final String BANKROLL_PAUSE = "BANKROLL_PAUSE";
 
 	/** Table type (poker variant). */
 	private final TableType tableType;
@@ -399,7 +402,7 @@ public class Table extends Task<Void, Void> {
 		boolean endedByHero = false;
 		numOfHand = 0;
 		bankRollCounter = 0;
-		Alesia.openDB();
+		DB db = Alesia.openDB();
 
 		for (numOfHand = 1; (numOfHand < simulationsHand && !isCancelled() && !endedByHero)
 				|| (simulationsHand == 0 && !isCancelled() && !endedByHero); numOfHand++) {
@@ -423,63 +426,77 @@ public class Table extends Task<Void, Void> {
 				String msg = "Hand: " + numOfHand
 						+ ", The table has less players that allow. Restartting the hole table.";
 				bankRollCounter++;
+
+				// fire partial result reques and wait until the summarization process is finish
+				if (bankRollCounter >= PARTIAL_RESULT_LIMIT) {
+
+					// for the taskGroup
+					firePropertyChange(TaskGroup.PARTIAL_RESULT_REQUEST, false, true);
+
+					// for the TTaskmonitor
+					firePropertyChange(PROP_MESSAGE, null, "Bankroll pause. Waiting for summarization ...");
+
+					// spetial case: interactive simulation: handle partial result directly
+					if (1 == simulationParameters.getInteger("numOfTasks")) {
+						TaskGroup.processPartialResult();
+						resetBankRollCounter();
+					}
+				}
+				while (bankRollCounter >= PARTIAL_RESULT_LIMIT && !isCancelled()) {
+					ThreadUtils.sleepSafely(250);
+				}
+
+				// in tournament: retire players those wins are not enougth to buy the next
+				// round
+				boolean isTournament = simulationParameters.getBoolean("isTournament");
+				if (isTournament) {
+					int tournamentBuyIn = buyIn * 10;
+					int ret = (tournamentBuyIn - buyIn) * -1;
+					SimulationResult.update("status = ?", "wins < ?", SimulationResult.RETIRED, ret);
+				}
+
+				// reset and shuffle variaables
 				for (Player player2 : players) {
 					Client client = player2.getClient();
-					// interactive environment client can be an instance of tableDialog
+					// interactive environment Hero ist an instance of tableDialog
 					Bot bot = null;
 					if (client instanceof TableDialog)
 						bot = (Bot) ((TableDialog) client).getProxyClient();
 					else
 						bot = (Bot) player2.getClient();
 
-					simulationParameters.add(bot.getBankrollSnapSchot());
+					SimulationResult result = bot.getBankrollSnapSchot();
+					simulationParameters.add(result);
+
+					bot.shuffleVariables(isTournament);
 					player2.resetHand();
 					player2.setCash(buyIn);
 				}
 
-				// fire bankroll pause and wait until the summarization process is finish
-				if (bankRollCounter >= simulationParameters.getInteger("bankRollMax")) {
-					// for the taskGroup
-					firePropertyChange(BANKROLL_PAUSE, false, true);
-					// for the TTaskmonitor
-					firePropertyChange(PROP_MESSAGE, null, "Bankroll pause. Waiting for summarization ...");
-				}
-				while (bankRollCounter >= simulationParameters.getInteger("bankRollMax") && !isCancelled()) {
-					ThreadUtils.sleepSafely(250);
+				// increment the bb. This method should be executed in taskGroup but i made here
+				// to allow me to test interactive. also, unilateral increment don.t affect the
+				// simulation (i think) eventualy all tables will be reach the same conclution
+				/*
+				 * the idea is simply incremet the bb when the AVG(tables) % x = 0. that allaw a
+				 * global marker (like a timer)
+				 */
+				BigDecimal avgTables = (BigDecimal) db.firstCell(
+						"SELECT AVG(tables) FROM simulation_results WHERE tableId = ? AND status = ?", -1,
+						SimulationResult.ACTIVE);
+				int inc = 7;
+				if (avgTables != null && avgTables.intValue() % inc == 0) {
+					double bbInc = avgTables.doubleValue() / inc;
+					bigBlind = bigBlind + (bigBlind * (int) bbInc);
+
+					move to a new method. the bb muss be also computed at star of the simulation to continue the torurnament
+
+					for (Player player : players) {
+						player.getClient().joinedTable(tableType, newBigBlind, players);
+					}
 				}
 
+				// (don.t move) notify the bot. bot us this msg to init internal status
 				notifyMessage(msg);
-			}
-
-			// when a single player loose
-			for (Player player : players) {
-				if (player.getCash() < bigBlind) {
-
-					// when is Hero, end the simulation??
-					// if (player.getName().equals("Hero") && GAME_OVER.equals(whenPlayerLose)) {
-					// endedByHero = true;
-					// break;
-					// }
-
-					// if (REFILL.equals(whenPlayerLose)) {
-					// String msg = "Hand # " + numOfHand + ": " + player.getName()
-					// + " lost the battle. Refilling cash " + buyIn;
-					// notifyMessage(msg);
-					// notifyMessage(REFILL);
-					// player.resetHand();
-					// player.setCash(buyIn);
-					// }
-
-					// if (RESTAR.equals(whenPlayerLose)) {
-					// String msg = "Hand: " + numOfHand + ": " + player.getName()
-					// + " lost the battle. Restartting the hole table.";
-					// notifyMessage(msg);
-					// for (Player player2 : players) {
-					// player2.resetHand();
-					// player2.setCash(buyIn);
-					// }
-					// }
-				}
 			}
 
 			// DONT MOVE. actions alter player.s cash

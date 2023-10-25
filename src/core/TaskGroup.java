@@ -21,7 +21,11 @@ import hero.ozsoft.*;
  */
 public class TaskGroup extends Task<Void, Void> implements PropertyChangeListener {
 	private List<Task<?, ?>> tasks;
-	private int bankRollPause;
+
+	public static final String PARTIAL_RESULT_REQUEST = "PARTIAL_RESULT_REQUEST";
+
+	/** cont the number of active task that need a partial result */
+	protected int partialResult;
 
 	public TaskGroup() {
 		super(Alesia.getInstance());
@@ -46,7 +50,6 @@ public class TaskGroup extends Task<Void, Void> implements PropertyChangeListene
 	@Override
 	protected void cancelled() {
 		tasks.forEach(t -> t.cancel(true));
-		// getTaskService().shutdown();
 	}
 
 	@Override
@@ -57,24 +60,26 @@ public class TaskGroup extends Task<Void, Void> implements PropertyChangeListene
 		while (done < tasks.size()) {
 			Thread.sleep(1000);
 
-			// check all done tasks
+			// the number of done task
 			done = tasks.stream().filter(t -> t.isCancelled() || t.isDone()).count();
 
 			long active = tasks.size() - done;
 
-			// check bankRollPause
-			if (bankRollPause >= active) {
-				performSummarization();
+			// if all active task requested partial result, perfomt it
+			if (partialResult >= active) {
+				processPartialResult();
+				partialResult = 0;
 				tasks.forEach(t -> ((Table) t).resetBankRollCounter());
 			}
 
 		}
-		// sumarize the rest
-		performSummarization();
+		// sumarize pendig result. this happen whit the job finish but partial result
+		// are no precesed
+		processPartialResult();
 		return null;
 	}
 
-	private void performSummarization() {
+	public static void processPartialResult() {
 		// list of the unprocessed records
 		List<String> processed = new ArrayList<>();
 		LazyList<SimulationResult> sourceList = SimulationResult.find("tableId > ?", -1);
@@ -89,32 +94,37 @@ public class TaskGroup extends Task<Void, Void> implements PropertyChangeListene
 			summe.setInteger("tableId", -1);
 			summe.setString("trooper", "*");
 			summe.setString("variables", variables);
-			summe.set("hands", 0);
-			summe.set("wins", 0);
-			summe.set("ratio", 0);
+			summe.setInteger("hands", 0);
+			summe.setString("status", SimulationResult.ACTIVE);
+			summe.setInteger("tables", 0);
+			summe.setInteger("wins", 0);
+			summe.setDouble("ratio", 0D);
 			for (SimulationResult sameVariable : sameVariables) {
 				int hands = summe.getInteger("hands") + sameVariable.getInteger("hands");
 				summe.set("hands", hands);
 
+				int tables = summe.getInteger("tables") + 1;
+				summe.set("tables", tables);
+
 				int wins = summe.getInteger("wins") + sameVariable.getInteger("wins");
 				summe.set("wins", wins);
-
 			}
 			double ratio = summe.getDouble("wins") / summe.getDouble("hands");
 			summe.set("ratio", ratio);
 			SimulationResult.delete("variables = ?", variables);
 			processed.add(variables);
+
+			// check the tournament status of the player
 			summe.save();
 		}
-		bankRollPause = 0;
 	}
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		String propertyName = evt.getPropertyName();
 
-		if (Table.BANKROLL_PAUSE.equals(propertyName)) {
-			bankRollPause++;
+		if (PARTIAL_RESULT_REQUEST.equals(propertyName)) {
+			partialResult++;
 		}
 	}
 }

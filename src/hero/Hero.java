@@ -172,7 +172,7 @@ public class Hero {
 				String[] sb_bb = word.split("/");
 				double sb = Double.parseDouble(Hero.parseNummer(sb_bb[0], cs));
 				double bb = Double.parseDouble(Hero.parseNummer(sb_bb[1], cs));
-				double bi = bb * 100;
+				double bi = bb * Constants.BUYIN_FACTOR;
 				TrooperParameter trooperParameter = TrooperParameter.findFirst("trooper = ?", "Hero");
 				trooperParameter.setDouble("buyIn", bi);
 				trooperParameter.setDouble("bigBlind", bb);
@@ -228,7 +228,7 @@ public class Hero {
 
 	@org.jdesktop.application.Action
 	public void showGameSimulatorPanel(ActionEvent event) {
-		GameSimulatorPanel simulatorPanel = new GameSimulatorPanel();
+		SimulationParametersPanel simulatorPanel = new SimulationParametersPanel();
 		simulatorPanel.setTitleDescriptionFromAction("showGameSimulatorPanel");
 		Alesia.getMainPanel().showPanel(simulatorPanel);
 	}

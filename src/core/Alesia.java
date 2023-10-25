@@ -14,6 +14,7 @@ package core;
 import java.awt.Dialog.*;
 import java.awt.event.*;
 import java.io.*;
+import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -86,13 +87,14 @@ public class Alesia extends Application {
 	 * @return instance of {@link DB}
 	 * @see #getDBProperties()
 	 */
-	public static void openDB() {
+	public static DB openDB() {
 		String name = "hero";
 		// if the database is already open, do nothing
-		List<String> conNames = DB.getCurrrentConnectionNames();
-		if (conNames.contains(name))
-			return;
-
+		Map<String, Connection> conNames = DB.connections();
+		if (conNames.containsKey(name)) {
+			return null;
+			// TODO: mo
+		}
 		Properties orgPrp = getInstance(). getDBProperties();
 
 		// remove all properties except those who star whit "name"
@@ -113,6 +115,7 @@ public class Alesia extends Application {
 		@SuppressWarnings("resource")
 		DB db = new DB(name);
 		db.open(drv, url, properties);
+		return db;
 	}
 
 	public static void showDialog(String title, JComponent content, double sizeFactor) {

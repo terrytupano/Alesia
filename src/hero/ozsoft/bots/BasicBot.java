@@ -50,9 +50,6 @@ public class BasicBot extends Bot {
 	/** Betting aggression (0 = safe, 100 = aggressive). */
 	private int alpha;
 
-	private Random random = new Random();
-
-
 	public BasicBot() {
 
 	}

@@ -25,14 +25,14 @@ import datasource.*;
 import hero.ozsoft.*;
 import hero.ozsoft.bots.*;
 
-public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionListener {
+public class SimulationParametersPanel extends TUIFormPanel implements ListSelectionListener {
 
 	private PokerSimulatorPanel pokerSimulatorPanel;
 	private WebList trooperList;
 	private TroopersTable troopersTable;
 	private WebTextField shuffleTextField;
 
-	public GameSimulatorPanel() {
+	public SimulationParametersPanel() {
 		this.pokerSimulatorPanel = new PokerSimulatorPanel();
 		TActionsFactory.insertActions(this);
 
@@ -44,9 +44,9 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 		setModel(model);
 
 		addInputComponent(TUIUtils.getWebTextField("simulationName", model, columns), true, true);
+		addInputComponent(TUIUtils.getSwitch("isTournament", model.getBoolean("isTournament")));
 		addInputComponent(TUIUtils.getNumericTextField("simulationsHands", model, columns), true, true);
 		addInputComponent(TUIUtils.getSpinner("numOfTasks", model, 1, TTaskManager.CORE_POOL_SIZE));
-		addInputComponent(TUIUtils.getSpinner("bankRollMax", model, 1, 1000));
 		addInputComponent(TUIUtils.getSpinner("minPlayers", model, 2, Table.CAPACITY));
 
 		shuffleTextField = TUIUtils.getWebTextField("simulationVariable", model, columns);
@@ -119,7 +119,7 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 				.toArray(new TrooperParameter[0]);
 		WebList list = new WebList(StyleId.listTransparent, trooperParameters);
 		list.addListSelectionListener(this);
-//		list.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+		// list.setLayoutOrientation(JList.HORIZONTAL_WRAP);
 		list.setVisibleRowCount(4);
 		list.addPropertyChangeListener(e -> {
 			if ("ancestor".equals(e.getPropertyName())) {
@@ -194,8 +194,8 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 		LazyList<TrooperParameter> parameters = TrooperParameter.findAll();
 		String[] variables = shuffleTextField.getText().split(",");
 		for (String variable : variables) {
-			List<Integer> integers = Table.getShuffleList();
 			for (TrooperParameter trooperParameter : parameters) {
+				List<Integer> integers = Table.getShuffleList(); // allways shuffle !!
 				trooperParameter.set(variable, integers.remove(0));
 				trooperParameter.save();
 			}
@@ -216,7 +216,7 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 				return null;
 			}
 			// check for hero client
-			if (TrooperParameter.find("name = ?", "Hero") == null) {
+			if (TrooperParameter.getHero() == null) {
 				Alesia.showNotification("hero.msg01");
 				return null;
 			}
@@ -228,28 +228,29 @@ public class GameSimulatorPanel extends TUIFormPanel implements ListSelectionLis
 
 			// WARNING: order by chair is important. this is take into account in simulation
 			// & in tableDialog players place
-			LazyList<TrooperParameter> tparms = TrooperParameter.findAll().orderBy("chair");
-			SimulationParameters parameters = (SimulationParameters) getModel();
+			LazyList<TrooperParameter> parameters = TrooperParameter.findAll().orderBy("chair");
+			SimulationParameters simulationParameters = (SimulationParameters) getModel();
 			TaskGroup taskGroup = new TaskGroup();
 			Table oneTable = null;
-			int numOfTask = parameters.getInteger("numOfTasks");
+			int numOfTask = simulationParameters.getInteger("numOfTasks");
 
 			for (int i = 0; i < numOfTask; i++) {
-				Table table = new Table(i, parameters);
-				for (TrooperParameter trooperParm : tparms) {
-					if (trooperParm.getBoolean("isActive")) {
-						String tName = trooperParm.getString("trooper");
-						String clazz = trooperParm.getString("client");
+				Table table = new Table(i, simulationParameters);
+				for (TrooperParameter trooperParameter : parameters) {
+					if (trooperParameter.getBoolean("isActive")) {
+						String trooperName = trooperParameter.getString("trooper");
+						String clazz = trooperParameter.getString("client");
+						int chair = trooperParameter.getInteger("chair");
 						Class<?> cls = Class.forName("hero.ozsoft.bots." + clazz);
-						int cash = parameters.getInteger("buyIn");
+						int cash = simulationParameters.getInteger("buyIn");
 						// Constructor cons = cls.getConstructor(String.class);
 						// Bot bot = (Bot) cons.newInstance(name);
 						// @SuppressWarnings("deprecation")
 						Bot bot = (Bot) cls.newInstance();
-						Trooper trooper = bot.getSimulationTrooper(table, trooperParm, parameters);
-						Player player = new Player(tName, cash, bot, trooperParm.getInteger("chair"));
+						Trooper trooper = bot.configureBot(table, trooperParameter, simulationParameters);
+						Player player = new Player(trooperName, cash, bot, chair);
 						table.addPlayer(player);
-						if (trooperParm.isHero())
+						if (trooperParameter.isHero())
 							setTrooper(trooper);
 					}
 				}

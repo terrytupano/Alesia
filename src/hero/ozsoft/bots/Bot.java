@@ -45,7 +45,7 @@ public abstract class Bot implements Client {
 
 	@Override
 	public void actorRotated(Player actor) {
-		// TODO Auto-generated method stub
+		// Auto-generated method stub
 	}
 
 	@Override
@@ -55,21 +55,47 @@ public abstract class Bot implements Client {
 		this.pot = pot;
 	}
 
-	public SimulationResult getBankrollSnapSchot() {
-		SimulationResult statistic = SimulationResult.create("trooper", trooperName, "variables",
-				simulationVariables.toString());
+	/**
+	 * set new new simulation parameters for this bot. in multivariable simulation,
+	 * check if the current shuffle variables is allow to play (tournamentBuyIn >
+	 * buyIn)
+	 * 
+	 * @return
+	 */
+	public void shuffleVariables(boolean tournament) {
+		// normal
+		if (!tournament) {
+			shuffle();
+			return;
+		}
 
-		statistic.set("tableId", table.getTableId());
-		statistic.set("hands", handsT);
-		double wins = player.getCash() - buyIn;
-		statistic.set("wins", wins);
+		// tournament
+		boolean retry = true;
+		while (retry) {
+			shuffle();
+			String vars = simulationVariables.toString();
+			SimulationResult result = SimulationResult.findFirst("trooper = ? AND variables = ?", "*", vars);
+			// TODO: for large simulation this method is extermly slow and ineficient.
+			// sugestion. fi count(*) status == A > 50% retrive a list of only variables and
+			// and random select the variable
+			retry = result != null && SimulationResult.RETIRED.equals(result.getString("status"));
+		}
+	}
 
-		// new simulation parameters
+	private void shuffle() {
 		for (String key : simulationVariables.keySet()) {
 			Integer newValue = table.getShuffleVariable();
 			simulationVariables.put(key, newValue);
 		}
+	}
 
+	public SimulationResult getBankrollSnapSchot() {
+		SimulationResult statistic = SimulationResult.create("trooper", trooperName, "variables",
+				simulationVariables.toString());
+		statistic.set("tableId", table.getTableId());
+		statistic.set("hands", handsT);
+		double wins = player.getCash() - buyIn;
+		statistic.set("wins", wins);
 		return statistic;
 	}
 
@@ -127,8 +153,8 @@ public abstract class Bot implements Client {
 	}
 
 	/**
-	 * return a {@link Trooper} instance configured to run as Bot inside the
-	 * simulation table.
+	 * configure this Bot instace and return the associated internal {@link Trooper}
+	 * instance configured to run as Bot inside the
 	 * 
 	 * @param table            - the environment in witch the trooper run
 	 * @param trooperParameter - the parameters that the trooper must follow.
@@ -136,7 +162,7 @@ public abstract class Bot implements Client {
 	 * @return the trooper
 	 */
 
-	public Trooper getSimulationTrooper(Table table, TrooperParameter trooperParameter,
+	public Trooper configureBot(Table table, TrooperParameter trooperParameter,
 			SimulationParameters simulationParameters) {
 		this.table = table;
 		this.trooperParameter = trooperParameter;

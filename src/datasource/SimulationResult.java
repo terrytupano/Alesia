@@ -8,4 +8,6 @@ import org.javalite.activejdbc.annotations.*;
 //@CompositePK({"name", "value"})
 public class SimulationResult extends Model {
 
+    public static String ACTIVE = "A";
+    public static String RETIRED = "R";
 }
