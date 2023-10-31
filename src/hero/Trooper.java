@@ -522,7 +522,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 
 		int bandc = (int) Math.round(sampledActions.size() * alpha / 100d);
 		bandc = bandc == 0 ? 1 : bandc; // avoid error when alpha is extreme low
-		sampledActions = sampledActions.subList(0, bandc);
+		sampledActions = sampledActions.subList(0, bandc); 
 
 		if (bandc > 2)
 			System.out.println("Trooper.getAction() " + bandc);
