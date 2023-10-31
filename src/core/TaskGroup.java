@@ -27,6 +27,9 @@ public class TaskGroup extends Task<Void, Void> implements PropertyChangeListene
 	/** cont the number of active task that need a partial result */
 	protected int partialResult;
 
+	/** in tournament entviorement, determine mex rebuy a payer can make */
+	private static int MAX_RE_BUY = 10;
+
 	public TaskGroup() {
 		super(Alesia.getInstance());
 		this.tasks = new ArrayList<>();
@@ -69,7 +72,7 @@ public class TaskGroup extends Task<Void, Void> implements PropertyChangeListene
 			if (partialResult >= active) {
 				processPartialResult();
 				partialResult = 0;
-				tasks.forEach(t -> ((Table) t).resetBankRollCounter());
+				tasks.forEach(t -> ((Table) t).resetTableCounter());
 			}
 
 		}
@@ -103,7 +106,7 @@ public class TaskGroup extends Task<Void, Void> implements PropertyChangeListene
 				int hands = summe.getInteger("hands") + sameVariable.getInteger("hands");
 				summe.set("hands", hands);
 
-				int tables = summe.getInteger("tables") + 1;
+				int tables = summe.getInteger("tables") + sameVariable.getInteger("tables");
 				summe.set("tables", tables);
 
 				int wins = summe.getInteger("wins") + sameVariable.getInteger("wins");
@@ -117,6 +120,19 @@ public class TaskGroup extends Task<Void, Void> implements PropertyChangeListene
 			// check the tournament status of the player
 			summe.save();
 		}
+
+		// in tournament: retire players those wins are not enougth to buy the next
+		// round
+		SimulationParameters parameters = SimulationParameters.getSimulationParameters();
+		boolean isTournament = parameters.getBoolean("isTournament");
+
+		if (isTournament) {
+			int initialBuyIn = parameters.getInteger("buyIn");
+			int tournamentBuyIn = initialBuyIn * MAX_RE_BUY;
+			int ret = (tournamentBuyIn - initialBuyIn) * -1;
+			SimulationResult.update("status = ?", "wins < ?", SimulationResult.RETIRED, ret);
+		}
+
 	}
 
 	@Override

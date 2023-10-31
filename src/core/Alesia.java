@@ -90,11 +90,10 @@ public class Alesia extends Application {
 	public static DB openDB() {
 		String name = "hero";
 		// if the database is already open, do nothing
-		Map<String, Connection> conNames = DB.connections();
-		if (conNames.containsKey(name)) {
-			return null;
-			// TODO: mo
-		}
+		// Map<String, Connection> conNames = DB.connections();
+		// if (conNames.containsKey(name)) {
+		// 	return null;
+		// }
 		Properties orgPrp = getInstance(). getDBProperties();
 
 		// remove all properties except those who star whit "name"
@@ -165,7 +164,6 @@ public class Alesia extends Application {
 		try {
 			// active jdbc propertie files pointed form main alesia property file
 			Properties activeprp = new Properties();
-			// TODO: convert to urls to allow more access support ???
 			File fp = new File(System.getProperty("Alesia.database.file.name"));
 			activeprp.load(new FileInputStream(fp));
 			return activeprp;

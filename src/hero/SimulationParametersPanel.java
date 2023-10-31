@@ -45,7 +45,7 @@ public class SimulationParametersPanel extends TUIFormPanel implements ListSelec
 
 		addInputComponent(TUIUtils.getWebTextField("simulationName", model, columns), true, true);
 		addInputComponent(TUIUtils.getSwitch("isTournament", model.getBoolean("isTournament")));
-		addInputComponent(TUIUtils.getNumericTextField("simulationsHands", model, columns), true, true);
+		addInputComponent(TUIUtils.getNumericTextField("handsToSimulate", model, columns), true, true);
 		addInputComponent(TUIUtils.getSpinner("numOfTasks", model, 1, TTaskManager.CORE_POOL_SIZE));
 		addInputComponent(TUIUtils.getSpinner("minPlayers", model, 2, Table.CAPACITY));
 
@@ -102,6 +102,14 @@ public class SimulationParametersPanel extends TUIFormPanel implements ListSelec
 		// save current changes
 		if (!save())
 			return null;
+
+		Object[] options = { "Yes", "No" };
+		int opt = JOptionPane.showOptionDialog(this,
+				"The simulations result table contains data. \nThis acction will delete all current information. \nDo you want to continue?",
+				"Warning", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
+		if (opt == 1)
+			return null;
+
 		SimulationParameters parameters = (SimulationParameters) getModel();
 		parameters.cleanSimulation();
 		return startSimulation();
@@ -226,10 +234,19 @@ public class SimulationParametersPanel extends TUIFormPanel implements ListSelec
 				return null;
 			}
 
+			SimulationParameters simulationParameters = (SimulationParameters) getModel();
+
+			// in tournament, the # of strategies muss > # players
+			int stst = Table.getTotalStrategies(simulationParameters);
+			boolean isTournament = simulationParameters.getBoolean("isTournament");
+			if (isTournament && stst < Table.CAPACITY) {
+				Alesia.showNotification("hero.msg07", stst, Table.CAPACITY);
+				return null;
+			}
+
 			// WARNING: order by chair is important. this is take into account in simulation
 			// & in tableDialog players place
 			LazyList<TrooperParameter> parameters = TrooperParameter.findAll().orderBy("chair");
-			SimulationParameters simulationParameters = (SimulationParameters) getModel();
 			TaskGroup taskGroup = new TaskGroup();
 			Table oneTable = null;
 			int numOfTask = simulationParameters.getInteger("numOfTasks");

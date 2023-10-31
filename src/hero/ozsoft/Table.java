@@ -69,7 +69,7 @@ public class Table extends Task<Void, Void> {
 	private static final boolean ALWAYS_CALL_SHOWDOWN = false;
 
 	/** determine how fine the simulation variables will be */
-	private static int GRAIN = 3;
+	public static int GRAIN = 10;
 
 	/**
 	 * if the table has fewer players than allowed (field {@link #MIN_PLAYERS}), the
@@ -84,6 +84,9 @@ public class Table extends Task<Void, Void> {
 	 * indicate the number of tables muss be simulated before partial result request
 	 */
 	public static final int PARTIAL_RESULT_LIMIT = 10;
+
+	/** the table counter to bb increments */
+	private static final int BIGBLIND_INCREMENT = 10;
 
 	public static final String PAUSE_TASK = "PAUSE_TASK";
 	public static final String PAUSE_HERO = "PAUSE_HERO";
@@ -111,7 +114,10 @@ public class Table extends Task<Void, Void> {
 	private int dealerPosition;
 
 	/** counter to perform summarization */
-	private int bankRollCounter;
+	private int tableCounter;
+
+	/** the current players with status active id DB */
+	private int activeStrategies;
 
 	/** The current dealer. */
 	private Player dealer;
@@ -134,9 +140,11 @@ public class Table extends Task<Void, Void> {
 	/** num of current played hands */
 	private int numOfHand;
 
-	public int buyIn, bigBlind;
+	public int buyIn, bigBlind, initialBigBlind;
 
-	public int simulationsHand;
+	private boolean isTournament;
+
+	public int handsToSimulate;
 
 	private boolean pauseTask, pauseHero, pausePlayer;
 
@@ -150,11 +158,14 @@ public class Table extends Task<Void, Void> {
 	/** compute hands x seg. */
 	private DescriptiveStatistics statistics;
 
+	private int lastBigBlindIncrement;
+
+	private DB db;
+
 	public Table(int tableId, SimulationParameters parameters) {
 		super(Alesia.getInstance());
 		this.tableId = tableId;
 		this.simulationParameters = parameters;
-		this.simulationsHand = simulationParameters.getInteger("simulationsHands");
 		this.tableType = TableType.NO_LIMIT;
 		this.statistics = new DescriptiveStatistics(100);
 		players = new ArrayList<Player>(CAPACITY);
@@ -169,8 +180,11 @@ public class Table extends Task<Void, Void> {
 		setDescription("Description fo the simulation");
 		setMessage("Simulation initialization ...");
 
-		this.bigBlind = parameters.getInteger("bigBlind");
-		this.buyIn = parameters.getInteger("buyIn");
+		this.handsToSimulate = simulationParameters.getInteger("handsToSimulate");
+		this.bigBlind = simulationParameters.getInteger("bigBlind");
+		this.initialBigBlind = bigBlind;
+		this.buyIn = simulationParameters.getInteger("buyIn");
+		this.isTournament = simulationParameters.getBoolean("isTournament");
 	}
 
 	public int getTableId() {
@@ -399,13 +413,14 @@ public class Table extends Task<Void, Void> {
 		}
 		dealerPosition = -1;
 		actorPosition = -1;
-		boolean endedByHero = false;
 		numOfHand = 0;
-		bankRollCounter = 0;
-		DB db = Alesia.openDB();
+		tableCounter = 0;
+		activeStrategies = Integer.MAX_VALUE;
+		db = Alesia.openDB();
+		updateBigBlind();
 
-		for (numOfHand = 1; (numOfHand < simulationsHand && !isCancelled() && !endedByHero)
-				|| (simulationsHand == 0 && !isCancelled() && !endedByHero); numOfHand++) {
+		for (numOfHand = 1; (!isTournament && numOfHand < handsToSimulate && !isCancelled())
+				|| (isTournament && CAPACITY <= activeStrategies && !isCancelled()); numOfHand++) {
 			// pause ?
 			if (pauseTask && !isCancelled()) {
 				ThreadUtils.sleepSafely(250);
@@ -425,10 +440,10 @@ public class Table extends Task<Void, Void> {
 			if (RESTAR.equals(whenPlayerLose) && actp <= simulationParameters.getInteger("minPlayers")) {
 				String msg = "Hand: " + numOfHand
 						+ ", The table has less players that allow. Restartting the hole table.";
-				bankRollCounter++;
+				tableCounter++;
 
 				// fire partial result reques and wait until the summarization process is finish
-				if (bankRollCounter >= PARTIAL_RESULT_LIMIT) {
+				if (tableCounter >= PARTIAL_RESULT_LIMIT) {
 
 					// for the taskGroup
 					firePropertyChange(TaskGroup.PARTIAL_RESULT_REQUEST, false, true);
@@ -439,61 +454,16 @@ public class Table extends Task<Void, Void> {
 					// spetial case: interactive simulation: handle partial result directly
 					if (1 == simulationParameters.getInteger("numOfTasks")) {
 						TaskGroup.processPartialResult();
-						resetBankRollCounter();
+						resetTableCounter();
 					}
 				}
-				while (bankRollCounter >= PARTIAL_RESULT_LIMIT && !isCancelled()) {
+				while (tableCounter >= PARTIAL_RESULT_LIMIT && !isCancelled()) {
 					ThreadUtils.sleepSafely(250);
 				}
 
-				// in tournament: retire players those wins are not enougth to buy the next
-				// round
-				boolean isTournament = simulationParameters.getBoolean("isTournament");
-				if (isTournament) {
-					int tournamentBuyIn = buyIn * 10;
-					int ret = (tournamentBuyIn - buyIn) * -1;
-					SimulationResult.update("status = ?", "wins < ?", SimulationResult.RETIRED, ret);
-				}
-
-				// reset and shuffle variaables
-				for (Player player2 : players) {
-					Client client = player2.getClient();
-					// interactive environment Hero ist an instance of tableDialog
-					Bot bot = null;
-					if (client instanceof TableDialog)
-						bot = (Bot) ((TableDialog) client).getProxyClient();
-					else
-						bot = (Bot) player2.getClient();
-
-					SimulationResult result = bot.getBankrollSnapSchot();
-					simulationParameters.add(result);
-
-					bot.shuffleVariables(isTournament);
-					player2.resetHand();
-					player2.setCash(buyIn);
-				}
-
-				// increment the bb. This method should be executed in taskGroup but i made here
-				// to allow me to test interactive. also, unilateral increment don.t affect the
-				// simulation (i think) eventualy all tables will be reach the same conclution
-				/*
-				 * the idea is simply incremet the bb when the AVG(tables) % x = 0. that allaw a
-				 * global marker (like a timer)
-				 */
-				BigDecimal avgTables = (BigDecimal) db.firstCell(
-						"SELECT AVG(tables) FROM simulation_results WHERE tableId = ? AND status = ?", -1,
-						SimulationResult.ACTIVE);
-				int inc = 7;
-				if (avgTables != null && avgTables.intValue() % inc == 0) {
-					double bbInc = avgTables.doubleValue() / inc;
-					bigBlind = bigBlind + (bigBlind * (int) bbInc);
-
-					move to a new method. the bb muss be also computed at star of the simulation to continue the torurnament
-
-					for (Player player : players) {
-						player.getClient().joinedTable(tableType, newBigBlind, players);
-					}
-				}
+				resetAndUpdatePlayers();
+				updateBigBlind();
+				updateActiveStrategies();
 
 				// (don.t move) notify the bot. bot us this msg to init internal status
 				notifyMessage(msg);
@@ -518,7 +488,7 @@ public class Table extends Task<Void, Void> {
 			statistics.addValue((System.currentTimeMillis() - time1) / 1000d);
 			String speed = TResources.twoDigitFormat.format(statistics.getMean());
 			firePropertyChange(PROP_MESSAGE, null, "Played Hands: " + numOfHand + " Speed: " + speed + " Sec/Hand");
-			setProgress(numOfHand, 0, simulationsHand);
+			setProgress(numOfHand, 0, handsToSimulate);
 		}
 
 		// Game over.
@@ -535,12 +505,147 @@ public class Table extends Task<Void, Void> {
 		return null;
 	}
 
-	public int getBankRollCounter() {
-		return bankRollCounter;
+	/*
+	 * increment the bb. This method should be executed in taskGroup but i made here
+	 * to allow me to test interactive. also, unilateral increment don.t affect the
+	 * simulation (i think) eventualy all tables will be reach the same conclution
+	 * 
+	 * the idea is simply incremet the bb when the AVG(tables) % x = 0. that allaw a
+	 * global marker (like a timer)
+	 */
+	private void updateBigBlind() {
+		if (!isTournament)
+			return;
+
+		BigDecimal decimal = (BigDecimal) db.firstCell(
+				"SELECT AVG(tables) FROM simulation_results WHERE tableId = ? AND status = ?", -1,
+				SimulationResult.ACTIVE);
+		int bbIncrement = decimal == null ? 0 : decimal.intValue() / BIGBLIND_INCREMENT;
+		if (bbIncrement > lastBigBlindIncrement) {
+			bigBlind = initialBigBlind + (initialBigBlind * bbIncrement / 100);
+			buyIn = bigBlind * 100;
+			for (Player player : players) {
+				player.setCash(buyIn);
+				player.getClient().joinedTable(tableType, bigBlind, players);
+			}
+			lastBigBlindIncrement = bbIncrement;
+		}
 	}
 
-	public void resetBankRollCounter() {
-		this.bankRollCounter = 0;
+	public static int getTotalStrategies(SimulationParameters parameters) {
+		int vars = parameters.getVariablesToSimulate();
+		double totalStrategies = Math.pow((Table.GRAIN - 1), vars);
+		return (int) totalStrategies;
+	}
+
+	private boolean areAllPresent() {
+		long simulatedStrategies = getSimulatedStrategies();
+		int totalStrategies = getTotalStrategies(simulationParameters);
+		return totalStrategies == simulatedStrategies;
+	}
+
+	private long getSimulatedStrategies() {
+		Long simulatedStrategies = (Long) db.firstCell("SELECT COUNT(*) FROM simulation_results WHERE tableId = ?", -1);
+		return simulatedStrategies;
+	}
+
+	/**
+	 * this method:
+	 * - reset the player values
+	 * - update the simulation result table
+	 * - update the strategies for the next round
+	 */
+	private void resetAndUpdatePlayers() {
+		List<Map> activeList = null;
+		boolean allPresent = areAllPresent();
+		for (Player player2 : players) {
+			Client client = player2.getClient();
+			// interactive environment Hero ist an instance of tableDialog
+			Bot bot = null;
+			if (client instanceof TableDialog)
+				bot = (Bot) ((TableDialog) client).getProxyClient();
+			else
+				bot = (Bot) player2.getClient();
+
+			SimulationResult result = bot.getBankrollSnapSchot();
+			player2.resetHand();
+			player2.setCash(buyIn);
+			player2.getClient().joinedTable(tableType, bigBlind, players);
+			simulationParameters.add(result);
+
+			// normal
+			if (!isTournament) {
+				shuffle(bot.simulationVariables);
+				continue;
+			}
+
+			// tournament: this level organization is to prevent the same strategy be used
+			// by 2 or more troppers in the same table
+			if (!allPresent) {
+				// first level: random generation of strategies until there are all strategies
+				// present.
+				boolean retry = true;
+				while (retry) {
+					shuffle(bot.simulationVariables);
+					String vars2 = bot.simulationVariables.toString();
+					SimulationResult result2 = SimulationResult.findFirst("trooper = ? AND variables = ?", "*", vars2);
+					retry = result2 != null && SimulationResult.RETIRED.equals(result2.getString("status"));
+				}
+			} else {
+				// second level: if all strategies are present in the db file, shuffle a sublist
+				if (activeList == null) {
+					activeList = db.all("SELECT variables FROM simulation_results WHERE tableId = ? AND status = ?",
+							-1, SimulationResult.ACTIVE);
+					Collections.shuffle(activeList);
+				}
+				// if there no more active strategies, retire the player (happen at end of the
+				// simulation where sumarization may retire strategies)
+				if (activeList.isEmpty()) {
+					player2.setCash(0);
+				} else {
+					Map<Object, Object> map = activeList.remove(0);
+					String vars3 = map.get("variables").toString();
+					String[] keysVals = vars3.split(",");
+					for (String kv : keysVals) {
+						String[] kv2 = kv.split("=");
+						bot.simulationVariables.put(kv2[0].trim(), Integer.parseInt(kv2[1]));
+					}
+
+				}
+
+			}
+		}
+	}
+
+	private void shuffle(TreeMap<String, Integer> variables) {
+		for (String key : variables.keySet()) {
+			Integer newValue = getShuffleVariable();
+			variables.put(key, newValue);
+		}
+	}
+
+	/**
+	 * this method update the global variable {@link #activeStrategies}
+	 */
+	private void updateActiveStrategies() {
+		if (!isTournament)
+			return;
+		// wait until all strategies are present
+		if (!areAllPresent())
+			return;
+
+		Long actives = (Long) db.firstCell(
+				"SELECT COUNT(*) FROM simulation_results WHERE tableId = ? AND status = ?", -1,
+				SimulationResult.ACTIVE);
+		activeStrategies = actives.intValue();
+	}
+
+	public int getTableCounter() {
+		return tableCounter;
+	}
+
+	public void resetTableCounter() {
+		this.tableCounter = 0;
 	}
 
 	/**

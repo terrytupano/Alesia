@@ -25,12 +25,13 @@ public abstract class Bot implements Client {
 	protected int dealer;
 	protected int pot;
 	protected int buyIn;
-	protected String trooperName;
 	protected TrooperParameter trooperParameter;
 	protected UoAHand myHole, communityHand, hand;
 	protected Table table;
-	protected TreeMap<String, Integer> simulationVariables;
 	private int prevCash;
+
+	public TreeMap<String, Integer> simulationVariables;
+	public String trooperName;
 
 	/** Number of hole cards. */
 	protected static final int HOLE_CARDS = 2;
@@ -55,45 +56,13 @@ public abstract class Bot implements Client {
 		this.pot = pot;
 	}
 
-	/**
-	 * set new new simulation parameters for this bot. in multivariable simulation,
-	 * check if the current shuffle variables is allow to play (tournamentBuyIn >
-	 * buyIn)
-	 * 
-	 * @return
-	 */
-	public void shuffleVariables(boolean tournament) {
-		// normal
-		if (!tournament) {
-			shuffle();
-			return;
-		}
-
-		// tournament
-		boolean retry = true;
-		while (retry) {
-			shuffle();
-			String vars = simulationVariables.toString();
-			SimulationResult result = SimulationResult.findFirst("trooper = ? AND variables = ?", "*", vars);
-			// TODO: for large simulation this method is extermly slow and ineficient.
-			// sugestion. fi count(*) status == A > 50% retrive a list of only variables and
-			// and random select the variable
-			retry = result != null && SimulationResult.RETIRED.equals(result.getString("status"));
-		}
-	}
-
-	private void shuffle() {
-		for (String key : simulationVariables.keySet()) {
-			Integer newValue = table.getShuffleVariable();
-			simulationVariables.put(key, newValue);
-		}
-	}
-
 	public SimulationResult getBankrollSnapSchot() {
-		SimulationResult statistic = SimulationResult.create("trooper", trooperName, "variables",
-				simulationVariables.toString());
+		String variables = simulationVariables.toString();
+		variables = variables.substring(1, variables.length() - 1);
+		SimulationResult statistic = SimulationResult.create("trooper", trooperName, "variables", variables);
 		statistic.set("tableId", table.getTableId());
 		statistic.set("hands", handsT);
+		statistic.set("tables", 1);
 		double wins = player.getCash() - buyIn;
 		statistic.set("wins", wins);
 		return statistic;
@@ -174,7 +143,7 @@ public abstract class Bot implements Client {
 
 		// according to the variable comma separated values (1 or more) this simulation
 		// is simple or multi variable simulation
-		String[] variables = simulationParameters.getString("simulationVariable").split(",");
+		String[] variables = simulationParameters.getVariables();
 		for (String var : variables) {
 			simulationVariables.put(var, Integer.valueOf(trooperParameter.getString(var)));
 		}
@@ -245,7 +214,8 @@ public abstract class Bot implements Client {
 	@Override
 	public void playerUpdated(Player player) {
 		// update myHole cards only once. thas allow correct traking of # of hands
-		// played by this trooper
+		// played by this trooper. a hand is whe the trooper has cards. whet the trooper
+		// whit his card do, is here not important.
 		if (trooperName.equals(player.getName()) && player.getHand().size() == HOLE_CARDS && myHole.size() == 0) {
 			handsT++;
 			this.myHole = player.getHand();

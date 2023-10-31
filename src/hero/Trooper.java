@@ -524,8 +524,8 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		bandc = bandc == 0 ? 1 : bandc; // avoid error when alpha is extreme low
 		sampledActions = sampledActions.subList(0, bandc);
 
-		// if (bandc > 2)
-		// 	System.out.println("Trooper.getAction()");
+		if (bandc > 2)
+			System.out.println("Trooper.getAction() " + bandc);
 
 		AbstractRealDistribution distribution = new TriangularDistribution(0, bandc, bandc);
 		if (SubOptimalAction.OPORTUNITY.equals(distributionName))

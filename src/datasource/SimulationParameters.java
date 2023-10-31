@@ -10,10 +10,19 @@ public class SimulationParameters extends Model {
 		return SimulationParameters.findById(1);
 	}
 
-	public boolean isSingleVariable() {
-		return getString("simulationVariable").split(",").length == 1;
+	public String[] getVariables() {
+		String[] variables = getString("simulationVariable").split(",");
+		return variables;
 	}
-	
+
+	public int getVariablesToSimulate() {
+		return getVariables().length;
+	}
+
+	public boolean isSingleVariable() {
+		return getVariablesToSimulate() == 1;
+	}
+
 	public void cleanSimulation() {
 		SimulationResult.delete("simulation_parameter_id = ?", getId());
 	}
