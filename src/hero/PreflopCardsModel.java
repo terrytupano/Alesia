@@ -172,7 +172,7 @@ public class PreflopCardsModel {
 	}
 
 	/**
-	 * this metod will return the Normalized EV. 
+	 * this metod will return the Normalized EV.
 	 * 
 	 * @param cards - cards in {@link PreflopCardsModel} format
 	 * 
@@ -276,21 +276,13 @@ public class PreflopCardsModel {
 	 * @throws IllegalArgumentException if the new percentage is below 0 or over 100
 	 */
 	public void setPercentage(int newPercentage) {
-		if (newPercentage < 0 || newPercentage > 100) {
-			throw new IllegalArgumentException("percentage value must be between 0 and 100 inclusively");
-		}
+		Preconditions.checkArgument(newPercentage >= 0 && newPercentage <= 100,
+				"percentage value must be between 0 and 100 inclusively");
 
 		// clear all area.
 		preflopCards.forEach(pfr -> pfr.setBoolean("selected", false));
-
-		// TODO: evaluate a union or intersection methods to increase flexibility
-		// clear only the card that are in the old percentage range
-		// int clear = (int) Math.round(168 * percentage / 100d);
-		// for (int i = 0; i < clear; i++)
-		// preflopCards.get(i).setBoolean("selected", false);
-
 		this.percentage = newPercentage;
-		int set = (int) Math.round(168 * percentage / 100d);
+		int set = (int) Math.round(preflopCards.size() * percentage / 100d);
 		for (int i = 0; i < set; i++)
 			preflopCards.get(i).setBoolean("selected", true);
 	}

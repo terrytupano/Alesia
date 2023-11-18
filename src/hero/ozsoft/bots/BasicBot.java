@@ -80,7 +80,7 @@ public class BasicBot extends Bot {
 		Map<String, Object> evaluation = PokerSimulator.getEvaluation(myHole, communityHand, activeVillains, cash / bigBlind);
 		PotOdd potOdd = Trooper.potOdd(pot, actions, evaluation);
 		SubOptimalAction subOptimalAction = Trooper.getAction(potOdd.availableActions,
-				SubOptimalAction.TRIANGULAR, alpha);
+				SubOptimalAction.ACTION_NORMAL, alpha);
 
 		return getPlayerAction(subOptimalAction.action, allowedActions);
 

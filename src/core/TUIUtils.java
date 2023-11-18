@@ -65,6 +65,7 @@ import com.jgoodies.forms.layout.*;
 import gui.*;
 import gui.jgoodies.*;
 import gui.wlaf.*;
+import javafx.scene.control.*;
 
 public class TUIUtils {
 
@@ -77,7 +78,7 @@ public class TUIUtils {
 	public static final int V_GAP = 4;
 	public static final Font H1_Font = UIManager.getFont("Label.font").deriveFont(20l);
 	public static final Font H2_Font = UIManager.getFont("Label.font").deriveFont(16l);
-//	public static final Color ACCENT_COLOR = Color.BLUE.darker();
+	// public static final Color ACCENT_COLOR = Color.BLUE.darker();
 	public static final Color ACCENT_COLOR = new Color(63, 90, 116);
 	public static final int TOOL_BAR_ICON_SIZE = 20;
 	public static final int STANDAR_GAP = 10;
@@ -192,7 +193,7 @@ public class TUIUtils {
 
 		MatteBorder border = new MatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY);
 		groupPanel.setBorder(new CompoundBorder(border, TUIUtils.STANDAR_EMPTY_BORDER));
-//		groupPanel.setBorder(border);
+		// groupPanel.setBorder(border);
 		return groupPanel;
 	}
 
@@ -259,7 +260,7 @@ public class TUIUtils {
 	 */
 	public static WebButton getButtonForToolBar(Action action) {
 		overRideIcons(TOOL_BAR_ICON_SIZE, action);
-//		WebButton button = new WebButton(StyleId.buttonHover, action);
+		// WebButton button = new WebButton(StyleId.buttonHover, action);
 		WebButton button = new WebButton(action);
 		button.setName(action.getValue(Action.NAME).toString());
 		button.setText(null);
@@ -398,13 +399,13 @@ public class TUIUtils {
 			ListItem item = ListItem.getItemForField(name, jComponent);
 			// the with is forced by the layout
 			item.setPreferredSize(new Dimension(0, height));
-//			item.setBorder(BorderFactory.createEmptyBorder());
+			// item.setBorder(BorderFactory.createEmptyBorder());
 			item.setBorder(null);
 			item.setOpaque(false);
 			panel.add(item, FormLayout.LINE);
 			panel.add(new JSeparator(), FormLayout.LINE);
 		}
-//		panel.setBorder(STANDAR_EMPTY_BORDER);
+		// panel.setBorder(STANDAR_EMPTY_BORDER);
 		return panel;
 	}
 
@@ -716,8 +717,8 @@ public class TUIUtils {
 	public static JScrollPane getSmartScroller(JComponent component) {
 		WebScrollPane pane = new WebScrollPane(component, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-//		WebScrollPane pane = getWebScrollPane(component);
-//		pane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		// WebScrollPane pane = getWebScrollPane(component);
+		// pane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		new SmartScroller(pane);
 		return pane;
 	}
@@ -1035,10 +1036,44 @@ public class TUIUtils {
 		return scrollPane;
 	}
 
+	public static RangeSlider getRangeSlider(String fieldName, Model model) {
+		return getRangeSlider(fieldName, model, 0, 100);
+	}
+
+	/**
+	 * temporal: return a RangeSlider where the db field is a comma separated string
+	 * with a pair of int formatted as "value,upperValue"
+	 * 
+	 */
+	public static RangeSlider getRangeSlider(String fieldName, Model model, int min, int max) {
+		RangeSlider slider = new RangeSlider(min, max);
+		int val1 = min;
+		int val2 = max;
+		String vals = model.getString(fieldName);
+		if (vals != null) {
+			String[] vals2 = vals.split(",");
+			val1 = Integer.parseInt(vals2[0]);
+			val2 = Integer.parseInt(vals2[1]);
+		}
+		slider.setValue(val1);
+		slider.setUpperValue(val2);
+		slider.setName(fieldName);
+		slider.setMinorTickSpacing(5);
+		slider.setMajorTickSpacing(20);
+		slider.setPaintLabels(true);
+		slider.setPaintTicks(true);
+		setToolTip(fieldName, slider);
+		return slider;
+	}
+
 	public static WebSpinner getSpinner(String fieldName, Model model, int min, int max) {
-		int val = model.getInteger(fieldName);
-		val = val < min ? min : val;
-		return getSpinner(fieldName, val, min, max, 1);
+		return getSpinner(fieldName, model, min, max, 1);
+	}
+
+	public static WebSpinner getSpinner(String fieldName, Model model, int min, int max, int step) {
+		Integer val = model.getInteger(fieldName);
+		val = val == null || val < min ? min : val;
+		return getSpinner(fieldName, val, min, max, step);
 	}
 
 	public static WebSpinner getSpinner(String name, int val, int min, int max, int step) {
@@ -1195,7 +1230,6 @@ public class TUIUtils {
 		}
 	}
 
-
 	public static void setDimensionForTextComponent(JComponent jtc, int col) {
 		col = (col < 5) ? 5 : col;
 		col = (col > 50) ? 50 : col;
@@ -1256,7 +1290,7 @@ public class TUIUtils {
 
 	public static JPanel getLineLayoutPanel(JLabel westComponet, Component firstLine, Component secondLine,
 			Component eastComponet) {
-//		JPanel panel = new JPanel();
+		// JPanel panel = new JPanel();
 		WebPanel eastPanel = new WebPanel();
 		BoxLayout layout2 = new BoxLayout(eastPanel, BoxLayout.Y_AXIS);
 		eastPanel.setLayout(layout2);
@@ -1267,13 +1301,13 @@ public class TUIUtils {
 		com.jgoodies.forms.layout.FormLayout layout = new com.jgoodies.forms.layout.FormLayout(
 				"pref, 5dlu, 96dlu:grow, 5dlu, right:pref", "p, 2dlu, p");
 		DefaultFormBuilder builder = new DefaultFormBuilder(layout);
-//		builder.opaque(true);
+		// builder.opaque(true);
 		CellConstraints cc = new CellConstraints();
 		builder.add(westComponet, cc.xywh(1, 1, 1, 3));
 		builder.add(firstLine, cc.xy(3, 1));
 		builder.add(secondLine, cc.xy(3, 3));
 		builder.add(eastPanel, cc.xywh(5, 1, 1, 3));
-//		builder.add(eastComponet, cc.xywh(5, 1, 1, 3, "center, top"));
+		// builder.add(eastComponet, cc.xywh(5, 1, 1, 3, "center, top"));
 		return builder.build();
 
 	}
@@ -1294,8 +1328,8 @@ public class TUIUtils {
 				return;
 			}
 			dialog.setSize(size.width + 10, size.height);
-//			dialog.validate();
-//			dialog.invalidate();
+			// dialog.validate();
+			// dialog.invalidate();
 			Dimension dialogPrefSize = dialog.getPreferredSize();
 			int newPrefHeight = dialogPrefSize.height;
 			dialog.setSize((dialog.getSize()).width, newPrefHeight);

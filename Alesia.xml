@@ -31,6 +31,7 @@
   <UserLogIn.rememberUser type="ButtonState" selected="true"/>
   <logging.level type="ComboBoxState" selectedIndex="3"/>
   <pokerWindows type="ComboBoxState" selectedIndex="-1"/>
+  <simulation.Log type="ButtonState" selected="true"/>
   <buyIn type="string"></buyIn>
   <play.goal type="TextComponentState" text="300" caretPosition="3"/>
   <table.smallBlid type="TextComponentState" text="1000" caretPosition="4"/>
@@ -51,7 +52,7 @@
       </DockableList>
     </root>
   </FlickaDockablePane>
-  <TWebFrame type="WindowState" location="1941,44" size="558,927" state="0"/>
+  <TWebFrame type="WindowState" location="1924,47" size="558,927" state="0"/>
   <simHands type="TextComponentState" text="100000" caretPosition="6"/>
   <takeOpportunity type="ButtonState" selected="true"/>
   <preflopRekonAmmo.base type="TextComponentState" text="1.5" caretPosition="3"/>

@@ -65,7 +65,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	public static final String ACTION_PERFORMED = "trooper.Action performed";
 	public static final String ACTIONS = "trooper.Actions";
 	/** the number of step to divide the raise values */
-	public static int STEPS = 5;
+	public static int STEPS = 6;
 
 	private static DecimalFormat twoDigitFormat = TResources.twoDigitFormat;
 	private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
@@ -82,9 +82,9 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	 */
 	public static List<Double> getRaiseSteps(double from, double to) {
 		double amount = from;
-		double inc = (to - from) / STEPS;
+		double inc = (to - from) / (STEPS + 1);
 		List<Double> doubles = new ArrayList<>();
-		for (int i = 1; i < STEPS; i++) {
+		for (int i = 0; i < STEPS; i++) {
 			amount += inc;
 			doubles.add(amount);
 		}
@@ -150,7 +150,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	private double currentHandCost;;
 	private double playUntil;
 	private long playTime;
-	private String distributionName;
+	private String gameAction;
 	private TrooperParameter trooperParameter;
 	private int numOfvillains;
 	private GameRecorder gameRecorder;
@@ -171,7 +171,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		this.handsCounter = 0;
 		this.playUntil = 0;
 		this.trooperParameter = null;
-		this.distributionName = SubOptimalAction.TRIANGULAR;
+		this.gameAction = SubOptimalAction.ACTION_NORMAL;
 	}
 
 	/**
@@ -181,7 +181,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	 */
 	protected TrooperAction act() {
 		int alpha = trooperParameter.getInteger("alpha");
-		SubOptimalAction subOptimalAction = Trooper.getAction(availableActions, distributionName, alpha);
+		SubOptimalAction subOptimalAction = Trooper.getAction(availableActions, gameAction, alpha);
 		pokerSimulator.setVariable(ACTION_PERFORMED, subOptimalAction.action);
 		pokerSimulator.setVariable(ACTIONS, subOptimalAction.sampledActions);
 
@@ -240,22 +240,25 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 
 		if (txt != null) {
 			setVariableAndLog(EXPLANATION, "--- OPORTUNITY DETECTED " + txt + " ---");
-			distributionName = SubOptimalAction.OPORTUNITY;
 			loadActions(pokerSimulator.heroChips);
+			gameAction = SubOptimalAction.ACTION_OPORTUNITY;
 
 			// 221201: due to high variance in getSuboptimalAction plus real money players
 			// are cautious about high pot
 			// increment and in order to stabilize winnings according to eV from opportunity
 			// card distribution.
 			// Opportunities is now always all-in
-			if (!availableActions.isEmpty()) {
-				TrooperAction action = new TrooperAction("", -1.0);
-				for (TrooperAction a : availableActions) {
-					action = a.amount > action.amount ? a : action;
-				}
-				availableActions.clear();
-				availableActions.add(action);
-			}
+
+			// removed 231101 this bock is biased. apha parameter is resposable for this
+
+			// if (!availableActions.isEmpty()) {
+			// TrooperAction action = new TrooperAction("", -1.0);
+			// for (TrooperAction a : availableActions) {
+			// action = a.amount > action.amount ? a : action;
+			// }
+			// availableActions.clear();
+			// availableActions.add(action);
+			// }
 
 			// to this point, if available actions are empty, means hero is responding a
 			// extreme high raise. that mean maybe hero is weak. at this point raise mean
@@ -441,96 +444,33 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	}
 
 	public static class SubOptimalAction {
-		public static String TRIANGULAR = "TRIANGULAR";
-		public static String OPORTUNITY = "OPORTUNITY";
+		public static String ACTION_NORMAL = "ACTION_NORMAL";
+		public static String ACTION_OPORTUNITY = "ACTION_OPORTUNITY";
 		public TrooperAction action;
 		public List<TEntry<TrooperAction, Double>> sampledActions;
 	}
 
-	/**
-	 * this method retrieve the amount of chips of all currently active villains.
-	 * the 0 position is the amount of chips computed and the index 1 is the number
-	 * of active villains
-	 * 
-	 * TODO: maybe ammocontrol should control loadaction(ammo) instead
-	 * loadaction(herrochips) make a comment !!!
-	 * 
-	 * NOTE: Die Liste von möglichen Aktions ist nach Wert der Aktion geordnet. das
-	 * Verhältnis ist 1-1 doch ist es wichtig die Werte gucken. das gibt mir ein
-	 * Idee von zukünftige Aggression.
-	 */
 
-	/**
-	 * return the action to be follow based on statistic sample of the
-	 * availableActions parameters and the distribution name. the idea behind this
-	 * method is to make a random decision but this decision is close to random that
-	 * confuse the Villains. this method will not return the optimal action based on
-	 * EV, but a value that resemble that.
-	 * 
-	 * @param availableActions - the actions
-	 * @param distributionName - the name of the distribution to use in the decision
-	 *                         process.
-	 * @param mode             - the mode parameter in TriangularDistribution
-	 * 
-	 * @return sub optimal decision
-	 */
-	public static SubOptimalAction getSubOptimalAction2(List<TrooperAction> availableActions, String distributionName,
-			double mode) {
-
-		// double b = ammo + alpha * ammo; // agresive: b > ammo
-		// b = b == 0 ? 1 : b; // avoid error when alpha is extreme low
-		// double c = alpha < 0 ? b : ammo; // K sugestions allways as upperbound
-		// TriangularDistribution td = new TriangularDistribution(0, c, b);
-		// int amount = (int) td.sample();
-
-		Vector<TEntry<TrooperAction, Double>> sampledActions = new Vector<>();
-		availableActions.forEach((ta) -> sampledActions.add(new TEntry<TrooperAction, Double>(ta, ta.amount)));
-		Collections.sort(sampledActions, Collections.reverseOrder());
-
-		int elements = availableActions.size();
-		double hs = mode * elements;
-		double mode1 = (hs > 1) ? 0 : hs * elements;
-		AbstractRealDistribution distribution = new TriangularDistribution(0, mode1, elements);
-		if (SubOptimalAction.OPORTUNITY.equals(distributionName))
-			distribution = new TriangularDistribution(0, 0, elements);
-		int[] singletos = new int[elements];
-		double[] probabilities = new double[elements];
-		for (int i = 0; i < elements; i++) {
-			singletos[i] = i;
-			TEntry<TrooperAction, Double> te = sampledActions.elementAt(i);
-			probabilities[i] = distribution.probability(i, i + 1);
-			te.setValue(probabilities[i]);
-		}
-
-		int ele = (int) distribution.sample();
-		SubOptimalAction subOptimalAction = new SubOptimalAction();
-		subOptimalAction.action = sampledActions.elementAt(ele).getKey();
-		subOptimalAction.sampledActions = sampledActions;
-		return subOptimalAction;
-	}
-
-	public static SubOptimalAction getAction(List<TrooperAction> availableActions, String distributionName, int alpha) {
+	public static SubOptimalAction getAction(List<TrooperAction> availableActions, String gameAction, int alpha) {
 		List<TEntry<TrooperAction, Double>> sampledActions = new ArrayList<>();
 		for (TrooperAction ta : availableActions) {
 			sampledActions.add(new TEntry<TrooperAction, Double>(ta, ta.amount));
 		}
 		Collections.sort(sampledActions);
-		// double b = ammo + alpha * ammo; // agresive: b > ammo
-		// double c = alpha < 0 ? b : ammo; // K sugestions allways as upperbound
-		// TriangularDistribution td = new TriangularDistribution(0, c, b);
-		// int amount = (int) td.sample();
 
 		int bandc = (int) Math.round(sampledActions.size() * alpha / 100d);
 		bandc = bandc == 0 ? 1 : bandc; // avoid error when alpha is extreme low
-		sampledActions = sampledActions.subList(0, bandc); 
+		// in oportunity, ignore alpha and use the complete list of actions. in normal
+		// play, use alpha
+		if (SubOptimalAction.ACTION_OPORTUNITY.equals(gameAction))
+			bandc = sampledActions.size();
 
-		if (bandc > 2)
-			System.out.println("Trooper.getAction() " + bandc);
+		sampledActions = sampledActions.subList(0, bandc);
+
+		// if (bandc > 2)
+		// System.out.println("Trooper.getAction() " + bandc);
 
 		AbstractRealDistribution distribution = new TriangularDistribution(0, bandc, bandc);
-		if (SubOptimalAction.OPORTUNITY.equals(distributionName))
-			distribution = new TriangularDistribution(0, availableActions.size(), availableActions.size());
-
 		for (int i = 0; i < bandc; i++) {
 			TEntry<TrooperAction, Double> te = sampledActions.get(i);
 			double prob = distribution.probability(i, i + 1);
@@ -571,7 +511,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	 */
 	private void loadActions(double maximum) {
 		availableActions.clear();
-		distributionName = SubOptimalAction.TRIANGULAR;
+		gameAction = SubOptimalAction.ACTION_NORMAL;
 
 		double call = pokerSimulator.callValue;
 		double raise = pokerSimulator.raiseValue;

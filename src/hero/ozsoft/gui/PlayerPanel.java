@@ -68,7 +68,6 @@ public class PlayerPanel extends JPanel {
 	 * Constructor.
 	 */
 	public PlayerPanel() {
-//		setBorder(BORDER);
 		setOpaque(false);
 		nameLabel = getJLable();
 		cashLabel = getJLable();

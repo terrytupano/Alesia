@@ -29,6 +29,7 @@ import org.jdesktop.application.Task.*;
 
 import com.alee.extended.layout.*;
 import com.alee.laf.button.*;
+import com.alee.laf.checkbox.*;
 import com.alee.laf.combobox.*;
 import com.alee.laf.grouping.*;
 import com.alee.managers.settings.*;
@@ -70,6 +71,9 @@ public class TableDialog extends InputBlocker implements Client {
 	/** The current actor's name. */
 	private String actorName;
 
+	/** list of messages to remove if {@link #detailLog} is false */
+	private List<String> removeList = Arrays.asList("blind", "deals", "calls", "checks", "bets", "folds", "raises");
+
 	private Client proxyClient;
 	private final TConsoleTextArea outConsole;
 	private Player heroPlayer;
@@ -78,6 +82,7 @@ public class TableDialog extends InputBlocker implements Client {
 	private BusyPanel busyPanel;
 	private Component oldGlassPanel;
 	private long speed;
+	private boolean detailLog;
 
 	/**
 	 * Constructor.
@@ -109,8 +114,8 @@ public class TableDialog extends InputBlocker implements Client {
 
 		// control panel
 		outConsole = new TConsoleTextArea();
-//		WebButton endGame = new WebButton(ap -> dispose());
-//		endGame.setIcon(TUIUtils.getToolBarFontIcon('\ue047'));
+		// WebButton endGame = new WebButton(ap -> dispose());
+		// endGame.setIcon(TUIUtils.getToolBarFontIcon('\ue047'));
 
 		List<WebToggleButton> buttons = TUIUtils.getToggleButtons("pauseInteractiveSimulation",
 				"pauseInteractiveSimulationOnHero", "pauseInteractiveSimulationOnPlayer",
@@ -125,14 +130,19 @@ public class TableDialog extends InputBlocker implements Client {
 		comboBox.addActionListener(e -> this.speed = Long.valueOf(((TSEntry) comboBox.getSelectedItem()).getKey()));
 		comboBox.registerSettings(new Configuration<ComboBoxState>("simulation.speed"));
 
+		WebCheckBox checkBox = TUIUtils.getCheckBox("Detail log", false);
+		checkBox.addActionListener(e -> this.detailLog = checkBox.isSelected());
+		checkBox.registerSettings(new Configuration<ButtonState>("simulation.Log"));
+
 		JPanel jp = new JPanel(new VerticalFlowLayout());
 		jp.setOpaque(false);
 		jp.add(comboBox);
 		jp.add(groupPane);
+		jp.add(checkBox);
 		controlPanel.add(jp, BorderLayout.EAST);
 
 		// set the table components
-		FormLayout layout = new FormLayout("center:90dlu, center:90dlu, center:90dlu, center:90dlu",
+		FormLayout layout = new FormLayout("center:90dlu, center:90dlu, center:90dlu, center:90dlu, center:90dlu",
 				"center:pref, 3dlu, center:pref, 3dlu, center:pref, 3dlu, center:pref, 3dlu, fill:80dlu");
 		// PanelBuilder builder = new PanelBuilder(layout, new FormDebugPanel());
 		PanelBuilder builder = new PanelBuilder(layout);
@@ -142,27 +152,30 @@ public class TableDialog extends InputBlocker implements Client {
 		builder.add(chairs.get(3));
 		builder.nextColumn();
 		builder.add(chairs.get(4));
-		builder.nextLine(2);
-
-		builder.add(chairs.get(2));
-		builder.nextColumn(2);
-		builder.add(boardPanel, CC.rchw(3, 2, 3, 2));
 		builder.nextColumn();
 		builder.add(chairs.get(5));
 		builder.nextLine(2);
 
-		builder.add(chairs.get(1));
-		builder.nextColumn(3);
+		builder.add(chairs.get(2));
+		builder.nextColumn(2);
+		builder.add(boardPanel, CC.rchw(3, 2, 3, 3));
+		builder.nextColumn(2);
 		builder.add(chairs.get(6));
+		builder.nextLine(2);
+
+		builder.add(chairs.get(1));
+		builder.nextColumn(4);
+		builder.add(chairs.get(7));
 		builder.nextLine(2);
 
 		builder.nextColumn();
 		builder.add(chairs.get(0));
 		builder.nextColumn();
-		builder.add(chairs.get(7));
-
+		builder.add(new JLabel());
+		builder.nextColumn();
+		builder.add(chairs.get(8));
 		builder.nextLine(2);
-		builder.add(controlPanel, CC.rcw(9, 1, 4));
+		builder.add(controlPanel, CC.rcw(9, 1, 5));
 
 		contentPane = builder.build();
 		contentPane.setOpaque(true);
@@ -187,13 +200,13 @@ public class TableDialog extends InputBlocker implements Client {
 		String msg = message.startsWith("Hand: ") ? message : "    " + message;
 		// boardPanel.waitForUserInput();
 
-		// TODO: temporal. avoid log detail messages
-		String[] dets = { "blind", "deals", "calls", "checks", "bets", "folds", "raises" };
-		boolean log = true;
-		for (String det : dets)
-			log = message.contains(det) ? false : log;
-		if (log)
+		if (detailLog) {
 			outConsole.append(msg + "\n");
+		} else {
+			Optional<String> optional = removeList.stream().filter(i -> message.contains(i)).findFirst();
+			if (!optional.isPresent())
+				outConsole.append(msg + "\n");
+		}
 
 		proxyClient.messageReceived(message);
 
@@ -214,7 +227,7 @@ public class TableDialog extends InputBlocker implements Client {
 	public Client getProxyClient() {
 		return proxyClient;
 	}
-	
+
 	@Override
 	public void actorRotated(Player actor) {
 		setActorInTurn(false);
@@ -316,6 +329,7 @@ public class TableDialog extends InputBlocker implements Client {
 		oldGlassPanel = Alesia.getMainFrame().getGlassPane();
 		Alesia.getMainFrame().setGlassPane(busyPanel);
 		this.dialog = TUIUtils.getDialog("Table visualizer", contentPane);
+		// dialog.setMinimumSize(new Dimension(650, 580));
 
 		// cancel the associated table on close
 		WindowAdapter wa = new WindowAdapter() {
@@ -329,12 +343,12 @@ public class TableDialog extends InputBlocker implements Client {
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
 
-//		// Show the frame.
-//		setResizable(false);
-//		pack();
-//		setLocation(660, 75);
-//		// setLocationRelativeTo(null);
-//		// setVisible(true);
+		// // Show the frame.
+		// setResizable(false);
+		// pack();
+		// setLocation(660, 75);
+		// // setLocationRelativeTo(null);
+		// // setVisible(true);
 
 	}
 

@@ -68,9 +68,6 @@ public class Table extends Task<Void, Void> {
 	/** Whether players will always call the showdown, or fold when no chance. */
 	private static final boolean ALWAYS_CALL_SHOWDOWN = false;
 
-	/** determine how fine the simulation variables will be */
-	public static int GRAIN = 10;
-
 	/**
 	 * if the table has fewer players than allowed (field {@link #MIN_PLAYERS}), the
 	 * simulation is restarted
@@ -78,15 +75,12 @@ public class Table extends Task<Void, Void> {
 	private static final String RESTAR = "RESTAR";
 
 	/** current capacity of the table */
-	public static final int CAPACITY = 8;
+	public static final int CAPACITY = 9;
 
 	/**
 	 * indicate the number of tables muss be simulated before partial result request
 	 */
 	public static final int PARTIAL_RESULT_LIMIT = 10;
-
-	/** the table counter to bb increments */
-	private static final int BIGBLIND_INCREMENT = 10;
 
 	public static final String PAUSE_TASK = "PAUSE_TASK";
 	public static final String PAUSE_HERO = "PAUSE_HERO";
@@ -411,6 +405,7 @@ public class Table extends Task<Void, Void> {
 		for (Player player : players) {
 			player.getClient().joinedTable(tableType, bigBlind, players);
 		}
+		int totalTables = 0;
 		dealerPosition = -1;
 		actorPosition = -1;
 		numOfHand = 0;
@@ -419,8 +414,8 @@ public class Table extends Task<Void, Void> {
 		db = Alesia.openDB();
 		updateBigBlind();
 
-		for (numOfHand = 1; (!isTournament && numOfHand < handsToSimulate && !isCancelled())
-				|| (isTournament && CAPACITY <= activeStrategies && !isCancelled()); numOfHand++) {
+		for (numOfHand = 1; (numOfHand < handsToSimulate && !isCancelled())
+				&& ((!isTournament) || (isTournament && CAPACITY <= activeStrategies)); numOfHand++) {
 			// pause ?
 			if (pauseTask && !isCancelled()) {
 				ThreadUtils.sleepSafely(250);
@@ -430,14 +425,14 @@ public class Table extends Task<Void, Void> {
 			long time1 = System.currentTimeMillis();
 
 			// Counts active players
-			int actp = 0;
+			int activePlayers = 0;
 			for (Player player : players) {
 				if (player.getCash() >= bigBlind) {
-					actp++;
+					activePlayers++;
 				}
 			}
 
-			if (RESTAR.equals(whenPlayerLose) && actp <= simulationParameters.getInteger("minPlayers")) {
+			if (RESTAR.equals(whenPlayerLose) && activePlayers <= simulationParameters.getInteger("minPlayers")) {
 				String msg = "Hand: " + numOfHand
 						+ ", The table has less players that allow. Restartting the hole table.";
 				tableCounter++;
@@ -449,7 +444,8 @@ public class Table extends Task<Void, Void> {
 					firePropertyChange(TaskGroup.PARTIAL_RESULT_REQUEST, false, true);
 
 					// for the TTaskmonitor
-					firePropertyChange(PROP_MESSAGE, null, "Bankroll pause. Waiting for summarization ...");
+					totalTables += tableCounter;
+					firePropertyChange(PROP_MESSAGE, null, "Tables: "+ totalTables + " Waiting for summarization ...");
 
 					// spetial case: interactive simulation: handle partial result directly
 					if (1 == simulationParameters.getInteger("numOfTasks")) {
@@ -487,7 +483,9 @@ public class Table extends Task<Void, Void> {
 
 			statistics.addValue((System.currentTimeMillis() - time1) / 1000d);
 			String speed = TResources.twoDigitFormat.format(statistics.getMean());
-			firePropertyChange(PROP_MESSAGE, null, "Played Hands: " + numOfHand + " Speed: " + speed + " Sec/Hand");
+			int sb = (int) bigBlind / 2;
+			firePropertyChange(PROP_MESSAGE, null,
+					bigBlind + "-" + sb + " Hands: " + numOfHand + " Speed: " + speed + " Sec/Hand");
 			setProgress(numOfHand, 0, handsToSimulate);
 		}
 
@@ -502,16 +500,21 @@ public class Table extends Task<Void, Void> {
 		notifyPlayersUpdated(false);
 		Alesia.showNotification("hero.msg04", numOfHand);
 		notifyMessage("Game over.");
+		db.close();
 		return null;
 	}
 
-	/*
-	 * increment the bb. This method should be executed in taskGroup but i made here
+	/**
+	 * increment the bb in tournament mode. this method Compute the AVG(tables) and
+	 * if every strategy has played (avg) more that 10 tables, the bb is incremented
+	 * 10% of the initial bb, 20% the second time and so on. the buyIn is also
+	 * incremented
+	 * 
+	 * This method should be executed in taskGroup but i made here
 	 * to allow me to test interactive. also, unilateral increment don.t affect the
 	 * simulation (i think) eventualy all tables will be reach the same conclution
 	 * 
-	 * the idea is simply incremet the bb when the AVG(tables) % x = 0. that allaw a
-	 * global marker (like a timer)
+	 * 
 	 */
 	private void updateBigBlind() {
 		if (!isTournament)
@@ -520,7 +523,7 @@ public class Table extends Task<Void, Void> {
 		BigDecimal decimal = (BigDecimal) db.firstCell(
 				"SELECT AVG(tables) FROM simulation_results WHERE tableId = ? AND status = ?", -1,
 				SimulationResult.ACTIVE);
-		int bbIncrement = decimal == null ? 0 : decimal.intValue() / BIGBLIND_INCREMENT;
+		int bbIncrement = decimal == null ? 0 : decimal.intValue() / 5;
 		if (bbIncrement > lastBigBlindIncrement) {
 			bigBlind = initialBigBlind + (initialBigBlind * bbIncrement / 100);
 			buyIn = bigBlind * 100;
@@ -534,7 +537,8 @@ public class Table extends Task<Void, Void> {
 
 	public static int getTotalStrategies(SimulationParameters parameters) {
 		int vars = parameters.getVariablesToSimulate();
-		double totalStrategies = Math.pow((Table.GRAIN - 1), vars);
+		int grain = parameters.getInteger("grain");
+		double totalStrategies = Math.pow((grain - 1), vars);
 		return (int) totalStrategies;
 	}
 
@@ -1100,10 +1104,10 @@ public class Table extends Task<Void, Void> {
 	 * 
 	 * @return the shuffle list
 	 */
-	public static List<Integer> getShuffleList() {
+	public static List<Integer> getShuffleList(int grain) {
 		List<Integer> integers = new ArrayList<>();
-		int step = 100 / GRAIN;
-		for (int i = 1; i < GRAIN; i++) {
+		int step = 100 / grain;
+		for (int i = 1; i < grain; i++) {
 			integers.add(step * i);
 		}
 		Collections.shuffle(integers);
@@ -1116,7 +1120,8 @@ public class Table extends Task<Void, Void> {
 	 * @return the new value
 	 */
 	public int getShuffleVariable() {
-		List<Integer> integers = getShuffleList();
+		int grain = simulationParameters.getInteger("grain");
+		List<Integer> integers = getShuffleList(grain);
 		int i = integers.get(0);
 		return i;
 	}

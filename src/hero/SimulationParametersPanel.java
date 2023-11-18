@@ -17,6 +17,7 @@ import com.alee.laf.button.*;
 import com.alee.laf.grouping.*;
 import com.alee.laf.list.*;
 import com.alee.laf.panel.*;
+import com.alee.laf.spinner.*;
 import com.alee.laf.text.*;
 import com.alee.managers.style.*;
 
@@ -48,6 +49,7 @@ public class SimulationParametersPanel extends TUIFormPanel implements ListSelec
 		addInputComponent(TUIUtils.getNumericTextField("handsToSimulate", model, columns), true, true);
 		addInputComponent(TUIUtils.getSpinner("numOfTasks", model, 1, TTaskManager.CORE_POOL_SIZE));
 		addInputComponent(TUIUtils.getSpinner("minPlayers", model, 2, Table.CAPACITY));
+		addInputComponent(TUIUtils.getSpinner("grain", model, 5, 20, 5));
 
 		shuffleTextField = TUIUtils.getWebTextField("simulationVariable", model, columns);
 		WebButton shuffleButton = TUIUtils.getSmallButton("shuffleVariable");
@@ -201,9 +203,11 @@ public class SimulationParametersPanel extends TUIFormPanel implements ListSelec
 			return;
 		LazyList<TrooperParameter> parameters = TrooperParameter.findAll();
 		String[] variables = shuffleTextField.getText().split(",");
+		SimulationParameters simulationParameters = (SimulationParameters) getModel();
+		int grain = simulationParameters.getInteger("grain");
 		for (String variable : variables) {
 			for (TrooperParameter trooperParameter : parameters) {
-				List<Integer> integers = Table.getShuffleList(); // allways shuffle !!
+				List<Integer> integers = Table.getShuffleList(grain); // allways shuffle !!
 				trooperParameter.set(variable, integers.remove(0));
 				trooperParameter.save();
 			}

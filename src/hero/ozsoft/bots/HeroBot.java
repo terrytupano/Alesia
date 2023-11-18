@@ -16,21 +16,30 @@ public class HeroBot extends Bot {
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		PlayerAction action = null;
-		while (action == null) {
-			int raiseValue = minBet * 2;
-			boolean callBol = player.getCash() >= minBet;
-			boolean raiseBol = callBol && player.getCash() >= raiseValue;
-			boolean potBol = callBol && player.getCash() >= pot;
-			boolean allinBol = callBol;
-			pokerSimulator.sensorStatus.put("call", callBol);
-			pokerSimulator.sensorStatus.put("raise", raiseBol);
+		// while (action == null) {
+			int raiseValue = Math.min(minBet *2, player.getCash());
+
+			boolean callBol = allowedActions.contains(PlayerAction.CALL) || allowedActions.contains(PlayerAction.CHECK);
+			boolean raiseBol = allowedActions.contains(PlayerAction.RAISE)
+					|| allowedActions.contains(PlayerAction.BET) && player.getCash() >= raiseValue;
+			boolean potBol = raiseBol && player.getCash() >= pot;
+			boolean allinBol = raiseBol && player.getCash() >= minBet;
+			// A bet is the initial amount and a raise is anything on top of this
 			pokerSimulator.sensorStatus.put("raise.pot", potBol);
 			pokerSimulator.sensorStatus.put("raise.allin", allinBol);
 			pokerSimulator.sensorStatus.put("raise.slider", allinBol);
 
+			// the trooper dont take into account call/check/raise enabled/disabel status.
+			// there are actives and/or mutate the text to reflext valid acction
+			// call/check are the same
+			// check: call buton is active. callvalue=0
+			// call: call button is active. callvalue=minbet
 			pokerSimulator.setCallValue(minBet);
 			if (allowedActions.contains(PlayerAction.CHECK))
 				pokerSimulator.setCallValue(0);
+
+			if (!callBol || !raiseBol)
+				System.out.println("HeroBot.act()");
 
 			pokerSimulator.setPotValue(pot);
 			pokerSimulator.setHeroChips(player.getCash());
@@ -70,11 +79,11 @@ public class HeroBot extends Bot {
 			// action = null;
 
 			// avoid Illegal client action: raise less than minimum bet!
-			if (!(PlayerAction.CHECK.equals(action) || PlayerAction.FOLD.equals(action)) && act.amount < minBet
-					&& act.amount < player.getCash())
-				action = null;
+		// 	if (!(PlayerAction.CHECK.equals(action) || PlayerAction.FOLD.equals(action)) && act.amount < minBet
+		// 			&& act.amount < player.getCash())
+		// 		action = null;
 
-		}
+		// }
 		return action;
 
 	}
