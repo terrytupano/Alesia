@@ -37,6 +37,8 @@ import com.alee.managers.settings.*;
 import com.alee.managers.style.*;
 import com.alee.utils.*;
 
+import ICRReader.*;
+import datasource.*;
 import flicka.*;
 import gui.*;
 import gui.wlaf.*;
@@ -92,9 +94,9 @@ public class Alesia extends Application {
 		// if the database is already open, do nothing
 		// Map<String, Connection> conNames = DB.connections();
 		// if (conNames.containsKey(name)) {
-		// 	return null;
+		// return null;
 		// }
-		Properties orgPrp = getInstance(). getDBProperties();
+		Properties orgPrp = getInstance().getDBProperties();
 
 		// remove all properties except those who star whit "name"
 		Set<Object> keys = orgPrp.keySet();
@@ -111,7 +113,7 @@ public class Alesia extends Application {
 		String url = properties.getProperty("url");
 		properties.remove("url");
 
-		@SuppressWarnings("resource")
+		// @SuppressWarnings("resource")
 		DB db = new DB(name);
 		db.open(drv, url, properties);
 		return db;
@@ -121,7 +123,7 @@ public class Alesia extends Application {
 		final WebPopOver popOver = new WebPopOver(getMainFrame());
 		popOver.setModalityType(ModalityType.TOOLKIT_MODAL);
 		popOver.setMovable(false);
-		popOver.setMargin ( 10 );
+		popOver.setMargin(10);
 		popOver.setLayout(new VerticalFlowLayout());
 		final WebImage icon = new WebImage(TResources.getSmallIcon(TWebFrame.APP_ICON));
 		final WebLabel titleLabel = new WebLabel(title, WebLabel.CENTER);
@@ -132,13 +134,13 @@ public class Alesia extends Application {
 			}
 		});
 
-//		popOver.setUndecorated(true);
+		// popOver.setUndecorated(true);
 		GroupPanel tit = new GroupPanel(GroupingType.fillMiddle, 4, icon, titleLabel, closeButton);
 		tit.setMargin(0, 0, 10, 0);
 		popOver.add(tit);
 		popOver.add(content);
 
-//		popOver.pack();
+		// popOver.pack();
 		popOver.setSize(getMainFrame().getBoundByFactor(sizeFactor).getSize());
 		popOver.setLocationRelativeTo(getMainFrame());
 		popOver.setVisible(true);
@@ -310,7 +312,7 @@ public class Alesia extends Application {
 		homePanel.setActions(alist);
 
 		mainPanel.showPanel(homePanel);
-//		mainPanel.showPanel(new HeroPanel());
+		// mainPanel.showPanel(new HeroPanel());
 		Alesia.getMainFrame().setContentPane(mainPanel);
 	}
 
@@ -365,5 +367,17 @@ public class Alesia extends Application {
 
 		mainFrame = new TWebFrame();
 		mainFrame.setVisible(true);
+
+		openDB();
+		// ICRReader.performImport();
+
+		Paginator<ICRPlayer> paginator = new Paginator<>(ICRPlayer.class, 100, null);
+		while (paginator.hasNext()) {
+			List<ICRPlayer> list = paginator.getPage();
+			for (ICRPlayer icrPlayer : list) {
+			}
+		}
+		List<ICRGame> games = ICRGame.find("gameId < ?", 797469060);
+		games.forEach(g -> ICRGame.checkGame(g));
 	}
 }

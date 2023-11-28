@@ -300,7 +300,8 @@ public class PokerSimulator {
 		}
 
 		UoAHand iBoard = new UoAHand();
-		int iterations = 100000;
+		int iterations = 100_000;
+		 
 		result.put("iterations", iterations);
 		double ahead = 0, tied = 0, behind = 0;
 
