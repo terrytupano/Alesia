@@ -43,6 +43,9 @@ import flicka.*;
 import gui.*;
 import gui.wlaf.*;
 import hero.*;
+import hero.ozsoft.*;
+import weka.core.*;
+import weka.core.neighboursearch.*;
 
 public class Alesia extends Application {
 
@@ -369,15 +372,7 @@ public class Alesia extends Application {
 		mainFrame.setVisible(true);
 
 		openDB();
-		// ICRReader.performImport();
-
-		Paginator<ICRPlayer> paginator = new Paginator<>(ICRPlayer.class, 100, null);
-		while (paginator.hasNext()) {
-			List<ICRPlayer> list = paginator.getPage();
-			for (ICRPlayer icrPlayer : list) {
-			}
-		}
-		List<ICRGame> games = ICRGame.find("gameId < ?", 797469060);
-		games.forEach(g -> ICRGame.checkGame(g));
+		TWekaUtils.buildKdTreeInstances();
+		DB.closeAllConnections();
 	}
 }

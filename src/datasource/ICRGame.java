@@ -21,15 +21,15 @@ public class ICRGame extends Model {
      * @return the matrix form the actions field
      */
     private static String[][] getActionsMatrix(ICRGame game, int street) {
-        List<ICRPlayer> players = ICRPlayer.find("gameId = ?", game.getInteger("gameId"));
-        String[][] matrix2 = new String[players.size()][10];
-        for (int i = 0; i < players.size(); i++) {
-            ICRPlayer player = players.get(i);
+        List<ICRGameDetail> details = ICRGameDetail.find("gameId = ?", game.getInteger("gameId"));
+        String[][] matrix2 = new String[details.size()][10];
+        for (int i = 0; i < details.size(); i++) {
+            ICRGameDetail detail = details.get(i);
             String action = "";
-            action = street == 0 ? player.getString("preFlopActions") : action;
-            action = street == 1 ? player.getString("flopActions") : action;
-            action = street == 2 ? player.getString("turnActions") : action;
-            action = street == 3 ? player.getString("riverActions") : action;
+            action = street == 0 ? detail.getString("preFlopActions") : action;
+            action = street == 1 ? detail.getString("flopActions") : action;
+            action = street == 2 ? detail.getString("turnActions") : action;
+            action = street == 3 ? detail.getString("riverActions") : action;
 
             for (int j = 0; j < 10; j++) {
                 String action2 = action.length() <= j ? "-" : action.substring(j, j + 1);

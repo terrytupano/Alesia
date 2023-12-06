@@ -8,8 +8,8 @@ import org.apache.commons.lang3.*;
 
 import com.alee.utils.*;
 
-import core.*;
 import datasource.*;
+import hero.*;
 import hero.UoAHandEval.*;
 
 /**
@@ -18,12 +18,8 @@ import hero.UoAHandEval.*;
  */
 
 public class ICRReader {
-	private final List<Game> games = new ArrayList<Game>();
 	private String table;
 	private Hashtable<String, String> actionsDic;
-	private Hashtable<String, Integer> actionsValues;
-	private static TreeMap<String, Integer> playersWins = new TreeMap<>();
-	private static TreeMap<String, Integer> playersHands = new TreeMap<>();
 
 	public ICRReader(String table) {
 		this.table = table;
@@ -38,10 +34,6 @@ public class ICRReader {
 		actionsDic.put("A", "all-in");
 		actionsDic.put("Q", "quits game");
 		actionsDic.put("K", "kicked from game");
-
-		this.actionsValues = new Hashtable<>();
-		actionsValues.put("b", 10);
-		actionsValues.put("B", 20);
 	}
 
 	/**
@@ -54,21 +46,17 @@ public class ICRReader {
 		File dirFile = new File(userdir + "/IRCData/" + table);
 		File[] dirs = FileUtils.listFiles(dirFile);
 		for (File dir : dirs) {
-			// int name = Integer.parseInt(dir.getName());
-			// if (name < 199902)
-			// continue;
 			Flattenizer f = new Flattenizer(dir.getAbsolutePath());
 			List<Game> games2 = f.getGames();
-			// games.addAll(games2);
-			// countHands(games2);
-			// save(games2);
+			save(games2);
 		}
 	}
 
 	private void save(List<Game> games) {
 		long mills = System.currentTimeMillis();
 		int gameCounter = 0;
-		for (Game game : games) {
+		for (int i = 0; i < games.size(); i++) {
+			Game game = games.get(i);
 			if (ICRGame.first("gameId = ?", game.id) != null)
 				continue;
 
@@ -84,23 +72,23 @@ public class ICRReader {
 			icrGame.setInteger("playersRiver", game.playersRiver);
 			icrGame.setInteger("potRiver", game.potRiver);
 			icrGame.setString("boardCards", game.boardCards.stream().map(c -> c.card).collect(Collectors.joining(" ")));
-			List<ICRPlayer> icrPlayers = new ArrayList<>();
+			List<ICRGameDetail> gameDetails = new ArrayList<>();
 			for (Player player : game.players) {
-				ICRPlayer icrPlayer = ICRPlayer.create();
-				icrPlayer.setInteger("gameId", game.id);
-				icrPlayer.setString("name", player.name);
-				icrPlayer.setInteger("position", Integer.parseInt(player.position));
-				icrPlayer.setInteger("playersLeft", player.playersLeft);
-				icrPlayer.setInteger("chipsCount", player.chipsCount);
-				icrPlayer.setInteger("chipsBet", player.chipsBet);
-				icrPlayer.setInteger("chipsWins", player.chipsWins);
-				icrPlayer.setString("preFlopActions", player.preFlopActions);
-				icrPlayer.setString("flopActions", player.flopActions);
-				icrPlayer.setString("turnActions", player.turnActions);
-				icrPlayer.setString("riverActions", player.riverActions);
-				icrPlayer.setString("handCards",
+				ICRGameDetail gameDetail = ICRGameDetail.create();
+				gameDetail.setInteger("gameId", game.id);
+				gameDetail.setString("name", player.name);
+				gameDetail.setInteger("position", Integer.parseInt(player.position));
+				gameDetail.setInteger("playersLeft", player.playersLeft);
+				gameDetail.setInteger("chipsCount", player.chipsCount);
+				gameDetail.setInteger("chipsBet", player.chipsBet);
+				gameDetail.setInteger("chipsWins", player.chipsWins);
+				gameDetail.setString("preFlopActions", player.preFlopActions);
+				gameDetail.setString("flopActions", player.flopActions);
+				gameDetail.setString("turnActions", player.turnActions);
+				gameDetail.setString("riverActions", player.riverActions);
+				gameDetail.setString("handCards",
 						player.handCards.stream().map(c -> c.card).collect(Collectors.joining(" ")));
-				String handCards = icrPlayer.getString("handCards");
+				String handCards = gameDetail.getString("handCards");
 				String boardCards = icrGame.getString("boardCards");
 				if (!StringUtils.isBlank(boardCards) && !StringUtils.isBlank(handCards)) {
 					String cards = handCards + " " + boardCards;
@@ -113,52 +101,30 @@ public class ICRReader {
 					UoAHand flopHand = new UoAHand(
 							cards2[0] + " " + cards2[1] + " " + cards2[2] + " " + cards2[3] + " " + cards2[4]);
 					int flopRank = UoAHandEvaluator.rankHand(flopHand);
-					icrPlayer.setInteger("flopRank", flopRank);
+					gameDetail.setInteger("flopRank", flopRank);
 
 					UoAHand turnHand = new UoAHand(
 							cards2[0] + " " + cards2[1] + " " + cards2[2] + " " + cards2[3] + " " + cards2[4] + " "
 									+ cards2[5]);
 					int turnRank = UoAHandEvaluator.rankHand(turnHand);
-					icrPlayer.setInteger("turnRank", turnRank);
+					gameDetail.setInteger("turnRank", turnRank);
 
 					UoAHand uoAHand = new UoAHand(cards);
 					int riverRank = UoAHandEvaluator.rankHand(uoAHand);
-					icrPlayer.setInteger("riverRank", riverRank);
+					gameDetail.setInteger("riverRank", riverRank);
 					saveGame = true;
 				}
-				icrPlayers.add(icrPlayer);
+				gameDetails.add(gameDetail);
 			}
 			// save game iif at least 2 players saw the showdown
 			if (saveGame) {
 				gameCounter++;
 				icrGame.save();
-				icrPlayers.forEach(p -> p.save());
+				gameDetails.forEach(p -> p.save());
 			}
+			TWekaUtils.printProgress("Saving", games.size(), i);
 		}
 		System.out.println(gameCounter + " Games saved. " + ((System.currentTimeMillis() - mills) / 1000) + " Seg");
-	}
-
-
-	private void countHands(List<Game> games) {
-		for (Game game : games) {
-			for (Player player : game.players) {
-				int hands = 1;
-				if (playersHands.containsKey(player.name)) {
-					hands = playersHands.get(player.name) + 1;
-				}
-				playersHands.put(player.name, hands);
-
-				if (player.chipsWins > 0) {
-					int wins = 1;
-					if (playersWins.containsKey(player.name)) {
-						wins = playersWins.get(player.name) + 1;
-					}
-					playersWins.put(player.name, wins);
-				}
-			}
-		}
-		System.out.println("Total Hands: " + playersHands.size());
-		System.out.println("Total Wins: " + playersWins.size());
 	}
 
 	/**
@@ -236,8 +202,9 @@ public class ICRReader {
 		game.boardCards.forEach(c -> board.append(c.toString() + " "));
 		String patt = "%9s %5s %10s %10s %10s %10s %-15s";
 		System.out.println(String.format(patt, "timestamp", "play#", "preF", "flop", "turn", "river", "board"));
-		System.out.println(String.format(patt, game.id, game.players.size(), game.potPreFlop, game.potFlop, game.potTurn,
-				game.potRiver, board));
+		System.out
+				.println(String.format(patt, game.id, game.players.size(), game.potPreFlop, game.potFlop, game.potTurn,
+						game.potRiver, board));
 
 		patt = "%-10s %3s %-5s %-5s %-5s %-5s %7s %7s %-5s";
 		System.out.println("\nPlayer information");
@@ -247,36 +214,14 @@ public class ICRReader {
 		for (Player player : game.players) {
 			StringBuffer cards = new StringBuffer();
 			player.handCards.forEach(c -> cards.append(c.toString() + " "));
-			System.out.println(String.format(patt, player.name, player.position, player.preFlopActions, player.flopActions,
-					player.turnActions, player.riverActions, player.chipsCount, player.chipsWins, cards));
+			System.out.println(
+					String.format(patt, player.name, player.position, player.preFlopActions, player.flopActions,
+							player.turnActions, player.riverActions, player.chipsCount, player.chipsWins, cards));
 		}
-	}
-
-	public List<TEntry<String, Integer>> getTopPlayersByHands(int firstN) {
-		ArrayList<TEntry<String, Integer>> topPly = new ArrayList<>();
-		for (Map.Entry<String, Integer> entry : playersHands.entrySet()) {
-			topPly.add(new TEntry<>(entry.getKey(), entry.getValue()));
-		}
-		Collections.sort(topPly, Collections.reverseOrder());
-		return topPly.subList(0, firstN);
 	}
 
 	public static void performImport() {
 		ICRReader reader = new ICRReader("holdem2");
 		reader.loadGameHistory();
-		int firstN = 100;
-		List<TEntry<String, Integer>> topHands = reader.getTopPlayersByHands(firstN);
-		System.out.println("\nTop " + firstN + " Players ");
-		System.out.printf("%-20s %10s %10s", "Name", "Hands", "wins");
-		System.out.println("\n----------------------------------------");
-		for (TEntry<String, Integer> tEntry : topHands) {
-			System.out.println(
-					String.format("%-20s %10d %10d", tEntry.getKey(), tEntry.getValue(),
-							playersWins.get(tEntry.getKey())));
-		}
-
-		// Game sample = reader.games.get(1);
-		// reader.tabularFormat(sample);
-
 	}
 }

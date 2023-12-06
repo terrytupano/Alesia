@@ -191,7 +191,6 @@ public class Flattenizer {
 	}
 
 	public List<Game> getGames() {
-		long mills = System.currentTimeMillis();
 		try {
 			System.out.println("Processing dir " + dir);
 			loadGameHistory(dir);
@@ -208,8 +207,7 @@ public class Flattenizer {
 			});
 			System.out.println(gameCounter + " Games, (deleted " + deletedGames + ") " + playersCounter
 					+ " players and " + actionsCounter
-					+ " actions Processed in "
-					+ ((System.currentTimeMillis() - mills) / 1000) + " Seg");
+					+ " actions Processed.");
 
 			return games2;
 		} catch (Exception e) {
