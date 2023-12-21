@@ -4,13 +4,17 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.*;
 
+import javax.swing.*;
+
 import org.apache.commons.lang3.*;
 
 import com.alee.utils.*;
 
+import core.*;
 import datasource.*;
 import hero.*;
 import hero.UoAHandEval.*;
+import hero.ozsoft.*;
 
 /**
  * @author Zack Tillotson
@@ -19,29 +23,28 @@ import hero.UoAHandEval.*;
 
 public class ICRReader {
 	private String table;
-	private Hashtable<String, String> actionsDic;
+	private Hashtable<String, String> actionsToText = new Hashtable<>();
 
 	public ICRReader(String table) {
 		this.table = table;
-		this.actionsDic = new Hashtable<>();
-		actionsDic.put("-", "no action; player is no longer contesting pot");
-		actionsDic.put("B", "blind bet");
-		actionsDic.put("f", "fold");
-		actionsDic.put("k", "check");
-		actionsDic.put("b", "bet");
-		actionsDic.put("c", "call");
-		actionsDic.put("r", "raise");
-		actionsDic.put("A", "all-in");
-		actionsDic.put("Q", "quits game");
-		actionsDic.put("K", "kicked from game");
+		actionsToText.put("-", "no action; player is no longer contesting pot");
+		actionsToText.put("B", "blind bet");
+		actionsToText.put("f", "fold");
+		actionsToText.put("k", "check");
+		actionsToText.put("b", "bet");
+		actionsToText.put("c", "call");
+		actionsToText.put("r", "raise");
+		actionsToText.put("A", "all-in");
+		actionsToText.put("Q", "quits game");
+		actionsToText.put("K", "kicked from game");
 	}
 
 	/**
-	 * read all de available data and build the game history. the golbal variable
-	 * {@link #games} will contain a list of all table games performed.
+	 * read all ICR files in the folder ICRData and parse it. the result are stored
+	 * in ICRGame and ICRGameDetail tables.
 	 * 
 	 */
-	public void loadGameHistory() {
+	private void loadGameHistory() {
 		String userdir = System.getProperty("user.dir");
 		File dirFile = new File(userdir + "/IRCData/" + table);
 		File[] dirs = FileUtils.listFiles(dirFile);
@@ -52,6 +55,14 @@ public class ICRReader {
 		}
 	}
 
+	/**
+	 * save the list of parsed Game into the corresponding db tables. this method
+	 * will store only:
+	 * - games with playerLeft <= Table.CAPACITY
+	 * - games with at leas flop card present.
+	 * 
+	 * @param games the parsed games
+	 */
 	private void save(List<Game> games) {
 		long mills = System.currentTimeMillis();
 		int gameCounter = 0;
@@ -82,10 +93,10 @@ public class ICRReader {
 				gameDetail.setInteger("chipsCount", player.chipsCount);
 				gameDetail.setInteger("chipsBet", player.chipsBet);
 				gameDetail.setInteger("chipsWins", player.chipsWins);
-				gameDetail.setString("preFlopActions", player.preFlopActions);
-				gameDetail.setString("flopActions", player.flopActions);
-				gameDetail.setString("turnActions", player.turnActions);
-				gameDetail.setString("riverActions", player.riverActions);
+				gameDetail.setString("actionsPreFlop", player.preFlopActions);
+				gameDetail.setString("actionsFlop", player.flopActions);
+				gameDetail.setString("actionsTurn", player.turnActions);
+				gameDetail.setString("actionsRiver", player.riverActions);
 				gameDetail.setString("handCards",
 						player.handCards.stream().map(c -> c.card).collect(Collectors.joining(" ")));
 				String handCards = gameDetail.getString("handCards");
@@ -93,25 +104,31 @@ public class ICRReader {
 				if (!StringUtils.isBlank(boardCards) && !StringUtils.isBlank(handCards)) {
 					String cards = handCards + " " + boardCards;
 					String[] cards2 = cards.split(" ");
-					if (cards2.length != 7) {
+					// at leas floop and the right # of players
+					if (player.playersLeft > Table.CAPACITY || StringUtils.isBlank(boardCards)) {
 						// don nothing the game will be not save it
 						continue;
 					}
 
 					UoAHand flopHand = new UoAHand(
 							cards2[0] + " " + cards2[1] + " " + cards2[2] + " " + cards2[3] + " " + cards2[4]);
-					int flopRank = UoAHandEvaluator.rankHand(flopHand);
-					gameDetail.setInteger("flopRank", flopRank);
+					int rankFlop = UoAHandEvaluator.rankHand(flopHand);
+					gameDetail.setInteger("rankFlop", rankFlop);
 
-					UoAHand turnHand = new UoAHand(
-							cards2[0] + " " + cards2[1] + " " + cards2[2] + " " + cards2[3] + " " + cards2[4] + " "
-									+ cards2[5]);
-					int turnRank = UoAHandEvaluator.rankHand(turnHand);
-					gameDetail.setInteger("turnRank", turnRank);
+					if (cards2.length >= 6) {
+						UoAHand turnHand = new UoAHand(
+								cards2[0] + " " + cards2[1] + " " + cards2[2] + " " + cards2[3] + " " + cards2[4] + " "
+										+ cards2[5]);
+						int rankTurn = UoAHandEvaluator.rankHand(turnHand);
+						gameDetail.setInteger("rankTurn", rankTurn);
+					}
 
-					UoAHand uoAHand = new UoAHand(cards);
-					int riverRank = UoAHandEvaluator.rankHand(uoAHand);
-					gameDetail.setInteger("riverRank", riverRank);
+					if (cards2.length == 7) {
+						UoAHand uoAHand = new UoAHand(cards);
+						int rankRiver = UoAHandEvaluator.rankHand(uoAHand);
+						gameDetail.setInteger("rankRiver", rankRiver);
+					}
+
 					saveGame = true;
 				}
 				gameDetails.add(gameDetail);
@@ -125,69 +142,6 @@ public class ICRReader {
 			TWekaUtils.printProgress("Saving", games.size(), i);
 		}
 		System.out.println(gameCounter + " Games saved. " + ((System.currentTimeMillis() - mills) / 1000) + " Seg");
-	}
-
-	/**
-	 * TODO: incomplete
-	 * 
-	 * @param game
-	 */
-	public void printGameEvent(Game game) {
-		String boardc = game.boardCards.toString();
-		System.out.println("New Hand: " + game.id);
-
-		boolean hadAction;
-
-		// preflop
-
-		// Flop actions
-		System.out.println(
-				"Flop: " + game.boardCards.get(0) + " " + game.boardCards.get(1) + " " + game.boardCards.get(2));
-		hadAction = true;
-		for (int round = 1; round == 1 || hadAction; round++) {
-			hadAction = false;
-			for (Player player : game.players) {
-				if (player.preFlopActions.length() >= round) {
-					String action = player.preFlopActions.substring(round - 1, round);
-					System.out.println(player.handCards.toString() + " " + player.name + " " + actionsDic.get(action));
-					hadAction = true;
-				}
-			}
-		}
-
-		// Turn actions
-		System.out.println("Turn: " + game.boardCards.get(0) + " " + game.boardCards.get(1) + " "
-				+ game.boardCards.get(2) + " " + game.boardCards.get(3));
-		hadAction = true;
-		for (int round = 1; round == 1 || hadAction; round++) {
-			hadAction = false;
-			for (Player player : game.players) {
-				if (player.flopActions.length() >= round) {
-					String action = player.flopActions.substring(round - 1, round);
-					if (!action.equals("-"))
-						System.out.println(
-								player.handCards.toString() + " " + player.name + " " + actionsDic.get(action));
-					hadAction = true;
-				}
-			}
-		}
-
-		// River actions
-		System.out.println("River: " + game.boardCards.get(0) + " " + game.boardCards.get(1) + " "
-				+ game.boardCards.get(2) + " " + game.boardCards.get(3) + " " + game.boardCards.get(4));
-		hadAction = true;
-		for (int round = 1; round == 1 || hadAction; round++) {
-			hadAction = false;
-			for (Player player : game.players) {
-				if (player.turnActions.length() >= round) {
-					String action = player.turnActions.substring(round - 1, round);
-					if (!action.equals("-"))
-						System.out.println(
-								player.handCards.toString() + " " + player.name + " " + actionsDic.get(action));
-					hadAction = true;
-				}
-			}
-		}
 	}
 
 	/**
@@ -221,6 +175,15 @@ public class ICRReader {
 	}
 
 	public static void performImport() {
+		Object[] options = { "OK", "CANCEL" };
+		int opt = JOptionPane.showOptionDialog(Alesia.getMainFrame(), "Delete files?", "Warning", JOptionPane.DEFAULT_OPTION,
+				JOptionPane.WARNING_MESSAGE, null, options, options[0]);
+		if (opt != 0) {
+			System.out.println("Aborted");
+			return;
+		}
+		ICRGame.deleteAll();
+		ICRGameDetail.deleteAll();
 		ICRReader reader = new ICRReader("holdem2");
 		reader.loadGameHistory();
 	}

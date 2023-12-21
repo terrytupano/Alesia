@@ -1,0 +1,14 @@
+@relation 'Turn Round 6'
+
+@attribute playersLeft numeric
+@attribute position numeric
+@attribute rank numeric
+@attribute playersStreet numeric
+@attribute pot numeric
+@attribute chips numeric
+@attribute chipsBets numeric
+@attribute action string
+
+@data
+9,5,2224586,2,1510,9866,700,r:80
+9,1,1485181,2,1080,1905,540,c:40

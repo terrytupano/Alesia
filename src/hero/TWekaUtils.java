@@ -4,79 +4,118 @@ import java.util.*;
 
 import org.javalite.activejdbc.*;
 
-import core.*;
 import datasource.*;
-import hero.ozsoft.*;
 import weka.core.*;
 import weka.core.converters.ConverterUtils.*;
 import weka.core.neighboursearch.*;
 
 public class TWekaUtils {
 
+    public static List<String> streets = Arrays.asList(new String[] { "PreFlop", "Flop", "Turn", "River" });
+    private static Map<String, KDTree> treesMap = new HashMap<>();
+
     public static void buildKdTreeInstances() {
         try {
-            String[] streets = new String[] { "flopRank", "turnRank", "riverRank"};
-            for (String street : streets) {
-                Instances instances = TWekaUtils.buildKdTreeInstances(street);
-                // save to file
-                DataSink dataSink = new DataSink(street + "_instances.arff");
-                dataSink.write(instances);
-
+            // NOT PREPLOP !!
+            for (int i = 1; i < streets.size(); i++) {
+                String street = streets.get(i);
+                for (int round = 0; round < ICRGame.ACTIONS_MATRIX_DEEP; round++) {
+                    Instances instances = TWekaUtils.buildKdTreeInstances(street, round);
+                    if (!instances.isEmpty()) {
+                        // save to file
+                        DataSink dataSink = new DataSink(street + " Round " + round + "_instances.arff");
+                        dataSink.write(instances);
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-                // KDTree kdTree = null;
+    }
 
-                // kdTree = new KDTree();
-                // kdTree.setInstances(instances);
+    public static void readKdTree() {
+        try {
+            for (String street : streets) {
+                DataSource dataSource = new DataSource(street + "_instances.arff");
+                Instances instances = dataSource.getDataSet();
+                System.out.println(instances.toSummaryString());
+                KDTree kdTree = new KDTree();
+                kdTree.setInstances(instances);
+                treesMap.put(street, kdTree);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
-     * build the KDTree for the specific street argument.
+     * build the KDTree for the specific street/round argument. the result is the
+     * tree for all selected players actions at the specific stree and round with
+     * all know table.s status information
+     * 
      * - the instances only games with playerLeft <= Table.CAPACITY
-     * - the label for this tree is the id value
+     * - the label for this tree is the action:value pair
      * 
      * 
-     * @param street - the rank db filed: flopRank, turnRank or riverRank
+     * @param street - the sufix for the rank db filed: Flop (rankFlop), Turn
+     *               (rankTurn) or River (rankRiver)
+     * @param round  - 0 - ICRGame.ACTIONS_MATRIX_DEEP
      * @return the KDTree
      */
-    private static Instances buildKdTreeInstances(String street) {
-        Attribute playersLeft = new Attribute("playersLeft", 0);
-        Attribute position = new Attribute("position", 1);
-        Attribute rank = new Attribute(street, 2);
-        Attribute id = new Attribute("id", 3);
+    private static Instances buildKdTreeInstances(String street, int round) {
+        Attribute playersLeft = new Attribute("playersLeft");
+        Attribute position = new Attribute("position");
+        Attribute rank = new Attribute("rank");
+        Attribute playersStreet = new Attribute("playersStreet");
+        Attribute pot = new Attribute("pot");
+        Attribute chips = new Attribute("chips");
+        Attribute bets = new Attribute("chipsBets");
+        Attribute action = new Attribute("action", true); // r:20
 
         ArrayList<Attribute> attributes = new ArrayList<>();
         attributes.add(playersLeft);
         attributes.add(position);
         attributes.add(rank);
-        attributes.add(id);
-        Instances instances = new Instances(street + " Instances list", attributes, 10000);
-        instances.setClass(id);
-        List<ICRPlayer> players = ICRPlayer.find("selected = ?", true);
-        for (int i = 0; i < players.size(); i++) {
-            ICRPlayer icrPlayer = players.get(i);
-            Paginator<ICRGameDetail> paginator = new Paginator<>(ICRGameDetail.class, 100, "name = ?",
-                    icrPlayer.get("name"));
+        attributes.add(playersStreet);
+        attributes.add(pot);
+        attributes.add(chips);
+        attributes.add(bets);
+        attributes.add(action);
+        Instances instances = new Instances(street + " Round " + round, attributes, 10000);
+        instances.setClassIndex(attributes.size() - 1);
+        List<ICRPlayer> players2 = ICRPlayer.find("selected = ?", true);
+        for (int i = 0; i < players2.size(); i++) {
+            ICRPlayer icrPlayer = players2.get(i);
+            String name = icrPlayer.getString("name");
+            Paginator<ICRGameDetail> paginator = new Paginator<>(ICRGameDetail.class, 100, "name = ?", name);
             int totalPages = (int) paginator.pageCount();
             for (int j = 1; j <= totalPages; j++) {
                 List<ICRGameDetail> details = paginator.getPage(j);
                 for (ICRGameDetail detail : details) {
-                    Integer pl = detail.getInteger("playersLeft");
-                    // only games with players <= Table.CAPACITY
-                    if (pl <= Table.CAPACITY) {
+                    ICRGame game = ICRGame.findFirst("gameId = ?", detail.get("gameId"));
+
+                    printProgress("Game: " + game.getInteger("gameId") + " Street: " + street
+                            + " Round: " + round + " Player: " + name, players2.size(), i);
+
+                    String actionValue = ICRGame.getActionValue(game, streets.indexOf(street), round, name);
+                    Integer rankStreet = detail.getInteger("rank" + street);
+                    // only ad instances to the tree iff the player was present on the action. -:0
+                    // means the player folded befor this street/round action
+                    // System.out.println("actionvalue: " + actionValue + " rank: " + rankStreet);
+                    if (!"-:0".equals(actionValue) && rankStreet != null) {
                         DenseInstance instance = new DenseInstance(attributes.size());
-                        instance.setValue(playersLeft, pl);
+                        instance.setValue(playersLeft, detail.getInteger("playersLeft"));
                         instance.setValue(position, detail.getInteger("position"));
-                        Integer rank2 = detail.getInteger(street);
-                        instance.setValue(rank, rank2 == null ? -1 : rank2);
-                        instance.setValue(id, detail.getInteger("id"));
+                        instance.setValue(rank, rankStreet);
+                        instance.setValue(playersStreet, game.getInteger("players" + street));
+                        instance.setValue(pot, game.getInteger("pot" + street));
+                        instance.setValue(chips, detail.getInteger("chipsCount"));
+                        instance.setValue(bets, detail.getInteger("chipsBet"));
+                        instance.setValue(action, actionValue);
                         instances.add(instance);
                     }
                 }
             }
-            printProgress("Building kdTree for " + icrPlayer.get("name"), players.size(), i);
         }
 
         return instances;
@@ -97,7 +136,8 @@ public class TWekaUtils {
 
     /**
      * from the ICRGameDetail file, retrive the players basic statistic. (name,
-     * hands played winCount ... etc)
+     * hands played winCount ... etc) and build the ICRPlayer table to determinate,
+     * the bes players
      */
     public static void updatePlayersSts() {
         // ICRPlayer.deleteAll();

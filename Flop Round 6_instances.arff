@@ -1,0 +1,14 @@
+@relation 'Flop Round 6'
+
+@attribute playersLeft numeric
+@attribute position numeric
+@attribute rank numeric
+@attribute playersStreet numeric
+@attribute pot numeric
+@attribute chips numeric
+@attribute chipsBets numeric
+@attribute action string
+
+@data
+8,6,1113947,2,680,2652,340,c:20
+8,2,2163239,2,2360,7118,1220,r:40

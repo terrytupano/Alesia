@@ -371,8 +371,8 @@ public class Alesia extends Application {
 		mainFrame = new TWebFrame();
 		mainFrame.setVisible(true);
 
-		openDB();
-		TWekaUtils.buildKdTreeInstances();
-		DB.closeAllConnections();
+		// openDB();
+		// TWekaUtils.buildKdTreeInstances();
+		// DB.closeAllConnections();
 	}
 }

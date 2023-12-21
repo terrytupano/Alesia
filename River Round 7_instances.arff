@@ -1,0 +1,13 @@
+@relation 'River Round 7'
+
+@attribute playersLeft numeric
+@attribute position numeric
+@attribute rank numeric
+@attribute playersStreet numeric
+@attribute pot numeric
+@attribute chips numeric
+@attribute chipsBets numeric
+@attribute action string
+
+@data
+8,6,1485183,2,1880,1503,900,r:80

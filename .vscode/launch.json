@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Console",
+            "request": "launch",
+            "mainClass": "ICRReader.Console",
+            "projectName": "Alesia"
+        },
+        {
+            "type": "java",
             "name": "ICRReader",
             "request": "launch",
             "mainClass": "ICRReader.ICRReader",

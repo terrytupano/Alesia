@@ -1,0 +1,19 @@
+@relation 'River Round 5'
+
+@attribute playersLeft numeric
+@attribute position numeric
+@attribute rank numeric
+@attribute playersStreet numeric
+@attribute pot numeric
+@attribute chips numeric
+@attribute chipsBets numeric
+@attribute action string
+
+@data
+7,1,1485180,2,2060,4458,1020,r:80
+6,4,1485184,2,10630,27652,5240,r:80
+9,1,2221884,2,1360,131952,620,r:80
+7,6,2599114,2,970,39214,480,r:80
+9,4,1115899,2,1690,1077,760,r:80
+7,4,744223,2,2000,1120,920,r:80
+8,6,1485183,2,1880,1503,900,r:80
