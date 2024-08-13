@@ -1,0 +1,1 @@
+mvn install:install-file "-Dfile=lib/bsaf-1.9.1.jar" "-DgroupId=oracle" "-DartifactId=bsaf" "-Dversion=1.9.1" "-Dpackaging=jar" "-DgeneratePom=true" "-Dsrc=lib/bsaf-1.9.1-sources.jar"
