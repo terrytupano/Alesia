@@ -67,5 +67,14 @@
 	<classpathentry kind="lib" path="lib/tablesaw/tablesaw-json-0.43.1.jar"/>
 	<classpathentry kind="lib" path="lib/tablesaw/univocity-parsers-2.8.4.jar"/>
 	<classpathentry kind="lib" path="lib/activejdbc-instrumentation-2.3.jar"/>
+	<classpathentry kind="lib" path="lib/easyrule/easy-rules-core-4.1.0.jar" sourcepath="lib/tablesaw/tablesaw-core-0.43.1-sources.jar"/>
+	<classpathentry kind="lib" path="lib/easyrule/easy-rules-mvel-4.1.0.jar"/>
+	<classpathentry kind="lib" path="lib/easyrule/easy-rules-support-4.1.0.jar"/>
+	<classpathentry kind="lib" path="lib/easyrule/jackson-annotations-2.11.3.jar"/>
+	<classpathentry kind="lib" path="lib/easyrule/jackson-core-2.11.3.jar"/>
+	<classpathentry kind="lib" path="lib/easyrule/jackson-databind-2.11.3.jar"/>
+	<classpathentry kind="lib" path="lib/easyrule/mvel2-2.4.10.Final.jar"/>
+	<classpathentry kind="lib" path="lib/easyrule/slf4j-api-1.7.30.jar"/>
+	<classpathentry kind="lib" path="lib/easyrule/snakeyaml-1.26.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

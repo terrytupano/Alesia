@@ -14,7 +14,6 @@ package core;
 import java.awt.Dialog.*;
 import java.awt.event.*;
 import java.io.*;
-import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -37,15 +36,10 @@ import com.alee.managers.settings.*;
 import com.alee.managers.style.*;
 import com.alee.utils.*;
 
-import ICRReader.*;
-import datasource.*;
 import flicka.*;
 import gui.*;
 import gui.wlaf.*;
 import hero.*;
-import hero.ozsoft.*;
-import weka.core.*;
-import weka.core.neighboursearch.*;
 
 public class Alesia extends Application {
 
