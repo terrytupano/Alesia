@@ -1,29 +1,23 @@
-------------------------------------------
-TODOS:
-------------------------------------------
-
-- simulate the optimal upperboud of handsranks: motiviation: better probability calculation when there is extremely rare to find a hand like royal flush or straith flus
-- simulation to compute the preflop % based on num of villans (the result were something like villans*10)
-
-- lower limit in roi formula: 10% lower limmit in a bussines is 30% (read literature about it) maybe is util to make a table with detail investments 
-- make a ROI formula: ROI = (Winnings - Investment) / Investment take into acount any moment in play when bet > lower limitn (roucht 10%)of roi , fold hero mus play until lower limit but once the limit is errreichen, dont gepardice any more also consider playtime 
-
-
----------------------------------------------------------------------
-
 Ryzen-5-5500U
 Intel-Core-i9-13900
 
-New iot variable to contro the amount of invest in amocontrol (as factor of positive potential).
 
-Rebuild the sim panel and create the range slider to incorporate multi stage tournaments (include grain as ui inpuit)/
+------------------------------------------
+as exercise
+------------------------------------------
+read "know your oponent" in page 32 and prepare a simulation to find the best strategie to respond to the example. 
+tip. change the environtment to find it
 
-Try to incorporate hidden hand. How hide is trooper.s hand??? As oportunity ?? Or check if this situatios is already covered by handstreng (using hand eval)
-
-card abtraction
+------------------------------------------
+concept to review
+------------------------------------------
 regret minimization java
 tree search java
 
+
+------------------------------------------
+knn notes:
+------------------------------------------
 
 The database
 can be viewed as split into four different parts, each
@@ -39,12 +33,12 @@ compute the variance tho remove the chips exchange (variance in chipsCount) in c
 what happen if i check the complete tree or flop->turn-> river-> _showdow (on steps ahead) whit all powible strategies whith less simulations
 		so i can decide the next step???????????????? the ide is only one step ahead whit all posible bet/call/reise options, and rebuild ammocontrol
 		return a list with posible strategies
-	
+		
 instance
 player left 		(1-9)	(include only <= 9)
 position			(1-9)
 Street rank			(?-?)	
-players street		(2-9)	the number of currnet players in the current round 
+players street		(2-9)	the number of current players in the current round 
 pot street			(?-?)
 
 Game: 897360895 Street: Flop Round: 0 Player: mtew-boynk
