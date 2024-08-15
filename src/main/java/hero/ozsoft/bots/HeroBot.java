@@ -91,9 +91,6 @@ public class HeroBot extends Bot {
 	@Override
 	public void messageReceived(String message) {
 		super.messageReceived(message);
-		// if (message.equals(Table.RESTAR)) {
-		// System.out.println("Avg descition method: "+statistics.getMean());
-		// }
 	}
 
 	@Override
@@ -117,7 +114,7 @@ public class HeroBot extends Bot {
 		pokerSimulator.bigBlind = bigBlind;
 		pokerSimulator.smallBlind = bigBlind / 2;
 		pokerSimulator.buyIn = buyIn;
-		pokerSimulator.clearEnvironment();
+		pokerSimulator.newHand();
 	}
 
 	@Override

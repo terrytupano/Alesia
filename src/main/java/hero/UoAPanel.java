@@ -99,8 +99,6 @@ public class UoAPanel extends TUIPanel {
 		int bigBlinds = (Integer) bbSpinner.getValue();
 
 		Map<String, Object> evaluation = PokerSimulator.getEvaluation(myHole, comunity, 1, bigBlinds);
-		// Add Chen score
-		evaluation.put("chenScore", PokerSimulator.getChenScore(myHole));
 
 		// all elements instance of List are array of uoAHand. override this property
 		// and show only a sublist

@@ -71,7 +71,9 @@ public class CardsPanel extends WebPanel {
 	 */
 	public void setExampleFromOponetModelingPaper() {
 		resetTable();
-		UoAHand exam = new UoAHand("Ad Qc 3h 4c jh");
+		// UoAHand exam = new UoAHand("Ad Qc 3h 4c jh");
+		UoAHand exam = new UoAHand("Jh 9c Qs 8d 4c");
+
 		setHand(exam);
 	}
 

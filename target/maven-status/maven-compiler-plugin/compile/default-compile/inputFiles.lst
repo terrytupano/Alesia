@@ -57,6 +57,7 @@ C:\Users\terry\Documents\java project\Alesia\src\main\java\gui\jgoodies\ListItem
 C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\ozsoft\TableType.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\SensorArrayPanel.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\flicka\DoNothingTask.java
+C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\PokerSimulatorTraker.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\Trooper.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\core\TStringUtils.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\ozsoft\actions\CheckAction.java
@@ -114,6 +115,7 @@ C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\GamePlayer.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\flicka\Selector.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\gui\TAbstractTableModel.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\SimulatorClientList.java
+C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\rules\ChenScore.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\TroopersTable.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\datasource\HeadsUpPushFold.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\ozsoft\bots\RandomBot.java
@@ -149,7 +151,6 @@ C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\ozsoft\gui\UICon
 C:\Users\terry\Documents\java project\Alesia\src\main\java\gui\list\ListItemTransferHandler.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\ozsoft\Player.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\TCVUtils.java
-C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\rules\ChenScoreRule.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\datasource\ICRGameDetail.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\gui\TitledSeparator.java
 C:\Users\terry\Documents\java project\Alesia\src\main\java\hero\PokerSimulator2.java

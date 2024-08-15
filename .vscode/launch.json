@@ -1,0 +1,147 @@
+{
+    // Verwendet IntelliSense zum Ermitteln möglicher Attribute.
+    // Zeigen Sie auf vorhandene Attribute, um die zugehörigen Beschreibungen anzuzeigen.
+    // Weitere Informationen finden Sie unter https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Alesia",
+            "request": "launch",
+            "mainClass": "core.Alesia",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "GridGameExample",
+            "request": "launch",
+            "mainClass": "edu.brown.cs.burlap.examples.GridGameExample",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "IRLExample",
+            "request": "launch",
+            "mainClass": "edu.brown.cs.burlap.examples.IRLExample",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "OptionsExample",
+            "request": "launch",
+            "mainClass": "edu.brown.cs.burlap.examples.OptionsExample",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "BasicBehavior",
+            "request": "launch",
+            "mainClass": "edu.brown.cs.burlap.tutorials.BasicBehavior",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "ContinuousDomainTutorial",
+            "request": "launch",
+            "mainClass": "edu.brown.cs.burlap.tutorials.ContinuousDomainTutorial",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "HelloGridWorld",
+            "request": "launch",
+            "mainClass": "edu.brown.cs.burlap.tutorials.HelloGridWorld",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "MCVideo",
+            "request": "launch",
+            "mainClass": "edu.brown.cs.burlap.tutorials.MCVideo",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "PlotTest",
+            "request": "launch",
+            "mainClass": "edu.brown.cs.burlap.tutorials.PlotTest",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "QLTutorial",
+            "request": "launch",
+            "mainClass": "edu.brown.cs.burlap.tutorials.QLTutorial",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "VITutorial",
+            "request": "launch",
+            "mainClass": "edu.brown.cs.burlap.tutorials.VITutorial",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "ExampleOOGridWorld",
+            "request": "launch",
+            "mainClass": "edu.brown.cs.burlap.tutorials.domain.oo.ExampleOOGridWorld",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "ExampleGridWorld",
+            "request": "launch",
+            "mainClass": "edu.brown.cs.burlap.tutorials.domain.simple.ExampleGridWorld",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "NumericTextField",
+            "request": "launch",
+            "mainClass": "gui.NumericTextField",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "RangeSliderDemo",
+            "request": "launch",
+            "mainClass": "gui.RangeSliderDemo",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "UIManagerDefaults",
+            "request": "launch",
+            "mainClass": "gui.UIManagerDefaults",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "Frame1",
+            "request": "launch",
+            "mainClass": "gui.table.Frame1",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "LineChartDemo8",
+            "request": "launch",
+            "mainClass": "hero.LineChartDemo8",
+            "projectName": "alesia"
+        },
+        {
+            "type": "java",
+            "name": "UoAHandEvaluator",
+            "request": "launch",
+            "mainClass": "hero.UoAHandEval.UoAHandEvaluator",
+            "projectName": "alesia"
+        }
+    ]
+}

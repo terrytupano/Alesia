@@ -277,7 +277,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	private void clearEnvironment() {
 		// in live Environment
 		if (simulationTable == null) {
-			pokerSimulator.clearEnvironment();
+			pokerSimulator.newHand();
 			sensorsArray.clearEnvironment();
 			// read trooper variables again (her because i can on the fly update
 			Alesia.openDB();
@@ -449,7 +449,6 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		public TrooperAction action;
 		public List<TEntry<TrooperAction, Double>> sampledActions;
 	}
-
 
 	public static SubOptimalAction getAction(List<TrooperAction> availableActions, String gameAction, int alpha) {
 		List<TEntry<TrooperAction, Double>> sampledActions = new ArrayList<>();
@@ -763,8 +762,10 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 				sensorsArray.readSensors(true, sensorsArray.getSensors("hero.chips"));
 				double chips = sensorsArray.getSensor("hero.chips").getNumericOCR();
 				// if chips are not available, show the last computed play safe value
-				if (chips > 0)
-					playUntil = pokerSimulator.heroChipsMax - (playUntilParm * pokerSimulator.buyIn);
+				if (chips > 0) {
+					double maxC = pokerSimulator.pokerSimulatorTraker.getHeroMaxChips();
+					playUntil = maxC - (playUntilParm * pokerSimulator.buyIn);
+				}
 
 				if ((playtimeParm > 0 && playTime > playtimeParm)
 						|| (chips > 0 && playUntilParm > 0 && chips <= playUntil)

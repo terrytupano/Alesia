@@ -1,4 +1,5 @@
 package hero.UoAHandEval;
+
 /***************************************************************************
  Copyright (c) 2000:
  University of Alberta,
@@ -13,13 +14,96 @@ package hero.UoAHandEval;
  * @author Aaron Davidson, Darse Billings, Denis Papp
  */
 
+import java.util.*;
+import java.util.stream.*;
+
 public class UoAHandEvaluator {
+
+	// -------------------------------
+	// terry
+	// -------------------------------
+
+	public static boolean isPoketPair(UoAHand holeHand) {
+		int type = getType(holeHand);
+		return type == PAIR;
+	}
+
+	public static boolean isTwoOvercards(UoACard c1, UoACard c2, UoAHand communityHand) {
+		return isOvercard(c1, communityHand) && isOvercard(c2, communityHand);
+	}
+
+	public static boolean isOvercard(UoAHand holeHand, UoAHand communityHand) {
+		return isOvercard(holeHand.getCard(1), communityHand) || isOvercard(holeHand.getCard(2), communityHand);
+	}
+
+	private static boolean isOvercard(UoACard card, UoAHand communityHand) {
+		boolean isOvercard = true;
+		for (int j = 1; j <= communityHand.size(); j++) {
+			isOvercard = card.getRank() < communityHand.getCard(j).getRank() ? false : isOvercard;
+		}
+		return isOvercard;
+	}
+
+	public static boolean isInsideStraightDraw(UoAHand holeHand, UoAHand communityHand) {
+		UoAHand hand = new UoAHand(holeHand + " " + communityHand);
+		List<Integer> ranks = hand.getCards().stream().map(c -> c.getRank()).collect(Collectors.toList());
+		Collections.sort(ranks);
+		// there muss be only 1 gap = 2 cards
+		int gaps = 0;
+		for (int i = 0; i < ranks.size() - 1; i++) {
+			gaps += ranks.get(i + 1) - ranks.get(i) == 2 ? 1 : 0;
+		}
+		return gaps <= 2;
+	}
+
+	public static int getDarkness(UoAHand holeHand, UoAHand communityHand) {
+		int darkness = 0;
+		int type = getType(new UoAHand(holeHand + " " + communityHand));
+		if (type == PAIR || type == TWOPAIR || type == THREEKIND) {
+			darkness += containRank(holeHand.getCard(1), communityHand) ? 1 : 0;
+			darkness += containRank(holeHand.getCard(2), communityHand) ? 1 : 0;
+		}
+
+		if (type == STRAIGHT || type == FULLHOUSE || type == FOURKIND) {
+			darkness += containRank(holeHand.getCard(1), communityHand) ? 1 : 0;
+			darkness += containRank(holeHand.getCard(2), communityHand) ? 1 : 0;
+		}
+
+		if (type == FLUSH || type == STRAIGHTFLUSH) {
+			darkness += containSuit(holeHand.getCard(1), communityHand) ? 1 : 0;
+			darkness += containSuit(holeHand.getCard(2), communityHand) ? 1 : 0;
+		}
+
+		return darkness;
+	}
+
+	private static boolean containRank(UoACard card, UoAHand hand) {
+		long count = hand.getCards().stream().filter(c -> c.getRank() == card.getRank()).count();
+		return count > 0;
+	}
+
+	private static boolean containSuit(UoACard card, UoAHand hand) {
+		long count = hand.getCards().stream().filter(c -> c.getSuit() == card.getSuit()).count();
+		return count > 0;
+	}
+
+	public static String getTypeName(UoAHand hand) {
+		int type = getType(hand);
+		String t = hand_name[type];
+		return t;
+	}
+
+	public static int getType(UoAHand hand) {
+		int rank = rankHand(hand);
+		int type = (int) (rank / ID_GROUP_SIZE);
+		return type;
+	}
 
 	public static void main(String args[]) {
 		// UoAHand board = new UoAHand("3c Ac Kc 2d 7c");
 		// UoAHandEvaluator evaluator = new UoAHandEvaluator();
 		// int[][] ranks = evaluator.getRanks(board);
-		
+
 		UoAHand hand1 = new UoAHand("As Kh");
 		UoAHand hand2 = new UoAHand("6s 8s 2h 3d 4c");
 		// a Pair of Eights 8c 8h
@@ -55,8 +139,9 @@ public class UoAHandEvaluator {
 	 * 
 	 * @param c1 first hole card
 	 * @param c2 second hole card
-	 * @param h a 3-5 card hand
-	 * @return a unique number representing the hand strength of the best 5-card poker hand in the given cards and
+	 * @param h  a 3-5 card hand
+	 * @return a unique number representing the hand strength of the best 5-card
+	 *         poker hand in the given cards and
 	 *         board. The higher the number, the better the hand is.
 	 */
 	public int rankHand(UoACard c1, UoACard c2, UoAHand h) {
@@ -97,7 +182,7 @@ public class UoAHandEvaluator {
 	 * Compares two 5-7 card hands against each other.
 	 * 
 	 * @param rank1 The rank of the first hand
-	 * @param h2 The second hand
+	 * @param h2    The second hand
 	 * @return 1 = first hand is best, 2 = second hand is best, 0 = tie
 	 */
 	public int compareHands(int rank1, UoAHand h2) {
@@ -112,7 +197,8 @@ public class UoAHandEvaluator {
 	}
 
 	/**
-	 * Given a board, cache all possible two card combinations of hand ranks, so that lightenting fast hand comparisons
+	 * Given a board, cache all possible two card combinations of hand ranks, so
+	 * that lightenting fast hand comparisons
 	 * may be done later.
 	 */
 	public int[][] getRanks(UoAHand board) {
@@ -145,7 +231,8 @@ public class UoAHandEvaluator {
 	 * Get the best 5 card poker hand from a 7 card hand
 	 * 
 	 * @param h Any 7 card poker hand
-	 * @return A Hand containing the highest ranked 5 card hand possible from the input.
+	 * @return A Hand containing the highest ranked 5 card hand possible from the
+	 *         input.
 	 */
 	public UoAHand getBest5CardHand(UoAHand h) {
 		int[] ch = h.getCardArray();
@@ -177,27 +264,27 @@ public class UoAHandEvaluator {
 	 */
 	private String drb_Name_Hand(int handtype) {
 		switch (handtype) {
-			case -1 :
+			case -1:
 				return ("Hidden Hand");
-			case 1 :
+			case 1:
 				return ("High Card");
-			case 2 :
+			case 2:
 				return ("Pair");
-			case 3 :
+			case 3:
 				return ("Two Pair");
-			case 4 :
+			case 4:
 				return ("Three of a Kind");
-			case 5 :
+			case 5:
 				return ("Straight");
-			case 6 :
+			case 6:
 				return ("Flush");
-			case 7 :
+			case 7:
 				return ("Full House");
-			case 8 :
+			case 8:
 				return ("Four of a Kind");
-			case 9 :
+			case 9:
 				return ("Straight Flush");
-			default :
+			default:
 				return ("Very Weird hand indeed");
 		}
 	}
@@ -226,7 +313,8 @@ public class UoAHandEvaluator {
 			for (i = 1; i <= hand[0]; i++) {
 				if ((hand[i] != unknown) && ((hand[i] / 13) == suit)) {
 					suitvector[(hand[i] % 13) + 1] = 1;
-				} ;
+				}
+				;
 			}
 
 			/* now look for straights */
@@ -242,7 +330,8 @@ public class UoAHandEvaluator {
 					strght++;
 					if (strght >= 5) {
 						strtop = i - 1;
-					} ;
+					}
+					;
 				} else
 					strght = 0;
 			}
@@ -270,7 +359,8 @@ public class UoAHandEvaluator {
 		for (i = 1; i <= 13; i++) {
 			if (dist[i] >= 4) {
 				quadrank = i - 1;
-			} ;
+			}
+			;
 		}
 
 		/* copy those quads */
@@ -280,7 +370,8 @@ public class UoAHandEvaluator {
 			if ((hand[i] != unknown) && ((hand[i] % 13) == quadrank)) {
 				best[j] = hand[i];
 				j++;
-			} ;
+			}
+			;
 			i++;
 		}
 
@@ -299,7 +390,8 @@ public class UoAHandEvaluator {
 				if ((hand[i] != unknown) && ((hand[i] % 13) == kicker)) {
 					best[j] = hand[i];
 					j++;
-				} ;
+				}
+				;
 				i++;
 			}
 		} else {
@@ -315,7 +407,8 @@ public class UoAHandEvaluator {
 		for (i = 1; i <= 13; i++) {
 			if (dist[i] >= 3) {
 				tripsrank = i - 1;
-			} ;
+			}
+			;
 		}
 
 		/* copy those trips */
@@ -325,7 +418,8 @@ public class UoAHandEvaluator {
 			if ((hand[i] != unknown) && ((hand[i] % 13) == tripsrank)) {
 				best[j] = hand[i];
 				j++;
-			} ;
+			}
+			;
 			i++;
 		}
 
@@ -345,7 +439,8 @@ public class UoAHandEvaluator {
 			if ((hand[i] != unknown) && ((hand[i] % 13) == pairrank)) {
 				best[j] = hand[i];
 				j++;
-			} ;
+			}
+			;
 			i++;
 		}
 	}
@@ -362,7 +457,8 @@ public class UoAHandEvaluator {
 		for (i = 14; i <= 17; i++) {
 			if (dist[i] >= 5) {
 				flushsuit = i - 14;
-			} ;
+			}
+			;
 		}
 
 		/* explicitly initialize suitvector */
@@ -375,7 +471,8 @@ public class UoAHandEvaluator {
 		for (i = 1; i <= hand[0]; i++) {
 			if ((hand[i] != unknown) && ((hand[i] / 13) == flushsuit)) {
 				suitvector[(hand[i] % 13) + 1] = 1;
-			} ;
+			}
+			;
 		}
 
 		/* determine best five cards in flushsuit */
@@ -385,7 +482,8 @@ public class UoAHandEvaluator {
 			if (suitvector[i] >= 1) {
 				best[j] = (13 * flushsuit) + i - 1;
 				j++;
-			} ;
+			}
+			;
 			i--;
 		}
 	}
@@ -406,7 +504,8 @@ public class UoAHandEvaluator {
 				strght++;
 				if (strght >= 5) {
 					strtop = i - 1;
-				} ;
+				}
+				;
 			} else
 				strght = 0;
 		}
@@ -417,7 +516,8 @@ public class UoAHandEvaluator {
 				for (i = 1; i <= hand[0]; i++) {
 					if ((hand[i] != unknown) && (hand[i] % 13 == (strtop + 1 - j))) {
 						best[j] = hand[i];
-					} ;
+					}
+					;
 				}
 			}
 		} else if (strtop == 3) {
@@ -425,13 +525,15 @@ public class UoAHandEvaluator {
 				for (i = 1; i <= hand[0]; i++) {
 					if ((hand[i] != unknown) && (hand[i] % 13 == (strtop + 1 - j))) {
 						best[j] = hand[i];
-					} ;
+					}
+					;
 				}
 			}
 			for (i = 1; i <= hand[0]; i++) { /* the Ace in a low straight */
 				if ((hand[i] != unknown) && (hand[i] % 13 == 12)) {
 					best[5] = hand[i];
-				} ;
+				}
+				;
 			}
 		}
 	}
@@ -443,7 +545,8 @@ public class UoAHandEvaluator {
 		for (i = 1; i <= 13; i++) {
 			if (dist[i] >= 3) {
 				tripsrank = i - 1;
-			} ;
+			}
+			;
 		}
 
 		/* copy those trips */
@@ -453,7 +556,8 @@ public class UoAHandEvaluator {
 			if ((hand[i] != unknown) && ((hand[i] % 13) == tripsrank)) {
 				best[j] = hand[i];
 				j++;
-			} ;
+			}
+			;
 			i++;
 		}
 
@@ -462,14 +566,16 @@ public class UoAHandEvaluator {
 		for (i = 1; i <= 13; i++) { /* find rank of largest kicker */
 			if ((dist[i] >= 1) && ((i - 1) != tripsrank)) {
 				kicker1 = i - 1;
-			} ;
+			}
+			;
 		}
 
 		kicker2 = unknown;
 		for (i = 1; i <= kicker1; i++) { /* find rank of second kicker */
 			if ((dist[i] >= 1) && ((i - 1) != tripsrank)) {
 				kicker2 = i - 1;
-			} ;
+			}
+			;
 		}
 
 		/* copy kickers */
@@ -479,7 +585,8 @@ public class UoAHandEvaluator {
 				if ((hand[i] != unknown) && ((hand[i] % 13) == kicker1)) {
 					best[j] = hand[i];
 					j++;
-				} ;
+				}
+				;
 				i++;
 			}
 		} else {
@@ -493,7 +600,8 @@ public class UoAHandEvaluator {
 				if ((hand[i] != unknown) && ((hand[i] % 13) == kicker2)) {
 					best[j] = hand[i];
 					j++;
-				} ;
+				}
+				;
 				i++;
 			}
 		} else {
@@ -509,13 +617,15 @@ public class UoAHandEvaluator {
 		for (i = 1; i <= 13; i++) {
 			if (dist[i] >= 2) {
 				pairrank1 = i - 1;
-			} ;
+			}
+			;
 		}
 		/* find rank of second largest pair */
 		for (i = 1; i <= 13; i++) {
 			if ((dist[i] >= 2) && ((i - 1) != pairrank1)) {
 				pairrank2 = i - 1;
-			} ;
+			}
+			;
 		}
 
 		/* copy those pairs */
@@ -525,7 +635,8 @@ public class UoAHandEvaluator {
 			if ((hand[i] != unknown) && ((hand[i] % 13) == pairrank1)) {
 				best[j] = hand[i];
 				j++;
-			} ;
+			}
+			;
 			i++;
 		}
 		i = 1; /* position in hand[] */
@@ -533,7 +644,8 @@ public class UoAHandEvaluator {
 			if ((hand[i] != unknown) && ((hand[i] % 13) == pairrank2)) {
 				best[j] = hand[i];
 				j++;
-			} ;
+			}
+			;
 			i++;
 		}
 
@@ -552,7 +664,8 @@ public class UoAHandEvaluator {
 				if ((hand[i] != unknown) && ((hand[i] % 13) == kicker)) {
 					best[j] = hand[i];
 					j++;
-				} ;
+				}
+				;
 				i++;
 			}
 		} else {
@@ -568,7 +681,8 @@ public class UoAHandEvaluator {
 		for (i = 1; i <= 13; i++) {
 			if (dist[i] >= 2) {
 				pairrank = i - 1;
-			} ;
+			}
+			;
 		}
 
 		/* copy that pair */
@@ -578,7 +692,8 @@ public class UoAHandEvaluator {
 			if ((hand[i] != unknown) && ((hand[i] % 13) == pairrank)) {
 				best[j] = hand[i];
 				j++;
-			} ;
+			}
+			;
 			i++;
 		}
 
@@ -587,13 +702,15 @@ public class UoAHandEvaluator {
 		for (i = 1; i <= 13; i++) { /* find rank of largest kicker */
 			if ((dist[i] >= 1) && ((i - 1) != pairrank)) {
 				kicker1 = i - 1;
-			} ;
+			}
+			;
 		}
 		kicker2 = unknown;
 		for (i = 1; i <= kicker1; i++) { /* find rank of second kicker */
 			if ((dist[i] >= 1) && ((i - 1) != pairrank)) {
 				kicker2 = i - 1;
-			} ;
+			}
+			;
 		}
 		kicker3 = unknown;
 		for (i = 1; i <= kicker2; i++) { /* find rank of third kicker */
@@ -609,7 +726,8 @@ public class UoAHandEvaluator {
 				if ((hand[i] != unknown) && ((hand[i] % 13) == kicker1)) {
 					best[j] = hand[i];
 					j++;
-				} ;
+				}
+				;
 				i++;
 			}
 		} else {
@@ -623,7 +741,8 @@ public class UoAHandEvaluator {
 				if ((hand[i] != unknown) && ((hand[i] % 13) == kicker2)) {
 					best[j] = hand[i];
 					j++;
-				} ;
+				}
+				;
 				i++;
 			}
 		} else {
@@ -637,7 +756,8 @@ public class UoAHandEvaluator {
 				if ((hand[i] != unknown) && ((hand[i] % 13) == kicker3)) {
 					best[j] = hand[i];
 					j++;
-				} ;
+				}
+				;
 				i++;
 			}
 		} else {
@@ -654,31 +774,36 @@ public class UoAHandEvaluator {
 		for (i = 1; i <= 13; i++) { /* find rank of largest kicker */
 			if (dist[i] >= 1) {
 				kicker1 = i - 1;
-			} ;
+			}
+			;
 		}
 		kicker2 = unknown;
 		for (i = 1; i <= kicker1; i++) { /* find rank of second kicker */
 			if (dist[i] >= 1) {
 				kicker2 = i - 1;
-			} ;
+			}
+			;
 		}
 		kicker3 = unknown;
 		for (i = 1; i <= kicker2; i++) { /* find rank of third kicker */
 			if (dist[i] >= 1) {
 				kicker3 = i - 1;
-			} ;
+			}
+			;
 		}
 		kicker4 = unknown;
 		for (i = 1; i <= kicker3; i++) { /* find rank of fourth kicker */
 			if (dist[i] >= 1) {
 				kicker4 = i - 1;
-			} ;
+			}
+			;
 		}
 		kicker5 = unknown;
 		for (i = 1; i <= kicker4; i++) { /* find rank of fifth kicker */
 			if (dist[i] >= 1) {
 				kicker5 = i - 1;
-			} ;
+			}
+			;
 		}
 
 		/* copy kickers */
@@ -690,7 +815,8 @@ public class UoAHandEvaluator {
 				if ((hand[i] != unknown) && ((hand[i] % 13) == kicker1)) {
 					best[j] = hand[i];
 					j++;
-				} ;
+				}
+				;
 				i++;
 			}
 		} else {
@@ -704,7 +830,8 @@ public class UoAHandEvaluator {
 				if ((hand[i] != unknown) && ((hand[i] % 13) == kicker2)) {
 					best[j] = hand[i];
 					j++;
-				} ;
+				}
+				;
 				i++;
 			}
 		} else {
@@ -718,7 +845,8 @@ public class UoAHandEvaluator {
 				if ((hand[i] != unknown) && ((hand[i] % 13) == kicker3)) {
 					best[j] = hand[i];
 					j++;
-				} ;
+				}
+				;
 				i++;
 			}
 		} else {
@@ -732,7 +860,8 @@ public class UoAHandEvaluator {
 				if ((hand[i] != unknown) && ((hand[i] % 13) == kicker4)) {
 					best[j] = hand[i];
 					j++;
-				} ;
+				}
+				;
 				i++;
 			}
 		} else {
@@ -746,7 +875,8 @@ public class UoAHandEvaluator {
 				if ((hand[i] != unknown) && ((hand[i] % 13) == kicker5)) {
 					best[j] = hand[i];
 					j++;
-				} ;
+				}
+				;
 				i++;
 			}
 		} else {
@@ -841,7 +971,8 @@ public class UoAHandEvaluator {
 				rankmax1 = dist[i];
 			} else if (dist[i] > rankmax2) {
 				rankmax2 = dist[i];
-			} ;
+			}
+			;
 
 			if (dist[i] >= 1) {
 				strght++;
@@ -866,7 +997,8 @@ public class UoAHandEvaluator {
 			} else {
 				hand_type = flush;
 				Find_Flush(hand, dist, best);
-			} ;
+			}
+			;
 		} else if (rankmax1 >= 4) {
 			hand_type = quads;
 			Find_Quads(hand, dist, best);
@@ -891,7 +1023,8 @@ public class UoAHandEvaluator {
 		} else {
 			hand_type = nopair;
 			Find_NoPair(hand, dist, best);
-		} ;
+		}
+		;
 
 		return (hand_type);
 	}
@@ -982,14 +1115,17 @@ public class UoAHandEvaluator {
 	}
 
 	/**
-	 * Get a numerical ranking of this hand. Uses java based code, so may be slower than using the native methods, but
+	 * Get a numerical ranking of this hand. Uses java based code, so may be slower
+	 * than using the native methods, but
 	 * is more compatible this way.
 	 * 
-	 * Based on Denis Papp's Loki Hand ID code (id.cpp) Given a 1-9 card hand, will return a unique rank such that any
+	 * Based on Denis Papp's Loki Hand ID code (id.cpp) Given a 1-9 card hand, will
+	 * return a unique rank such that any
 	 * two hands will be ranked with the better hand having a higher rank.
 	 * 
 	 * @param h a 1-9 card hand
-	 * @return a unique number representing the hand strength of the best 5-card poker hand in the given 7 cards. The
+	 * @return a unique number representing the hand strength of the best 5-card
+	 *         poker hand in the given 7 cards. The
 	 *         higher the number, the better the hand is.
 	 */
 	public final static int rankHand(UoAHand h) {
@@ -1122,11 +1258,11 @@ public class UoAHandEvaluator {
 		return res;
 	}
 
-	private static final String[] hand_name = {"HIGH", "PAIR", "TWO PAIR", "THREE KIND", "STRAIGHT", "FLUSH",
-			"FULL HOUSE", "FOUR KIND", "STRAIGHT FLUSH", "FIVE KIND"};
+	private static final String[] hand_name = { "HIGH", "PAIR", "TWO PAIR", "THREE KIND", "STRAIGHT", "FLUSH",
+			"FULL HOUSE", "FOUR KIND", "STRAIGHT FLUSH", "FIVE KIND" };
 
-	private static final String[] rank_name = {"Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
-			"Jack", "Queen", "King", "Ace"};
+	private static final String[] rank_name = { "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
+			"Jack", "Queen", "King", "Ace" };
 
 	/**
 	 * Return a string naming the hand
@@ -1141,42 +1277,42 @@ public class UoAHandEvaluator {
 		String t = new String();
 
 		switch (type) {
-			case HIGH :
+			case HIGH:
 				ident /= NUM_RANKS * NUM_RANKS * NUM_RANKS * NUM_RANKS;
 				t = rank_name[ident] + " High";
 				break;
-			case FLUSH :
+			case FLUSH:
 				ident /= NUM_RANKS * NUM_RANKS * NUM_RANKS * NUM_RANKS;
 				t = "a Flush, " + rank_name[ident] + " High";
 				break;
-			case PAIR :
+			case PAIR:
 				ident /= NUM_RANKS * NUM_RANKS * NUM_RANKS;
 				t = "a Pair of " + rank_name[ident] + "s";
 				break;
-			case TWOPAIR :
+			case TWOPAIR:
 				ident2 = ident / (NUM_RANKS * NUM_RANKS);
 				ident = (ident % (NUM_RANKS * NUM_RANKS)) / NUM_RANKS;
 				t = "Two Pair, " + rank_name[ident2] + "s and " + rank_name[ident] + "s";
 				break;
-			case THREEKIND :
+			case THREEKIND:
 				t = "Three of a Kind, " + rank_name[ident / (NUM_RANKS * NUM_RANKS)] + "s";
 				break;
-			case FULLHOUSE :
+			case FULLHOUSE:
 				t = "a Full House, " + rank_name[ident / NUM_RANKS] + "s over " + rank_name[ident % NUM_RANKS] + "s";
 				break;
-			case FOURKIND :
+			case FOURKIND:
 				t = "Four of a Kind, " + rank_name[ident / NUM_RANKS] + "s";
 				break;
-			case STRAIGHT :
+			case STRAIGHT:
 				t = "a " + rank_name[ident] + " High Straight";
 				break;
-			case STRAIGHTFLUSH :
+			case STRAIGHTFLUSH:
 				t = "a " + rank_name[ident] + " High Straight Flush";
 				break;
-			case FIVEKIND :
+			case FIVEKIND:
 				t = "Five of a Kind, " + rank_name[ident] + "s";
 				break;
-			default :
+			default:
 				t = hand_name[type];
 		}
 

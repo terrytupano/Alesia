@@ -1,7 +1,7 @@
 /*.class
 /*.sql
 /*.properties
-/bin/
+/target/
 /screenShots/
 /IRCData/
 src.rar

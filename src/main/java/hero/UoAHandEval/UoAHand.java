@@ -8,7 +8,7 @@ Copyright (c) 2000:
       See "Liscence.txt"
 ***************************************************************************/
 
-import java.util.StringTokenizer;
+import java.util.*;
 
 /**
 * Stores a Hand of Cards (up to a maximum of 7)
@@ -172,6 +172,18 @@ public class UoAHand {
       return cards[pos];
    }
    
-   
+
+	// -------------------------------
+	// terry
+	// -------------------------------
+
+
+   public List<UoACard> getCards() {
+      List<UoACard> cardsL = new ArrayList<>();
+      for (int i = 1; i <= cards[0]; i++) {
+         cardsL.add(new UoACard(cards[i]));
+      }
+      return cardsL;
+   }
 }
 
