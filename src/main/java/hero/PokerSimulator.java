@@ -256,6 +256,7 @@ public class PokerSimulator {
 			result.put("isPoketPair", UoAHandEvaluator.isPoketPair(holeCards));
 			result.put("isOvercard", UoAHandEvaluator.isOvercard(holeCards, communityCards));
 			result.put("isIStraightDraw", UoAHandEvaluator.isInsideStraightDraw(holeCards, communityCards));
+			result.put("darkness", UoAHandEvaluator.getDarkness(holeCards, communityCards));
 
 
 			// result.put("outsTurn", outsTurn);
