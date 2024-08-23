@@ -22,9 +22,9 @@ public class TrooperAction {
 	 */
 	public final String robotCommand;
 	/**
-	 * Computed expected value for this action
+	 *  pot odds are the ratio of the current size of the pot to the cost of this action ammount
 	 */
-	public double expectedValue;
+	public double potOdds;
 
 	/**
 	 * Constructor. the robot command for this action will be the name

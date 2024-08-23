@@ -14,10 +14,10 @@ package core;
 import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
-import java.io.InputStream;
 import java.text.*;
 import java.util.*;
 import java.util.List;
+import java.util.logging.*;
 import java.util.zip.*;
 
 import javax.imageio.*;
@@ -259,4 +259,30 @@ public class TResources {
 		}
 		return rdta;
 	}
+
+	/**
+	 * save a Properties objet
+	 * @param fileName - the namee of the fila
+	 * @param properties - the properties to save
+	 */
+    public static void saveProperties(String fileName, Properties properties) {
+        try {
+            File fp = new File(fileName);
+            properties.store(new FileOutputStream(fp), "");
+        } catch (Exception e) {
+            Alesia.logger.log(Level.SEVERE, "", e);
+        }
+    }
+
+    public static Properties loadProperties(String fileName) {
+        Properties properties = new Properties();
+        try {
+            File fp = new File(fileName);
+            properties.load(new FileInputStream(fp));
+            return properties;
+        } catch (Exception e) {
+            Alesia.logger.log(Level.SEVERE, "", e);
+        }
+        return null;
+    }
 }

@@ -31,7 +31,7 @@ import net.sourceforge.tess4j.*;
 public class Hero {
 
 	private static Trooper activeTrooper;
-	protected static Logger heroLogger = Logger.getLogger("Hero");
+	public static Logger heroLogger = Logger.getLogger("Hero");
 	private static HeroPanel heroPanel;
 //	private static Table simulationTable;
 //	private GameSimulatorPanel simulatorPanel;

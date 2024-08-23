@@ -18,14 +18,12 @@ public class ChenScore extends BasicRule {
     private Map<Integer, Double> raiseFactors;
 
     ChenScore(RuleBook ruleBook) {
-        super("the Chen Formula", "Ther Chen formula for preflop card.s selection.");
+        super("Chen Formula", "The Chen formula for preflop card.s selection.");
         this.ruleBook = ruleBook;
         this.properties = new Properties();
         this.raisePositions = new HashMap<>();
         this.callPositions = new HashMap<>();
         this.raiseFactors = new HashMap<>();
-
-        RuleBook.loadStrategy(this, properties);
 
         // raise/call/fold chenscores idexed by position
         for (int position = 0; position < Table.CAPACITY; position++) {
@@ -40,17 +38,17 @@ public class ChenScore extends BasicRule {
 
     @Override
     public boolean evaluate(Facts facts) {
-        return RuleBook.isPreflop(facts);
+        // only preflop
+        return ruleBook.pokerSimulator.street == PokerSimulator.HOLE_CARDS_DEALT;
     }
 
     @Override
     public void execute(Facts facts) throws Exception {
-        String key = this.getClass().getSimpleName();
-        UoAHand hand = (UoAHand) facts.get(RuleBook.HOLECARDS);
-        double score = PokerSimulator.getChenScore(hand);
+        UoAHand holeCards = ruleBook.pokerSimulator.holeCards;
+        double score = PokerSimulator.getChenScore(holeCards);
+        double callValue = ruleBook.pokerSimulator.callValue;
 
-        int callValue = (Integer) facts.get("callValue");
-        int tablePosition = (Integer) facts.get("tablePosition");
+        int tablePosition = ruleBook.pokerSimulator.tablePosition;
 
         int raise = raisePositions.get(tablePosition);
         int call = callPositions.get(tablePosition);
@@ -58,16 +56,20 @@ public class ChenScore extends BasicRule {
 
         // Always raise or reraise with x points or more.
         if (score >= raise) {
-            ruleBook.result.put(key, new TrooperAction("raise", callValue * raiseFactor));
+            TrooperAction action = new TrooperAction("raise", callValue * raiseFactor);
+            ruleBook.addAction(this, action);
+            Hero.heroLogger.info("chen score say: " + action);
             return;
         }
 
         // Only ever consider calling a raise with x points or more.
         if (score >= call) {
-            ruleBook.result.put(key, new TrooperAction("call", callValue));
+            TrooperAction action = new TrooperAction("call", callValue);
+            ruleBook.addAction(this, action);
+            Hero.heroLogger.info("chen score say: " + action);
             return;
         }
 
-        ruleBook.result.put(key, TrooperAction.FOLD);
+        Hero.heroLogger.info("Chen score found no action to perform");
     }
 }

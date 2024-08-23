@@ -68,6 +68,57 @@ public abstract class Bot implements Client {
 		return statistic;
 	}
 
+	/**
+	 * bassed on the incoming arguments, prepare al sensors of the currnet instace
+	 * of {@link PokerSimulator}
+	 * 
+	 * @param minBet         - the min bet
+	 * @param currentBet     - the curent bet
+	 * @param allowedActions - the list of alloed actions
+	 */
+	public void activeteSensors(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
+		int raiseValue = Math.min(minBet * 2, player.getCash());
+
+		boolean callBol = allowedActions.contains(PlayerAction.CALL) || allowedActions.contains(PlayerAction.CHECK);
+		boolean raiseBol = allowedActions.contains(PlayerAction.RAISE)
+				|| allowedActions.contains(PlayerAction.BET) && player.getCash() >= raiseValue;
+		boolean potBol = raiseBol && player.getCash() >= pot;
+		boolean allinBol = raiseBol && player.getCash() >= minBet;
+
+		// A bet is the initial amount and a raise is anything on top of this
+		pokerSimulator.sensorStatus.put("raise.pot", potBol);
+		pokerSimulator.sensorStatus.put("raise.allin", allinBol);
+		pokerSimulator.sensorStatus.put("raise.slider", allinBol);
+
+		// the trooper dont take into account call/check/raise enabled/disabel status.
+		// there are actives and/or mutate the text to reflext valid acction
+		// call/check are the same
+		// check: call buton is active. callvalue=0
+		// call: call button is active. callvalue=minbet
+		pokerSimulator.setCallValue(minBet);
+		if (allowedActions.contains(PlayerAction.CHECK))
+			pokerSimulator.setCallValue(0);
+
+		if (!callBol || !raiseBol)
+			System.out.println("HeroBot.act()");
+
+		pokerSimulator.setPotValue(pot);
+		pokerSimulator.setHeroChips(player.getCash());
+		pokerSimulator.setRaiseValue(raiseValue);
+		//TODO: hasCard method don't say if the villain folded his cards -------------------------------------------------- !!!!!!!!!
+		int villans = (int) villains.stream().filter(p -> p.hasCards()).count();
+		// pokerSimulator.setNunOfOpponets(villans);
+		pokerSimulator.setTablePosition(dealer, player.getChair(), villans);
+	}
+
+	/**
+	 * return a {@link PlayerAction} bade on the corresponding
+	 * {@link TrooperAction}. the method is simply a translation
+	 * 
+	 * @param trooperAction  - the selected TrooperAction
+	 * @param allowedActions - the list of PlayerActions (dicctionary)
+	 * @return the PlayerAction
+	 */
 	public PlayerAction getPlayerAction(TrooperAction trooperAction, Set<PlayerAction> allowedActions) {
 		if (trooperAction.equals(TrooperAction.FOLD))
 			return PlayerAction.FOLD;
@@ -91,7 +142,7 @@ public abstract class Bot implements Client {
 	}
 
 	/**
-	 * Equivalent of Trooper.loadActions(double)
+	 * Equivalent of {@link PokerSimulator#loadActions(double, PokerSimulator)}
 	 * 
 	 * @param minBet         - the minimum bet
 	 * @param currentBet     - the current bet
@@ -105,7 +156,7 @@ public abstract class Bot implements Client {
 		List<TrooperAction> actions = new ArrayList<>();
 
 		int bet = Math.max(minBet, currentBet);
-		List<Double> doubles = Trooper.getRaiseSteps(bet, cashToBet);
+		List<Double> doubles = PokerSimulator.getRaiseSteps(bet, cashToBet);
 
 		if (allowedActions.contains(PlayerAction.CHECK))
 			actions.add(TrooperAction.CHECK);
@@ -155,6 +206,7 @@ public abstract class Bot implements Client {
 	public void joinedTable(TableType type, int bigBlind, List<Player> players) {
 		this.villains = new ArrayList<>(players);
 		this.player = players.stream().filter(p -> trooperName.equals(p.getName())).findFirst().get();
+
 		villains.remove(player);
 		this.bigBlind = bigBlind;
 		this.buyIn = player.getCash();

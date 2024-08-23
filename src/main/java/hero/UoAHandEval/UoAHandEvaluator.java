@@ -23,55 +23,119 @@ public class UoAHandEvaluator {
 	// terry
 	// -------------------------------
 
-	public static boolean isPoketPair(UoAHand holeHand) {
-		int type = getType(holeHand);
+	public static boolean isPoketPair(UoAHand holeCards) {
+		int type = getType(holeCards);
 		return type == PAIR;
 	}
 
-	public static boolean isTwoOvercards(UoACard c1, UoACard c2, UoAHand communityHand) {
-		return isOvercard(c1, communityHand) && isOvercard(c2, communityHand);
+	public static boolean isTwoOvercards(UoACard c1, UoACard c2, UoAHand communityCards) {
+		return isOvercard(c1, communityCards) && isOvercard(c2, communityCards);
 	}
 
-	public static boolean isOvercard(UoAHand holeHand, UoAHand communityHand) {
-		return isOvercard(holeHand.getCard(1), communityHand) || isOvercard(holeHand.getCard(2), communityHand);
+	/**
+	 * return true iff the hand hat 1 overcard but not 2
+	 * 
+	 * @param holeCards      - the holeCards
+	 * @param communityCards - the communityCards
+	 * @return true iff 1 card is overcard
+	 */
+	public static boolean isOvercard(UoAHand holeCards, UoAHand communityCards) {
+		boolean first = isOvercard(holeCards.getCard(1), communityCards);
+		boolean second = isOvercard(holeCards.getCard(2), communityCards);
+
+		// xor operation
+		return (first && !second) || (!first && second);
 	}
 
-	private static boolean isOvercard(UoACard card, UoAHand communityHand) {
+	public static UoACard getSignificantCard(UoAHand holeCards) {
+		UoACard card = holeCards.getCard(1).getRank() > holeCards.getCard(2).getRank() ? holeCards.getCard(1)
+				: holeCards.getCard(2);
+		return card;
+	}
+
+	// public static boolean isOvercardParticipant(UoAHand holeCards, UoAHand communityCards) {
+	// 	UoACard card = holeCards.getCard(1).getRank() > holeCards.getCard(2).getRank() ? holeCards.getCard(1)
+	// 			: holeCards.getCard(2);
+	// 	return card;
+	// }
+
+	/**
+	 * return true if both cards on holeCards are overcard
+	 * 
+	 * @param holeCards      - the holeCards
+	 * @param communityCards - the communityCards
+	 * @return true or false
+	 */
+	public static boolean is2Overcards(UoAHand holeCards, UoAHand communityCards) {
+		return isOvercard(holeCards.getCard(1), communityCards) && isOvercard(holeCards.getCard(2), communityCards);
+	}
+
+	private static boolean isOvercard(UoACard card, UoAHand communityCards) {
 		boolean isOvercard = true;
-		for (int j = 1; j <= communityHand.size(); j++) {
-			isOvercard = card.getRank() < communityHand.getCard(j).getRank() ? false : isOvercard;
+		for (int j = 1; j <= communityCards.size(); j++) {
+			isOvercard = card.getRank() <= communityCards.getCard(j).getRank() ? false : isOvercard;
 		}
 		return isOvercard;
 	}
 
-	public static boolean isInsideStraightDraw(UoAHand holeHand, UoAHand communityHand) {
-		UoAHand hand = new UoAHand(holeHand + " " + communityHand);
-		List<Integer> ranks = hand.getCards().stream().map(c -> c.getRank()).collect(Collectors.toList());
-		Collections.sort(ranks);
-		// there muss be only 1 gap = 2 cards
-		int gaps = 0;
-		for (int i = 0; i < ranks.size() - 1; i++) {
-			gaps += ranks.get(i + 1) - ranks.get(i) == 2 ? 1 : 0;
+	public static boolean isFlushDraw(UoAHand holeCards, UoAHand communityCards) {
+		UoAHand hand = new UoAHand(holeCards + " " + communityCards);
+		long suitCount = 0;
+		List<Integer> suits = Arrays.asList(UoACard.CLUBS, UoACard.DIAMONDS, UoACard.HEARTS, UoACard.SPADES);
+		for (Integer suit : suits) {
+			long count = hand.getCards().stream().filter(c -> c.getSuit() == suit).count();
+			suitCount = count > suitCount ? count : suitCount;
 		}
-		return gaps <= 2;
+
+		int dark = containSuit(holeCards.getCard(1), communityCards) ? 1 : 0;
+		dark += containSuit(holeCards.getCard(2), communityCards) ? 1 : 0;
+		return dark > 0 && suitCount == 4;
 	}
 
-	public static int getDarkness(UoAHand holeHand, UoAHand communityHand) {
+	public static boolean isInStraightDraw(UoAHand holeCards, UoAHand communityCards) {
+		String gaps = getStraightDrawPatt(holeCards, communityCards);
+		// System.out.println(gaps);
+		return gaps.contains("121") || gaps.contains("211") || gaps.contains("112");
+	}
+
+	public static boolean isOEStraightDraw(UoAHand holeCards, UoAHand communityCards) {
+		String gaps = getStraightDrawPatt(holeCards, communityCards);
+		return gaps.contains("111");
+	}
+
+	private static String getStraightDrawPatt(UoAHand holeCards, UoAHand communityCards) {
+		UoAHand hand = new UoAHand(holeCards + " " + communityCards);
+		List<Integer> ranks = hand.getCards().stream().map(c -> c.getRank()).collect(Collectors.toList());
+		Collections.sort(ranks);
+		String gaps = "";
+		for (int i = 0; i < ranks.size() - 1; i++) {
+			int gap = ranks.get(i + 1) - ranks.get(i);
+			gaps += gap;
+		}
+		return gaps;
+	}
+
+	public static int getDarkness(UoAHand holeCards, UoAHand communityCards) {
 		int darkness = 0;
-		int type = getType(new UoAHand(holeHand + " " + communityHand));
+		int type = getType(new UoAHand(holeCards + " " + communityCards));
 		if (type == PAIR || type == TWOPAIR || type == THREEKIND) {
-			darkness += containRank(holeHand.getCard(1), communityHand) ? 1 : 0;
-			darkness += containRank(holeHand.getCard(2), communityHand) ? 1 : 0;
+			if (isPoketPair(holeCards)) {
+				darkness = 2;
+			} else {
+				darkness += containRank(holeCards.getCard(1), communityCards) ? 1 : 0;
+				darkness += containRank(holeCards.getCard(2), communityCards) ? 1 : 0;
+
+			}
 		}
 
 		if (type == STRAIGHT || type == FULLHOUSE || type == FOURKIND) {
-			darkness += containRank(holeHand.getCard(1), communityHand) ? 1 : 0;
-			darkness += containRank(holeHand.getCard(2), communityHand) ? 1 : 0;
+			darkness += containRank(holeCards.getCard(1), communityCards) ? 1 : 0;
+			darkness += containRank(holeCards.getCard(2), communityCards) ? 1 : 0;
 		}
 
 		if (type == FLUSH || type == STRAIGHTFLUSH) {
-			darkness += containSuit(holeHand.getCard(1), communityHand) ? 1 : 0;
-			darkness += containSuit(holeHand.getCard(2), communityHand) ? 1 : 0;
+			darkness += containSuit(holeCards.getCard(1), communityCards) ? 1 : 0;
+			darkness += containSuit(holeCards.getCard(2), communityCards) ? 1 : 0;
 		}
 
 		return darkness;

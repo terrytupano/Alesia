@@ -11,7 +11,8 @@ import com.alee.laf.panel.*;
 import hero.UoAHandEval.*;
 
 /**
- * panel with whit a matrix of all poker cards and area to set Hero Hole cards, villain Hole cards and the community cards
+ * panel with whit a matrix of all poker cards and area to set Hero Hole cards,
+ * villain Hole cards and the community cards
  * 
  */
 public class CardsPanel extends WebPanel {
@@ -55,7 +56,6 @@ public class CardsPanel extends WebPanel {
 		comP.add(boardCards.get(6));
 		comP.setBorder(new TitledBorder("Comunity cards"));
 
-
 		WebPanel gamePanel = new WebPanel(new FlowLayout(FlowLayout.LEFT));
 		gamePanel.add(holP);
 		gamePanel.add(comP);
@@ -64,16 +64,14 @@ public class CardsPanel extends WebPanel {
 		add(cardsPanel, BorderLayout.CENTER);
 		add(gamePanel, BorderLayout.SOUTH);
 	}
-	
+
 	/**
 	 * the the boar with the example cart form modeling opponent paper
 	 * 
 	 */
 	public void setExampleFromOponetModelingPaper() {
 		resetTable();
-		// UoAHand exam = new UoAHand("Ad Qc 3h 4c jh");
-		UoAHand exam = new UoAHand("Jh 9c Qs 8d 4c");
-
+		UoAHand exam = new UoAHand("Ad Qc 3h 4c jh");
 		setHand(exam);
 	}
 
@@ -82,7 +80,7 @@ public class CardsPanel extends WebPanel {
 	 * 
 	 * @param hand
 	 */
-	private void setHand(UoAHand hand) {
+	public void setHand(UoAHand hand) {
 		int idx[] = hand.getCardArray();
 		int cnt = 0;
 		for (int i = 1; i < idx.length - 2; i++) {
@@ -93,7 +91,6 @@ public class CardsPanel extends WebPanel {
 				}
 			}
 		}
-
 	}
 
 	/**
@@ -122,27 +119,26 @@ public class CardsPanel extends WebPanel {
 	}
 
 	/**
-	 * return the selected cards inside a {@link Hashtable}
-	 * <li>myHole - instance of {@link UoAHand} contains the Hole cards
-	 * <li>comunityCards - instance of {@link UoAHand} contains the selected
-	 * community cards
+	 * return the current board status as a {@link UoAHand}. this method return null
+	 * if the current board status is not valid for evaluation
 	 * 
-	 * @return selected cards
+	 * @return the hand or null
 	 */
-	public Hashtable<String, Object> getGameCards() {
-		Hashtable<String, Object> ht = new Hashtable<>();
-		String shc = boardCards.get(0).getUoACard() + " " + boardCards.get(1).getUoACard();
-		shc = shc.replace("1c", "");
-		shc = shc.trim();
-		ht.put("myHole", new UoAHand(shc));
-		String sco = boardCards.get(2).getUoACard() + " " + boardCards.get(3).getUoACard() + " "
+	public UoAHand getHand() {
+		String hole = boardCards.get(0).getUoACard() + " " + boardCards.get(1).getUoACard();
+		hole = hole.replace("1c", "");
+		hole = hole.trim();
+		String community = boardCards.get(2).getUoACard() + " " + boardCards.get(3).getUoACard() + " "
 				+ boardCards.get(4).getUoACard() + " " + boardCards.get(5).getUoACard() + " "
 				+ boardCards.get(6).getUoACard();
-		sco = sco.replace("1c", "");
-		sco = sco.trim();
-		ht.put("comunityCards", new UoAHand(sco));
+		community = community.replace("1c", "");
+		community = community.trim();
 
-		return ht;
+		if (hole.length() != 5 || community.length() < 8)
+			return null;
+
+		UoAHand hand = new UoAHand(hole + " " + community);
+		return hand;
 	}
 
 	private class CardMouseListener extends MouseAdapter {

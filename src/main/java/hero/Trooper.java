@@ -64,32 +64,8 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	public static final String STATUS = "aa.Trooper Status";
 	public static final String ACTION_PERFORMED = "trooper.Action performed";
 	public static final String ACTIONS = "trooper.Actions";
-	/** the number of step to divide the raise values */
-	public static int STEPS = 6;
-
 	private static DecimalFormat twoDigitFormat = TResources.twoDigitFormat;
 	private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-
-	/**
-	 * return the raise steps list. All the steps values are from > value < to. this
-	 * method assume that the "from" value is = raise and "to" value are all in. the
-	 * # of returned elements inside the list is determined by the {@value #STEPS}
-	 * 
-	 * @param from - raise value
-	 * @param to   - all in value
-	 * 
-	 * @return the list
-	 */
-	public static List<Double> getRaiseSteps(double from, double to) {
-		double amount = from;
-		double inc = (to - from) / (STEPS + 1);
-		List<Double> doubles = new ArrayList<>();
-		for (int i = 0; i < STEPS; i++) {
-			amount += inc;
-			doubles.add(amount);
-		}
-		return doubles;
-	}
 
 	/**
 	 * Compute the pot odds based on the formula from <strong>MoP page 54</strong>.
@@ -125,10 +101,10 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 
 		for (TrooperAction act : potOdd.availableActions) {
 			double ev = winProb * ammunitions - act.amount;
-			act.expectedValue = ev;
+			act.potOdds = ev;
 		}
 		// remove all negative values
-		potOdd.availableActions.removeIf(ta -> ta.expectedValue < 0);
+		potOdd.availableActions.removeIf(ta -> ta.potOdds < 0);
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 		return potOdd;
 	}
@@ -240,7 +216,8 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 
 		if (txt != null) {
 			setVariableAndLog(EXPLANATION, "--- OPORTUNITY DETECTED " + txt + " ---");
-			loadActions(pokerSimulator.heroChips);
+			// availableActions = PokerSimulator.loadActions(pokerSimulator.heroChips,
+			// pokerSimulator);
 			gameAction = SubOptimalAction.ACTION_OPORTUNITY;
 
 			// 221201: due to high variance in getSuboptimalAction plus real money players
@@ -319,7 +296,8 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		// FLOP AND FUTHER
 		if (pokerSimulator.street > PokerSimulator.HOLE_CARDS_DEALT) {
 			if (!checkOpportunities()) {
-				loadActions(pokerSimulator.heroChips);
+				// availableActions = PokerSimulator.loadActions(pokerSimulator.heroChips,
+				// pokerSimulator);
 				potOdd();
 			}
 		}
@@ -490,65 +468,6 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 
 	public boolean isPaused() {
 		return paused;
-	}
-
-	/**
-	 * 
-	 * this method fill the global variable {@link #availableActions} whit all
-	 * available actions according to the parameter <code>maximum</code>. the
-	 * expected actions are
-	 * <li>Check/Call
-	 * <li>Raise
-	 * <li>Pot
-	 * <li>All-in
-	 * <li>{@link #STEPS} more actions that range from raise to the value close to
-	 * All-in.
-	 * <p>
-	 * for a total of 9 possible actions
-	 * 
-	 * @param maximum - the upper bound to consider
-	 */
-	private void loadActions(double maximum) {
-		availableActions.clear();
-		gameAction = SubOptimalAction.ACTION_NORMAL;
-
-		double call = pokerSimulator.callValue;
-		double raise = pokerSimulator.raiseValue;
-		double chips = pokerSimulator.heroChips;
-		double pot = pokerSimulator.potValue;
-
-		// fail safe: the maximum can.t be greater as chips.
-		double imax = maximum > chips ? chips : maximum;
-
-		if (call >= 0 && call <= imax)
-			availableActions.add(new TrooperAction("call", call));
-
-		if (raise >= 0 && raise <= imax)
-			availableActions.add(new TrooperAction("raise", raise));
-
-		if (pot >= 0 && pot <= imax && pokerSimulator.isSensorEnabled("raise.pot"))
-			availableActions.add(new TrooperAction("pot", "raise.pot;raise", pot));
-
-		if (chips >= 0 && chips <= imax && pokerSimulator.isSensorEnabled("raise.allin"))
-			availableActions.add(new TrooperAction("allIn", "raise.allin;raise", chips));
-
-		double sb = pokerSimulator.smallBlind;
-		double bb = pokerSimulator.bigBlind;
-		if (raise > 0 && pot <= imax && pokerSimulator.isSensorEnabled("raise.slider")) {
-			// check for int or double values for blinds
-			boolean isInt = (Double.valueOf(bb)).intValue() == bb && (Double.valueOf(bb)).intValue() == sb;
-			double tick = raise;
-
-			List<Double> doubles = Trooper.getRaiseSteps(raise, imax);
-			for (Double double1 : doubles) {
-				tick = double1;
-				// round value to look natural (don't write 12345. write 12340 or 12350)
-				if (isInt)
-					tick = ((int) (tick / 10)) * 10;
-				String txt = isInt ? "" + (int) tick : twoDigitFormat.format(tick);
-				availableActions.add(new TrooperAction("raise", "raise.text:dc;raise.text:k=" + txt + ";raise", tick));
-			}
-		}
 	}
 
 	private void logInfo(String message) {

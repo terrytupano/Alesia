@@ -3,6 +3,7 @@ package hero;
 import java.text.*;
 import java.util.*;
 
+import org.apache.commons.lang3.*;
 import org.apache.commons.math3.stat.descriptive.*;
 
 import core.*;
@@ -33,7 +34,6 @@ public class PokerSimulator {
 	public static String STATUS_ERROR = "Error";
 	private static NumberFormat percentageFormat = TResources.percentageFormat;
 	private static DecimalFormat twoDigitFormat = TResources.twoDigitFormat;
-	RuleBook ruleBook;
 
 	/**
 	 * temporal storage for the incoming cards (simulator)
@@ -54,7 +54,9 @@ public class PokerSimulator {
 	// {@link GameRecorder}
 	public double heroChips;
 	public double callValue, raiseValue, potValue;
-	public int opponents;
+	public double winProb;
+
+	public int villans;
 	public int street = NO_CARDS_DEALT;
 	public double buyIn, smallBlind, bigBlind;
 	public final UoAHand communityCards = new UoAHand();
@@ -63,6 +65,7 @@ public class PokerSimulator {
 	public int tablePosition;
 	public DescriptiveStatistics performaceStatistic;
 	public PokerSimulatorTraker pokerSimulatorTraker;
+	public RuleBook ruleBook;
 
 	public int stimatedVillanTau;
 
@@ -75,6 +78,8 @@ public class PokerSimulator {
 	// public double Ppot, Npot, HS_n, winProb_n;
 
 	private boolean isLive;
+	/** the number of step to divide the raise values */
+	public static int STEPS = 6;
 
 	public PokerSimulator() {
 		streetNames.put(NO_CARDS_DEALT, "No cards dealt");
@@ -95,7 +100,7 @@ public class PokerSimulator {
 		this.variableList = new TreeMap<>();
 		this.performaceStatistic = new DescriptiveStatistics(10);
 		this.pokerSimulatorTraker = new PokerSimulatorTraker();
-		this.ruleBook = new RuleBook();
+		this.ruleBook = new RuleBook(this);
 	}
 
 	void setLive(boolean isLive) {
@@ -191,7 +196,6 @@ public class PokerSimulator {
 		UoAHandEvaluator evaluator = new UoAHandEvaluator();
 		UoAHand allCards = new UoAHand(holeCards + " " + communityCards);
 		int handRank = UoAHandEvaluator.rankHand(allCards);
-		int handType = UoAHandEvaluator.getType(allCards);
 		Map<String, Object> result = new TreeMap<>();
 
 		// my hand evaluation
@@ -207,8 +211,6 @@ public class PokerSimulator {
 			ArrayList<UoAHand> aheadList = new ArrayList<>(52 * 52);
 			ArrayList<UoAHand> tiedList = new ArrayList<>(52 * 52);
 			ArrayList<UoAHand> behindList = new ArrayList<>(52 * 52);
-			ArrayList<UoACard> outsTurn = new ArrayList<>(52 * 52);
-			ArrayList<UoACard> outsRiver = new ArrayList<>(52 * 52);
 			int[][] rowcol = evaluator.getRanks(new UoAHand(communityCards));
 			for (int i = 0; i < 52; i++) {
 				for (int j = i; j < 52; j++) { // <--- only triangular superior values
@@ -230,23 +232,6 @@ public class PokerSimulator {
 
 						if (handRank < rowcol[i][j])
 							behindList.add(hand);
-
-						// outs.
-						UoAHand outsHand = new UoAHand(holeCards + " " + communityCards);
-
-						// turn
-						UoACard turn = new UoACard(i);
-						outsHand.addCard(turn);
-						int turnType = UoAHandEvaluator.getType(outsHand);
-						if (turnType > handType && !outsTurn.contains(turn))
-							outsTurn.add(turn);
-
-						// river
-						UoACard river = new UoACard(j);
-						outsHand.addCard(river);
-						int riverType = UoAHandEvaluator.getType(outsHand);
-						if (riverType > handType && !outsRiver.contains(river))
-							outsRiver.add(river);
 					}
 
 				}
@@ -255,12 +240,11 @@ public class PokerSimulator {
 
 			result.put("isPoketPair", UoAHandEvaluator.isPoketPair(holeCards));
 			result.put("isOvercard", UoAHandEvaluator.isOvercard(holeCards, communityCards));
-			result.put("isIStraightDraw", UoAHandEvaluator.isInsideStraightDraw(holeCards, communityCards));
+			result.put("is2Overcards", UoAHandEvaluator.is2Overcards(holeCards, communityCards));
+			result.put("isInStraightDraw", UoAHandEvaluator.isInStraightDraw(holeCards, communityCards));
+			result.put("isOEStraightDraw", UoAHandEvaluator.isOEStraightDraw(holeCards, communityCards));
+			result.put("isFlushDraw", UoAHandEvaluator.isFlushDraw(holeCards, communityCards));
 			result.put("darkness", UoAHandEvaluator.getDarkness(holeCards, communityCards));
-
-
-			// result.put("outsTurn", outsTurn);
-			// result.put("outsRiver", outsRiver);
 
 			result.put("rankAhead", aheadList.size());
 			result.put("rankAhead%", ((double) aheadList.size()) / ((double) total) * 100d);
@@ -275,7 +259,72 @@ public class PokerSimulator {
 			result.put("rankBehindList", behindList);
 
 			// outs
+			int outs = 0;
+			String outsExplanation = "";
 
+			if (UoAHandEvaluator.isPoketPair(holeCards)
+					&& UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.PAIR) {
+				outs += 2;
+				outsExplanation += "Pocket pair to set, ";
+			}
+
+			if (UoAHandEvaluator.isOvercard(holeCards, communityCards)
+					&& UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.HIGH) {
+				outs += 3;
+				outsExplanation += "One overcard, ";
+			}
+
+			if (UoAHandEvaluator.isInStraightDraw(holeCards, communityCards)) {
+				outs += 4;
+				outsExplanation += "Inside straight draw, ";
+			}
+
+			if (UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.TWOPAIR
+					&& UoAHandEvaluator.getDarkness(holeCards, communityCards) == 2) {
+				outs += 4;
+				outsExplanation += "2 pairs to full house, ";
+			}
+
+			if (UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.PAIR
+					&& UoAHandEvaluator.getDarkness(holeCards, communityCards) == 1
+					&& !UoAHandEvaluator.isPoketPair(holeCards)) {
+				outs += 5;
+				outsExplanation += "1 pair to 2 pairs or trip, ";
+			}
+			// No pair to pair
+			// if (UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.HIGH) {
+			// outs += 6;
+			// outsExplanation += "No pair to pair, ";
+			// }
+
+			if (UoAHandEvaluator.is2Overcards(holeCards, communityCards)
+					&& UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.HIGH) {
+				outs += 6;
+				outsExplanation += "2 overcard to overpair, ";
+			}
+
+			if (UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.THREEKIND
+					&& UoAHandEvaluator.isPoketPair(holeCards)) {
+				outs += 7;
+				outsExplanation += "set to full house / four of a kind, ";
+			}
+
+			if (UoAHandEvaluator.isOEStraightDraw(holeCards, communityCards)) {
+				outs += 8;
+				outsExplanation += "Open ended straight draw, ";
+			}
+
+			if (UoAHandEvaluator.isFlushDraw(holeCards, communityCards)) {
+				outs += 9;
+				outsExplanation += "Flush draw, ";
+			}
+			// inside straight draw and 2 overcards
+			// inside straight and flush draw
+			// open ended straight and flush draw
+
+			result.put("outs", outs);
+			result.put("outs%", outs * 2.0);
+			result.put("outsExplanation", StringUtils.substringBeforeLast(outsExplanation, ", "));
 		}
 
 		// is the nuts (apply only in post flop): hero can't loose
@@ -501,7 +550,7 @@ public class PokerSimulator {
 	 */
 	public void newHand() {
 		street = NO_CARDS_DEALT;
-		this.opponents = -1;
+		this.villans = -1;
 		holeCards.makeEmpty();
 		communityCards.makeEmpty();
 		// 190831: ya el sistema se esta moviendo. por lo menos hace fold !!!! :D estoy
@@ -515,6 +564,7 @@ public class PokerSimulator {
 		callValue = -1;
 		raiseValue = -1;
 		heroChips = -1;
+		winProb = -1;
 	}
 
 	public String getCurrentHandStrengName() {
@@ -534,36 +584,6 @@ public class PokerSimulator {
 		// TODO: delete ???
 		return variableList;
 	}
-
-	// String txt = null;
-	// // Hero must check for oportunity
-	// if (!takeOpportunity)
-	// return txt;
-	// // the word oportunity means the event present in flop or turn streat. in
-	// river is not a oportunity any more
-	// if (currentRound < FLOP_CARDS_DEALT)
-	// return txt;
-	//
-	// // is the nut
-	// if (getMyHandHelper().isTheNuts())
-	// return "Is the Nuts";
-	//
-	// // villan.s most probable hands is stronger as hero.s hand
-	// // if (oppTopHand > myHandHelper.getHandRank())
-	// // return txt;
-	//
-	// // String sts = getSignificantCards();
-	// // // set hand but > pair
-	// // if (myHandHelper.getHandRank() > Hand.PAIR && sts.length() == 5) {
-	// // String nh = UoAHandEvaluator.nameHand(uoAHand);
-	// // txt = "Troper has " + nh + " (set)";
-	// // }
-	//
-	// // String nh = UoAHandEvaluator.nameHand(uoAHand);
-	// // txt = "Troper has " + nh;
-	//
-	// return txt;
-	// }
 
 	/**
 	 * return <code>true</code> if the sensor argument is enable. false otherwise
@@ -613,15 +633,13 @@ public class PokerSimulator {
 		street = currentHand.size();
 
 		evaluation.clear();
-		evaluation.putAll(getEvaluation(holeCards, communityCards, opponents, heroChips / bigBlind));
-		ruleBook.updateFacts(this);
+		evaluation.putAll(getEvaluation(holeCards, communityCards, villans, heroChips / bigBlind));
+		winProb = (double) evaluation.getOrDefault("winProb", 0.0);
 		pokerSimulatorTraker.update(this);
+		ruleBook.fire();
 
 		// WARNING: theses values ARE NOT available in preflop
 		double Ppot = (double) evaluation.getOrDefault("PPot", 0.0);
-		// Npot = (double) uoAEvaluation.getOrDefault("NPot", 0.0);
-		double winProb_n = (double) evaluation.getOrDefault("winProb", 0.0);
-		// HS_n = (double) uoAEvaluation.getOrDefault("HS_n", 0.0);
 		double rankA = (double) evaluation.getOrDefault("rankAhead%", 0.0);
 		double rankB = (double) evaluation.getOrDefault("rankBehind%", 0.0);
 
@@ -629,7 +647,7 @@ public class PokerSimulator {
 		String text = "rankAhead " + twoDigitFormat.format(rankA) + " rankBehind " + twoDigitFormat.format(rankB);
 		variableList.put("simulator.Hand Ranks", text);
 
-		text = "winProb " + percentageFormat.format(winProb_n) + " Ppot " + percentageFormat.format(Ppot) + " "
+		text = "winProb " + percentageFormat.format(winProb) + " Ppot " + percentageFormat.format(Ppot) + " "
 				+ evaluation.get("name");
 		variableList.put("simulator.Evaluation", text);
 
@@ -639,7 +657,7 @@ public class PokerSimulator {
 		text = "Chips " + heroChips + " Pot " + potValue + " Call " + callValue + " Raise " + raiseValue;
 		variableList.put("simulator.Table values", text);
 
-		text = "Round " + streetNames.get(street) + " Opponents " + opponents + " Position " + tablePosition;
+		text = "Round " + streetNames.get(street) + " Opponents " + villans + " Position " + tablePosition;
 		variableList.put("simulator.Simulator values", text);
 
 		if (isLive) {
@@ -661,10 +679,6 @@ public class PokerSimulator {
 		this.heroChips = heroChips;
 	}
 
-	public void setNunOfOpponets(int opp) {
-		this.opponents = opp;
-	}
-
 	public void setPotValue(double potValue) {
 		this.potValue = potValue;
 	}
@@ -683,13 +697,112 @@ public class PokerSimulator {
 	 * <p>
 	 * this metod is called during the {@link SensorsArray#read(String)} operation.
 	 */
-	public void setTablePosition(int dealerPos, int villans) {
+	public void setTablePosition(int dealerPos, int myChair, int villans) {
+		this.villans = villans;
 		// int tp = Math.abs(dbp - (getActiveSeats() + 1));
 		this.tablePosition = Math.abs(dealerPos - (villans + 1));
 	}
 
 	public void setVariable(String key, Object value) {
 		variableList.put(key, value);
+	}
+
+	/**
+	 * return the raise steps list. All the steps values are from > value < to. this
+	 * method assume that the "from" value is = raise and "to" value are all in. the
+	 * # of returned elements inside the list is determined by the {@value STEPS}
+	 * 
+	 * @param from - raise value
+	 * @param to   - all in value
+	 * 
+	 * @return the list
+	 */
+	public static List<Double> getRaiseSteps(double from, double to) {
+		double amount = from;
+		double inc = (to - from) / (STEPS + 1);
+		List<Double> doubles = new ArrayList<>();
+		for (int i = 0; i < STEPS; i++) {
+			amount += inc;
+			doubles.add(amount);
+		}
+		return doubles;
+	}
+
+	/**
+	 * this method fill and return a List of {@link TrooperAction} that are
+	 * available for Hero to select. the returned list look similar to the following
+	 * <li>Check/Call
+	 * <li>Raise
+	 * <li>Pot
+	 * <li>All-in
+	 * <li>{@link #STEPS} more actions that range from raise to the value close to
+	 * All-in.
+	 * <p>
+	 * for a total of 9 possible actions. this method will remove all actions if
+	 * equity != null && potodds < equity
+	 * 
+	 * @param pokerSimulator - the simulator instace to read all the info
+	 * @param equity         - the equity to consider if the action remains on the
+	 *                       returned list. null for no delete
+	 * @return the list
+	 */
+	public static List<TrooperAction> loadActions(PokerSimulator pokerSimulator, Double equity) {
+		List<TrooperAction> availableActions = new ArrayList<>();
+
+		double call = pokerSimulator.callValue;
+		double raise = pokerSimulator.raiseValue;
+		double chips = pokerSimulator.heroChips;
+		double pot = pokerSimulator.potValue;
+
+		// fail safe: the maximum can.t be greater as chips.
+		// double imax = maximum > chips ? chips : maximum;
+		double imax = chips;
+
+		if (call >= 0 && call <= imax)
+			availableActions.add(new TrooperAction("call", call));
+
+		if (raise >= 0 && raise <= imax)
+			availableActions.add(new TrooperAction("raise", raise));
+
+		if (pot >= 0 && pot <= imax && pokerSimulator.isSensorEnabled("raise.pot"))
+			availableActions.add(new TrooperAction("pot", "raise.pot;raise", pot));
+
+		if (chips >= 0 && chips <= imax && pokerSimulator.isSensorEnabled("raise.allin"))
+			availableActions.add(new TrooperAction("allIn", "raise.allin;raise", chips));
+
+		double sb = pokerSimulator.smallBlind;
+		double bb = pokerSimulator.bigBlind;
+		if (raise > 0 && pot <= imax && pokerSimulator.isSensorEnabled("raise.slider")) {
+			// check for int or double values for blinds
+			boolean isInt = (Double.valueOf(bb)).intValue() == bb && (Double.valueOf(bb)).intValue() == sb;
+			double tick = raise;
+
+			List<Double> doubles = PokerSimulator.getRaiseSteps(raise, imax);
+			for (Double double1 : doubles) {
+				tick = double1;
+				// round value to look natural (don't write 12345. write 12340 or 12350)
+				if (isInt)
+					tick = ((int) (tick / 10)) * 10;
+				String txt = isInt ? "" + (int) tick : twoDigitFormat.format(tick);
+				availableActions.add(new TrooperAction("raise", "raise.text:dc;raise.text:k=" + txt + ";raise", tick));
+			}
+		}
+
+		// compute reward:risk ratio
+		availableActions.forEach(a -> a.potOdds = RuleBook.rewardRiskToProb(pot, a.amount));
+
+		// remove all actions when potOdds < equity
+		// 240823: dont remove. the rules are responsible for that. some rules cann
+		// decide zB to bluff and all actions are needed
+		if (equity != null) {
+			for (TrooperAction a : availableActions) {
+				System.out.println("a.potOdds < equity " + a.potOdds + " " + equity + "= " + (a.potOdds < equity));
+			}
+			availableActions.removeIf(a -> a.potOdds < equity);
+		}
+
+		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
+		return availableActions;
 	}
 
 }

@@ -17,71 +17,44 @@ public class HeroBot extends Bot {
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
 		PlayerAction action = null;
 		// while (action == null) {
-			int raiseValue = Math.min(minBet *2, player.getCash());
 
-			boolean callBol = allowedActions.contains(PlayerAction.CALL) || allowedActions.contains(PlayerAction.CHECK);
-			boolean raiseBol = allowedActions.contains(PlayerAction.RAISE)
-					|| allowedActions.contains(PlayerAction.BET) && player.getCash() >= raiseValue;
-			boolean potBol = raiseBol && player.getCash() >= pot;
-			boolean allinBol = raiseBol && player.getCash() >= minBet;
-			// A bet is the initial amount and a raise is anything on top of this
-			pokerSimulator.sensorStatus.put("raise.pot", potBol);
-			pokerSimulator.sensorStatus.put("raise.allin", allinBol);
-			pokerSimulator.sensorStatus.put("raise.slider", allinBol);
+		activeteSensors(minBet, currentBet, allowedActions);
 
-			// the trooper dont take into account call/check/raise enabled/disabel status.
-			// there are actives and/or mutate the text to reflext valid acction
-			// call/check are the same
-			// check: call buton is active. callvalue=0
-			// call: call button is active. callvalue=minbet
-			pokerSimulator.setCallValue(minBet);
-			if (allowedActions.contains(PlayerAction.CHECK))
-				pokerSimulator.setCallValue(0);
+		pokerSimulator.runSimulation();
+		trooperParameter.fromMap(simulationVariables);
+		TrooperAction act = trooper.getSimulationAction(trooperParameter);
 
-			if (!callBol || !raiseBol)
-				System.out.println("HeroBot.act()");
+		if (act.equals(TrooperAction.FOLD))
+			action = PlayerAction.FOLD;
+		if (act.equals(TrooperAction.CHECK))
+			action = PlayerAction.CHECK;
+		if (act.name.equals("call") && act.amount > 0) {
+			if (allowedActions.contains(PlayerAction.CALL))
+				action = new CallAction((int) act.amount);
+			if (allowedActions.contains(PlayerAction.BET))
+				action = new BetAction((int) act.amount);
+		}
+		if (act.name.equals("raise") || act.name.equals("pot") || act.name.equals("allIn")) {
+			if (allowedActions.contains(PlayerAction.RAISE))
+				action = new RaiseAction((int) act.amount);
+			if (allowedActions.contains(PlayerAction.BET))
+				action = new BetAction((int) act.amount);
+		}
 
-			pokerSimulator.setPotValue(pot);
-			pokerSimulator.setHeroChips(player.getCash());
-			pokerSimulator.setRaiseValue(raiseValue);
-			int actV = (int) villains.stream().filter(p -> p.hasCards()).count();
-			pokerSimulator.setNunOfOpponets(actV);
-			pokerSimulator.setTablePosition(dealer, actV);
+		if (action == null)
+			throw new IllegalArgumentException("Hero bot has no correct action selected. Trooper action was" + act);
 
-			pokerSimulator.runSimulation();
-			trooperParameter.fromMap(simulationVariables);
-			TrooperAction act = trooper.getSimulationAction(trooperParameter);
+		// avoid Player '" + name + "' asked to pay more cash than he owns!
+		// if (!(PlayerAction.CHECK.equals(action) || PlayerAction.FOLD.equals(action))
+		// && act.amount < minBet
+		// && act.amount < player.getCash())
+		// action = null;
 
-			if (act.equals(TrooperAction.FOLD))
-				action = PlayerAction.FOLD;
-			if (act.equals(TrooperAction.CHECK))
-				action = PlayerAction.CHECK;
-			if (act.name.equals("call") && act.amount > 0) {
-				if (allowedActions.contains(PlayerAction.CALL))
-					action = new CallAction((int) act.amount);
-				if (allowedActions.contains(PlayerAction.BET))
-					action = new BetAction((int) act.amount);
-			}
-			if (act.name.equals("raise") || act.name.equals("pot") || act.name.equals("allIn")) {
-				if (allowedActions.contains(PlayerAction.RAISE))
-					action = new RaiseAction((int) act.amount);
-				if (allowedActions.contains(PlayerAction.BET))
-					action = new BetAction((int) act.amount);
-			}
-
-			if (action == null)
-				throw new IllegalArgumentException("Hero bot has no correct action selected. Trooper action was" + act);
-
-			// avoid Player '" + name + "' asked to pay more cash than he owns!
-			// if (!(PlayerAction.CHECK.equals(action) || PlayerAction.FOLD.equals(action))
-			// && act.amount < minBet
-			// && act.amount < player.getCash())
-			// action = null;
-
-			// avoid Illegal client action: raise less than minimum bet!
-		// 	if (!(PlayerAction.CHECK.equals(action) || PlayerAction.FOLD.equals(action)) && act.amount < minBet
-		// 			&& act.amount < player.getCash())
-		// 		action = null;
+		// avoid Illegal client action: raise less than minimum bet!
+		// if (!(PlayerAction.CHECK.equals(action) || PlayerAction.FOLD.equals(action))
+		// && act.amount < minBet
+		// && act.amount < player.getCash())
+		// action = null;
 
 		// }
 		return action;

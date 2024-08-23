@@ -20,7 +20,7 @@ package hero.ozsoft.bots;
 import java.util.*;
 
 import hero.*;
-import hero.Trooper.*;
+import hero.UoAHandEval.*;
 import hero.ozsoft.*;
 import hero.ozsoft.actions.*;
 
@@ -64,100 +64,61 @@ public class BasicBot extends Bot {
 		this.tau = simulationVariables.get("tau");
 		this.alpha = simulationVariables.get("alpha");
 		preflopCardsModel.setPercentage(tau);
-//		if ("Hero".equals(trooperName))
-//			System.out.println("table: " + table.getTableId() + " Hero: tau = " + tau + ", " + "alpha: " + alpha);
+		// if ("Hero".equals(trooperName))
+		// System.out.println("table: " + table.getTableId() + " Hero: tau = " + tau +
+		// ", " + "alpha: " + alpha);
 
 		// apply tau parameter
-		if (!preflopCardsModel.containsHand(myHole)) {
-			return PlayerAction.FOLD;
-		}
-
-		//TODO: hasCard method don't say if the villain folded his cards -------------------------------------------------- !!!!!!!!!
-		int activeVillains = (int) villains.stream().filter(p -> p.hasCards()).count();
+		// if (!preflopCardsModel.containsHand(myHole)) {
+		// 	return PlayerAction.FOLD;
+		// }
 
 		double cash = (double) player.getCash();
 		List<TrooperAction> actions = Bot.loadActions(minBet, currentBet, cash, allowedActions);
-		Map<String, Object> evaluation = PokerSimulator.getEvaluation(myHole, communityHand, activeVillains, cash / bigBlind);
-		PotOdd potOdd = Trooper.potOdd(pot, actions, evaluation);
-		SubOptimalAction subOptimalAction = Trooper.getAction(potOdd.availableActions,
-				SubOptimalAction.ACTION_NORMAL, alpha);
 
-		return getPlayerAction(subOptimalAction.action, allowedActions);
+		activeteSensors(minBet, currentBet, allowedActions);
+		pokerSimulator.runSimulation();
+		System.out.println(player.getName() + " actions: " + pokerSimulator.ruleBook.result);
 
-		// q = q / 100;
-//		 double p = 1 - q;
-//		 double cashInDanger = cash * q;
-		//
-		// /**
-		// * pp implementation: this constant muss expres th number of BB allow to pull
-		// or pusch implementation. (maxx
-		// * recon ammunitions). this implemntation read th EV value from
-		// preflopdistribution and compute the inverse of
-		// * danger (positive EV, hat -danger value). diferenty of normal danger after
-		// preflop. preflop danger is
-		// * incremental. meaning every previous call/bet increaase the chanse of Fold
-		// */
-		//
-		// /**
-		// * ppMax represent the max number of ammo allow to expend to see the flop-
-		// when the preflop is good, this
-		// allos
-		// * multiples call/reise
-		// */
-		// int ppMax = 20 * bigBlind;
-		//
-		// /**
-		// * ppBase is a minimun allow to see the preflop. whe the ppMax * ev value are
-		// negative but not so far, ppBase
-		// * allow Hero to call a number of bb calls in order to se the flop. when
-		// another villa, try to steal the pot,
-		// * the the value of the equation is so negative thtat hero Fold
-		// */
-		// int ppBase = 0;
-		// if (hand.size() == 2) {
-		// ppBase = 5 * bigBlind;
-		// evHand = preflopCardsModel.getEV(myHole);
-		// // cash = ppBase + ppMax * evHand;
-		// cash = ppMax;
-		// cashInDanger = matchCost;
-		// // cashInDanger = matchCost;
-		// q = 0.75;
-		// p = 1 - q;
-		// }
-		//
-		// double ammo = ppBase + ((cash - cashInDanger) * evHand);
-		//
-		// double K = ammo / 2;
-		// if (matchCost > 0) {
-		// double risk = (pot / matchCost);
-		// K = p - q / risk;
-		// }
-		//
-		// // if amunition control equation is less that minimun Fold
-		// if (minBet > ammo) {
-		// return PlayerAction.FOLD;
-		// }
-		//
-		// double b = ammo + alha * ammo; // agresive: b > ammo
-		// b = b == 0 ? 1 : b; // avoid error when alpha is extreme low
-		// double c = alpha < 0 ? b : ammo; // K sugestions allways as upperbound
-		// TriangularDistribution td = new TriangularDistribution(0, c, b);
-		// int amount = (int) td.sample();
-		//
-		// amount = amount < minBet ? minBet : amount;
-		// // ------------------
-		//
+		if (allowedActions.contains(PlayerAction.CHECK)) {
+			return PlayerAction.CHECK;
+		} else {
+			return PlayerAction.CALL;
+		}
 
-//		return null;
+		// return getPlayerAction(subOptimalAction.action, allowedActions);
 	}
 
 	@Override
-	public void actorRotated(Player actor) {
-		// Not implemented.
+	public void boardUpdated(UoAHand hand, int bet, int pot) {
+		super.boardUpdated(hand, bet, pot);
+		if (hand.getCard(1) != null)
+			pokerSimulator.cardsBuffer.put("flop1", hand.getCard(1).toString());
+		if (hand.getCard(2) != null)
+			pokerSimulator.cardsBuffer.put("flop2", hand.getCard(2).toString());
+		if (hand.getCard(3) != null)
+			pokerSimulator.cardsBuffer.put("flop3", hand.getCard(3).toString());
+		if (hand.getCard(4) != null)
+			pokerSimulator.cardsBuffer.put("turn", hand.getCard(4).toString());
+		if (hand.getCard(5) != null)
+			pokerSimulator.cardsBuffer.put("river", hand.getCard(5).toString());
 	}
 
 	@Override
 	public void handStarted(Player dealer) {
-		// Not implemented.
+		this.dealer = villains.indexOf(dealer) + 1;
+		pokerSimulator.bigBlind = bigBlind;
+		pokerSimulator.smallBlind = bigBlind / 2;
+		pokerSimulator.buyIn = buyIn;
+		pokerSimulator.newHand();
+	}
+
+	@Override
+	public void playerUpdated(Player player) {
+		super.playerUpdated(player);
+		if (myHole.size() > 0) {
+			pokerSimulator.cardsBuffer.put("hero.card1", myHole.getCard(1).toString());
+			pokerSimulator.cardsBuffer.put("hero.card2", myHole.getCard(2).toString());
+		}
 	}
 }

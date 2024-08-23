@@ -1,15 +1,11 @@
 package hero.rules;
 
-import java.io.*;
 import java.util.*;
-import java.util.logging.*;
 
 import org.jeasy.rules.api.*;
 import org.jeasy.rules.core.*;
 
-import core.*;
 import hero.*;
-import hero.UoAHandEval.*;
 
 public class RuleBook {
 
@@ -17,18 +13,21 @@ public class RuleBook {
     public static final String COMMUNITY_CARDS = "communityCards";
 
     public HashMap<String, Object> result;
+
     private Facts facts;
     private Rules rules;
 
-    public RuleBook() {
+    PokerSimulator pokerSimulator;
+
+    public RuleBook(PokerSimulator simulator) {
+        this.pokerSimulator = simulator;
         this.rules = new Rules();
         this.result = new HashMap<>();
         this.facts = new Facts();
-        loadPreFlopRules();
-    }
 
-    private void loadPreFlopRules() {
         rules.register(new ChenScore(this));
+        rules.register(new PotOdds(this));
+        rules.register(new ImpliedOdds(this));
 
         // Rule rule = new RuleBuilder().name("Chen Formula")
         // .description("Ther Chen formula for preflop card.s selection.")
@@ -37,59 +36,34 @@ public class RuleBook {
 
     }
 
-    /**
-     * return true iff on the preflop
-     * 
-     * @param facts - the facts
-     * @return true iff preflop
-     */
-    public static boolean isPreflop(Facts facts) {
-        int street = (Integer) facts.get("street");
-        return street == PokerSimulator.FLOP_CARDS_DEALT;
+    public void addAction(BasicRule rule, Object action) {
+        String key = rule.getClass().getSimpleName();
+        result.put(key, action);
+    }
+
+    public void fire() {
+        RulesEngine engine = new DefaultRulesEngine();
+        engine.fire(rules, facts);
     }
 
     /**
-     * called by {@link PokerSimulator} after the evaluation to update all the facts
+     * compute from reward:risk notation to probability. prob = risk / (reward +
+     * risk)
      * 
-     * @param simulator the simulator
+     * @param reward - the reward
+     * @param risk   - the risk
+     * @return - the probability
      */
-    public void updateFacts(PokerSimulator simulator) {
-        facts.add(new Fact<Double>("heroChips", simulator.heroChips));
-        facts.add(new Fact<Double>("callValue", simulator.callValue));
-        facts.add(new Fact<Double>("raiseValue", simulator.raiseValue));
-        facts.add(new Fact<Double>("potValue", simulator.potValue));
-        facts.add(new Fact<Double>("buyIn", simulator.buyIn));
-        facts.add(new Fact<Double>("smallBlind", simulator.smallBlind));
-        facts.add(new Fact<Double>("bigBlind", simulator.bigBlind));
+    public static double rewardRiskToProb(double reward, double risk) {
+        double odds = risk / (reward + risk);
 
-        facts.add(new Fact<UoAHand>("communityCards", simulator.communityCards));
-        facts.add(new Fact<UoAHand>("holeCards", simulator.holeCards));
-        facts.add(new Fact<UoAHand>("currentHand", simulator.currentHand));
+        // if for some reason, i hero need check/call (risk = 0) odds are 1
+        if (risk == 0)
+            return 1.0;
 
-        facts.add(new Fact<Integer>("opponents", simulator.opponents));
-        facts.add(new Fact<Integer>("tablePosition", simulator.tablePosition));
-        facts.add(new Fact<Integer>("street", simulator.street));
+        if (risk > reward)
+            odds *= -1.0;
+
+        return odds;
     }
-
-    public static void loadStrategy(BasicRule rule, Properties properties) {
-        try {
-            String strategyFile = Constants.HERO_RESOURCES + "/" + rule.getClass().getSimpleName() + ".properties";
-            File fp = new File(strategyFile);
-            properties.load(new FileInputStream(fp));
-        } catch (Exception e) {
-            Alesia.logger.log(Level.SEVERE, "", e);
-        }
-    }
-
-    public static void saveStrategy(BasicRule rule, Properties properties) {
-        try {
-            String strategyFile = Constants.HERO_RESOURCES + "/" + rule.getClass().getSimpleName() + ".properties";
-            File fp = new File(strategyFile);
-            properties.store(new FileOutputStream(fp), "");
-        } catch (Exception e) {
-            Alesia.logger.log(Level.SEVERE, "", e);
-        }
-
-    }
-
 }

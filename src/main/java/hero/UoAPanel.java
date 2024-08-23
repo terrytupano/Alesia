@@ -21,8 +21,10 @@ import com.alee.laf.panel.*;
 import com.alee.laf.spinner.*;
 
 import core.*;
+import datasource.*;
 import gui.*;
 import hero.UoAHandEval.*;
+import hero.rules.*;
 
 public class UoAPanel extends TUIPanel {
 
@@ -34,7 +36,7 @@ public class UoAPanel extends TUIPanel {
 		super();
 		this.bbSpinner = TUIUtils.getSpinner("bbSpinner", 10, 0, 100, 5);
 
-//		setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
+		// setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
 		this.console = new TConsoleTextArea();
 		this.cardsPanel = new CardsPanel();
 
@@ -42,8 +44,11 @@ public class UoAPanel extends TUIPanel {
 		WebButton resetTableButton = TUIUtils.getButtonForToolBar(this, "resetTable");
 		WebButton setRandomHandButton = TUIUtils.getButtonForToolBar(this, "setRandomHand");
 		WebButton setExampleFromOMPaperButton = TUIUtils.getButtonForToolBar(this, "setExampleFromOMPaper");
+		WebButton saveCurrentHandButton = TUIUtils.getButtonForToolBar(this, "saveCurrentHand");
+		WebButton loadSavedHandButton = TUIUtils.getButtonForToolBar(this, "loadSavedHand");
 
-		GroupPane pane = new GroupPane(bbSpinner, evaluateHandButton, setRandomHandButton, setExampleFromOMPaperButton, resetTableButton);
+		GroupPane pane = new GroupPane(bbSpinner, evaluateHandButton, setRandomHandButton, setExampleFromOMPaperButton,
+				resetTableButton, saveCurrentHandButton, loadSavedHandButton);
 
 		getToolBar().add(pane);
 		WebPanel webPanel = new WebPanel(new BorderLayout());
@@ -76,29 +81,51 @@ public class UoAPanel extends TUIPanel {
 		evaluateHandImpl();
 	}
 
+	@org.jdesktop.application.Action
+	public void saveCurrentHand(ActionEvent event) {
+		UoAHand hand = cardsPanel.getHand();
+		if (hand == null) {
+			Alesia.showNotification("hero.msg09");
+			return;
+		}
+		Property property = Property.first("tkey = ?", "UoAPanel.savedCards");
+		if (property == null)
+			property = new Property();
+
+		property.set("tkey", "UoAPanel.savedCards", "tvalue", hand.toString());
+		property.save();
+		Alesia.showNotification("hero.msg08");
+	}
+
+	@org.jdesktop.application.Action
+	public void loadSavedHand(ActionEvent event) {
+		Property property = Property.first("tkey = ?", "UoAPanel.savedCards");
+		if (property != null) {
+			UoAHand hand = new UoAHand(property.getString("tvalue"));
+			cardsPanel.setHand(hand);
+		}
+	}
+
 	private void evaluateHandImpl() {
-		Hashtable<String, Object> parms = cardsPanel.getGameCards();
+		UoAHand hand = cardsPanel.getHand();
 		console.clear();
+		if (hand == null) {
+			Alesia.showNotification("hero.msg09");
+			return;
+		}
 
-		UoAHand myHole = (UoAHand) parms.get("myHole");
-		// // check hole hand
-		// if (myHole.size() == 1) {
-		// 	console.append(
-		// 			"ERROR\nHole hand must contain 0 cards (for board evaluation)\nOR 2 cards for normal card evaluation.\n");
-		// 	return;
-		// }
+		String community = hand.getCard(3) + " " + hand.getCard(4) + " " + hand.getCard(5) + " " + hand.getCard(6) + " "
+				+ hand.getCard(7);
+		community = community.replace("1c", "");
+		community = community.trim();
 
-		UoAHand comunity = (UoAHand) parms.get("comunityCards");
-		// // check community cards
-		// if (comunity.size() < 3) {
-		// 	console.append("ERROR\nComunity card must contain 3, 4 or 5 cards.\n");
-		// 	return;
-		// }
+		UoAHand holeCards = new UoAHand(hand.getCard(1) + " " + hand.getCard(2));
+		UoAHand comunityCards = new UoAHand(community);
 
-		console.append("Hole cards: " + myHole + " Comunity cards: " + comunity + "\n");
+		console.append("Hole cards: " + holeCards + " Comunity cards: " + comunityCards + "\n");
 		int bigBlinds = (Integer) bbSpinner.getValue();
 
-		Map<String, Object> evaluation = PokerSimulator.getEvaluation(myHole, comunity, 1, bigBlinds);
+		Map<String, Object> evaluation = PokerSimulator.getEvaluation(holeCards, comunityCards, 1, bigBlinds);
 
 		// all elements instance of List are array of uoAHand. override this property
 		// and show only a sublist

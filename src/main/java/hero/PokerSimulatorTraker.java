@@ -41,7 +41,7 @@ public class PokerSimulatorTraker {
 
     public void update(PokerSimulator simulator) {
         streets.add(simulator.street);
-        opponents.add(simulator.opponents);
+        opponents.add(simulator.villans);
         heroChips.add(simulator.heroChips);
         callValues.add(simulator.callValue);
         raiseValues.add(simulator.raiseValue);
