@@ -75,7 +75,7 @@ public class Table extends Task<Void, Void> {
 	private static final String RESTAR = "RESTAR";
 
 	/** current capacity of the table */
-	public static final int CAPACITY = 9;
+	public static final int MAX_CAPACITY = 9;
 
 	/**
 	 * indicate the number of tables muss be simulated before partial result request
@@ -162,8 +162,8 @@ public class Table extends Task<Void, Void> {
 		this.simulationParameters = parameters;
 		this.tableType = TableType.NO_LIMIT;
 		this.statistics = new DescriptiveStatistics(100);
-		players = new ArrayList<Player>(CAPACITY);
-		activePlayers = new ArrayList<Player>(CAPACITY);
+		players = new ArrayList<Player>(MAX_CAPACITY);
+		activePlayers = new ArrayList<Player>(MAX_CAPACITY);
 		deck = new UoADeck();
 		pots = new ArrayList<Pot>();
 		board = new UoAHand();
@@ -415,7 +415,7 @@ public class Table extends Task<Void, Void> {
 		updateBigBlind();
 
 		for (numOfHand = 1; (numOfHand < handsToSimulate && !isCancelled())
-				&& ((!isTournament) || (isTournament && CAPACITY <= activeStrategies)); numOfHand++) {
+				&& ((!isTournament) || (isTournament && MAX_CAPACITY <= activeStrategies)); numOfHand++) {
 			// pause ?
 			if (pauseTask && !isCancelled()) {
 				ThreadUtils.sleepSafely(250);

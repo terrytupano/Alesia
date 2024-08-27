@@ -122,7 +122,6 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	private boolean paused = false;
 	// This variable is ONLY used and cleaned by ensuregametable method
 	private String lastHoleCards = "";
-	private double maxRekonAmmo;
 	private double currentHandCost;;
 	private double playUntil;
 	private long playTime;
@@ -134,10 +133,10 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	private Table simulationTable;
 	private long startDate;
 
-	public Trooper() {
+	public Trooper(TrooperParameter parameter) {
 		super(Alesia.getInstance());
 		this.availableActions = new ArrayList<>();
-		this.pokerSimulator = new PokerSimulator();
+		this.pokerSimulator = new PokerSimulator(trooperParameter);
 		this.sensorsArray = new SensorsArray(pokerSimulator);
 		this.robotActuator = new RobotActuator(this);
 		this.numOfvillains = sensorsArray.getVillains();
@@ -176,78 +175,6 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	}
 
 	/**
-	 * this method check the opportunity parameter and act accordingly. when Hero is
-	 * preflop or river and the hero cards are in range card (phi or phi4) this
-	 * method will return <code>true</code> and override the main variable
-	 * {@link #availableActions} and set only raise all actions for hero to take the
-	 * opportunity
-	 * 
-	 * @return <code>true</code> for opportunity, <code>false</code> otherwise
-	 */
-	private boolean checkOpportunities() {
-		String txt = null;
-		boolean oportunity = trooperParameter.getBoolean("takeOpportunity");
-		if (!oportunity) {
-			setVariableAndLog(EXPLANATION, "Take oportunities = 'false'");
-			return false;
-		}
-
-		// preflop
-		if (pokerSimulator.street == PokerSimulator.HOLE_CARDS_DEALT) {
-			int phi = trooperParameter.getInteger("phi");
-			preflopCardsModel.setPercentage(phi);
-			if (preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
-				txt = "Hole cards in oportunity range.";
-			}
-		}
-		// river
-		if (pokerSimulator.street == PokerSimulator.RIVER_CARD_DEALT) {
-			int phi4 = trooperParameter.getInteger("phi4");
-			preflopCardsModel.setPercentage(phi4);
-			if (preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
-				txt = "River cards in oportunity range.";
-			}
-		}
-
-		// Always
-		if ((boolean) pokerSimulator.evaluation.get("isTheNut") == true) {
-			txt = "Is the Nuts.";
-		}
-
-		if (txt != null) {
-			setVariableAndLog(EXPLANATION, "--- OPORTUNITY DETECTED " + txt + " ---");
-			// availableActions = PokerSimulator.loadActions(pokerSimulator.heroChips,
-			// pokerSimulator);
-			gameAction = SubOptimalAction.ACTION_OPORTUNITY;
-
-			// 221201: due to high variance in getSuboptimalAction plus real money players
-			// are cautious about high pot
-			// increment and in order to stabilize winnings according to eV from opportunity
-			// card distribution.
-			// Opportunities is now always all-in
-
-			// removed 231101 this bock is biased. apha parameter is resposable for this
-
-			// if (!availableActions.isEmpty()) {
-			// TrooperAction action = new TrooperAction("", -1.0);
-			// for (TrooperAction a : availableActions) {
-			// action = a.amount > action.amount ? a : action;
-			// }
-			// availableActions.clear();
-			// availableActions.add(action);
-			// }
-
-			// to this point, if available actions are empty, means hero is responding a
-			// extreme high raise. that mean maybe hero is weak. at this point raise mean
-			// all in. (call actions is not considerer because is not opportunity)
-			if (availableActions.size() == 0 && pokerSimulator.raiseValue >= 0)
-				availableActions.add(new TrooperAction("raise", pokerSimulator.raiseValue));
-		}
-
-		return txt != null;
-	}
-
-	/**
 	 * clear the Environment for a new round.
 	 * 
 	 */
@@ -260,7 +187,6 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 			Alesia.openDB();
 			trooperParameter = TrooperParameter.findFirst("trooper = ?", "Hero");
 		}
-		maxRekonAmmo = -1;
 		currentHandCost = 0;
 		// subObtimalDist is clear with the loadactions method
 
@@ -287,20 +213,8 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 			return;
 		}
 
-		// PREFLOP
-		if (pokerSimulator.street == PokerSimulator.HOLE_CARDS_DEALT) {
-			if (!checkOpportunities())
-				setPreflopActions();
-		}
-
-		// FLOP AND FUTHER
-		if (pokerSimulator.street > PokerSimulator.HOLE_CARDS_DEALT) {
-			if (!checkOpportunities()) {
-				// availableActions = PokerSimulator.loadActions(pokerSimulator.heroChips,
-				// pokerSimulator);
-				potOdd();
-			}
-		}
+		// here come the action retribed from ruleBook
+		// pokerSimulator.ruleBook.action;
 
 		// if the list of available actions are empty, i habe no option but fold/check
 		// in concordance whit rule1: if i can keep checking until i get a luck card. i
@@ -403,8 +317,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	 * 
 	 * @return the action to perform
 	 */
-	public TrooperAction getSimulationAction(TrooperParameter tropperParameter) {
-		this.trooperParameter = tropperParameter;
+	public TrooperAction getSimulationAction() {
 		playTime = System.currentTimeMillis() - startDate;
 		clearEnvironment();
 
@@ -481,16 +394,6 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		setVariableAndLog(STATUS, paused ? "Trooper paused" : "Trooper resumed");
 	}
 
-	private void potOdd() {
-		PotOdd potOdd = Trooper.potOdd(pokerSimulator.potValue, availableActions, pokerSimulator.evaluation);
-		setVariableAndLog(EXPLANATION, potOdd.explanation);
-
-		// no calculation for 0 values
-		if (potOdd.availableActions.isEmpty())
-			logInfo(potOdd.explanation);
-
-		this.availableActions = potOdd.availableActions;
-	}
 
 	/**
 	 * read one unit of information. This method is intented to retrive information
@@ -517,66 +420,10 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 
 	}
 
-	/**
-	 * Set the action based on the starting hand distribution. This method set the
-	 * global variable {@link #maxRekonAmmo} this method always select the less cost
-	 * action. The general idea here is try to put the trooper in folp, so the
-	 * normal odds operation has chance to decide, at lower posible cost
-	 */
-	private void setPreflopActions() {
-		availableActions.clear();
-		int tau = trooperParameter.getInteger("tau");
-		preflopCardsModel.setPercentage(tau);
-		String txt = "No strict Preflop.";
-
-		boolean strictPreflop = trooperParameter.getBoolean("strictPreflop");
-		if (strictPreflop) {
-			txt = "Preflop in Range";
-			if (!preflopCardsModel.containsHand(pokerSimulator.holeCards)) {
-				setVariableAndLog(EXPLANATION, "Preflop not in range.");
-				return;
-			}
-		}
-
-		double nEv = preflopCardsModel.getNormalizedEV(pokerSimulator.holeCards);
-		if (maxRekonAmmo == -1) {
-			maxRekonAmmo = pokerSimulator.bigBlind + (pokerSimulator.heroChips * nEv);
-		}
-
-		double call = pokerSimulator.callValue;
-		double raise = pokerSimulator.raiseValue;
-		// can i check ??
-		if (call == 0) {
-			availableActions.add(TrooperAction.CHECK);
-			txt += " Checking.";
-		} else {
-			// can i call ?
-			if (call > 0 && (call + currentHandCost) <= maxRekonAmmo) {
-				availableActions.add(new TrooperAction("call", call));
-				txt += " Calling.";
-			} else {
-				// the raise is marginal ??
-				if (raise != -1 && (raise + currentHandCost) <= maxRekonAmmo) {
-					availableActions.add(new TrooperAction("raise", raise));
-					txt += " Raising.";
-				}
-			}
-		}
-		if (availableActions.size() == 0) {
-			txt = String.format(txt + " No more ammunition available. (%7.2f)", maxRekonAmmo);
-			setVariableAndLog(EXPLANATION, txt);
-			return;
-		}
-
-		String txt1 = String.format(txt + " %7.2f + (%7.2f * %1.3f) = %7.2f", pokerSimulator.bigBlind,
-				pokerSimulator.heroChips, nEv, maxRekonAmmo);
-		setVariableAndLog(EXPLANATION, txt1);
-	}
-
 	public void setSimulationTable(Table simulationTable) {
 		this.simulationTable = simulationTable;
 		pokerSimulator.setLive(false);
-		this.numOfvillains = Table.CAPACITY - 1;
+		this.numOfvillains = Table.MAX_CAPACITY - 1;
 		this.gameRecorder = new GameRecorder(this, numOfvillains);
 
 	}

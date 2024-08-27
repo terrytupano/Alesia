@@ -41,13 +41,16 @@ public class TUIPanel extends WebPanel {
 	private WebToolBar toolBar;
 	private WebLabel titleLabel;
 	private WebLabel descriptionLabel;
+	private WebPanel northPanel;
 
 	public TUIPanel() {
 		super(new BorderLayout());
 		this.allActions = new Vector<>();
 		this.toolBar = TUIUtils.getWebToolBar();
 		this.titleLabel = TUIUtils.getH1Label("terry");
+		titleLabel.setVisible(false);
 		this.descriptionLabel = TUIUtils.getH3Label("Descrption for terry");
+		descriptionLabel.setVisible(false);
 		this.footerPanel = new WebPanel();
 		BoxLayout layout = new BoxLayout(footerPanel, BoxLayout.LINE_AXIS);
 		footerPanel.setLayout(layout);
@@ -58,7 +61,10 @@ public class TUIPanel extends WebPanel {
 
 		bodyComponent = new WebLabel("Terry");
 		footerPanel.add(new WebButton("Terry"));
-		WebPanel northPanel = TUIUtils.getInFormLayout(titleLabel, descriptionLabel, toolBar);
+		// no old school footer panel for now
+		footerPanel.setVisible(false); 
+		this.northPanel = TUIUtils.getInFormLayout(titleLabel, descriptionLabel, toolBar);
+		northPanel.setVisible(false);
 		northPanel.setBorder(TUIUtils.DOUBLE_EMPTY_BORDER);
 
 		add(northPanel, BorderLayout.NORTH);
@@ -85,7 +91,7 @@ public class TUIPanel extends WebPanel {
 		GroupPane groupPane = new GroupPane(components.toArray(new WebButton[0]));
 		groupPane.setBackground(Color.black);
 		groupPane.setOpaque(true);
-//		groupPane.setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
+		// groupPane.setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
 		footerPanel.add(groupPane);
 	}
 
@@ -151,7 +157,7 @@ public class TUIPanel extends WebPanel {
 		dialog.setResizable(false);
 		dialog.setContentPane(this);
 		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-//		computeAndSetInitialDialogSize();
+		// computeAndSetInitialDialogSize();
 		if (setAspectRatio)
 			TUIUtils.setDialogAspectRatio(dialog, aspectRatio);
 		else
@@ -264,9 +270,18 @@ public class TUIPanel extends WebPanel {
 	 * @param description - the description
 	 */
 	public void setTitleDescription(String title, String description) {
-		titleLabel.setText(title);
+		if (title != null)
+			titleLabel.setText(title);
+
 		if (description != null)
 			descriptionLabel.setText(description);
+
+		titleLabel.setVisible(title != null);
+		descriptionLabel.setVisible(description != null);
+
+		// TODO: may affect toolbar visibility
+		northPanel.setVisible(title != null || description != null);
+
 	}
 
 	/**

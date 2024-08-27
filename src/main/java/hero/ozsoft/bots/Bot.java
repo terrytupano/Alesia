@@ -22,10 +22,9 @@ public abstract class Bot implements Client {
 	protected Trooper trooper;
 	protected Player player;
 	protected int bigBlind;
-	protected int dealer;
+	protected int dealerChair;
 	protected int pot;
 	protected int buyIn;
-	protected TrooperParameter trooperParameter;
 	protected UoAHand myHole, communityHand, hand;
 	protected Table table;
 	private int prevCash;
@@ -95,20 +94,21 @@ public abstract class Bot implements Client {
 		// call/check are the same
 		// check: call buton is active. callvalue=0
 		// call: call button is active. callvalue=minbet
-		pokerSimulator.setCallValue(minBet);
+		pokerSimulator.callValue = minBet;
 		if (allowedActions.contains(PlayerAction.CHECK))
-			pokerSimulator.setCallValue(0);
+			pokerSimulator.callValue = 0;
 
 		if (!callBol || !raiseBol)
 			System.out.println("HeroBot.act()");
 
-		pokerSimulator.setPotValue(pot);
-		pokerSimulator.setHeroChips(player.getCash());
-		pokerSimulator.setRaiseValue(raiseValue);
-		//TODO: hasCard method don't say if the villain folded his cards -------------------------------------------------- !!!!!!!!!
+		pokerSimulator.potValue = pot;
+		pokerSimulator.heroChips = player.getCash();
+		pokerSimulator.raiseValue = raiseValue;
+		// TODO: hasCard method don't say if the villain folded his cards
+		// -------------------------------------------------- !!!!!!!!!
 		int villans = (int) villains.stream().filter(p -> p.hasCards()).count();
 		// pokerSimulator.setNunOfOpponets(villans);
-		pokerSimulator.setTablePosition(dealer, player.getChair(), villans);
+		pokerSimulator.setTablePosition(dealerChair, player.getChair(), villans);
 	}
 
 	/**
@@ -185,8 +185,7 @@ public abstract class Bot implements Client {
 	public Trooper configureBot(Table table, TrooperParameter trooperParameter,
 			SimulationParameters simulationParameters) {
 		this.table = table;
-		this.trooperParameter = trooperParameter;
-		this.trooper = new Trooper();
+		this.trooper = new Trooper(trooperParameter);
 		this.trooper.setSimulationTable(table);
 		this.pokerSimulator = trooper.getPokerSimulator();
 		this.trooperName = trooperParameter.getString("trooper");
@@ -261,6 +260,15 @@ public abstract class Bot implements Client {
 			matchCost = prevCash - player.getCash();
 			// System.out.println(trooper + " " + matchCost);
 		}
+	}
+
+	@Override
+	public void handStarted(Player dealer) {
+		this.dealerChair = dealer.getChair();
+		pokerSimulator.bigBlind = bigBlind;
+		pokerSimulator.smallBlind = bigBlind / 2;
+		pokerSimulator.buyIn = buyIn;
+		pokerSimulator.newHand();
 	}
 
 	@Override

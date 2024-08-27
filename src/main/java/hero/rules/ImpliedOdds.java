@@ -25,8 +25,10 @@ public class ImpliedOdds extends BasicRule {
 
     @Override
     public void execute(Facts facts) throws Exception {
-        double outsPerent = (Double) ruleBook.pokerSimulator.evaluation.getOrDefault("outs%", 0.0);
-        double equity = outsPerent / 100.0;
+        double outs2Perent = (Double) ruleBook.pokerSimulator.evaluation.getOrDefault("outs2%", 0.0);
+        double outs4Perent = (Double) ruleBook.pokerSimulator.evaluation.getOrDefault("outs4%", 0.0);
+
+        double equity = outs2Perent / 100.0;
 
         List<TrooperAction> actions = PokerSimulator.loadActions(ruleBook.pokerSimulator, equity);
         if (!actions.isEmpty())

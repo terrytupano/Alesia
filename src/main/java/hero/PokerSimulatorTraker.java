@@ -2,8 +2,6 @@ package hero;
 
 import java.util.*;
 
-import com.google.common.collect.Comparators;
-
 public class PokerSimulatorTraker {
     public List<Integer> streets = new ArrayList<>();
     public List<Integer> opponents = new ArrayList<>();
@@ -41,11 +39,16 @@ public class PokerSimulatorTraker {
 
     public void update(PokerSimulator simulator) {
         streets.add(simulator.street);
-        opponents.add(simulator.villans);
+        opponents.add(simulator.activeVillans);
         heroChips.add(simulator.heroChips);
         callValues.add(simulator.callValue);
         raiseValues.add(simulator.raiseValue);
         potValues.add(simulator.potValue);
+    }
+
+    // TODO. check implementation. see the grinder manual p31
+    public double getVpipPfr() {
+        return 0.0;
     }
 
     public void newHand() {

@@ -392,10 +392,10 @@ public class SensorsArray {
 			readSensors(false, slist);
 
 			pokerSimulator.setTablePosition(getDealerButtonPosition(), 1, getActiveVillains());
-			pokerSimulator.setPotValue(getSensor("pot").getNumericOCR());
-			pokerSimulator.setCallValue(getSensor("hero.call").getNumericOCR());
-			pokerSimulator.setHeroChips(getSensor("hero.chips").getNumericOCR());
-			pokerSimulator.setRaiseValue(getSensor("hero.raise").getNumericOCR());
+			pokerSimulator.potValue = getSensor("pot").getNumericOCR();
+			pokerSimulator.callValue = getSensor("hero.call").getNumericOCR();
+			pokerSimulator.heroChips = getSensor("hero.chips").getNumericOCR();
+			pokerSimulator.raiseValue = getSensor("hero.raise").getNumericOCR();
 		}
 
 		// cards areas sensor will perform a simulation

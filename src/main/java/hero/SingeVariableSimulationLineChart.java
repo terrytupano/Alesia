@@ -51,7 +51,7 @@ public class SingeVariableSimulationLineChart extends JDialog {
 		xYPlot.setRangeZeroBaselineVisible(true);
 		xYPlot.setBackgroundPaint(null);
 		XYLineAndShapeRenderer xYLineAndShapeRenderer = (XYLineAndShapeRenderer) xYPlot.getRenderer();
-		for (int i = 0; i < Table.CAPACITY; i++) {
+		for (int i = 0; i < Table.MAX_CAPACITY; i++) {
 			xYLineAndShapeRenderer.setSeriesStroke(i, new BasicStroke(2.0F));
 			xYLineAndShapeRenderer.setSeriesLinesVisible(i, true);
 			xYLineAndShapeRenderer.setSeriesShapesVisible(i, false);

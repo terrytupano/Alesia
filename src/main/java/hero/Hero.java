@@ -131,7 +131,8 @@ public class Hero {
 	}
 
 	private void initTrooperEnvironment() {
-		activeTrooper = new Trooper();
+		TrooperParameter parameter = TrooperParameter.getHero();
+		activeTrooper = new Trooper(parameter);
 		heroPanel.setTrooper(activeTrooper);
 	}
 

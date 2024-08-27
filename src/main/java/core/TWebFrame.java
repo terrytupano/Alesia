@@ -128,7 +128,7 @@ public class TWebFrame extends WebFrame {
 		WebLabel splashTitleLabel = new WebLabel(StyleId.labelShadow, TStringUtils.getString("name"), WebLabel.CENTER);
 		splashTitleLabel.setFont(new Font("MagistralC", Font.PLAIN, 50));
 
-		WebLabel splashSubtitleLabel = new WebLabel(StyleId.labelShadow, TStringUtils.getString("description"),
+		WebLabel splashSubtitleLabel = new WebLabel(StyleId.labelShadow, TStringUtils.getString("title"),
 				WebLabel.CENTER);
 		splashSubtitleLabel.setFont(getFont(Font.PLAIN, 15));
 		splashIncrementLabel = new WebLabel("---", WebLabel.CENTER);

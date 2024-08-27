@@ -70,7 +70,7 @@ public class BasicBot extends Bot {
 
 		// apply tau parameter
 		// if (!preflopCardsModel.containsHand(myHole)) {
-		// 	return PlayerAction.FOLD;
+		// return PlayerAction.FOLD;
 		// }
 
 		double cash = (double) player.getCash();
@@ -78,7 +78,7 @@ public class BasicBot extends Bot {
 
 		activeteSensors(minBet, currentBet, allowedActions);
 		pokerSimulator.runSimulation();
-		System.out.println(player.getName() + " actions: " + pokerSimulator.ruleBook.result);
+		System.out.println(player.getName() + " actions: " + pokerSimulator.ruleBook.rulesDesitions);
 
 		if (allowedActions.contains(PlayerAction.CHECK)) {
 			return PlayerAction.CHECK;
@@ -102,15 +102,6 @@ public class BasicBot extends Bot {
 			pokerSimulator.cardsBuffer.put("turn", hand.getCard(4).toString());
 		if (hand.getCard(5) != null)
 			pokerSimulator.cardsBuffer.put("river", hand.getCard(5).toString());
-	}
-
-	@Override
-	public void handStarted(Player dealer) {
-		this.dealer = villains.indexOf(dealer) + 1;
-		pokerSimulator.bigBlind = bigBlind;
-		pokerSimulator.smallBlind = bigBlind / 2;
-		pokerSimulator.buyIn = buyIn;
-		pokerSimulator.newHand();
 	}
 
 	@Override

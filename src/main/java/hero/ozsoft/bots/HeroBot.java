@@ -21,8 +21,8 @@ public class HeroBot extends Bot {
 		activeteSensors(minBet, currentBet, allowedActions);
 
 		pokerSimulator.runSimulation();
-		trooperParameter.fromMap(simulationVariables);
-		TrooperAction act = trooper.getSimulationAction(trooperParameter);
+		pokerSimulator.trooperParameter.fromMap(simulationVariables);
+		TrooperAction act = trooper.getSimulationAction();
 
 		if (act.equals(TrooperAction.FOLD))
 			action = PlayerAction.FOLD;
@@ -79,15 +79,6 @@ public class HeroBot extends Bot {
 			pokerSimulator.cardsBuffer.put("turn", hand.getCard(4).toString());
 		if (hand.getCard(5) != null)
 			pokerSimulator.cardsBuffer.put("river", hand.getCard(5).toString());
-	}
-
-	@Override
-	public void handStarted(Player dealer) {
-		this.dealer = villains.indexOf(dealer) + 1;
-		pokerSimulator.bigBlind = bigBlind;
-		pokerSimulator.smallBlind = bigBlind / 2;
-		pokerSimulator.buyIn = buyIn;
-		pokerSimulator.newHand();
 	}
 
 	@Override

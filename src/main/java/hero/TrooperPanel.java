@@ -38,11 +38,8 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 			addInputComponent(TUIUtils.getNumericTextField("playUntil", model, columns), false, true);
 		}
 
+		addInputComponent(TUIUtils.getNumericTextField("alpha", model, columns), true, true);
 		addInputComponent(TUIUtils.getNumericTextField("tau", model, columns), true, true);
-		addInputComponent(TUIUtils.getSwitch("strictPreflop", model.getBoolean("strictPreflop")));
-		addInputComponent(TUIUtils.getSwitch("takeOpportunity", model.getBoolean("takeOpportunity")));
-		addInputComponent(TUIUtils.getNumericTextField("phi", model, columns), true, true);
-		addInputComponent(TUIUtils.getNumericTextField("phi4", model, columns), true, true);
 
 		setTitleDescriptionFrom("trooper", "description");
 
@@ -62,14 +59,8 @@ public class TrooperPanel extends TUIFormPanel implements PropertyChangeListener
 		// getInputComponent("playUntil"));
 
 		builder.appendSeparator("Preflop selection");
-		builder.append(TStringUtils.getString("strictPreflop"), getInputComponent("strictPreflop"));
+		builder.append(TStringUtils.getString("alpha"), getInputComponent("alpha"));
 		builder.append(TStringUtils.getString("tau"), getInputComponent("tau"));
-
-		builder.appendSeparator("Oportunities");
-		builder.append(TStringUtils.getString("phi"), getInputComponent("phi"));
-		builder.append(TStringUtils.getString("phi4"), getInputComponent("phi4"));
-		// builder.nextLine();
-		builder.append(TStringUtils.getString("takeOpportunity"), getInputComponent("takeOpportunity"), 5);
 
 		JPanel panel = builder.getPanel();
 		setBodyComponent(component);

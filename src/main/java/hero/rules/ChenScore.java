@@ -26,7 +26,7 @@ public class ChenScore extends BasicRule {
         this.raiseFactors = new HashMap<>();
 
         // raise/call/fold chenscores idexed by position
-        for (int position = 0; position < Table.CAPACITY; position++) {
+        for (int position = 0; position < Table.MAX_CAPACITY; position++) {
             int raise = (Integer) properties.getOrDefault("raisePosition." + position, 15);
             raisePositions.put(position, raise);
             int call = (Integer) properties.getOrDefault("callPosition." + position, 10);
@@ -48,11 +48,11 @@ public class ChenScore extends BasicRule {
         double score = PokerSimulator.getChenScore(holeCards);
         double callValue = ruleBook.pokerSimulator.callValue;
 
-        int tablePosition = ruleBook.pokerSimulator.tablePosition;
+        int tablePosition = ruleBook.pokerSimulator.getTablePosition();
 
-        int raise = raisePositions.get(tablePosition);
-        int call = callPositions.get(tablePosition);
-        double raiseFactor = raiseFactors.get(tablePosition);
+        int raise = raisePositions.get(tablePosition - 1);
+        int call = callPositions.get(tablePosition - 1);
+        double raiseFactor = raiseFactors.get(tablePosition - 1);
 
         // Always raise or reraise with x points or more.
         if (score >= raise) {

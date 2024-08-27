@@ -6,9 +6,12 @@ import java.util.*;
 import org.apache.commons.lang3.*;
 import org.apache.commons.math3.stat.descriptive.*;
 
+import com.jgoodies.common.base.*;
+
 import core.*;
 import datasource.*;
 import hero.UoAHandEval.*;
+import hero.ozsoft.*;
 import hero.rules.*;
 
 /**
@@ -56,16 +59,16 @@ public class PokerSimulator {
 	public double callValue, raiseValue, potValue;
 	public double winProb;
 
-	public int villans;
+	public int activeVillans;
 	public int street = NO_CARDS_DEALT;
 	public double buyIn, smallBlind, bigBlind;
 	public final UoAHand communityCards = new UoAHand();
 	public final UoAHand holeCards = new UoAHand();
 	public final UoAHand currentHand = new UoAHand();
-	public int tablePosition;
 	public DescriptiveStatistics performaceStatistic;
 	public PokerSimulatorTraker pokerSimulatorTraker;
 	public RuleBook ruleBook;
+	public TrooperParameter trooperParameter;
 
 	public int stimatedVillanTau;
 
@@ -73,6 +76,7 @@ public class PokerSimulator {
 
 	// private long lastStepMillis;
 	private Hashtable<Integer, String> streetNames = new Hashtable<>();
+	private int tablePosition;
 
 	// Global variables updated by getHandPotential method
 	// public double Ppot, Npot, HS_n, winProb_n;
@@ -81,7 +85,8 @@ public class PokerSimulator {
 	/** the number of step to divide the raise values */
 	public static int STEPS = 6;
 
-	public PokerSimulator() {
+	public PokerSimulator(TrooperParameter trooperParameter) {
+		this.trooperParameter = trooperParameter;
 		streetNames.put(NO_CARDS_DEALT, "No cards dealt");
 		streetNames.put(HOLE_CARDS_DEALT, "Hole cards dealt");
 		streetNames.put(FLOP_CARDS_DEALT, "Flop");
@@ -187,7 +192,7 @@ public class PokerSimulator {
 	/**
 	 * return the evaluation computed based on {@link UoAHandEvaluator}
 	 * 
-	 * @param holeCardsv     - my cards
+	 * @param holeCards     - my cards
 	 * @param communityCards - table's cards
 	 * 
 	 * @return the evaluation
@@ -323,7 +328,8 @@ public class PokerSimulator {
 			// open ended straight and flush draw
 
 			result.put("outs", outs);
-			result.put("outs%", outs * 2.0);
+			result.put("outs2%", outs * 2.15); 
+			result.put("outs4%", outs * 4.10); 
 			result.put("outsExplanation", StringUtils.substringBeforeLast(outsExplanation, ", "));
 		}
 
@@ -550,7 +556,7 @@ public class PokerSimulator {
 	 */
 	public void newHand() {
 		street = NO_CARDS_DEALT;
-		this.villans = -1;
+		this.activeVillans = -1;
 		holeCards.makeEmpty();
 		communityCards.makeEmpty();
 		// 190831: ya el sistema se esta moviendo. por lo menos hace fold !!!! :D estoy
@@ -633,7 +639,7 @@ public class PokerSimulator {
 		street = currentHand.size();
 
 		evaluation.clear();
-		evaluation.putAll(getEvaluation(holeCards, communityCards, villans, heroChips / bigBlind));
+		evaluation.putAll(getEvaluation(holeCards, communityCards, activeVillans, heroChips / bigBlind));
 		winProb = (double) evaluation.getOrDefault("winProb", 0.0);
 		pokerSimulatorTraker.update(this);
 		ruleBook.fire();
@@ -657,7 +663,7 @@ public class PokerSimulator {
 		text = "Chips " + heroChips + " Pot " + potValue + " Call " + callValue + " Raise " + raiseValue;
 		variableList.put("simulator.Table values", text);
 
-		text = "Round " + streetNames.get(street) + " Opponents " + villans + " Position " + tablePosition;
+		text = "Round " + streetNames.get(street) + " Opponents " + activeVillans + " Position " + tablePosition;
 		variableList.put("simulator.Simulator values", text);
 
 		if (isLive) {
@@ -671,36 +677,32 @@ public class PokerSimulator {
 		performaceStatistic.addValue(System.currentTimeMillis() - t1);
 	}
 
-	public void setCallValue(double callValue) {
-		this.callValue = callValue;
-	}
-
-	public void setHeroChips(double heroChips) {
-		this.heroChips = heroChips;
-	}
-
-	public void setPotValue(double potValue) {
-		this.potValue = potValue;
-	}
-
-	public void setRaiseValue(double raiseValue) {
-		this.raiseValue = raiseValue;
-	}
-
 	/**
-	 * Update the table position. the Heros table position is determinated detecting
-	 * the dealer button and counting clockwise. For examples, in a 4 villans table:
-	 * <li>If hero has the dealer button, this method return 5;
-	 * <li>if villan4 is the dealer, this method return 1. Hero is small blind
-	 * <li>if villan1 is the dealer, this method return 4. Hero is in middle table
-	 * position.
-	 * <p>
-	 * this metod is called during the {@link SensorsArray#read(String)} operation.
+	 * set the {@link #tablePosition} and {@link #activeVillans} internal
+	 * parameters. all incomming parameters are 1 based
+	 * 
+	 * @param dealerChair   - the dealler position.
+	 * @param myChair       - the hero chair (can vary in simulation)
+	 * @param activeVillans - the current active villans
 	 */
-	public void setTablePosition(int dealerPos, int myChair, int villans) {
-		this.villans = villans;
+	public void setTablePosition(int dealerChair, int myChair, int activeVillans) {
+		Preconditions.checkArgument(dealerChair > 0, "dealerPosition argument muss be > 0");
+		Preconditions.checkArgument(myChair > 0, "myChair argument muss be > 0");
+
+		this.activeVillans = activeVillans;
 		// int tp = Math.abs(dbp - (getActiveSeats() + 1));
-		this.tablePosition = Math.abs(dealerPos - (villans + 1));
+		this.tablePosition = myChair - dealerChair;
+
+		if (dealerChair == myChair)
+			this.tablePosition = Table.MAX_CAPACITY;
+
+		if (tablePosition < 0)
+			this.tablePosition = tablePosition + Table.MAX_CAPACITY;
+		// this.tablePosition = Math.abs(dealerPos - (villans + 1));
+	}
+
+	public int getTablePosition() {
+		return tablePosition;
 	}
 
 	public void setVariable(String key, Object value) {
@@ -795,10 +797,7 @@ public class PokerSimulator {
 		// 240823: dont remove. the rules are responsible for that. some rules cann
 		// decide zB to bluff and all actions are needed
 		if (equity != null) {
-			for (TrooperAction a : availableActions) {
-				System.out.println("a.potOdds < equity " + a.potOdds + " " + equity + "= " + (a.potOdds < equity));
-			}
-			availableActions.removeIf(a -> a.potOdds < equity);
+			availableActions.removeIf(a -> a.potOdds > equity);
 		}
 
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D

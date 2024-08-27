@@ -48,7 +48,7 @@ public class SimulationParametersPanel extends TUIFormPanel implements ListSelec
 		addInputComponent(TUIUtils.getSwitch("isTournament", model.getBoolean("isTournament")));
 		addInputComponent(TUIUtils.getNumericTextField("handsToSimulate", model, columns), true, true);
 		addInputComponent(TUIUtils.getSpinner("numOfTasks", model, 1, TTaskManager.CORE_POOL_SIZE));
-		addInputComponent(TUIUtils.getSpinner("minPlayers", model, 2, Table.CAPACITY));
+		addInputComponent(TUIUtils.getSpinner("minPlayers", model, 2, Table.MAX_CAPACITY));
 		addInputComponent(TUIUtils.getSpinner("grain", model, 5, 20, 5));
 
 		shuffleTextField = TUIUtils.getWebTextField("simulationVariable", model, columns);
@@ -243,8 +243,8 @@ public class SimulationParametersPanel extends TUIFormPanel implements ListSelec
 			// in tournament, the # of strategies muss > # players
 			int stst = Table.getTotalStrategies(simulationParameters);
 			boolean isTournament = simulationParameters.getBoolean("isTournament");
-			if (isTournament && stst < Table.CAPACITY) {
-				Alesia.showNotification("hero.msg07", stst, Table.CAPACITY);
+			if (isTournament && stst < Table.MAX_CAPACITY) {
+				Alesia.showNotification("hero.msg07", stst, Table.MAX_CAPACITY);
 				return null;
 			}
 

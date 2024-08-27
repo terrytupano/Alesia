@@ -12,17 +12,19 @@ public class RuleBook {
     public static final String HOLECARDS = "holeCards";
     public static final String COMMUNITY_CARDS = "communityCards";
 
-    public HashMap<String, Object> result;
+    public HashMap<String, Object> rulesDesitions;
 
     private Facts facts;
     private Rules rules;
+
+    public TrooperAction action;
 
     PokerSimulator pokerSimulator;
 
     public RuleBook(PokerSimulator simulator) {
         this.pokerSimulator = simulator;
         this.rules = new Rules();
-        this.result = new HashMap<>();
+        this.rulesDesitions = new HashMap<>();
         this.facts = new Facts();
 
         rules.register(new ChenScore(this));
@@ -38,7 +40,7 @@ public class RuleBook {
 
     public void addAction(BasicRule rule, Object action) {
         String key = rule.getClass().getSimpleName();
-        result.put(key, action);
+        rulesDesitions.put(key, action);
     }
 
     public void fire() {
@@ -56,14 +58,6 @@ public class RuleBook {
      */
     public static double rewardRiskToProb(double reward, double risk) {
         double odds = risk / (reward + risk);
-
-        // if for some reason, i hero need check/call (risk = 0) odds are 1
-        if (risk == 0)
-            return 1.0;
-
-        if (risk > reward)
-            odds *= -1.0;
-
         return odds;
     }
 }

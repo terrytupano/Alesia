@@ -149,31 +149,31 @@ public class TableDialog extends InputBlocker implements Client {
 
 		// ArrayList<PlayerPanel> playerP = new ArrayList<>(playerPanels.values());
 		builder.nextColumn();
-		builder.add(chairs.get(3));
-		builder.nextColumn();
 		builder.add(chairs.get(4));
 		builder.nextColumn();
 		builder.add(chairs.get(5));
-		builder.nextLine(2);
-
-		builder.add(chairs.get(2));
-		builder.nextColumn(2);
-		builder.add(boardPanel, CC.rchw(3, 2, 3, 3));
-		builder.nextColumn(2);
+		builder.nextColumn();
 		builder.add(chairs.get(6));
 		builder.nextLine(2);
 
-		builder.add(chairs.get(1));
-		builder.nextColumn(4);
+		builder.add(chairs.get(3));
+		builder.nextColumn(2);
+		builder.add(boardPanel, CC.rchw(3, 2, 3, 3));
+		builder.nextColumn(2);
 		builder.add(chairs.get(7));
 		builder.nextLine(2);
 
+		builder.add(chairs.get(2));
+		builder.nextColumn(4);
+		builder.add(chairs.get(8));
+		builder.nextLine(2);
+
 		builder.nextColumn();
-		builder.add(chairs.get(0));
+		builder.add(chairs.get(1));
 		builder.nextColumn();
 		builder.add(new JLabel());
 		builder.nextColumn();
-		builder.add(chairs.get(8));
+		builder.add(chairs.get(9));
 		builder.nextLine(2);
 		builder.add(controlPanel, CC.rcw(9, 1, 5));
 
