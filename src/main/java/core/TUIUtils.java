@@ -19,7 +19,6 @@ import java.text.*;
 import java.util.*;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.*;
 
 import javax.swing.*;
 import javax.swing.Action;
@@ -66,6 +65,7 @@ import com.jgoodies.forms.layout.*;
 import gui.*;
 import gui.jgoodies.*;
 import gui.wlaf.*;
+import javafx.scene.control.*;
 
 public class TUIUtils {
 

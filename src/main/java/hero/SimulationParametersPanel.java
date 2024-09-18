@@ -17,7 +17,6 @@ import com.alee.laf.button.*;
 import com.alee.laf.grouping.*;
 import com.alee.laf.list.*;
 import com.alee.laf.panel.*;
-import com.alee.laf.spinner.*;
 import com.alee.laf.text.*;
 import com.alee.managers.style.*;
 

@@ -42,51 +42,42 @@ import hero.ozsoft.actions.*;
  */
 public class BasicBot extends Bot {
 
-	private PreflopCardsModel preflopCardsModel = new PreflopCardsModel();
-
-	/** Tightness (0 = loose, 100 = tight). */
-	private int tau;
-
-	/** Betting aggression (0 = safe, 100 = aggressive). */
-	private int alpha;
-
 	public BasicBot() {
 
 	}
 
 	@Override
 	public PlayerAction act(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
-
 		// No choice, must check.
 		if (allowedActions.size() == 1)
 			return PlayerAction.CHECK;
 
-		this.tau = simulationVariables.get("tau");
-		this.alpha = simulationVariables.get("alpha");
-		preflopCardsModel.setPercentage(tau);
-		// if ("Hero".equals(trooperName))
-		// System.out.println("table: " + table.getTableId() + " Hero: tau = " + tau +
-		// ", " + "alpha: " + alpha);
-
-		// apply tau parameter
-		// if (!preflopCardsModel.containsHand(myHole)) {
-		// return PlayerAction.FOLD;
-		// }
-
-		double cash = (double) player.getCash();
-		List<TrooperAction> actions = Bot.loadActions(minBet, currentBet, cash, allowedActions);
-
+		// System.out.println("--- ");
 		activeteSensors(minBet, currentBet, allowedActions);
 		pokerSimulator.runSimulation();
-		System.out.println(player.getName() + " actions: " + pokerSimulator.ruleBook.rulesDesitions);
+		TrooperAction action = pokerSimulator.ruleBook.getAction();
+		PlayerAction action2 = getPlayerAction(action, allowedActions);
 
-		if (allowedActions.contains(PlayerAction.CHECK)) {
-			return PlayerAction.CHECK;
-		} else {
-			return PlayerAction.CALL;
+		// System.out.println("currentBet " + currentBet);
+		// System.out.println("minBet " + minBet);
+		// System.out.println("player.getCash() " + player.getCash());
+		// System.out.println("TrooperAction " + action);
+		// System.out.println("PlayerAction " + action2);
+		double amount = action.amount;
+		if (action.name.equals("raise") && amount < minBet && amount < player.getCash()) {
+			activeteSensors(minBet, currentBet, allowedActions);
+			pokerSimulator.runSimulation();
+			action = pokerSimulator.ruleBook.getAction();
+			action2 = getPlayerAction(action, allowedActions);
 		}
 
-		// return getPlayerAction(subOptimalAction.action, allowedActions);
+		// if (allowedActions.contains(PlayerAction.CHECK)) {
+		// return PlayerAction.CHECK;
+		// } else {
+		// return PlayerAction.CALL;
+		// }
+
+		return action2;
 	}
 
 	@Override

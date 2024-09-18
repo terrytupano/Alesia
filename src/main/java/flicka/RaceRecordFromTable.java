@@ -8,8 +8,6 @@ import javax.swing.table.*;
 
 import core.*;
 import datasource.*;
-
-import gui.*;
 import gui.table.*;
 
 public class RaceRecordFromTable extends TUIFormPanel implements ActionListener {

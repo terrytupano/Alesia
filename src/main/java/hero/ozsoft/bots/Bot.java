@@ -68,7 +68,7 @@ public abstract class Bot implements Client {
 	}
 
 	/**
-	 * bassed on the incoming arguments, prepare al sensors of the currnet instace
+	 * based on the incoming arguments, prepare al sensors of the current instace
 	 * of {@link PokerSimulator}
 	 * 
 	 * @param minBet         - the min bet
@@ -76,18 +76,20 @@ public abstract class Bot implements Client {
 	 * @param allowedActions - the list of alloed actions
 	 */
 	public void activeteSensors(int minBet, int currentBet, Set<PlayerAction> allowedActions) {
-		int raiseValue = Math.min(minBet * 2, player.getCash());
+		int raiseValue = minBet + bigBlind;
 
 		boolean callBol = allowedActions.contains(PlayerAction.CALL) || allowedActions.contains(PlayerAction.CHECK);
-		boolean raiseBol = allowedActions.contains(PlayerAction.RAISE)
-				|| allowedActions.contains(PlayerAction.BET) && player.getCash() >= raiseValue;
-		boolean potBol = raiseBol && player.getCash() >= pot;
-		boolean allinBol = raiseBol && player.getCash() >= minBet;
+		boolean raiseBol = (allowedActions.contains(PlayerAction.RAISE)
+				|| allowedActions.contains(PlayerAction.BET)) && minBet < raiseValue && raiseValue < player.getCash();
+		boolean potBol = player.getCash() >= pot;
+		boolean allinBol = player.getCash() > 0;
 
 		// A bet is the initial amount and a raise is anything on top of this
+		pokerSimulator.sensorStatus.put("raise.call", callBol);
 		pokerSimulator.sensorStatus.put("raise.pot", potBol);
 		pokerSimulator.sensorStatus.put("raise.allin", allinBol);
-		pokerSimulator.sensorStatus.put("raise.slider", allinBol);
+		pokerSimulator.sensorStatus.put("raise.slider", raiseBol);
+		pokerSimulator.sensorStatus.put("raise", raiseBol);
 
 		// the trooper dont take into account call/check/raise enabled/disabel status.
 		// there are actives and/or mutate the text to reflext valid acction
@@ -98,12 +100,10 @@ public abstract class Bot implements Client {
 		if (allowedActions.contains(PlayerAction.CHECK))
 			pokerSimulator.callValue = 0;
 
-		if (!callBol || !raiseBol)
-			System.out.println("HeroBot.act()");
-
 		pokerSimulator.potValue = pot;
 		pokerSimulator.heroChips = player.getCash();
 		pokerSimulator.raiseValue = raiseValue;
+		pokerSimulator.street = street;
 		// TODO: hasCard method don't say if the villain folded his cards
 		// -------------------------------------------------- !!!!!!!!!
 		int villans = (int) villains.stream().filter(p -> p.hasCards()).count();
@@ -130,19 +130,28 @@ public abstract class Bot implements Client {
 			if (allowedActions.contains(PlayerAction.BET))
 				return new BetAction((int) trooperAction.amount);
 		}
-		if (trooperAction.name.equals("raise") || trooperAction.name.equals("pot")
-				|| trooperAction.name.equals("allIn")) {
+		if (trooperAction.name.equals("allIn")) {
+			if (trooperAction.amount < player.getCash())
+				return new CallAction((int) trooperAction.amount);
+			else
+				return new RaiseAction((int) trooperAction.amount);
+		}
+		if (trooperAction.name.equals("raise") || trooperAction.name.equals("pot")) {
 			if (allowedActions.contains(PlayerAction.RAISE))
 				return new RaiseAction((int) trooperAction.amount);
 			if (allowedActions.contains(PlayerAction.BET))
 				return new BetAction((int) trooperAction.amount);
 		}
 
-		throw new IllegalArgumentException("No correct action selected. Trooper action was" + trooperAction);
+		throw new IllegalArgumentException("No correct action selected. Trooper action was " + trooperAction);
 	}
 
 	/**
 	 * Equivalent of {@link PokerSimulator#loadActions(double, PokerSimulator)}
+	 * 
+	 * 
+	 * delete !!!!
+	 * 
 	 * 
 	 * @param minBet         - the minimum bet
 	 * @param currentBet     - the current bet

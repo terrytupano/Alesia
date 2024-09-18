@@ -18,7 +18,6 @@ import com.alee.managers.settings.*;
 
 import core.*;
 import datasource.*;
-import gui.*;
 import gui.console.*;
 
 public class HeroPanel extends TUIFormPanel {

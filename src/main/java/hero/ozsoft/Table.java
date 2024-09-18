@@ -317,6 +317,7 @@ public class Table extends Task<Void, Void> {
 				// String.format("Player '%s' acted with illegal Raise action", actor));
 				// }
 				// }
+
 				playersToAct--;
 				if (action instanceof CheckAction) {
 					// Do nothing.
@@ -445,7 +446,7 @@ public class Table extends Task<Void, Void> {
 
 					// for the TTaskmonitor
 					totalTables += tableCounter;
-					firePropertyChange(PROP_MESSAGE, null, "Tables: "+ totalTables + " Waiting for summarization ...");
+					firePropertyChange(PROP_MESSAGE, null, "Tables: " + totalTables + " Waiting for summarization ...");
 
 					// spetial case: interactive simulation: handle partial result directly
 					if (1 == simulationParameters.getInteger("numOfTasks")) {
@@ -644,10 +645,10 @@ public class Table extends Task<Void, Void> {
 		activeStrategies = actives.intValue();
 	}
 
-	public int getTableCounter() {
-		return tableCounter;
-	}
-
+	/**
+	 * reset the simulated tables. use this method to allow this table continua
+	 * after sumnarsatopm task
+	 */
 	public void resetTableCounter() {
 		this.tableCounter = 0;
 	}

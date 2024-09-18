@@ -24,7 +24,6 @@ import core.*;
 import datasource.*;
 import gui.*;
 import hero.UoAHandEval.*;
-import hero.rules.*;
 
 public class UoAPanel extends TUIPanel {
 

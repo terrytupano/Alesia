@@ -136,7 +136,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	public Trooper(TrooperParameter parameter) {
 		super(Alesia.getInstance());
 		this.availableActions = new ArrayList<>();
-		this.pokerSimulator = new PokerSimulator(trooperParameter);
+		this.pokerSimulator = new PokerSimulator(parameter);
 		this.sensorsArray = new SensorsArray(pokerSimulator);
 		this.robotActuator = new RobotActuator(this);
 		this.numOfvillains = sensorsArray.getVillains();
@@ -145,7 +145,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		this.performaceStatistic = new DescriptiveStatistics(10);
 		this.handsCounter = 0;
 		this.playUntil = 0;
-		this.trooperParameter = null;
+		this.trooperParameter = parameter;
 		this.gameAction = SubOptimalAction.ACTION_NORMAL;
 	}
 

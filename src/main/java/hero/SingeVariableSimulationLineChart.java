@@ -6,14 +6,12 @@ import javax.swing.*;
 
 import org.javalite.activejdbc.*;
 import org.jfree.chart.*;
-import org.jfree.chart.labels.*;
 import org.jfree.chart.plot.*;
 import org.jfree.chart.renderer.xy.*;
 import org.jfree.data.xy.*;
 
 import core.*;
 import datasource.*;
-
 import hero.ozsoft.*;
 
 public class SingeVariableSimulationLineChart extends JDialog {

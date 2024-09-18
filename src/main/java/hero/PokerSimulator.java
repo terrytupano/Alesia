@@ -12,7 +12,6 @@ import core.*;
 import datasource.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.*;
-import hero.rules.*;
 
 /**
  * 
@@ -192,7 +191,7 @@ public class PokerSimulator {
 	/**
 	 * return the evaluation computed based on {@link UoAHandEvaluator}
 	 * 
-	 * @param holeCards     - my cards
+	 * @param holeCards      - my cards
 	 * @param communityCards - table's cards
 	 * 
 	 * @return the evaluation
@@ -328,8 +327,8 @@ public class PokerSimulator {
 			// open ended straight and flush draw
 
 			result.put("outs", outs);
-			result.put("outs2%", outs * 2.15); 
-			result.put("outs4%", outs * 4.10); 
+			result.put("outs2", outs * (2.15 / 100.0));
+			result.put("outs4", outs * (4.10 / 100.0));
 			result.put("outsExplanation", StringUtils.substringBeforeLast(outsExplanation, ", "));
 		}
 
@@ -571,6 +570,7 @@ public class PokerSimulator {
 		raiseValue = -1;
 		heroChips = -1;
 		winProb = -1;
+		ruleBook.newHand();
 	}
 
 	public String getCurrentHandStrengName() {
@@ -740,7 +740,7 @@ public class PokerSimulator {
 	 * <li>{@link #STEPS} more actions that range from raise to the value close to
 	 * All-in.
 	 * <p>
-	 * for a total of 9 possible actions. this method will remove all actions if
+	 * for a total of 10 possible actions. this method will remove all actions if
 	 * equity != null && potodds < equity
 	 * 
 	 * @param pokerSimulator - the simulator instace to read all the info

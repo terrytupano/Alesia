@@ -1,16 +1,5 @@
 package hero.UoAHandEval;
 
-/***************************************************************************
-Copyright (c) 2000:
-      University of Alberta,
-      Deptartment of Computing Science
-      Computer Poker Research Group
-
-      See "Liscence.txt"
-***************************************************************************/
-
-import java.lang.*;
-
 import javax.swing.*;
 
 import core.*;
