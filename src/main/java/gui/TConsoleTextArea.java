@@ -23,7 +23,7 @@ public class TConsoleTextArea extends WebTextArea {
 	private String pattern;
 
 	public TConsoleTextArea() {
-		this("%-17s %-50s");
+		this("%-20s %-50s");
 	}
 
 	public TConsoleTextArea(String pattern) {

@@ -204,6 +204,12 @@ public class Player {
 	public Player publicClone() {
 		Player clone = new Player(name, cash, null, chair);
 		clone.hasCards = hasCards;
+
+		// TEMP: to show on the table, the cards. visual simulatiion purpose
+		if (hasCards) {
+			clone.setCards(Arrays.asList(hand.getCard(1), hand.getCard(2)));
+		}
+
 		clone.bet = bet;
 		clone.action = action;
 		return clone;

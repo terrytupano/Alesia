@@ -4,6 +4,7 @@ import java.util.*;
 
 import org.jeasy.rules.api.*;
 import org.jeasy.rules.core.*;
+import org.netlib.util.*;
 
 import hero.UoAHandEval.*;
 import hero.ozsoft.*;
@@ -72,9 +73,16 @@ public class RuleBook {
         double raiseValue = pokerSimulator.raiseValue;
         double tablePosition = pokerSimulator.getTablePosition();
 
+        // TODO: is worth set the upB to include all way down to 22?
+        // vortail: this allow early position to play more hand
+        // nachteil: late position play -ev hands
+
         // 25 is the max % for preflopCardsModel where all cards hat +EV
-        double upB = 25d;
-        double step = upB / (double) Table.MAX_CAPACITY;
+        // double upB = 25d;
+
+        // ultil poket 22
+        double upB = 42d;
+        double step = upB / Table.MAX_CAPACITY;
         // use the table position to compute the distance tp=1 tight tp=9 loose in
         // reference to raise/re-raise
         int tau2 = (int) Math.round(step * tablePosition);
@@ -123,21 +131,19 @@ public class RuleBook {
 
     private void evaluateValueBetting() {
         boolean isTheNut = (Boolean) pokerSimulator.evaluation.getOrDefault("isTheNut", false);
-        int valueBetting = pokerSimulator.trooperParameter.getInteger("valueBetting");
 
         if (isTheNut) {
-            putAction("valueBetting", valueBetting, availableActions);
+            putAction("valueBetting", pokerSimulator.buyIn, availableActions);
         }
     }
 
     private void evaluateSemiBluff() {
         int outs = (Integer) pokerSimulator.evaluation.getOrDefault("outs", 0);
-        int semiBluff = pokerSimulator.trooperParameter.getInteger("semiBluff");
 
         // Spots to Go All-in as a Semi-Bluff. 020 Essential Poker Math_ Fundamental
         // No-Limit Hold’em Mathematics You Need to Know p243
         if (outs > 7) {
-            putAction("semiBluff", semiBluff, availableActions);
+            putAction("semiBluff", pokerSimulator.buyIn, availableActions);
 
             // TODO: code coied for checkOportuty method in trooper. NOT TESTED
             // --------------------------------------
@@ -152,29 +158,66 @@ public class RuleBook {
         }
     }
 
+    /**
+     * Pot odds are the IMMEDIATE odds we’re being offered
+     * when we call a bet in poker. The important aspect of this definition is
+     * IMMEDIATE, because with pot odds it’s all about how much we stand to win
+     * IMMEDIATELY in relation to what we are risking by calling a bet.
+     * 
+     * Essential poker math p95
+     */
     private void evaluatePotOdds() {
+        // if (pokerSimulator.street != PokerSimulator.RIVER_CARD_DEALT) {
+        // Hero.heroLogger.info("potOdds rule only on the river");
+        // return;
+        // }
+
         double winProb = pokerSimulator.winProb;
-        int potOdds = pokerSimulator.trooperParameter.getInteger("potOdds");
+        int darkness = (int) pokerSimulator.evaluation.getOrDefault("darkness", 0);
 
         List<TrooperAction> list = new ArrayList<>(availableActions);
+        // Should we call? If we expect to win at least potOdds of the time, we should
+        // call.
         list.removeIf(a -> a.potOdds > winProb);
 
-        if (!list.isEmpty()) {
-            putAction("potOdds", potOdds, list);
+        double texture = ((double) pokerSimulator.evaluation.get("rankBehindTexture%")) / 100d;
+        System.out.println("texture " + texture);
+
+        if (!list.isEmpty() && darkness > 0) {
+            // use the darknes variable to decide call/raise
+            double value = darkness == 2 ? pokerSimulator.potValue : pokerSimulator.raiseValue;
+            putAction("potOdds", value, list);
         }
+
     }
 
+    /**
+     * You can think of implied odds as an extension of pot odds. While pot odds
+     * are considered our most direct and immediate odds when calling a bet,
+     * implied odds are our indirect odds. Recapping on the previous chapter, with
+     * pot odds, it’s all about how much we stand to win immediately in
+     * relationship to what we’re risking by calling a bet. In contrast, implied
+     * odds consider how much we stand to win not only immediately, but also on
+     * later rounds of betting after we make the best hand.
+     * 
+     * Essential poker math p113
+     */
     private void evaluateImpliedOdds() {
+        if (!(pokerSimulator.street == PokerSimulator.FLOP_CARDS_DEALT
+                || pokerSimulator.street == PokerSimulator.TURN_CARD_DEALT)) {
+            // Hero.heroLogger.info("impliedOdds rule only on the flop & turn street");
+            return;
+        }
+
         double outs2 = (Double) pokerSimulator.evaluation.getOrDefault("outs2", 0.0);
         double outs4 = (Double) pokerSimulator.evaluation.getOrDefault("outs4", 0.0);
-        int impliedOdds = pokerSimulator.trooperParameter.getInteger("impliedOdds");
 
         final double equity = pokerSimulator.street == PokerSimulator.FLOP_CARDS_DEALT ? outs4 : outs2;
         List<TrooperAction> list = new ArrayList<>(availableActions);
         list.removeIf(a -> a.potOdds > equity);
 
         if (!list.isEmpty()) {
-            putAction("impliedOdds", impliedOdds, list);
+            putAction("impliedOdds", pokerSimulator.buyIn, list);
         }
     }
 
@@ -233,19 +276,6 @@ public class RuleBook {
     }
 
     /**
-     * compute from reward:risk notation to probability. prob = risk / (reward +
-     * risk)
-     * 
-     * @param reward - the reward
-     * @param risk   - the risk
-     * @return - the probability
-     */
-    public static double rewardRiskToProb(double reward, double risk) {
-        double odds = risk / (reward + risk);
-        return odds;
-    }
-
-    /**
      * from the list of actions passed as argument, return the action whose ammount
      * is closest to the value argument
      * 
@@ -261,16 +291,7 @@ public class RuleBook {
         return action;
     }
 
-    private void putAction(String ruleName, int factor, List<TrooperAction> actions) {
-        int alpha = pokerSimulator.trooperParameter.getInteger("alpha");
-
-        // 10=1 bb, 20=2 bb ... 100/10bb
-        double value = alpha * pokerSimulator.bigBlind / 10d;
-        double r = Math.random();
-        double factor2 = factor / 100d;
-        if (r < factor2)
-            value = pokerSimulator.callValue;
-
+    private void putAction(String ruleName, double value, List<TrooperAction> actions) {
         TrooperAction action = getCloseTo(actions, value);
         rulesDesitions.put(ruleName, action);
     }

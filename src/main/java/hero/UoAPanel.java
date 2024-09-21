@@ -29,11 +29,11 @@ public class UoAPanel extends TUIPanel {
 
 	private CardsPanel cardsPanel;
 	private TConsoleTextArea console;
-	private WebSpinner bbSpinner;
+	private WebSpinner rangeSpinner;
 
 	public UoAPanel() {
 		super();
-		this.bbSpinner = TUIUtils.getSpinner("bbSpinner", 10, 0, 100, 5);
+		this.rangeSpinner = TUIUtils.getSpinner("rangeSpinner", 25, 1, 100, 5);
 
 		// setBorder(TUIUtils.STANDAR_EMPTY_BORDER);
 		this.console = new TConsoleTextArea();
@@ -46,7 +46,7 @@ public class UoAPanel extends TUIPanel {
 		WebButton saveCurrentHandButton = TUIUtils.getButtonForToolBar(this, "saveCurrentHand");
 		WebButton loadSavedHandButton = TUIUtils.getButtonForToolBar(this, "loadSavedHand");
 
-		GroupPane pane = new GroupPane(bbSpinner, evaluateHandButton, setRandomHandButton, setExampleFromOMPaperButton,
+		GroupPane pane = new GroupPane(rangeSpinner, evaluateHandButton, setRandomHandButton, setExampleFromOMPaperButton,
 				resetTableButton, saveCurrentHandButton, loadSavedHandButton);
 
 		getToolBar().add(pane);
@@ -122,9 +122,9 @@ public class UoAPanel extends TUIPanel {
 		UoAHand comunityCards = new UoAHand(community);
 
 		console.append("Hole cards: " + holeCards + " Comunity cards: " + comunityCards + "\n");
-		int bigBlinds = (Integer) bbSpinner.getValue();
+		int preflopRange = (Integer) rangeSpinner.getValue();
 
-		Map<String, Object> evaluation = PokerSimulator.getEvaluation(holeCards, comunityCards, 1, bigBlinds);
+		Map<String, Object> evaluation = PokerSimulator.getEvaluation(holeCards, comunityCards, 2, preflopRange);
 
 		// all elements instance of List are array of uoAHand. override this property
 		// and show only a sublist

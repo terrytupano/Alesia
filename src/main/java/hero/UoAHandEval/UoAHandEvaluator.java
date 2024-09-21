@@ -53,10 +53,12 @@ public class UoAHandEvaluator {
 		return card;
 	}
 
-	// public static boolean isOvercardParticipant(UoAHand holeCards, UoAHand communityCards) {
-	// 	UoACard card = holeCards.getCard(1).getRank() > holeCards.getCard(2).getRank() ? holeCards.getCard(1)
-	// 			: holeCards.getCard(2);
-	// 	return card;
+	// public static boolean isOvercardParticipant(UoAHand holeCards, UoAHand
+	// communityCards) {
+	// UoACard card = holeCards.getCard(1).getRank() >
+	// holeCards.getCard(2).getRank() ? holeCards.getCard(1)
+	// : holeCards.getCard(2);
+	// return card;
 	// }
 
 	/**
@@ -68,14 +70,6 @@ public class UoAHandEvaluator {
 	 */
 	public static boolean is2Overcards(UoAHand holeCards, UoAHand communityCards) {
 		return isOvercard(holeCards.getCard(1), communityCards) && isOvercard(holeCards.getCard(2), communityCards);
-	}
-
-	private static boolean isOvercard(UoACard card, UoAHand communityCards) {
-		boolean isOvercard = true;
-		for (int j = 1; j <= communityCards.size(); j++) {
-			isOvercard = card.getRank() <= communityCards.getCard(j).getRank() ? false : isOvercard;
-		}
-		return isOvercard;
 	}
 
 	public static boolean isFlushDraw(UoAHand holeCards, UoAHand communityCards) {
@@ -103,18 +97,40 @@ public class UoAHandEvaluator {
 		return gaps.contains("111");
 	}
 
-	private static String getStraightDrawPatt(UoAHand holeCards, UoAHand communityCards) {
-		UoAHand hand = new UoAHand(holeCards + " " + communityCards);
-		List<Integer> ranks = hand.getCards().stream().map(c -> c.getRank()).collect(Collectors.toList());
-		Collections.sort(ranks);
-		String gaps = "";
-		for (int i = 0; i < ranks.size() - 1; i++) {
-			int gap = ranks.get(i + 1) - ranks.get(i);
-			gaps += gap;
-		}
-		return gaps;
+	/**
+	 * return the name of the hand type. HIGH, PAIR, TWO PAIR, THREE KIND,
+	 * STRAIGHT, FLUSH.. and so on
+	 * 
+	 * @param hand - the hand
+	 * @return the type name
+	 */
+	public static String getTypeName(UoAHand hand) {
+		int type = getType(hand);
+		String t = hand_name[type];
+		return t;
 	}
 
+	/**
+	 * return the type index of the hand. zB 0=HIGH, 1=PAIR, 2=TWO PAIR, 3=THREE
+	 * KIND.. and so on
+	 * 
+	 * @param hand
+	 * @return
+	 */
+	public static int getType(UoAHand hand) {
+		int rank = rankHand(hand);
+		int type = (int) (rank / ID_GROUP_SIZE);
+		return type;
+	}
+
+	/**
+	 * return 0, 1 or 2 in response of how many cards participaten on the current
+	 * hand. 2 is the maximum both holeCards participaten on the hand
+	 * 
+	 * @param holeCards      - the hole card
+	 * @param communityCards - the communitycards
+	 * @return the darkness
+	 */
 	public static int getDarkness(UoAHand holeCards, UoAHand communityCards) {
 		int darkness = 0;
 		int type = getType(new UoAHand(holeCards + " " + communityCards));
@@ -141,6 +157,26 @@ public class UoAHandEvaluator {
 		return darkness;
 	}
 
+	private static boolean isOvercard(UoACard card, UoAHand communityCards) {
+		boolean isOvercard = true;
+		for (int j = 1; j <= communityCards.size(); j++) {
+			isOvercard = card.getRank() <= communityCards.getCard(j).getRank() ? false : isOvercard;
+		}
+		return isOvercard;
+	}
+
+	private static String getStraightDrawPatt(UoAHand holeCards, UoAHand communityCards) {
+		UoAHand hand = new UoAHand(holeCards + " " + communityCards);
+		List<Integer> ranks = hand.getCards().stream().map(c -> c.getRank()).collect(Collectors.toList());
+		Collections.sort(ranks);
+		String gaps = "";
+		for (int i = 0; i < ranks.size() - 1; i++) {
+			int gap = ranks.get(i + 1) - ranks.get(i);
+			gaps += gap;
+		}
+		return gaps;
+	}
+
 	private static boolean containRank(UoACard card, UoAHand hand) {
 		long count = hand.getCards().stream().filter(c -> c.getRank() == card.getRank()).count();
 		return count > 0;
@@ -151,18 +187,6 @@ public class UoAHandEvaluator {
 		return count > 0;
 	}
 
-	public static String getTypeName(UoAHand hand) {
-		int type = getType(hand);
-		String t = hand_name[type];
-		return t;
-	}
-
-	public static int getType(UoAHand hand) {
-		int rank = rankHand(hand);
-		int type = (int) (rank / ID_GROUP_SIZE);
-		return type;
-	}
-
 	public static void main(String args[]) {
 		// UoAHand board = new UoAHand("3c Ac Kc 2d 7c");
 		// UoAHandEvaluator evaluator = new UoAHandEvaluator();
@@ -170,22 +194,6 @@ public class UoAHandEvaluator {
 
 		UoAHand hand1 = new UoAHand("As Kh");
 		UoAHand hand2 = new UoAHand("6s 8s 2h 3d 4c");
-		// a Pair of Eights 8c 8h
-		// 384475
-		// Two Pair, Nines and Eights 8c 8h 9c 9h
-		// 743847
-		// Three of a Kind, Eights 8c 8h 8s
-		// 1114893
-		// a Ten High Straight 6s 7c 8h 9d Td
-		// 1485180
-		// a Flush, Ten High 5s 7s 8s 9s Ts
-		// 2101414
-		// a Full House, Eights over Nines 8h 8d 8s 9h 9d
-		// 2227843
-		// Four of a Kind, Eights 8h 8d 8s 8c 9d
-		// 2599136
-		// a Ten High Straight Flush 6s 7s 8s 9s Ts
-		// 2970352
 		UoAHandEvaluator handEval = new UoAHandEvaluator();
 
 		System.out.println(handEval.getBest5CardHand(hand1));

@@ -1280,9 +1280,10 @@ public class TUIUtils {
 			String tooltip = TStringUtils.getString(n1);
 			if (!n1.equals(tooltip)) {
 				tooltip = tooltip.length() > 80 ? WordUtils.wrap(tooltip, 80) : tooltip;
-				if (cmp instanceof ToolTipMethods)
-					((ToolTipMethods) cmp).setToolTip(tooltip);
-				else
+				// 240919: the weblf tooltips dont show on certains component like spinner
+				// if (cmp instanceof ToolTipMethods)
+				// 	((ToolTipMethods) cmp).setToolTip(tooltip);
+				// else
 					cmp.setToolTipText(tooltip);
 			}
 		}
