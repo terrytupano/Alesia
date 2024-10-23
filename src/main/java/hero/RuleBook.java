@@ -80,7 +80,7 @@ public class RuleBook {
         // 25 is the max % for preflopCardsModel where all cards hat +EV
         // double upB = 25d;
 
-        // ultil poket 22
+        // ultil 22 poket pair
         double upB = 42d;
         double step = upB / Table.MAX_CAPACITY;
         // use the table position to compute the distance tp=1 tight tp=9 loose in
@@ -139,23 +139,30 @@ public class RuleBook {
 
     private void evaluateSemiBluff() {
         int outs = (Integer) pokerSimulator.evaluation.getOrDefault("outs", 0);
+        int street = pokerSimulator.street;
 
         // Spots to Go All-in as a Semi-Bluff. 020 Essential Poker Math_ Fundamental
         // No-Limit Hold’em Mathematics You Need to Know p243
-        if (outs > 7) {
+        if (PokerSimulator.FLOP_CARDS_DEALT == street && outs > 7) {
             putAction("semiBluff", pokerSimulator.buyIn, availableActions);
-
-            // TODO: code coied for checkOportuty method in trooper. NOT TESTED
-            // --------------------------------------
-            // to this point, if available actions are empty, means hero is responding a
-            // extreme high raise. that mean maybe hero is weak. at this point raise mean
-            // all in. (call actions is not considerer because is not opportunity)
-
-            // if (actions.size() == 0 && ruleBook.pokerSimulator.raiseValue >= 0)
-            // actions.add(new TrooperAction("raise", ruleBook.pokerSimulator.raiseValue));
-
-            // --------------------------------------
         }
+
+        // with more that 9 out i have prob > 0.53
+        if (PokerSimulator.TURN_CARD_DEALT == street && outs > 9) {
+            putAction("semiBluff", pokerSimulator.buyIn, availableActions);
+        }
+
+        // TODO: code coied for checkOportuty method in trooper. NOT TESTED
+        // --------------------------------------
+        // to this point, if available actions are empty, means hero is responding a
+        // extreme high raise. that mean maybe hero is weak. at this point raise mean
+        // all in. (call actions is not considerer because is not opportunity)
+
+        // if (actions.size() == 0 && ruleBook.pokerSimulator.raiseValue >= 0)
+        // actions.add(new TrooperAction("raise", ruleBook.pokerSimulator.raiseValue));
+
+        // --------------------------------------
+
     }
 
     /**
@@ -181,7 +188,7 @@ public class RuleBook {
         list.removeIf(a -> a.potOdds > winProb);
 
         double texture = ((double) pokerSimulator.evaluation.get("rankBehindTexture%")) / 100d;
-        System.out.println("texture " + texture);
+        // System.out.println("texture " + texture);
 
         if (!list.isEmpty() && darkness > 0) {
             // use the darknes variable to decide call/raise

@@ -30,5 +30,7 @@ public class SmallBlindAction extends PlayerAction {
     /* package */ SmallBlindAction() {
         super("Small blind", "posts the small blind");
     }
-    
+    public SmallBlindAction(int bb) {
+        super("Small blind", "", bb);
+    }    
 }

@@ -159,7 +159,9 @@ public class UoAHand {
       String s = new String();
       for (int i=1;i<=cards[0];i++)
          s += " " + getCard(i).toString();
-      return s;
+         // terry:
+      return s.trim();
+      // return s;
    }
 
 

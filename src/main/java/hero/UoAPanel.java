@@ -15,6 +15,9 @@ import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 
+import org.apache.commons.math3.stat.*;
+import org.apache.commons.math3.stat.descriptive.*;
+
 import com.alee.laf.button.*;
 import com.alee.laf.grouping.*;
 import com.alee.laf.panel.*;
@@ -45,9 +48,11 @@ public class UoAPanel extends TUIPanel {
 		WebButton setExampleFromOMPaperButton = TUIUtils.getButtonForToolBar(this, "setExampleFromOMPaper");
 		WebButton saveCurrentHandButton = TUIUtils.getButtonForToolBar(this, "saveCurrentHand");
 		WebButton loadSavedHandButton = TUIUtils.getButtonForToolBar(this, "loadSavedHand");
+		WebButton testVariableButton = TUIUtils.getButtonForToolBar(this, "testVariable");
 
-		GroupPane pane = new GroupPane(rangeSpinner, evaluateHandButton, setRandomHandButton, setExampleFromOMPaperButton,
-				resetTableButton, saveCurrentHandButton, loadSavedHandButton);
+		GroupPane pane = new GroupPane(rangeSpinner, evaluateHandButton, setRandomHandButton,
+				setExampleFromOMPaperButton, resetTableButton, saveCurrentHandButton, loadSavedHandButton,
+				testVariableButton);
 
 		getToolBar().add(pane);
 		WebPanel webPanel = new WebPanel(new BorderLayout());
@@ -66,6 +71,45 @@ public class UoAPanel extends TUIPanel {
 	public void resetTable(ActionEvent event) {
 		cardsPanel.resetTable();
 		console.clear();
+	}
+
+	@org.jdesktop.application.Action
+	public void testVariable(ActionEvent event) {
+		Frequency frequency = new Frequency();
+		DescriptiveStatistics statistics = new DescriptiveStatistics();
+		console.clear();
+		UoAHand holeCards = new UoAHand();
+		UoAHand comunityCards = new UoAHand();
+		UoADeck deck = new UoADeck();
+		for (int i = 0; i < 100_000; i++) {
+			deck.reset();
+			deck.shuffle();
+			holeCards.makeEmpty();
+			comunityCards.makeEmpty();
+			holeCards.addCard(deck.deal().getIndex());
+			holeCards.addCard(deck.deal().getIndex());
+			comunityCards.addCard(deck.deal().getIndex());
+			comunityCards.addCard(deck.deal().getIndex());
+			comunityCards.addCard(deck.deal().getIndex());
+			Map<String, Object> evaluation = PokerSimulator.getOuts(holeCards, comunityCards);
+			int outs = (int) evaluation.get("outs");
+			statistics.addValue(outs);
+			frequency.addValue(outs);
+			if (outs > 20) {
+				System.out.println("Outs: " + outs + " cardsDealed " + holeCards +  " " + comunityCards + " "
+						+ evaluation.get("outsExplanation"));
+			}
+
+		}
+		for (int i = 0; i < 30; i++) {
+			// System.out.printf("%-3s\t%-5s\n", i, frequency.getCount(i));
+		}
+
+		Map<String, Object> map = new HashMap<>();
+		map.put("min", statistics.getMin());
+		map.put("mean", statistics.getMean());
+		map.put("max", statistics.getMax());
+		console.print(map);
 	}
 
 	@org.jdesktop.application.Action

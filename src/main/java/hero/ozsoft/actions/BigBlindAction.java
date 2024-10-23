@@ -23,12 +23,15 @@ package hero.ozsoft.actions;
  * @author Oscar Stigter
  */
 public class BigBlindAction extends PlayerAction {
-    
+
     /**
      * Constructor.
      */
-    /* package */ BigBlindAction() {
+    BigBlindAction() {
         super("Big blind", "posts the big blind");
     }
-    
+
+    public BigBlindAction(int bb) {
+        super("Big blind", "", bb);
+    }
 }

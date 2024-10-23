@@ -12,12 +12,7 @@ import java.util.List;
  * the information retrived for this game recorded will be available at the next
  * game session
  * <p>
- * TODO: maybe exted the funcionality to supply imediate info. a villans in this
- * game sesion may alter his behabior and the curren hero status is not aware of
- * this.
  * 
- * @author terry
- *
  */
 public class GameRecorder {
 

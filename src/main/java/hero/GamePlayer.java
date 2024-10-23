@@ -15,7 +15,7 @@ import hero.ozsoft.*;
  * player around 2-8 . this class only take the last 100 hands (must be around 1
  * 1/2 hours)
  * 
- * TODO. 100 is an estimated to avoid pass behaviors interfir whit the new
+ * NOTE. 100 is an estimated to avoid pass behaviors interfir whit the new
  * villans moods and skills. chick this value. a better aproach cound be keep
  * track of long data and remove the old ones by date.
  * 

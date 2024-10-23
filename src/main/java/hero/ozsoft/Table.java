@@ -35,6 +35,7 @@
 package hero.ozsoft;
 
 import java.math.*;
+import java.text.*;
 import java.time.*;
 import java.util.*;
 
@@ -118,6 +119,12 @@ public class Table extends Task<Void, Void> {
 
 	/** The position of the acting player. */
 	private int actorPosition;
+
+	/**
+	 * The sequence of backslash-delimited bets. f indicates
+	 * a fold, c a call, r a raise.
+	 */
+	private BettingSequence bettingSequence;
 
 	/** The acting player. */
 	private Player actor;
@@ -236,6 +243,7 @@ public class Table extends Task<Void, Void> {
 		}
 		notifyPlayersUpdated(false);
 		notifyMessage("%s deals the %s.", dealer, phaseName);
+		bettingSequence.addMessage("-------- " + phaseName + ": " + board);
 	}
 
 	/**
@@ -251,6 +259,7 @@ public class Table extends Task<Void, Void> {
 		holeCardsDealed = true;
 		notifyPlayersUpdated(false);
 		notifyMessage("%s deals the hole cards.", dealer);
+		bettingSequence.addMessage("-------- " + "Hole cards");
 	}
 
 	/**
@@ -291,6 +300,7 @@ public class Table extends Task<Void, Void> {
 			if (actor.isAllIn()) {
 				// Player is all-in, so must check.
 				action = PlayerAction.CHECK;
+				bettingSequence.addAction(actor, action);
 				playersToAct--;
 			} else {
 				// // Otherwise allow client to act.
@@ -329,6 +339,7 @@ public class Table extends Task<Void, Void> {
 					actor.payCash(betIncrement);
 					actor.setBet(actor.getBet() + betIncrement);
 					contributePot(betIncrement);
+					bettingSequence.addAction(actor, action);
 				} else if (action instanceof BetAction) {
 					int amount = (tableType == TableType.FIXED_LIMIT) ? minBet : action.getAmount();
 					if (amount < minBet && amount < actor.getCash()) {
@@ -341,6 +352,7 @@ public class Table extends Task<Void, Void> {
 					minBet = amount;
 					lastBettor = actor;
 					playersToAct = activePlayers.size();
+					bettingSequence.addAction(actor, action);
 				} else if (action instanceof RaiseAction) {
 					int amount = (tableType == TableType.FIXED_LIMIT) ? minBet : action.getAmount();
 					if (amount < minBet && amount < actor.getCash()) {
@@ -364,6 +376,7 @@ public class Table extends Task<Void, Void> {
 						// Max. number of raises reached; other players get one more turn.
 						playersToAct = activePlayers.size() - 1;
 					}
+					bettingSequence.addAction(actor, action);
 				} else if (action instanceof FoldAction) {
 					actor.setCards(null);
 					activePlayers.remove(actor);
@@ -379,8 +392,10 @@ public class Table extends Task<Void, Void> {
 						winner.win(amount);
 						notifyBoardUpdated();
 						notifyMessage("%s wins %d.", winner, amount);
+						bettingSequence.addMessage("%s wins %d with %s", winner, amount, winner.getHand());
 						playersToAct = 0;
 					}
+					bettingSequence.addAction(actor, action);
 				} else {
 					// Programming error, should never happen.
 					throw new IllegalStateException("Invalid action: " + action);
@@ -464,6 +479,7 @@ public class Table extends Task<Void, Void> {
 
 				// (don.t move) notify the bot. bot us this msg to init internal status
 				notifyMessage(msg);
+				bettingSequence.addMessage(msg);
 			}
 
 			// DONT MOVE. actions alter player.s cash
@@ -476,6 +492,7 @@ public class Table extends Task<Void, Void> {
 
 			if (noOfActivePlayers > 1) {
 				playHand();
+				System.out.println(getGlobalState());
 			} else {
 				// end the simulation when there is no more active players. if the flow reach
 				// this point, is probably because whenPlayerLose = DO_NOTHING
@@ -719,6 +736,7 @@ public class Table extends Task<Void, Void> {
 					player.getClient().playerUpdated(playerToShow);
 				}
 				notifyMessage("%s has %s.", playerToShow, UoAHandEvaluator.nameHand(hand));
+				bettingSequence.addMessage("%s has %s.", playerToShow, UoAHandEvaluator.nameHand(hand));
 			} else {
 				// Fold.
 				playerToShow.setCards(null);
@@ -732,6 +750,7 @@ public class Table extends Task<Void, Void> {
 					}
 				}
 				notifyMessage("%s muck.", playerToShow);
+				bettingSequence.addMessage("%s muck.", playerToShow);
 			}
 		}
 
@@ -809,11 +828,14 @@ public class Table extends Task<Void, Void> {
 			if (winnerText.length() > 0) {
 				winnerText.append(", ");
 			}
-			winnerText.append(String.format("%s wins %d", winner, potShare));
+			// bettingSequence.addShare(winner.getName(), potShare);
+			winnerText.append(String.format("%s wins %d with %s", winner, potShare, winner.getHand()));
+
 			notifyPlayersUpdated(true);
 		}
 		winnerText.append('.');
 		notifyMessage(winnerText.toString());
+		bettingSequence.addMessage(winnerText.toString());
 
 		// Sanity check.
 		if (totalWon != totalPot) {
@@ -974,6 +996,26 @@ public class Table extends Task<Void, Void> {
 	}
 
 	/**
+	 * Return the global state at the end of a hand
+	 * 
+	 * @return a string that includes the bot names (backslash-delimited) in seat
+	 *         order, hand number, the betting sequence,
+	 *         the card information, and the bankroll changes in seat order (in
+	 *         small blinds)
+	 */
+	public String getGlobalState() {
+		String result = "hand " + numOfHand;
+		result += " Time: " + TStringUtils.getTime(System.currentTimeMillis());
+		result += "\nPlayers: ";
+		for (Player player : players) {
+			result += " " + player.getChair() + " " + player.getName();
+		}
+		result += bettingSequence.getSequence();
+
+		return result;
+	}
+
+	/**
 	 * Plays a single hand.
 	 * 
 	 * @throws InterruptedException
@@ -1031,6 +1073,8 @@ public class Table extends Task<Void, Void> {
 		contributePot(bigBlind);
 		notifyBoardUpdated();
 		notifyPlayerActed();
+		BigBlindAction action = new BigBlindAction(bigBlind);
+		bettingSequence.addAction(actor, action);
 	}
 
 	/**
@@ -1042,12 +1086,15 @@ public class Table extends Task<Void, Void> {
 		contributePot(smallBlind);
 		notifyBoardUpdated();
 		notifyPlayerActed();
+		SmallBlindAction action = new SmallBlindAction(smallBlind);
+		bettingSequence.addAction(actor, action);
 	}
 
 	/**
 	 * Resets the game for a new hand.
 	 */
 	private void resetHand() {
+		bettingSequence = new BettingSequence();
 		// Clear the board.
 		holeCardsDealed = false;
 		board.makeEmpty();
@@ -1085,6 +1132,7 @@ public class Table extends Task<Void, Void> {
 		}
 		notifyPlayersUpdated(false);
 		notifyMessage("Hand: %d, %s is the dealer.", numOfHand, dealer);
+		bettingSequence.addMessage("%s is the dealer.", dealer);
 	}
 
 	/**

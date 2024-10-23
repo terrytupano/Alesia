@@ -129,7 +129,6 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	private TrooperParameter trooperParameter;
 	private int numOfvillains;
 	private GameRecorder gameRecorder;
-	private PreflopCardsModel preflopCardsModel = new PreflopCardsModel("pokerStar");
 	private Table simulationTable;
 	private long startDate;
 

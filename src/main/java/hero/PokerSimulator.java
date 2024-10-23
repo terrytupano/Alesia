@@ -204,7 +204,8 @@ public class PokerSimulator {
 		if (holeCards.size() > 0) {
 			result.put("rank", handRank);
 			result.put("name", UoAHandEvaluator.nameHand(allCards));
-			result.put("bestOf5Cards", evaluator.getBest5CardHand(allCards).toString().trim());
+			result.put("cardsDealed", holeCards + " " + communityCards);
+			// result.put("bestOf5Cards", evaluator.getBest5CardHand(allCards).toString().trim());
 		}
 
 		// board evaluation

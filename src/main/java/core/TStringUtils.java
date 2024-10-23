@@ -33,6 +33,7 @@ import gui.*;
 public class TStringUtils {
 
 	private static SimpleDateFormat dateFormat = new SimpleDateFormat();
+	private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 	private static Random random = new Random();
 	/**
 	 * contains all the .propertie files.
@@ -160,16 +161,8 @@ public class TStringUtils {
 		return dmsg;
 	}
 
-	/**
-	 * crea una instanica de <code>Date</code> que representa el monemto actual y lo
-	 * retorna como una cadena de
-	 * caracteres segun el formato pasado como argumento
-	 * 
-	 * @param f formato <code>(ver SimpleDateFormat)</code>
-	 * @return
-	 */
-	public static String getStringDate(String f) {
-		return getStringDate(new Date(), f);
+	public static String getTime(Long timestamp) {
+		return timeFormat.format(timestamp);
 	}
 
 	/**
