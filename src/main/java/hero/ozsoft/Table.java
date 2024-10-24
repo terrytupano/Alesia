@@ -243,7 +243,10 @@ public class Table extends Task<Void, Void> {
 		}
 		notifyPlayersUpdated(false);
 		notifyMessage("%s deals the %s.", dealer, phaseName);
-		bettingSequence.addMessage("-------- " + phaseName + ": " + board);
+		int street = PokerSimulator.FLOP_CARDS_DEALT;
+		street = phaseName.equals("Turn") ? PokerSimulator.TURN_CARD_DEALT : street;
+		street = phaseName.equals("River") ? PokerSimulator.RIVER_CARD_DEALT : street;
+		bettingSequence.addStreet(street, board);
 	}
 
 	/**
@@ -259,7 +262,7 @@ public class Table extends Task<Void, Void> {
 		holeCardsDealed = true;
 		notifyPlayersUpdated(false);
 		notifyMessage("%s deals the hole cards.", dealer);
-		bettingSequence.addMessage("-------- " + "Hole cards");
+		bettingSequence.addStreet(PokerSimulator.HOLE_CARDS_DEALT, null);
 	}
 
 	/**
@@ -492,7 +495,7 @@ public class Table extends Task<Void, Void> {
 
 			if (noOfActivePlayers > 1) {
 				playHand();
-				System.out.println(getGlobalState());
+				// System.out.println(getGlobalState());
 			} else {
 				// end the simulation when there is no more active players. if the flow reach
 				// this point, is probably because whenPlayerLose = DO_NOTHING
@@ -708,6 +711,7 @@ public class Table extends Task<Void, Void> {
 		// Players automatically show or fold in order.
 		boolean firstToShow = true;
 		int bestHandValue = -1;
+		bettingSequence.addMessage(BettingSequence.SEPARATOR + "Showdown");
 		for (Player playerToShow : showingPlayers) {
 			UoAHand hand = new UoAHand(board + " " + playerToShow.getHand());
 			boolean doShow = ALWAYS_CALL_SHOWDOWN;
@@ -735,8 +739,9 @@ public class Table extends Task<Void, Void> {
 				for (Player player : players) {
 					player.getClient().playerUpdated(playerToShow);
 				}
-				notifyMessage("%s has %s.", playerToShow, UoAHandEvaluator.nameHand(hand));
-				bettingSequence.addMessage("%s has %s.", playerToShow, UoAHandEvaluator.nameHand(hand));
+				String hand2 = UoAHandEvaluator.nameHand(hand);
+				notifyMessage("%s has %s.", playerToShow, hand2);
+				bettingSequence.addMessage("%s has %s.", playerToShow, hand2);
 			} else {
 				// Fold.
 				playerToShow.setCards(null);
@@ -996,22 +1001,15 @@ public class Table extends Task<Void, Void> {
 	}
 
 	/**
-	 * Return the global state at the end of a hand
+	 * Return the log recorded for this hand. This log string contain newline
+	 * character, so can be read as standar multiline poker log
 	 * 
-	 * @return a string that includes the bot names (backslash-delimited) in seat
-	 *         order, hand number, the betting sequence,
-	 *         the card information, and the bankroll changes in seat order (in
-	 *         small blinds)
+	 * @return the log
 	 */
 	public String getGlobalState() {
 		String result = "hand " + numOfHand;
 		result += " Time: " + TStringUtils.getTime(System.currentTimeMillis());
-		result += "\nPlayers: ";
-		for (Player player : players) {
-			result += " " + player.getChair() + " " + player.getName();
-		}
-		result += bettingSequence.getSequence();
-
+		result += "\n" + bettingSequence.getSequence();
 		return result;
 	}
 
@@ -1110,6 +1108,12 @@ public class Table extends Task<Void, Void> {
 				activePlayers.add(player);
 			}
 		}
+
+		String result = "Players: ";
+		for (Player player : activePlayers) {
+			result += " " + player.getChair() + " " + player.getName();
+		}
+		bettingSequence.addMessage(result);
 
 		// Rotate the dealer button.
 		dealerPosition = (dealerPosition + 1) % activePlayers.size();

@@ -69,23 +69,22 @@ public class PokerSimulator {
 	public PokerSimulatorTraker pokerSimulatorTraker;
 	public RuleBook ruleBook;
 	public TrooperParameter trooperParameter;
-
+	
 	public int stimatedVillanTau;
-
+	
+	public static final Hashtable<Integer, String> streetNames = new Hashtable<>();
 	public final Map<String, Object> evaluation = new Hashtable<>();
 
-	// private long lastStepMillis;
-	private Hashtable<Integer, String> streetNames = new Hashtable<>();
 	private int tablePosition;
-
 	private boolean isLive;
+
 	/** the number of step to divide the raise values */
 	public static int STEPS = 6;
 
 	public PokerSimulator(TrooperParameter trooperParameter) {
 		this.trooperParameter = trooperParameter;
 		streetNames.put(NO_CARDS_DEALT, "No cards dealt");
-		streetNames.put(HOLE_CARDS_DEALT, "Hole cards dealt");
+		streetNames.put(HOLE_CARDS_DEALT, "Hole cards");
 		streetNames.put(FLOP_CARDS_DEALT, "Flop");
 		streetNames.put(TURN_CARD_DEALT, "Turn");
 		streetNames.put(RIVER_CARD_DEALT, "River");

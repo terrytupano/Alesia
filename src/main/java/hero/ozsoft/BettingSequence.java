@@ -1,22 +1,30 @@
 package hero.ozsoft;
 
 import java.util.*;
+import java.util.stream.*;
 
-import org.apache.commons.lang3.*;
-
+import hero.*;
+import hero.UoAHandEval.*;
 import hero.ozsoft.actions.*;
 
 public class BettingSequence {
 
+    private Map<Integer, List<PlayerAction>> streets;
     private List<String> sequence;
-    public List<String> potShare;
+    private int street;
+    public static final String SEPARATOR = "------ ";
 
     public BettingSequence() {
         this.sequence = new ArrayList<>();
-        this.potShare = new ArrayList<>();
+        this.street = PokerSimulator.NO_CARDS_DEALT;
+        this.streets = new TreeMap<>();
+        streets.put(street, new ArrayList<>());
     }
 
     public void addAction(Player player, PlayerAction action) {
+        List<PlayerAction> list = streets.get(street);
+        list.add(action);
+
         String name = "";
         String action2 = action.toString();
         if (player != null)
@@ -29,12 +37,12 @@ public class BettingSequence {
         addMessage(name + " - " + action2);
     }
 
-    public void addShare(String name, Integer ammount) {
-        addShare(name, Double.valueOf(ammount));
-    }
+    public void addStreet(int street, UoAHand board) {
+        this.street = street;
+        streets.put(street, new ArrayList<>());
+        String board2 = board == null ? "" : ": " + board;
 
-    public void addShare(String name, Double ammount) {
-        this.sequence.add(name + ":" + ammount);
+        addMessage(SEPARATOR + PokerSimulator.streetNames.get(street) + board2);
     }
 
     public void addMessage(String message, Object... args) {
@@ -43,9 +51,16 @@ public class BettingSequence {
     }
 
     public String getSequence() {
-        String result = sequence.toString();
-        result = result.replace(",", "\n");
-        result = StringUtils.substringBetween(result, "[", "]");
+        String result = sequence.stream().collect(Collectors.joining("\n"));
         return result;
+    }
+
+    private void printStreets() {
+        for (Map.Entry<Integer, List<PlayerAction>> street2 : streets.entrySet()) {
+            System.out.println(PokerSimulator.streetNames.get(street2.getKey()));
+            for (PlayerAction action : street2.getValue()) {
+                System.out.println("  " + action);
+            }
+        }
     }
 }

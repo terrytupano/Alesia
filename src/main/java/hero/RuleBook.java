@@ -73,17 +73,17 @@ public class RuleBook {
         double raiseValue = pokerSimulator.raiseValue;
         double tablePosition = pokerSimulator.getTablePosition();
 
-        // TODO: is worth set the upB to include all way down to 22?
+        // TODO: is worth set the upperB to include all way down to 22?
         // vortail: this allow early position to play more hand
         // nachteil: late position play -ev hands
 
         // 25 is the max % for preflopCardsModel where all cards hat +EV
-        // double upB = 25d;
+        // double upperB = 25d;
 
         // ultil 22 poket pair
-        double upB = 42d;
-        double step = upB / Table.MAX_CAPACITY;
-        // use the table position to compute the distance tp=1 tight tp=9 loose in
+        double upperB = 42d;
+        double step = upperB / Table.MAX_CAPACITY;
+        // use the table position to compute the distance tposition=1 tight tposition=9 loose in
         // reference to raise/re-raise
         int tau2 = (int) Math.round(step * tablePosition);
         preflopCardsModel.setPercentage(tau2);
@@ -187,8 +187,8 @@ public class RuleBook {
         // call.
         list.removeIf(a -> a.potOdds > winProb);
 
-        double texture = ((double) pokerSimulator.evaluation.get("rankBehindTexture%")) / 100d;
-        // System.out.println("texture " + texture);
+        double texture = ((double) pokerSimulator.evaluation.get("rankBehindTexture%")) / 100d; remove the texture from this method
+        System.out.println("texture " + texture);
 
         if (!list.isEmpty() && darkness > 0) {
             // use the darknes variable to decide call/raise

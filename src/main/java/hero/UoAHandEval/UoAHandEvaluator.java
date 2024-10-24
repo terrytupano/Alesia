@@ -172,7 +172,9 @@ public class UoAHandEvaluator {
 		String gaps = "";
 		for (int i = 0; i < ranks.size() - 1; i++) {
 			int gap = ranks.get(i + 1) - ranks.get(i);
-			gaps += gap;
+			// eg: JcJd TcQcKd return 1011 no inglude 0 value
+			if (gap > 0)
+				gaps += gap;
 		}
 		return gaps;
 	}
