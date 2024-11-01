@@ -54,6 +54,7 @@ public class BasicBot extends Bot {
 
 		// System.out.println("--- ");
 		activeteSensors(minBet, currentBet, allowedActions);
+		pokerSimulator.bettingSequence = table.bettingSequence;
 		pokerSimulator.runSimulation();
 		TrooperAction action = pokerSimulator.ruleBook.getAction();
 		PlayerAction action2 = getPlayerAction(action, allowedActions);

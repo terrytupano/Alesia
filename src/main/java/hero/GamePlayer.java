@@ -161,6 +161,7 @@ public class GamePlayer {
 	private void performMeasure() {
 		// new player ??
 		if (!oldName.equals(name)) {
+			//TODO: change by			StringUtils.getLevenshteinDistance(oldName, name) from commntext lib
 			int diff = (StringUtils.difference(oldName, name).length() / Math.max(oldName.length(), name.length()))
 					* 100;
 			// string difference must be more than 60%

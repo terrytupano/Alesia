@@ -4,7 +4,6 @@ import java.util.*;
 
 import org.jeasy.rules.api.*;
 import org.jeasy.rules.core.*;
-import org.netlib.util.*;
 
 import hero.UoAHandEval.*;
 import hero.ozsoft.*;
@@ -62,8 +61,8 @@ public class RuleBook {
         rules.register(valueBetting);
 
         Rule semiBluff = new RuleBuilder().name("Semi Bluff")
-                .description("A semi-bluff occurs when you bet with a drawing hand.")
-                .when(facts -> isPosFlop()).then(facts -> evaluateSemiBluff()).build();
+                .description("A semi-bluff occurs when you bet with a drawing hand.").when(facts -> isPosFlop())
+                .then(facts -> evaluateSemiBluff()).build();
         rules.register(semiBluff);
     }
 
@@ -166,10 +165,9 @@ public class RuleBook {
     }
 
     /**
-     * Pot odds are the IMMEDIATE odds we’re being offered
-     * when we call a bet in poker. The important aspect of this definition is
-     * IMMEDIATE, because with pot odds it’s all about how much we stand to win
-     * IMMEDIATELY in relation to what we are risking by calling a bet.
+     * Pot odds are the IMMEDIATE odds we’re being offered when we call a bet in poker. The important aspect of this
+     * definition is IMMEDIATE, because with pot odds it’s all about how much we stand to win IMMEDIATELY in relation to
+     * what we are risking by calling a bet.
      * 
      * Essential poker math p95
      */
@@ -187,8 +185,8 @@ public class RuleBook {
         // call.
         list.removeIf(a -> a.potOdds > winProb);
 
-        double texture = ((double) pokerSimulator.evaluation.get("rankBehindTexture%")) / 100d; remove the texture from this method
-        System.out.println("texture " + texture);
+        // double texture = ((double) pokerSimulator.evaluation.get("rankBehindTexture%")) / 100d;
+        // System.out.println("texture " + texture);
 
         if (!list.isEmpty() && darkness > 0) {
             // use the darknes variable to decide call/raise
@@ -199,13 +197,11 @@ public class RuleBook {
     }
 
     /**
-     * You can think of implied odds as an extension of pot odds. While pot odds
-     * are considered our most direct and immediate odds when calling a bet,
-     * implied odds are our indirect odds. Recapping on the previous chapter, with
-     * pot odds, it’s all about how much we stand to win immediately in
-     * relationship to what we’re risking by calling a bet. In contrast, implied
-     * odds consider how much we stand to win not only immediately, but also on
-     * later rounds of betting after we make the best hand.
+     * You can think of implied odds as an extension of pot odds. While pot odds are considered our most direct and
+     * immediate odds when calling a bet, implied odds are our indirect odds. Recapping on the previous chapter, with
+     * pot odds, it’s all about how much we stand to win immediately in relationship to what we’re risking by calling a
+     * bet. In contrast, implied odds consider how much we stand to win not only immediately, but also on later rounds
+     * of betting after we make the best hand.
      * 
      * Essential poker math p113
      */
@@ -221,6 +217,7 @@ public class RuleBook {
 
         final double equity = pokerSimulator.street == PokerSimulator.FLOP_CARDS_DEALT ? outs4 : outs2;
         List<TrooperAction> list = new ArrayList<>(availableActions);
+        
         list.removeIf(a -> a.potOdds > equity);
 
         if (!list.isEmpty()) {
@@ -283,8 +280,7 @@ public class RuleBook {
     }
 
     /**
-     * from the list of actions passed as argument, return the action whose ammount
-     * is closest to the value argument
+     * from the list of actions passed as argument, return the action whose ammount is closest to the value argument
      * 
      * @param actions - the actions
      * @param value   - the value

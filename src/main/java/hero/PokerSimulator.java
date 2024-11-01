@@ -13,16 +13,6 @@ import datasource.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.*;
 
-/**
- * 
- * Link between hero and PokerProthsis library. This Class perform the
- * simulation and store all result for further use. this is for <I>Me vs
- * Opponents</I> simulator.
- * <p>
- * this its the class that contain all necessary information for decision making
- * and is populated by the class {@link SensorsArray}
- * 
- */
 public class PokerSimulator {
 
 	// same values as PokerProphesierAdapter + no_card_deal status
@@ -34,49 +24,37 @@ public class PokerSimulator {
 	public static String STATUS = "aa.Simulator Status";
 	public static String STATUS_OK = "Ok";
 	public static String STATUS_ERROR = "Error";
+
 	private static NumberFormat percentageFormat = TResources.percentageFormat;
 	private static DecimalFormat twoDigitFormat = TResources.twoDigitFormat;
 	private static PreflopCardsModel preflopCardsModel = new PreflopCardsModel();
+	private int tablePosition;
+	private TreeMap<String, Object> variableList;
 
-	/**
-	 * temporal storage for the incoming cards (simulator)
-	 */
+	/** temporal storage for the incoming cards (simulator) */
 	public final Hashtable<String, String> cardsBuffer;
 
-	/**
-	 * enable/disable status for read sensors.
-	 */
+	/** enable/disable status for read sensors. */
 	public final Hashtable<String, Boolean> sensorStatus;
-	private TreeMap<String, Object> variableList;
-	/**
-	 * ............
-	 */
-	// TODO: all prevvalue chips related muss be tracked by the correct instance of
-	// {@link GameRecorder}
-	// TODO: all heromax chips related muss be tracked by the correct instance of
-	// {@link GameRecorder}
-	public double heroChips;
-	public double callValue, raiseValue, potValue;
-	public double winProb;
 
+	public double callValue, raiseValue, potValue;
+	public double buyIn, smallBlind, bigBlind;
+	public double heroChips;
+	public double winProb;
 	public int activeVillans;
 	public int street = NO_CARDS_DEALT;
-	public double buyIn, smallBlind, bigBlind;
 	public final UoAHand communityCards = new UoAHand();
 	public final UoAHand holeCards = new UoAHand();
 	public final UoAHand currentHand = new UoAHand();
 	public DescriptiveStatistics performaceStatistic;
-	public PokerSimulatorTraker pokerSimulatorTraker;
 	public RuleBook ruleBook;
 	public TrooperParameter trooperParameter;
-	
-	public int stimatedVillanTau;
-	
-	public static final Hashtable<Integer, String> streetNames = new Hashtable<>();
+	public boolean isLive;
+	public BettingSequence bettingSequence;
+
 	public final Map<String, Object> evaluation = new Hashtable<>();
 
-	private int tablePosition;
-	private boolean isLive;
+	public static final Hashtable<Integer, String> streetNames = new Hashtable<>();
 
 	/** the number of step to divide the raise values */
 	public static int STEPS = 6;
@@ -100,12 +78,7 @@ public class PokerSimulator {
 		this.sensorStatus = new Hashtable<>();
 		this.variableList = new TreeMap<>();
 		this.performaceStatistic = new DescriptiveStatistics(10);
-		this.pokerSimulatorTraker = new PokerSimulatorTraker();
 		this.ruleBook = new RuleBook(this);
-	}
-
-	void setLive(boolean isLive) {
-		this.isLive = isLive;
 	}
 
 	/**
@@ -286,8 +259,7 @@ public class PokerSimulator {
 		int outs = 0;
 		String outsExplanation = "";
 
-		if (UoAHandEvaluator.isPoketPair(holeCards)
-				&& UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.PAIR) {
+		if (UoAHandEvaluator.isPoketPair(holeCards) && UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.PAIR) {
 			outs += 2;
 			outsExplanation += "Pocket pair to set, ";
 		}
@@ -354,15 +326,13 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * Hand Potential algorithm based on "Opponent Modeling in Poker", Darse
-	 * Billings, Denis Papp, Jonathan Schaeffer, Duane SzafronPoker. page 7.
+	 * Hand Potential algorithm based on "Opponent Modeling in Poker", Darse Billings, Denis Papp, Jonathan Schaeffer,
+	 * Duane SzafronPoker. page 7.
 	 * <p>
-	 * this method compute and return a the <code>PPot</code> and <code>NPot</code>
-	 * in array format.
+	 * this method compute and return a the <code>PPot</code> and <code>NPot</code> in array format.
 	 * 
-	 * note: The hand strength calculation is with respect to one opponent but can
-	 * be extrapolated to multiple opponents by raising it to the power of the
-	 * number of active opponents.
+	 * note: The hand strength calculation is with respect to one opponent but can be extrapolated to multiple opponents
+	 * by raising it to the power of the number of active opponents.
 	 */
 	public static Map<String, Object> getHandPotential(UoAHand holeCards, UoAHand communityCards, int totalPlayers) {
 		Map<String, Object> result = new TreeMap<>();
@@ -474,8 +444,7 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * return a {@link Map} object filled whit all values obtained from diverse
-	 * evaluations algorithms.
+	 * return a {@link Map} object filled whit all values obtained from diverse evaluations algorithms.
 	 * 
 	 * @param holeCards      - Hole Cards
 	 * @param communityCards - Community cards
@@ -493,9 +462,8 @@ public class PokerSimulator {
 		result.put("chenScore", PokerSimulator.getChenScore(holeCards));
 
 		/**
-		 * of the rankBehindList property, check how many of those hands are inside of
-		 * the preflopRange, if one hand pass the preflop distribution, count if the
-		 * outs of the hand are better that mine
+		 * of the rankBehindList property, check how many of those hands are inside of the preflopRange, if one hand
+		 * pass the preflop distribution, count if the outs of the hand are better that mine
 		 */
 		if (communityCards.size() > 0) {
 			int inside = 0;
@@ -593,7 +561,6 @@ public class PokerSimulator {
 		// de refujiados en dresden !!!! ya van 2 meses
 		cardsBuffer.clear();
 		sensorStatus.clear();
-		pokerSimulatorTraker.newHand();
 		potValue = -1;
 		tablePosition = -1;
 		callValue = -1;
@@ -632,11 +599,9 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * perform the PokerProphesier simulation. Call this method when all the cards
-	 * on the table has been set using {@link #addCard(String, String)} this method
-	 * will create the {@link HoleCards} and the {@link CommunityCards} (if is
-	 * available). After the simulation, the adapters are updated and can be
-	 * consulted and the report are up to date
+	 * perform the PokerProphesier simulation. Call this method when all the cards on the table has been set using
+	 * {@link #addCard(String, String)} this method will create the {@link HoleCards} and the {@link CommunityCards} (if
+	 * is available). After the simulation, the adapters are updated and can be consulted and the report are up to date
 	 * 
 	 */
 	public void runSimulation() {
@@ -670,8 +635,12 @@ public class PokerSimulator {
 
 		evaluation.clear();
 		evaluation.putAll(getEvaluation(holeCards, communityCards, activeVillans + 1, 42)); // 42% until poket 22
+
+		// Stack-to-Pot Ratios (SPRs)
+		double sprs = bettingSequence.getSmallestStack() / potValue;
+		evaluation.put("SPRs", sprs);
+
 		winProb = (double) evaluation.getOrDefault("winProb", 0.0);
-		pokerSimulatorTraker.update(this);
 		ruleBook.fire();
 
 		// WARNING: theses values ARE NOT available in preflop
@@ -708,8 +677,8 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * set the {@link #tablePosition} and {@link #activeVillans} internal
-	 * parameters. all incomming parameters are 1 based
+	 * set the {@link #tablePosition} and {@link #activeVillans} internal parameters. all incomming parameters are 1
+	 * based
 	 * 
 	 * @param dealerChair   - the dealler position.
 	 * @param myChair       - the hero chair (can vary in simulation)
@@ -740,9 +709,9 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * return the raise steps list. All the steps values are from > value < to. this
-	 * method assume that the "from" value is = raise and "to" value are all in. the
-	 * # of returned elements inside the list is determined by the {@value STEPS}
+	 * return the raise steps list. All the steps values are from > value < to. this method assume that the "from" value
+	 * is = raise and "to" value are all in. the # of returned elements inside the list is determined by the
+	 * {@value STEPS}
 	 * 
 	 * @param from - raise value
 	 * @param to   - all in value
@@ -761,21 +730,18 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * this method fill and return a List of {@link TrooperAction} that are
-	 * available for Hero to select. the returned list look similar to the following
+	 * this method fill and return a List of {@link TrooperAction} that are available for Hero to select. the returned
+	 * list look similar to the following
 	 * <li>Check/Call
 	 * <li>Raise
 	 * <li>Pot
 	 * <li>All-in
-	 * <li>{@link #STEPS} more actions that range from raise to the value close to
-	 * All-in.
+	 * <li>{@link #STEPS} more actions that range from raise to the value close to All-in.
 	 * <p>
-	 * for a total of 10 possible actions. this method will remove all actions if
-	 * equity != null && potodds < equity
+	 * for a total of 10 possible actions. this method will remove all actions if equity != null && potodds < equity
 	 * 
 	 * @param pokerSimulator - the simulator instace to read all the info
-	 * @param equity         - the equity to consider if the action remains on the
-	 *                       returned list. null for no delete
+	 * @param equity         - the equity to consider if the action remains on the returned list. null for no delete
 	 * @return the list
 	 */
 	public static List<TrooperAction> loadActions(PokerSimulator pokerSimulator, Double equity) {
@@ -786,38 +752,36 @@ public class PokerSimulator {
 		double chips = pokerSimulator.heroChips;
 		double pot = pokerSimulator.potValue;
 
-		// fail safe: the maximum can.t be greater as chips.
-		// double imax = maximum > chips ? chips : maximum;
-		double imax = chips;
-
-		if (call >= 0 && call <= imax)
+		if (call >= 0 && call <= chips)
 			availableActions.add(new TrooperAction("call", call));
 
-		if (raise >= 0 && raise <= imax)
+		if (raise >= 0 && raise <= chips)
 			availableActions.add(new TrooperAction("raise", raise));
 
-		if (pot >= 0 && pot <= imax && pokerSimulator.isSensorEnabled("raise.pot"))
-			availableActions.add(new TrooperAction("pot", "raise.pot;raise", pot));
+		if (pot >= 0 && pot <= chips && pokerSimulator.isSensorEnabled("raise.pot"))
+			availableActions.add(new TrooperAction("pot", pot));
 
-		if (chips >= 0 && chips <= imax && pokerSimulator.isSensorEnabled("raise.allin"))
-			availableActions.add(new TrooperAction("allIn", "raise.allin;raise", chips));
+		if (chips >= 0 && chips <= chips && pokerSimulator.isSensorEnabled("raise.allin"))
+			availableActions.add(new TrooperAction("allIn", chips));
 
-		double sb = pokerSimulator.smallBlind;
-		double bb = pokerSimulator.bigBlind;
-		if (raise > 0 && pot <= imax && pokerSimulator.isSensorEnabled("raise.slider")) {
-			// check for int or double values for blinds
-			boolean isInt = (Double.valueOf(bb)).intValue() == bb && (Double.valueOf(bb)).intValue() == sb;
-			double tick = raise;
+		if (raise > 0 && pot <= chips && pokerSimulator.isSensorEnabled("raise.slider")) {
+			// add standar bettings values
+			availableActions.add(new TrooperAction(TrooperAction.RAISE, 0.25 * pot));
+			availableActions.add(new TrooperAction(TrooperAction.RAISE, 0.3 * pot));
+			availableActions.add(new TrooperAction(TrooperAction.RAISE, 0.5 * pot));
+			availableActions.add(new TrooperAction(TrooperAction.RAISE, 0.66 * pot));
+			availableActions.add(new TrooperAction(TrooperAction.RAISE, 0.75 * pot));
+			availableActions.add(new TrooperAction(TrooperAction.RAISE, 1.5 * pot));
+			availableActions.add(new TrooperAction(TrooperAction.RAISE, 2 * pot));
+			availableActions.add(new TrooperAction(TrooperAction.RAISE, 2.5 * pot));
+			availableActions.add(new TrooperAction(TrooperAction.RAISE, 3 * pot));
 
-			List<Double> doubles = PokerSimulator.getRaiseSteps(raise, imax);
-			for (Double double1 : doubles) {
-				tick = double1;
-				// round value to look natural (don't write 12345. write 12340 or 12350)
-				if (isInt)
-					tick = ((int) (tick / 10)) * 10;
-				String txt = isInt ? "" + (int) tick : twoDigitFormat.format(tick);
-				availableActions.add(new TrooperAction("raise", "raise.text:dc;raise.text:k=" + txt + ";raise", tick));
-			}
+			// remove actions out of range
+			availableActions.removeIf(a -> a.amount >= chips);			
+			// List<Double> doubles = PokerSimulator.getRaiseSteps(raise, chips);
+			// for (Double double1 : doubles) {
+			// 	availableActions.add(new TrooperAction(TrooperAction.RAISE, double1));
+			// }
 		}
 
 		// compute reward:risk ratio
@@ -835,8 +799,7 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * compute from reward:risk notation to probability. prob = risk / (reward +
-	 * risk)
+	 * compute from reward:risk notation to probability. prob = risk / (reward + risk)
 	 * 
 	 * @param reward - the reward
 	 * @param risk   - the risk

@@ -10,9 +10,8 @@ import hero.ozsoft.*;
 import hero.ozsoft.actions.*;
 
 /**
- * Base class for all Texas Hold'em poker bot implementations. this base
- * implementation contain all required variables to allow subclasses record the
- * history of this particular implementation.
+ * Base class for all Texas Hold'em poker bot implementations. this base implementation contain all required variables
+ * to allow subclasses record the history of this particular implementation.
  * 
  */
 public abstract class Bot implements Client {
@@ -68,8 +67,7 @@ public abstract class Bot implements Client {
 	}
 
 	/**
-	 * based on the incoming arguments, prepare al sensors of the current instace
-	 * of {@link PokerSimulator}
+	 * based on the incoming arguments, prepare al sensors of the current instace of {@link PokerSimulator}
 	 * 
 	 * @param minBet         - the min bet
 	 * @param currentBet     - the curent bet
@@ -79,8 +77,8 @@ public abstract class Bot implements Client {
 		int raiseValue = minBet + bigBlind;
 
 		boolean callBol = allowedActions.contains(PlayerAction.CALL) || allowedActions.contains(PlayerAction.CHECK);
-		boolean raiseBol = (allowedActions.contains(PlayerAction.RAISE)
-				|| allowedActions.contains(PlayerAction.BET)) && minBet < raiseValue && raiseValue < player.getCash();
+		boolean raiseBol = (allowedActions.contains(PlayerAction.RAISE) || allowedActions.contains(PlayerAction.BET))
+				&& minBet < raiseValue && raiseValue < player.getCash();
 		boolean potBol = player.getCash() >= pot;
 		boolean allinBol = player.getCash() > 0;
 
@@ -91,9 +89,8 @@ public abstract class Bot implements Client {
 		pokerSimulator.sensorStatus.put("raise.slider", raiseBol);
 		pokerSimulator.sensorStatus.put("raise", raiseBol);
 
-		// the trooper dont take into account call/check/raise enabled/disabel status.
-		// there are actives and/or mutate the text to reflext valid acction
-		// call/check are the same
+		// the trooper dont take into account call/check/raise enabled/disabel status. there are actives and/or mutate
+		// the text to reflext valid acction call/check are the same
 		// check: call buton is active. callvalue=0
 		// call: call button is active. callvalue=minbet
 		pokerSimulator.callValue = minBet;
@@ -112,8 +109,7 @@ public abstract class Bot implements Client {
 	}
 
 	/**
-	 * return a {@link PlayerAction} bade on the corresponding
-	 * {@link TrooperAction}. the method is simply a translation
+	 * return a {@link PlayerAction} bade on the corresponding {@link TrooperAction}. the method is simply a translation
 	 * 
 	 * @param trooperAction  - the selected TrooperAction
 	 * @param allowedActions - the list of PlayerActions (dicctionary)
@@ -147,43 +143,8 @@ public abstract class Bot implements Client {
 	}
 
 	/**
-	 * Equivalent of {@link PokerSimulator#loadActions(double, PokerSimulator)}
-	 * 
-	 * 
-	 * delete !!!!
-	 * 
-	 * 
-	 * @param minBet         - the minimum bet
-	 * @param currentBet     - the current bet
-	 * @param cashToBet      - the cash to bet
-	 * @param allowedActions - the actions
-	 * 
-	 * @return available actions to execute
-	 */
-	public static List<TrooperAction> loadActions(int minBet, int currentBet, double cashToBet,
-			Set<PlayerAction> allowedActions) {
-		List<TrooperAction> actions = new ArrayList<>();
-
-		int bet = Math.max(minBet, currentBet);
-		List<Double> doubles = PokerSimulator.getRaiseSteps(bet, cashToBet);
-
-		if (allowedActions.contains(PlayerAction.CHECK))
-			actions.add(TrooperAction.CHECK);
-		if (allowedActions.contains(PlayerAction.CALL))
-			actions.add(new TrooperAction("call", 0));
-		if (allowedActions.contains(PlayerAction.BET) || allowedActions.contains(PlayerAction.RAISE))
-			doubles.forEach(d -> actions.add(new TrooperAction("raise", d)));
-
-		// if there is no more option, fold
-		if (actions.isEmpty())
-			actions.add(TrooperAction.FOLD);
-
-		return actions;
-	}
-
-	/**
-	 * configure this Bot instace and return the associated internal {@link Trooper}
-	 * instance configured to run as Bot inside the
+	 * configure this Bot instace and return the associated internal {@link Trooper} instance configured to run as Bot
+	 * inside the
 	 * 
 	 * @param table            - the environment in witch the trooper run
 	 * @param trooperParameter - the parameters that the trooper must follow.

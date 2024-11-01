@@ -1,5 +1,7 @@
 package hero;
 
+import core.*;
+
 /**
  * this class encapsulate all required values for the trooper to perform an action.
  * 
@@ -8,6 +10,13 @@ public class TrooperAction {
 
 	public static final TrooperAction FOLD = new TrooperAction("fold", 0d);
 	public static final TrooperAction CHECK = new TrooperAction("call", 0d);
+
+	public static final String FLOD = "fold";
+	public static final String CALL = "call";
+	public static final String RAISE = "raise";
+	public static final String BET = "bet";
+	public static final String POT = "pot";
+	public static final String ALL_IN = "allIn";
 
 	/**
 	 * the name for this action
@@ -22,31 +31,34 @@ public class TrooperAction {
 	 */
 	public final String robotCommand;
 	/**
-	 *  pot odds are the ratio of the current size of the pot to the cost of this action ammount
+	 * pot odds are the ratio of the current size of the pot to the cost of this action ammount
 	 */
 	public double potOdds;
 
 	/**
 	 * Constructor. the robot command for this action will be the name
 	 * 
-	 * @param name The action's name.
+	 * @param name   The action's name.
 	 * @param amount - the cost for this action.
 	 */
 	public TrooperAction(String name, double amount) {
-		this(name, name, amount);
-	}
+		// avoid ammounts like 2,99999 from calculations
+		String amountS = TResources.twoDigitFormat.format(amount);
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param name The action's name.
-	 * @param robotCmd The command sequence for the {@link RobotActuator} class
-	 * @param amount The action's amount.
-	 */
-	public TrooperAction(String name, String robotCmd, double amount) {
-		this.name = name;
-		this.robotCommand = robotCmd;
+		boolean isInt = amount == Math.rint(amount);
+		// round value to look natural (don't write 12345. write 12340 or 12350)
+
+		String command = name;
+		if (POT.equals(name))
+			command = "raise.pot;raise";
+		if (ALL_IN.equals(name))
+			command = "raise.allin;raise";
+		if (BET.equals(name))
+			command = "raise.text:dc;raise.text:k=" + amountS + ";raise";
+
 		this.amount = amount;
+		this.name = name;
+		this.robotCommand = command;
 	}
 
 	@Override

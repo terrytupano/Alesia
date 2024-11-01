@@ -260,10 +260,6 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 			}
 			long t1 = System.currentTimeMillis();
 
-			// TODO: used for reweight. not implemented
-			// pokerSimulator.stimatedVillanTau = getMinActiveTau();
-			pokerSimulator.stimatedVillanTau = 50;
-
 			// at this point i must decide and act.
 			// MANDATORY ORDEN FIRST NUMBER AND THEN CARDS
 			setVariableAndLog(STATUS, "Reading NUMBERS ...");
@@ -421,7 +417,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 
 	public void setSimulationTable(Table simulationTable) {
 		this.simulationTable = simulationTable;
-		pokerSimulator.setLive(false);
+		pokerSimulator.isLive = false;
 		this.numOfvillains = Table.MAX_CAPACITY - 1;
 		this.gameRecorder = new GameRecorder(this, numOfvillains);
 
@@ -528,7 +524,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 				double chips = sensorsArray.getSensor("hero.chips").getNumericOCR();
 				// if chips are not available, show the last computed play safe value
 				if (chips > 0) {
-					double maxC = pokerSimulator.pokerSimulatorTraker.getHeroMaxChips();
+					double maxC = pokerSimulator.bettingSequence.getHeroMaxChips();
 					playUntil = maxC - (playUntilParm * pokerSimulator.buyIn);
 				}
 

@@ -120,12 +120,6 @@ public class Table extends Task<Void, Void> {
 	/** The position of the acting player. */
 	private int actorPosition;
 
-	/**
-	 * The sequence of backslash-delimited bets. f indicates
-	 * a fold, c a call, r a raise.
-	 */
-	private BettingSequence bettingSequence;
-
 	/** The acting player. */
 	private Player actor;
 	/** The minimum bet in the current hand. */
@@ -142,10 +136,10 @@ public class Table extends Task<Void, Void> {
 	private int numOfHand;
 
 	public int buyIn, bigBlind, initialBigBlind;
+	public BettingSequence bettingSequence;
+	public int handsToSimulate;
 
 	private boolean isTournament;
-
-	public int handsToSimulate;
 
 	private boolean pauseTask, pauseHero, pausePlayer;
 
@@ -833,7 +827,6 @@ public class Table extends Task<Void, Void> {
 			if (winnerText.length() > 0) {
 				winnerText.append(", ");
 			}
-			// bettingSequence.addShare(winner.getName(), potShare);
 			winnerText.append(String.format("%s wins %d with %s", winner, potShare, winner.getHand()));
 
 			notifyPlayersUpdated(true);
