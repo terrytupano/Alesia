@@ -40,7 +40,7 @@ public class PokerSimulator {
 	public double callValue, raiseValue, potValue;
 	public double buyIn, smallBlind, bigBlind;
 	public double heroChips;
-	public double winProb;
+	public double winProb, SPRs;
 	public int activeVillans;
 	public int street = NO_CARDS_DEALT;
 	public final UoAHand communityCards = new UoAHand();
@@ -567,6 +567,7 @@ public class PokerSimulator {
 		raiseValue = -1;
 		heroChips = -1;
 		winProb = -1;
+		SPRs = -1;
 		ruleBook.newHand();
 	}
 
@@ -637,8 +638,9 @@ public class PokerSimulator {
 		evaluation.putAll(getEvaluation(holeCards, communityCards, activeVillans + 1, 42)); // 42% until poket 22
 
 		// Stack-to-Pot Ratios (SPRs)
-		double sprs = bettingSequence.getSmallestStack() / potValue;
-		evaluation.put("SPRs", sprs);
+		// this value is only calculate on preflop and flop. ref: https://www.splitsuit.com/how-to-use-spr-poker-video
+		if (street <= FLOP_CARDS_DEALT)
+			SPRs = bettingSequence.getEfectiveStackSize() / potValue;
 
 		winProb = (double) evaluation.getOrDefault("winProb", 0.0);
 		ruleBook.fire();
@@ -766,6 +768,8 @@ public class PokerSimulator {
 
 		if (raise > 0 && pot <= chips && pokerSimulator.isSensorEnabled("raise.slider")) {
 			// add standar bettings values
+			double bbb = 3 * pokerSimulator.bigBlind;
+			availableActions.add(new TrooperAction(TrooperAction.RAISE, bbb));
 			availableActions.add(new TrooperAction(TrooperAction.RAISE, 0.25 * pot));
 			availableActions.add(new TrooperAction(TrooperAction.RAISE, 0.3 * pot));
 			availableActions.add(new TrooperAction(TrooperAction.RAISE, 0.5 * pot));
@@ -775,12 +779,14 @@ public class PokerSimulator {
 			availableActions.add(new TrooperAction(TrooperAction.RAISE, 2 * pot));
 			availableActions.add(new TrooperAction(TrooperAction.RAISE, 2.5 * pot));
 			availableActions.add(new TrooperAction(TrooperAction.RAISE, 3 * pot));
+			availableActions.add(new TrooperAction(TrooperAction.RAISE, 3.5 * pot));
+			availableActions.add(new TrooperAction(TrooperAction.RAISE, 4 * pot));
 
 			// remove actions out of range
-			availableActions.removeIf(a -> a.amount >= chips);			
+			availableActions.removeIf(a -> a.amount >= chips || a.amount < bbb);
 			// List<Double> doubles = PokerSimulator.getRaiseSteps(raise, chips);
 			// for (Double double1 : doubles) {
-			// 	availableActions.add(new TrooperAction(TrooperAction.RAISE, double1));
+			// availableActions.add(new TrooperAction(TrooperAction.RAISE, double1));
 			// }
 		}
 

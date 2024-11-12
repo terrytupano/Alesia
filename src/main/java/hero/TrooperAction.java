@@ -45,7 +45,7 @@ public class TrooperAction {
 		// avoid ammounts like 2,99999 from calculations
 		String amountS = TResources.twoDigitFormat.format(amount);
 
-		boolean isInt = amount == Math.rint(amount);
+		// boolean isInt = amount == Math.rint(amount);
 		// round value to look natural (don't write 12345. write 12340 or 12350)
 
 		String command = name;

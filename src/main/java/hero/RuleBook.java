@@ -67,32 +67,42 @@ public class RuleBook {
     }
 
     private void evaluateTauPreflop() {
+        // Low SPR (0-5): Favor Strong Hands and Aggressive Play
+        // Medium SPR (5-15): Balanced Play with a Mix of Hand Strengths
+        // High SPR (15+): Speculative Play for Big Pots
+        double sprUpper = 15;
         UoAHand holeCards = pokerSimulator.holeCards;
         double callValue = pokerSimulator.callValue;
         double raiseValue = pokerSimulator.raiseValue;
         double tablePosition = pokerSimulator.getTablePosition();
+        // double SPRs = pokerSimulator.SPRs > sprUpper ? sprUpper : pokerSimulator.SPRs;
+        double SPRs = pokerSimulator.heroChips / pokerSimulator.potValue;
+        SPRs = SPRs > sprUpper ? sprUpper : SPRs;
 
-        // TODO: is worth set the upperB to include all way down to 22?
-        // vortail: this allow early position to play more hand
-        // nachteil: late position play -ev hands
-
+        // 42% is ultil 22 poket pair
+        // 45% is to make every step 5%
         // 25 is the max % for preflopCardsModel where all cards hat +EV
         // double upperB = 25d;
+        double rangeUpper = 45d;
+        double step = rangeUpper / Table.MAX_CAPACITY;
+        double preflopRange = step * tablePosition;
+        int tau = (int) Math.round(preflopRange);
 
-        // ultil 22 poket pair
-        double upperB = 42d;
-        double step = upperB / Table.MAX_CAPACITY;
-        // use the table position to compute the distance tposition=1 tight tposition=9 loose in
-        // reference to raise/re-raise
-        int tau2 = (int) Math.round(step * tablePosition);
-        preflopCardsModel.setPercentage(tau2);
+        // adust by SPRs. the final tau value will be the min of both. this allow the standar tau value be ajusted by
+        // the environtment e.g: if hero is in later position (preflopRange is high) and sprs is low. taking th min
+        // value (sprs) will avoid wasting chips when hero is in a precarious situation
+        double sprRange = SPRs * (Table.MAX_CAPACITY + 1 - tablePosition);
+        tau = (int) Math.min(tau, sprRange);
+        tau = (int) Math.max(step, tau); // the absolute min is at least 1 step
 
+        preflopCardsModel.setPercentage(tau);
         if (preflopCardsModel.containsHand(holeCards)) {
-            // to allow call use the table position to probabilistic, select the call action
-            double value = raiseValue;
+            // * SPRs to betting. at this point, hero has a good hand. Low SPRs tight agresive, put money on the pot.
+            // high SPRs tight pasive call/check
+            double value = callValue;
             double r = Math.random();
-            if (r < tablePosition / 10d)
-                value = callValue;
+            if (r < SPRs / sprUpper)
+                value = raiseValue;
 
             TrooperAction action = getCloseTo(availableActions, value);
             rulesDesitions.put("tauPreflop", action);
@@ -131,6 +141,7 @@ public class RuleBook {
     private void evaluateValueBetting() {
         boolean isTheNut = (Boolean) pokerSimulator.evaluation.getOrDefault("isTheNut", false);
 
+        pokerSimulator.bettingSequence.getPlayersType(pokerSimulator.buyIn, pokerSimulator.bigBlind);
         if (isTheNut) {
             putAction("valueBetting", pokerSimulator.buyIn, availableActions);
         }
@@ -217,7 +228,7 @@ public class RuleBook {
 
         final double equity = pokerSimulator.street == PokerSimulator.FLOP_CARDS_DEALT ? outs4 : outs2;
         List<TrooperAction> list = new ArrayList<>(availableActions);
-        
+
         list.removeIf(a -> a.potOdds > equity);
 
         if (!list.isEmpty()) {

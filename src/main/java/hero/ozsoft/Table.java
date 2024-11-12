@@ -252,6 +252,9 @@ public class Table extends Task<Void, Void> {
 			cs.add(deck.deal());
 			cs.add(deck.deal());
 			player.setCards(cs);
+
+			// update sumaries
+			bettingSequence.addSummary(player);
 		}
 		holeCardsDealed = true;
 		notifyPlayersUpdated(false);
