@@ -183,28 +183,26 @@ public class RuleBook {
      * Essential poker math p95
      */
     private void evaluatePotOdds() {
-        // if (pokerSimulator.street != PokerSimulator.RIVER_CARD_DEALT) {
-        // Hero.heroLogger.info("potOdds rule only on the river");
-        // return;
-        // }
 
         double winProb = pokerSimulator.winProb;
-        int darkness = (int) pokerSimulator.evaluation.getOrDefault("darkness", 0);
+        int darkness = (int) pokerSimulator.evaluation.getOrDefault("darknessHand", 0);
 
         List<TrooperAction> list = new ArrayList<>(availableActions);
         // Should we call? If we expect to win at least potOdds of the time, we should
-        // call.
+        // call. Essential poker math p95
         list.removeIf(a -> a.potOdds > winProb);
 
         // double texture = ((double) pokerSimulator.evaluation.get("rankBehindTexture%")) / 100d;
         // System.out.println("texture " + texture);
 
+        // TODO: rethink this strategie. why darknes? and how much call/raise? should i take the winprob to select the
+        // amunt? e.g: value = winprob * chips? or maybe i need to check: in order to take account of potodd i need to
+        // check if i have a made hand. (using darkness to detect it)
         if (!list.isEmpty() && darkness > 0) {
             // use the darknes variable to decide call/raise
             double value = darkness == 2 ? pokerSimulator.potValue : pokerSimulator.raiseValue;
             putAction("potOdds", value, list);
         }
-
     }
 
     /**
@@ -217,8 +215,7 @@ public class RuleBook {
      * Essential poker math p113
      */
     private void evaluateImpliedOdds() {
-        if (!(pokerSimulator.street == PokerSimulator.FLOP_CARDS_DEALT
-                || pokerSimulator.street == PokerSimulator.TURN_CARD_DEALT)) {
+        if (pokerSimulator.street == PokerSimulator.RIVER_CARD_DEALT) {
             // Hero.heroLogger.info("impliedOdds rule only on the flop & turn street");
             return;
         }

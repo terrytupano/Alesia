@@ -215,10 +215,19 @@ public class PokerSimulator {
 			result.put("isPoketPair", UoAHandEvaluator.isPoketPair(holeCards));
 			result.put("isOvercard", UoAHandEvaluator.isOvercard(holeCards, communityCards));
 			result.put("is2Overcards", UoAHandEvaluator.is2Overcards(holeCards, communityCards));
-			result.put("isInStraightDraw", UoAHandEvaluator.isInStraightDraw(holeCards, communityCards));
-			result.put("isOEStraightDraw", UoAHandEvaluator.isOEStraightDraw(holeCards, communityCards));
-			result.put("isFlushDraw", UoAHandEvaluator.isFlushDraw(holeCards, communityCards));
-			result.put("darkness", UoAHandEvaluator.getDarkness(holeCards, communityCards));
+
+			int inStraightDraw = UoAHandEvaluator.isInStraightDraw(holeCards, communityCards);
+			result.put("isInStraightDraw", inStraightDraw > 0);
+
+			int oeStraightDraw = UoAHandEvaluator.isOEStraightDraw(holeCards, communityCards);
+			result.put("isOEStraightDraw", oeStraightDraw);
+
+			int flushDraw = UoAHandEvaluator.isFlushDraw(holeCards, communityCards);
+			result.put("isFlushDraw", flushDraw);
+
+			result.put("darknessHand", UoAHandEvaluator.getDarkness(holeCards, communityCards));
+			// for multiples draws, take the maximun fo them
+			result.put("darknessDraw", Collections.max(Arrays.asList(inStraightDraw, oeStraightDraw, flushDraw)));
 
 			double ahead = ((double) aheadList.size()) / ((double) total);
 			result.put("rankAhead", aheadList.size());
@@ -259,64 +268,69 @@ public class PokerSimulator {
 		int outs = 0;
 		String outsExplanation = "";
 
-		if (UoAHandEvaluator.isPoketPair(holeCards) && UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.PAIR) {
-			outs += 2;
-			outsExplanation += "Pocket pair to set, ";
-		}
+		// there is no more outs on the river
+		if (communityCards.size() == 3 || communityCards.size() == 4) {
 
-		if (UoAHandEvaluator.isOvercard(holeCards, communityCards)
-				&& UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.HIGH) {
-			outs += 3;
-			outsExplanation += "One overcard, ";
-		}
+			if (UoAHandEvaluator.isPoketPair(holeCards)
+					&& UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.PAIR) {
+				outs += 2;
+				outsExplanation += "Pocket pair to set, ";
+			}
 
-		if (UoAHandEvaluator.isInStraightDraw(holeCards, communityCards)) {
-			outs += 4;
-			outsExplanation += "Inside straight draw, ";
-		}
+			if (UoAHandEvaluator.isOvercard(holeCards, communityCards)
+					&& UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.HIGH) {
+				outs += 3;
+				outsExplanation += "One overcard, ";
+			}
 
-		if (UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.TWOPAIR
-				&& UoAHandEvaluator.getDarkness(holeCards, communityCards) == 2) {
-			outs += 4;
-			outsExplanation += "2 pairs to full house, ";
-		}
+			if (UoAHandEvaluator.isInStraightDraw(holeCards, communityCards) > 0) {
+				outs += 4;
+				outsExplanation += "Inside straight draw, ";
+			}
 
-		if (UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.PAIR
-				&& UoAHandEvaluator.getDarkness(holeCards, communityCards) == 1
-				&& !UoAHandEvaluator.isPoketPair(holeCards)) {
-			outs += 5;
-			outsExplanation += "1 pair to 2 pairs or trip, ";
-		}
-		// No pair to pair
-		// if (UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.HIGH) {
-		// outs += 6;
-		// outsExplanation += "No pair to pair, ";
-		// }
+			if (UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.TWOPAIR
+					&& UoAHandEvaluator.getDarkness(holeCards, communityCards) == 2) {
+				outs += 4;
+				outsExplanation += "2 pairs to full house, ";
+			}
 
-		if (UoAHandEvaluator.is2Overcards(holeCards, communityCards)
-				&& UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.HIGH) {
-			outs += 6;
-			outsExplanation += "2 overcard to overpair, ";
-		}
+			if (UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.PAIR
+					&& UoAHandEvaluator.getDarkness(holeCards, communityCards) == 1
+					&& !UoAHandEvaluator.isPoketPair(holeCards)) {
+				outs += 5;
+				outsExplanation += "1 pair to 2 pairs or trip, ";
+			}
+			// No pair to pair
+			// if (UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.HIGH) {
+			// outs += 6;
+			// outsExplanation += "No pair to pair, ";
+			// }
 
-		if (UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.THREEKIND
-				&& UoAHandEvaluator.isPoketPair(holeCards)) {
-			outs += 7;
-			outsExplanation += "set to full house / four of a kind, ";
-		}
+			if (UoAHandEvaluator.is2Overcards(holeCards, communityCards)
+					&& UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.HIGH) {
+				outs += 6;
+				outsExplanation += "2 overcard to overpair, ";
+			}
 
-		if (UoAHandEvaluator.isOEStraightDraw(holeCards, communityCards)) {
-			outs += 8;
-			outsExplanation += "Open ended straight draw, ";
-		}
+			if (UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.THREEKIND
+					&& UoAHandEvaluator.isPoketPair(holeCards)) {
+				outs += 7;
+				outsExplanation += "set to full house / four of a kind, ";
+			}
 
-		if (UoAHandEvaluator.isFlushDraw(holeCards, communityCards)) {
-			outs += 9;
-			outsExplanation += "Flush draw, ";
+			if (UoAHandEvaluator.isOEStraightDraw(holeCards, communityCards) > 0) {
+				outs += 8;
+				outsExplanation += "Open ended straight draw, ";
+			}
+
+			if (UoAHandEvaluator.isFlushDraw(holeCards, communityCards) > 0) {
+				outs += 9;
+				outsExplanation += "Flush draw, ";
+			}
+			// inside straight draw and 2 overcards
+			// inside straight and flush draw
+			// open ended straight and flush draw
 		}
-		// inside straight draw and 2 overcards
-		// inside straight and flush draw
-		// open ended straight and flush draw
 
 		result.put("outs", outs);
 		result.put("outs2", outs * (2.15 / 100.0));

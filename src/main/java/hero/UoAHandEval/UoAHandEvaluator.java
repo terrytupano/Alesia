@@ -72,7 +72,17 @@ public class UoAHandEvaluator {
 		return isOvercard(holeCards.getCard(1), communityCards) && isOvercard(holeCards.getCard(2), communityCards);
 	}
 
-	public static boolean isFlushDraw(UoAHand holeCards, UoAHand communityCards) {
+	/**
+	 * return a positive int that indicate if this hand is a flush draw.
+	 * <li>0: this hand is NOT A FLUSH DRAW
+	 * <li>1: this hand is a draw and only 1 card participate on the draw
+	 * <li>2: this hand is a draw and both cards participate on the dras
+	 * 
+	 * @param holeCards      - the hole cards
+	 * @param communityCards - the comunity cards
+	 * @return the number
+	 */
+	public static int isFlushDraw(UoAHand holeCards, UoAHand communityCards) {
 		UoAHand hand = new UoAHand(holeCards + " " + communityCards);
 		long suitCount = 0;
 		List<Integer> suits = Arrays.asList(UoACard.CLUBS, UoACard.DIAMONDS, UoACard.HEARTS, UoACard.SPADES);
@@ -83,23 +93,63 @@ public class UoAHandEvaluator {
 
 		int dark = containSuit(holeCards.getCard(1), communityCards) ? 1 : 0;
 		dark += containSuit(holeCards.getCard(2), communityCards) ? 1 : 0;
-		return dark > 0 && suitCount == 4;
-	}
 
-	public static boolean isInStraightDraw(UoAHand holeCards, UoAHand communityCards) {
-		String gaps = getStraightDrawPatt(holeCards, communityCards);
-		// System.out.println(gaps);
-		return gaps.contains("121") || gaps.contains("211") || gaps.contains("112");
-	}
-
-	public static boolean isOEStraightDraw(UoAHand holeCards, UoAHand communityCards) {
-		String gaps = getStraightDrawPatt(holeCards, communityCards);
-		return gaps.contains("111");
+		return dark > 0 && suitCount == 4 ? dark : 0;
 	}
 
 	/**
-	 * return the name of the hand type. HIGH, PAIR, TWO PAIR, THREE KIND,
-	 * STRAIGHT, FLUSH.. and so on
+	 * return a positive number if this hand is a inside straight draw. the number indicate:
+	 * <li>0: this hand is NOT A INSIDE STRAIGHT DRAW
+	 * <li>1: this hand is a draw and only 1 card participate on the draw
+	 * <li>2: this hand is a draw and both cards participate on the dras
+	 * 
+	 * @param holeCards      - the hole cards
+	 * @param communityCards - the comunity cards
+	 * @return the number
+	 */
+	public static int isInStraightDraw(UoAHand holeCards, UoAHand communityCards) {
+		String gaps = getStraightDrawPatt(holeCards, communityCards);
+		int noDraw = 0;
+		if (gaps.contains("121") || gaps.contains("211") || gaps.contains("112")) {
+			for (int i = 1; i < 3; i++) {
+				UoAHand hole1 = new UoAHand(holeCards.getCard(i).toString());
+				String gaps2 = getStraightDrawPatt(hole1, communityCards);
+				// cont the # of times that i dont habe drow any more. if noDraw = 2 both cards participate on the draw
+				// hand
+				noDraw += !(gaps2.equals("121") || gaps2.equals("211") || gaps2.equals("112")) ? 1 : 0;
+			}
+		}
+		return noDraw;
+	}
+
+	/**
+	 * return a positive number if this hand is a open ended Streight draw. the number indicate:
+	 * <li>0: this hand is NOT A OPEN ENDED STREIGHT DRAW
+	 * <li>1: this hand is a draw and only 1 card participate on the draw
+	 * <li>2: this hand is a draw and both cards participate on the dras
+	 * 
+	 * @param holeCards      - the hole cards
+	 * @param communityCards - the comunity cards
+	 * @return the number
+	 */
+	public static int isOEStraightDraw(UoAHand holeCards, UoAHand communityCards) {
+		String gaps = getStraightDrawPatt(holeCards, communityCards);
+		int noDraw = 0;
+		if (gaps.contains("111")) {
+			for (int i = 1; i < 3; i++) {
+				UoAHand hole1 = new UoAHand(holeCards.getCard(i).toString());
+				String gaps2 = getStraightDrawPatt(hole1, communityCards);
+				// cont the # of times that i dont habe drow any more. if noDraw = 2 both cards participate on the draw
+				// hand
+				noDraw += !(gaps2.equals("111")) ? 1 : 0;
+			}
+		}
+		return noDraw;
+
+	}
+
+	/**
+	 * return the name of the hand type. HIGH, PAIR, TWO PAIR, THREE KIND, STRAIGHT, FLUSH.. and so on
 	 * 
 	 * @param hand - the hand
 	 * @return the type name
@@ -111,8 +161,7 @@ public class UoAHandEvaluator {
 	}
 
 	/**
-	 * return the type index of the hand. zB 0=HIGH, 1=PAIR, 2=TWO PAIR, 3=THREE
-	 * KIND.. and so on
+	 * return the type index of the hand. zB 0=HIGH, 1=PAIR, 2=TWO PAIR, 3=THREE KIND.. and so on
 	 * 
 	 * @param hand
 	 * @return
@@ -124,8 +173,8 @@ public class UoAHandEvaluator {
 	}
 
 	/**
-	 * return 0, 1 or 2 in response of how many cards participaten on the current
-	 * hand. 2 is the maximum both holeCards participaten on the hand
+	 * return 0, 1 or 2 in response of how many cards participaten on the current hand. 2 is the maximum both holeCards
+	 * participaten on the hand. 0 mean that hero has no hand or the hand is only on comunity cards
 	 * 
 	 * @param holeCards      - the hole card
 	 * @param communityCards - the communitycards
@@ -165,6 +214,14 @@ public class UoAHandEvaluator {
 		return isOvercard;
 	}
 
+	/**
+	 * return a string that contain the gaps between the cards pasess as argument. e.g: "1211" mean that betwenn the 2d
+	 * and the 3d card is a 1 card gap
+	 * 
+	 * @param holeCards      - the hole cards
+	 * @param communityCards - the comunity card
+	 * @return the gaps
+	 */
 	private static String getStraightDrawPatt(UoAHand holeCards, UoAHand communityCards) {
 		UoAHand hand = new UoAHand(holeCards + " " + communityCards);
 		List<Integer> ranks = hand.getCards().stream().map(c -> c.getRank()).collect(Collectors.toList());
@@ -214,8 +271,7 @@ public class UoAHandEvaluator {
 	 * @param c1 first hole card
 	 * @param c2 second hole card
 	 * @param h  a 3-5 card hand
-	 * @return a unique number representing the hand strength of the best 5-card
-	 *         poker hand in the given cards and
+	 * @return a unique number representing the hand strength of the best 5-card poker hand in the given cards and
 	 *         board. The higher the number, the better the hand is.
 	 */
 	public int rankHand(UoACard c1, UoACard c2, UoAHand h) {
@@ -271,8 +327,7 @@ public class UoAHandEvaluator {
 	}
 
 	/**
-	 * Given a board, cache all possible two card combinations of hand ranks, so
-	 * that lightenting fast hand comparisons
+	 * Given a board, cache all possible two card combinations of hand ranks, so that lightenting fast hand comparisons
 	 * may be done later.
 	 */
 	public int[][] getRanks(UoAHand board) {
@@ -305,8 +360,7 @@ public class UoAHandEvaluator {
 	 * Get the best 5 card poker hand from a 7 card hand
 	 * 
 	 * @param h Any 7 card poker hand
-	 * @return A Hand containing the highest ranked 5 card hand possible from the
-	 *         input.
+	 * @return A Hand containing the highest ranked 5 card hand possible from the input.
 	 */
 	public UoAHand getBest5CardHand(UoAHand h) {
 		int[] ch = h.getCardArray();
@@ -338,28 +392,28 @@ public class UoAHandEvaluator {
 	 */
 	private String drb_Name_Hand(int handtype) {
 		switch (handtype) {
-			case -1:
-				return ("Hidden Hand");
-			case 1:
-				return ("High Card");
-			case 2:
-				return ("Pair");
-			case 3:
-				return ("Two Pair");
-			case 4:
-				return ("Three of a Kind");
-			case 5:
-				return ("Straight");
-			case 6:
-				return ("Flush");
-			case 7:
-				return ("Full House");
-			case 8:
-				return ("Four of a Kind");
-			case 9:
-				return ("Straight Flush");
-			default:
-				return ("Very Weird hand indeed");
+		case -1:
+			return ("Hidden Hand");
+		case 1:
+			return ("High Card");
+		case 2:
+			return ("Pair");
+		case 3:
+			return ("Two Pair");
+		case 4:
+			return ("Three of a Kind");
+		case 5:
+			return ("Straight");
+		case 6:
+			return ("Flush");
+		case 7:
+			return ("Full House");
+		case 8:
+			return ("Four of a Kind");
+		case 9:
+			return ("Straight Flush");
+		default:
+			return ("Very Weird hand indeed");
 		}
 	}
 
@@ -1189,17 +1243,14 @@ public class UoAHandEvaluator {
 	}
 
 	/**
-	 * Get a numerical ranking of this hand. Uses java based code, so may be slower
-	 * than using the native methods, but
+	 * Get a numerical ranking of this hand. Uses java based code, so may be slower than using the native methods, but
 	 * is more compatible this way.
 	 * 
-	 * Based on Denis Papp's Loki Hand ID code (id.cpp) Given a 1-9 card hand, will
-	 * return a unique rank such that any
+	 * Based on Denis Papp's Loki Hand ID code (id.cpp) Given a 1-9 card hand, will return a unique rank such that any
 	 * two hands will be ranked with the better hand having a higher rank.
 	 * 
 	 * @param h a 1-9 card hand
-	 * @return a unique number representing the hand strength of the best 5-card
-	 *         poker hand in the given 7 cards. The
+	 * @return a unique number representing the hand strength of the best 5-card poker hand in the given 7 cards. The
 	 *         higher the number, the better the hand is.
 	 */
 	public final static int rankHand(UoAHand h) {
@@ -1351,43 +1402,43 @@ public class UoAHandEvaluator {
 		String t = new String();
 
 		switch (type) {
-			case HIGH:
-				ident /= NUM_RANKS * NUM_RANKS * NUM_RANKS * NUM_RANKS;
-				t = rank_name[ident] + " High";
-				break;
-			case FLUSH:
-				ident /= NUM_RANKS * NUM_RANKS * NUM_RANKS * NUM_RANKS;
-				t = "a Flush, " + rank_name[ident] + " High";
-				break;
-			case PAIR:
-				ident /= NUM_RANKS * NUM_RANKS * NUM_RANKS;
-				t = "a Pair of " + rank_name[ident] + "s";
-				break;
-			case TWOPAIR:
-				ident2 = ident / (NUM_RANKS * NUM_RANKS);
-				ident = (ident % (NUM_RANKS * NUM_RANKS)) / NUM_RANKS;
-				t = "Two Pair, " + rank_name[ident2] + "s and " + rank_name[ident] + "s";
-				break;
-			case THREEKIND:
-				t = "Three of a Kind, " + rank_name[ident / (NUM_RANKS * NUM_RANKS)] + "s";
-				break;
-			case FULLHOUSE:
-				t = "a Full House, " + rank_name[ident / NUM_RANKS] + "s over " + rank_name[ident % NUM_RANKS] + "s";
-				break;
-			case FOURKIND:
-				t = "Four of a Kind, " + rank_name[ident / NUM_RANKS] + "s";
-				break;
-			case STRAIGHT:
-				t = "a " + rank_name[ident] + " High Straight";
-				break;
-			case STRAIGHTFLUSH:
-				t = "a " + rank_name[ident] + " High Straight Flush";
-				break;
-			case FIVEKIND:
-				t = "Five of a Kind, " + rank_name[ident] + "s";
-				break;
-			default:
-				t = hand_name[type];
+		case HIGH:
+			ident /= NUM_RANKS * NUM_RANKS * NUM_RANKS * NUM_RANKS;
+			t = rank_name[ident] + " High";
+			break;
+		case FLUSH:
+			ident /= NUM_RANKS * NUM_RANKS * NUM_RANKS * NUM_RANKS;
+			t = "a Flush, " + rank_name[ident] + " High";
+			break;
+		case PAIR:
+			ident /= NUM_RANKS * NUM_RANKS * NUM_RANKS;
+			t = "a Pair of " + rank_name[ident] + "s";
+			break;
+		case TWOPAIR:
+			ident2 = ident / (NUM_RANKS * NUM_RANKS);
+			ident = (ident % (NUM_RANKS * NUM_RANKS)) / NUM_RANKS;
+			t = "Two Pair, " + rank_name[ident2] + "s and " + rank_name[ident] + "s";
+			break;
+		case THREEKIND:
+			t = "Three of a Kind, " + rank_name[ident / (NUM_RANKS * NUM_RANKS)] + "s";
+			break;
+		case FULLHOUSE:
+			t = "a Full House, " + rank_name[ident / NUM_RANKS] + "s over " + rank_name[ident % NUM_RANKS] + "s";
+			break;
+		case FOURKIND:
+			t = "Four of a Kind, " + rank_name[ident / NUM_RANKS] + "s";
+			break;
+		case STRAIGHT:
+			t = "a " + rank_name[ident] + " High Straight";
+			break;
+		case STRAIGHTFLUSH:
+			t = "a " + rank_name[ident] + " High Straight Flush";
+			break;
+		case FIVEKIND:
+			t = "Five of a Kind, " + rank_name[ident] + "s";
+			break;
+		default:
+			t = hand_name[type];
 		}
 
 		return t;
