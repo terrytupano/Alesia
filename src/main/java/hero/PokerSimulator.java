@@ -333,8 +333,8 @@ public class PokerSimulator {
 		}
 
 		result.put("outs", outs);
-		result.put("outs2", outs * (2.15 / 100.0));
-		result.put("outs4", outs * (4.10 / 100.0));
+		result.put("outs2", outs * (2.13 / 100.0)); //Essential Poker Math p143
+		result.put("outs4", outs * (4.3 / 100.0)); //Essential Poker Math p143
 		result.put("outsExplanation", StringUtils.substringBeforeLast(outsExplanation, ", "));
 		return result;
 	}
