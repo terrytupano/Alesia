@@ -26,8 +26,7 @@ import hero.ozsoft.actions.*;
  * A Texas Hold'em player. <br />
  * <br />
  * 
- * The player's actions are delegated to a {@link Client}, which can be either
- * human-controlled or AI-controlled (bot).
+ * The player's actions are delegated to a {@link Client}, which can be either human-controlled or AI-controlled (bot).
  * 
  * @author Oscar Stigter
  */
@@ -140,7 +139,8 @@ public class Player {
 	}
 
 	/**
-	 * Returns whether the player has his hole cards dealt.
+	 * Returns whether the player has his hole cards dealt. the {@link #setCards(List)} remove the dealed cards if the
+	 * playar fold
 	 * 
 	 * @return True if the hole cards are dealt, otherwise false.
 	 */
@@ -251,8 +251,7 @@ public class Player {
 	}
 
 	/**
-	 * Sets the hole cards. calling this method with null argument remove the cards
-	 * (fold)
+	 * Sets the hole cards. calling this method with null argument remove the cards (fold)
 	 * 
 	 * @param cards - cards or <code>null</code>
 	 */

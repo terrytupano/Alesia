@@ -3,10 +3,8 @@ package hero.ozsoft;
 import java.util.*;
 import java.util.stream.*;
 
-import org.apache.commons.math3.stat.descriptive.*;
 import org.apache.commons.math3.util.*;
 
-import EDU.oswego.cs.dl.util.concurrent.FJTask.*;
 import hero.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.actions.*;
@@ -67,7 +65,8 @@ public class BettingSequence {
     }
 
     public void addSummary(Player player) {
-        PlayerSummary summary = new PlayerSummary(player.getName(), street, player.getChair(), player.getCash());
+        PlayerSummary summary = new PlayerSummary(player.getName(), street, player.getChair(), player.getCash(),
+                player.hasCards());
         addSummary(summary);
     }
 
@@ -87,6 +86,29 @@ public class BettingSequence {
             bettingHistory.put(handId, list);
         }
         list.add(playerSummary);
+    }
+
+    /**
+     * not completed method. delete
+     * @param bb
+     * @return
+     */
+    public double wasIRaised(double bb) {
+        // i raise is at least 3 bigblind
+        double bbb = bb * 3;
+
+        List<PlayerSummary> currentHand = bettingHistory.get(handId);
+        if (currentHand == null || currentHand.isEmpty())
+            return -1;
+
+        // select only active players & the current street
+        List<PlayerSummary> currentStreet = new ArrayList<>(currentHand);
+        currentStreet.removeIf(ps -> ps.isAlive && ps.street == street);
+
+        if (currentStreet.isEmpty())
+            return -1;
+
+        return 0;
     }
 
     /**
@@ -233,13 +255,15 @@ public class BettingSequence {
         public int chair;
         public String name;
         public double chips;
+        public boolean isAlive;
 
-        public PlayerSummary(String name, int street, int position, double chips) {
+        public PlayerSummary(String name, int street, int position, double chips, boolean isAlive) {
             this.chips = chips;
             this.currentTimeMillis = System.currentTimeMillis();
             this.name = name;
             this.chair = position;
             this.street = street;
+            this.isAlive = isAlive;
         }
     }
 }

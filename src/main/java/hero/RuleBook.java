@@ -66,6 +66,14 @@ public class RuleBook {
         rules.register(semiBluff);
     }
 
+    private double sprUpper = 15;
+
+    private double getSPRs() {
+        double SPRs = pokerSimulator.heroChips / pokerSimulator.potValue;
+        SPRs = SPRs > sprUpper ? sprUpper : SPRs;
+        return SPRs;
+    }
+
     private void evaluateTauPreflop() {
         // Low SPR (0-5): Favor Strong Hands and Aggressive Play
         // Medium SPR (5-15): Balanced Play with a Mix of Hand Strengths
@@ -75,12 +83,11 @@ public class RuleBook {
         double callValue = pokerSimulator.callValue;
         double raiseValue = pokerSimulator.raiseValue;
         double tablePosition = pokerSimulator.getTablePosition();
-        // double SPRs = pokerSimulator.SPRs > sprUpper ? sprUpper : pokerSimulator.SPRs;
-        double SPRs = pokerSimulator.heroChips / pokerSimulator.potValue;
-        SPRs = SPRs > sprUpper ? sprUpper : SPRs;
+        double SPRs = getSPRs();
 
         // 42% is ultil 22 poket pair
         // 45% is to make every step 5%
+        // 36% is to make every step 4%
         // 25 is the max % for preflopCardsModel where all cards hat +EV
         // double upperB = 25d;
         double rangeUpper = 45d;
@@ -195,6 +202,8 @@ public class RuleBook {
         // double texture = ((double) pokerSimulator.evaluation.get("rankBehindTexture%")) / 100d;
         // System.out.println("texture " + texture);
 
+        double SPRs = getSPRs();
+
         // TODO: rethink this strategie. why darknes? and how much call/raise? should i take the winprob to select the
         // amunt? e.g: value = winprob * chips? or maybe i need to check: in order to take account of potodd i need to
         // check if i have a made hand. (using darkness to detect it)
@@ -215,10 +224,16 @@ public class RuleBook {
      * Essential poker math p113
      */
     private void evaluateImpliedOdds() {
+
         if (pokerSimulator.street == PokerSimulator.RIVER_CARD_DEALT) {
             // Hero.heroLogger.info("impliedOdds rule only on the flop & turn street");
             return;
         }
+
+        int darknessDraw = (Integer) pokerSimulator.evaluation.getOrDefault("darknessDraw", 0);
+        // no draw, return
+        if (darknessDraw == 0)
+            return;
 
         double outs2 = (Double) pokerSimulator.evaluation.getOrDefault("outs2", 0.0);
         double outs4 = (Double) pokerSimulator.evaluation.getOrDefault("outs4", 0.0);
@@ -229,7 +244,9 @@ public class RuleBook {
         list.removeIf(a -> a.potOdds > equity);
 
         if (!list.isEmpty()) {
-            putAction("impliedOdds", pokerSimulator.buyIn, list);
+            // use the darkness to raise or call
+            double value = darknessDraw == 2 ? pokerSimulator.potValue : pokerSimulator.callValue;
+            putAction("impliedOdds", value, list);
         }
     }
 

@@ -797,11 +797,7 @@ public class PokerSimulator {
 			availableActions.add(new TrooperAction(TrooperAction.RAISE, 4 * pot));
 
 			// remove actions out of range
-			availableActions.removeIf(a -> a.amount >= chips || a.amount < bbb);
-			// List<Double> doubles = PokerSimulator.getRaiseSteps(raise, chips);
-			// for (Double double1 : doubles) {
-			// availableActions.add(new TrooperAction(TrooperAction.RAISE, double1));
-			// }
+			availableActions.removeIf(a -> a.amount >= chips || a.amount < call);
 		}
 
 		// compute reward:risk ratio
@@ -813,6 +809,8 @@ public class PokerSimulator {
 		if (equity != null) {
 			availableActions.removeIf(a -> a.potOdds > equity);
 		}
+
+		Collections.sort(availableActions, (a1, a2) -> Double.compare(a1.amount, a2.amount));
 
 		// 191228: Hero win his first game against TH app !!!!!!!!!!!!!!!! :D
 		return availableActions;
