@@ -5,6 +5,7 @@ import java.util.*;
 import org.jeasy.rules.api.*;
 import org.jeasy.rules.core.*;
 
+import datasource.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.*;
 
@@ -43,6 +44,14 @@ public class RuleBook {
         rules.register(tauPreflop);
 
         /**
+         * preflop and posflop
+         */
+        Rule valueBetting = new RuleBuilder().name("Value Betting")
+                .description("to extract as much money as possible from your opponents when you have a winning hand.")
+                .then(facts -> evaluateValueBetting()).build();
+        rules.register(valueBetting);
+
+        /**
          * posflop
          */
         Rule impliedOdds = new RuleBuilder().name("Implied Odds")
@@ -54,11 +63,6 @@ public class RuleBook {
                 .description("the ratio of the current size of the pot to the cost of a contemplated call.")
                 .when(facts -> isPosFlop()).then(facts -> evaluatePotOdds()).build();
         rules.register(potOdds);
-
-        Rule valueBetting = new RuleBuilder().name("Value Betting")
-                .description("to extract as much money as possible from your opponents when you have a winning hand.")
-                .when(facts -> isPosFlop()).then(facts -> evaluateValueBetting()).build();
-        rules.register(valueBetting);
 
         Rule semiBluff = new RuleBuilder().name("Semi Bluff")
                 .description("A semi-bluff occurs when you bet with a drawing hand.").when(facts -> isPosFlop())
@@ -98,7 +102,8 @@ public class RuleBook {
         // adust by SPRs. the final tau value will be the min of both. this allow the standar tau value be ajusted by
         // the environtment e.g: if hero is in later position (preflopRange is high) and sprs is low. taking th min
         // value (sprs) will avoid wasting chips when hero is in a precarious situation
-        double sprRange = SPRs * (Table.MAX_CAPACITY + 1 - tablePosition);
+        // see "preflop correction using SPR" tab in Some statistics.xlsx
+        double sprRange = SPRs * (Table.MAX_CAPACITY + 2 - tablePosition);
         tau = (int) Math.min(tau, sprRange);
         tau = (int) Math.max(step, tau); // the absolute min is at least 1 step
 
@@ -106,9 +111,10 @@ public class RuleBook {
         if (preflopCardsModel.containsHand(holeCards)) {
             // * SPRs to betting. at this point, hero has a good hand. Low SPRs tight agresive, put money on the pot.
             // high SPRs tight pasive call/check
+            // see "preflop correction using SPR" tab in Some statistics.xlsx
             double value = callValue;
             double r = Math.random();
-            if (r < SPRs / sprUpper)
+            if (r < 1 - (SPRs / sprUpper))
                 value = raiseValue;
 
             TrooperAction action = getCloseTo(availableActions, value);
@@ -146,10 +152,13 @@ public class RuleBook {
     }
 
     private void evaluateValueBetting() {
-        boolean isTheNut = (Boolean) pokerSimulator.evaluation.getOrDefault("isTheNut", false);
+        // preflop: all in with 2% AA KK QQ
+        preflopCardsModel.setPercentage(2);
+        boolean allIn = preflopCardsModel.containsHand(pokerSimulator.holeCards);
 
-        pokerSimulator.bettingSequence.getPlayersType(pokerSimulator.buyIn, pokerSimulator.bigBlind);
-        if (isTheNut) {
+        // posflop
+        boolean isTheNut = (Boolean) pokerSimulator.evaluation.getOrDefault("isTheNut", false);
+        if (isTheNut || allIn) {
             putAction("valueBetting", pokerSimulator.buyIn, availableActions);
         }
     }
@@ -157,6 +166,26 @@ public class RuleBook {
     private void evaluateSemiBluff() {
         int outs = (Integer) pokerSimulator.evaluation.getOrDefault("outs", 0);
         int street = pokerSimulator.street;
+
+        // A♣ T♣ and the flop is 5♣ K♣ 8♥ Raising all-in as a semi-bluff improves our equity to 45%; while
+        // simultaneously providing additional
+        // benefits. If villain only has a pair of Kings, we can make him fold better hands by forcing him into a tough
+        // all-in decision. By semi-bluff raising, we can now win the hand by either making our opponent fold, or making
+        // the best hand on the river.
+        // Essential Poker Math_ Fundamental p170: shoul we call?
+        // todo: this paragraph means is posible make a semibluff if the turn outs are -EV put the river outs are +EV
+
+        double outs2 = (Double) pokerSimulator.evaluation.getOrDefault("outs2", 0.0);
+        double outs4 = (Double) pokerSimulator.evaluation.getOrDefault("outs4", 0.0);
+
+        // List<TrooperAction> list = new ArrayList<>(availableActions);
+        // list.removeIf(a -> a.potOdds > equity);
+        long evfor2 = availableActions.stream().filter(a -> outs2 > a.potOdds).count();
+        long evfor4 = availableActions.stream().filter(a -> outs4 > a.potOdds).count();
+        double sprs = getSPRs();
+
+        if (evfor2 == 0 && evfor4 > 0 && sprs < 5)
+            putAction("semiBluff", pokerSimulator.buyIn, availableActions);
 
         // Spots to Go All-in as a Semi-Bluff. 020 Essential Poker Math_ Fundamental
         // No-Limit Hold’em Mathematics You Need to Know p243
@@ -190,9 +219,12 @@ public class RuleBook {
      * Essential poker math p95
      */
     private void evaluatePotOdds() {
-
         double winProb = pokerSimulator.winProb;
-        int darkness = (int) pokerSimulator.evaluation.getOrDefault("darknessHand", 0);
+        int darknessHand = (int) pokerSimulator.evaluation.getOrDefault("darknessHand", 0);
+
+        // no made hand, return
+        if (darknessHand == 0)
+            return;
 
         List<TrooperAction> list = new ArrayList<>(availableActions);
         // Should we call? If we expect to win at least potOdds of the time, we should
@@ -202,14 +234,12 @@ public class RuleBook {
         // double texture = ((double) pokerSimulator.evaluation.get("rankBehindTexture%")) / 100d;
         // System.out.println("texture " + texture);
 
-        double SPRs = getSPRs();
+        // double SPRs = getSPRs();
 
-        // TODO: rethink this strategie. why darknes? and how much call/raise? should i take the winprob to select the
-        // amunt? e.g: value = winprob * chips? or maybe i need to check: in order to take account of potodd i need to
-        // check if i have a made hand. (using darkness to detect it)
-        if (!list.isEmpty() && darkness > 0) {
+        if (!list.isEmpty()) {
+            TrooperAction action = getCloseToAlpha(list);
             // use the darknes variable to decide call/raise
-            double value = darkness == 2 ? pokerSimulator.potValue : pokerSimulator.raiseValue;
+            double value = darknessHand == 2 ? action.amount : pokerSimulator.callValue;
             putAction("potOdds", value, list);
         }
     }
@@ -244,8 +274,9 @@ public class RuleBook {
         list.removeIf(a -> a.potOdds > equity);
 
         if (!list.isEmpty()) {
+            TrooperAction action = getCloseToAlpha(list);
             // use the darkness to raise or call
-            double value = darknessDraw == 2 ? pokerSimulator.potValue : pokerSimulator.callValue;
+            double value = darknessDraw == 2 ? action.amount : pokerSimulator.callValue;
             putAction("impliedOdds", value, list);
         }
     }
@@ -286,20 +317,26 @@ public class RuleBook {
         // Hero.heroLogger.info("RuleBook decitions: " + rulesDesitions.toString());
 
         if (!rulesDesitions.isEmpty()) {
+
+            // Give priority to some rules.
+            TrooperAction action2 = rulesDesitions.get("valueBetting");
+            if (action2 != null)
+                return action2;
+
+            // remove same action selected by multiples rules
             List<TrooperAction> list = new ArrayList<>();
             rulesDesitions.forEach((k, v) -> {
-                // avoid add the same action selected by rules
                 if (!list.contains(v))
                     list.add(v);
             });
 
             // sort the actions.s values in ascending order
-            Collections.sort(list, (o1, o2) -> ((Double) o1.amount).compareTo((Double) o2.amount));
+            // Collections.sort(list, (o1, o2) -> ((Double) o1.amount).compareTo((Double) o2.amount));
             // System.out.println("RuleBook.getAction() " + list);
-            action = list.get(list.size() - 1);
+            // action = list.get(list.size() - 1);
 
-            // Collections.shuffle(list);
-            // action = list.get(0);
+            Collections.shuffle(list);
+            action = list.get(0);
         }
         return action;
     }
@@ -312,10 +349,32 @@ public class RuleBook {
      * @return the closest action
      */
     public static TrooperAction getCloseTo(List<TrooperAction> actions, double value) {
-        TrooperAction action = TrooperAction.CHECK;
+        TrooperAction action = TrooperAction.FOLD;
         for (TrooperAction trooperAction : actions) {
             action = Math.abs(trooperAction.amount - value) < Math.abs(action.amount - value) ? trooperAction : action;
         }
+        return action;
+    }
+
+    /**
+     * From the list of actions passed as argument, return the action whose ammount is closet to the alpha from the
+     * {@link TrooperParameter} asociated with this instance
+     * 
+     * @param actions - the +EV actions
+     * @return the action
+     */
+    private TrooperAction getCloseToAlpha(List<TrooperAction> actions) {
+        TrooperAction action = TrooperAction.FOLD;
+        int alpha = pokerSimulator.trooperParameter.getInteger("alpha");
+
+        // select the closest value from the all options
+        int i = alpha * availableActions.size() / 100;
+        action = availableActions.get(i);
+        double value = action.amount;
+        for (TrooperAction trooperAction : actions) {
+            action = Math.abs(trooperAction.amount - value) < Math.abs(action.amount - value) ? trooperAction : action;
+        }
+
         return action;
     }
 
@@ -323,5 +382,4 @@ public class RuleBook {
         TrooperAction action = getCloseTo(actions, value);
         rulesDesitions.put(ruleName, action);
     }
-
 }
