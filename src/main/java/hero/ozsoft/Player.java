@@ -56,6 +56,9 @@ public class Player {
 	/** the chair in the table for this player */
 	private int chair;
 
+	/** is this player the dealer */
+	public boolean isDealer;
+
 	/**
 	 * Constructor.
 	 * 

@@ -709,10 +709,10 @@ public class PokerSimulator {
 		this.tablePosition = myChair - dealerChair;
 
 		if (dealerChair == myChair)
-			this.tablePosition = Table.MAX_CAPACITY;
+			this.tablePosition = PokerTable.MAX_CAPACITY;
 
 		if (tablePosition < 0)
-			this.tablePosition = tablePosition + Table.MAX_CAPACITY;
+			this.tablePosition = tablePosition + PokerTable.MAX_CAPACITY;
 		// this.tablePosition = Math.abs(dealerPos - (villans + 1));
 	}
 

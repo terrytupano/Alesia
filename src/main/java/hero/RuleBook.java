@@ -21,6 +21,7 @@ public class RuleBook {
     private RulesEngine rulesEngine;
     private PreflopCardsModel preflopCardsModel;
     private PokerSimulator pokerSimulator;
+    private double sprUpper = 15;
 
     public RuleBook(PokerSimulator simulator) {
         this.pokerSimulator = simulator;
@@ -42,6 +43,11 @@ public class RuleBook {
                 .description("Preflop card.s selection based on the tau, alpha and tableposition parameters.")
                 .when(facts -> isPreFlop()).then(facts -> evaluateTauPreflop()).build();
         rules.register(tauPreflop);
+
+        Rule setMining = new RuleBuilder().name("Set Mining").description(
+                "when you call a pre-flop raise with the sole intention of flopping a set with a small pocket pair such as 22-55.")
+                .when(facts -> isPreFlop()).then(facts -> evaluateSetMining()).build();
+        rules.register(setMining);
 
         /**
          * preflop and posflop
@@ -70,8 +76,6 @@ public class RuleBook {
         rules.register(semiBluff);
     }
 
-    private double sprUpper = 15;
-
     private double getSPRs() {
         double SPRs = pokerSimulator.heroChips / pokerSimulator.potValue;
         SPRs = SPRs > sprUpper ? sprUpper : SPRs;
@@ -95,7 +99,7 @@ public class RuleBook {
         // 25 is the max % for preflopCardsModel where all cards hat +EV
         // double upperB = 25d;
         double rangeUpper = 45d;
-        double step = rangeUpper / Table.MAX_CAPACITY;
+        double step = rangeUpper / PokerTable.MAX_CAPACITY;
         double preflopRange = step * tablePosition;
         int tau = (int) Math.round(preflopRange);
 
@@ -103,7 +107,7 @@ public class RuleBook {
         // the environtment e.g: if hero is in later position (preflopRange is high) and sprs is low. taking th min
         // value (sprs) will avoid wasting chips when hero is in a precarious situation
         // see "preflop correction using SPR" tab in Some statistics.xlsx
-        double sprRange = SPRs * (Table.MAX_CAPACITY + 2 - tablePosition);
+        double sprRange = SPRs * (PokerTable.MAX_CAPACITY + 2 - tablePosition);
         tau = (int) Math.min(tau, sprRange);
         tau = (int) Math.max(step, tau); // the absolute min is at least 1 step
 
@@ -151,6 +155,10 @@ public class RuleBook {
         }
     }
 
+    /**
+     * A value bet in poker is a bet made with the intention of being called by an opponent with a weaker hand. The goal
+     * is to extract as much money as possible from the opponent when you believe you have the best hand.
+     */
     private void evaluateValueBetting() {
         // preflop: all in with 2% AA KK QQ
         preflopCardsModel.setPercentage(2);
@@ -159,8 +167,48 @@ public class RuleBook {
         // posflop
         boolean isTheNut = (Boolean) pokerSimulator.evaluation.getOrDefault("isTheNut", false);
         if (isTheNut || allIn) {
-            putAction("valueBetting", pokerSimulator.buyIn, availableActions);
+            putAlphaAction("valueBetting", availableActions);
         }
+    }
+
+    private double get3Bet() {
+        double bbb = pokerSimulator.bigBlind * 3;
+        // if call value > 0 i was raised
+        if (pokerSimulator.callValue > 0)
+            bbb = pokerSimulator.callValue * 3;
+        return bbb;
+    }
+
+    /**
+     * Set-mining is when you call a pre-flop raise with the sole intention of flopping a set with a small pocket pair
+     * such as 22-55. Essential Poker Math p206
+     */
+    private void evaluateSetMining() {
+        boolean rank = pokerSimulator.holeCards.getCard(1).getRank() < 6;
+        boolean pokerPair = UoAHandEvaluator.isPoketPair(pokerSimulator.holeCards);
+        // this rulle apply to poket pair less that 66 (55-22) if not, return
+        if (!(rank && pokerPair))
+            return;
+
+        // 15-to-1 Rule.
+        double ess = pokerSimulator.bettingSequence.getEfectiveStackSize();
+        if ((ess < pokerSimulator.bigBlind * 15))
+            return;
+
+            pokerSimulator.bettingSequence.getPlayersType(pokerSimulator.buyIn, pokerSimulator.bigBlind);
+
+        putAlphaAction("setMining", availableActions);
+
+    }
+
+    /**
+     * In the card game of poker, a bluff is a bet or raise made with a hand which is not thought to be the best hand.
+     * To bluff is to make such a bet. The objective of a bluff is to induce a fold by at least one opponent who holds a
+     * better hand.
+     */
+    private void evaluateBluff() {
+
+        // compute a Polarized range based on the
     }
 
     private void evaluateSemiBluff() {
@@ -172,7 +220,7 @@ public class RuleBook {
         // benefits. If villain only has a pair of Kings, we can make him fold better hands by forcing him into a tough
         // all-in decision. By semi-bluff raising, we can now win the hand by either making our opponent fold, or making
         // the best hand on the river.
-        // Essential Poker Math_ Fundamental p170: shoul we call?
+        // Essential Poker Math_ Fundamental p170: shoul we call? section
         // todo: this paragraph means is posible make a semibluff if the turn outs are -EV put the river outs are +EV
 
         double outs2 = (Double) pokerSimulator.evaluation.getOrDefault("outs2", 0.0);
@@ -371,6 +419,8 @@ public class RuleBook {
         int i = alpha * availableActions.size() / 100;
         action = availableActions.get(i);
         double value = action.amount;
+
+        // select for the +ev list, select the closest to the value
         for (TrooperAction trooperAction : actions) {
             action = Math.abs(trooperAction.amount - value) < Math.abs(action.amount - value) ? trooperAction : action;
         }
@@ -382,4 +432,10 @@ public class RuleBook {
         TrooperAction action = getCloseTo(actions, value);
         rulesDesitions.put(ruleName, action);
     }
+
+    private void putAlphaAction(String ruleName, List<TrooperAction> actions) {
+        TrooperAction action = getCloseToAlpha(actions);
+        rulesDesitions.put(ruleName, action);
+    }
+
 }

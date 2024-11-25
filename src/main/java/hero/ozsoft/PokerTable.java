@@ -56,12 +56,11 @@ import hero.ozsoft.bots.*;
  * Limit Texas Hold'em poker table. <br />
  * <br />
  * 
- * This class forms the heart of the poker engine. It controls the game flow for
- * a single poker table.
+ * This class forms the heart of the poker engine. It controls the game flow for a single poker table.
  * 
  * @author Oscar Stigter
  */
-public class Table extends Task<Void, Void> {
+public class PokerTable extends Task<Void, Void> {
 
 	/** In fixed-limit games, the maximum number of raises per betting round. */
 	private static final int MAX_RAISES = 3;
@@ -70,8 +69,7 @@ public class Table extends Task<Void, Void> {
 	private static final boolean ALWAYS_CALL_SHOWDOWN = false;
 
 	/**
-	 * if the table has fewer players than allowed (field {@link #MIN_PLAYERS}), the
-	 * simulation is restarted
+	 * if the table has fewer players than allowed (field {@link #MIN_PLAYERS}), the simulation is restarted
 	 */
 	private static final String RESTAR = "RESTAR";
 
@@ -157,7 +155,7 @@ public class Table extends Task<Void, Void> {
 
 	private DB db;
 
-	public Table(int tableId, SimulationParameters parameters) {
+	public PokerTable(int tableId, SimulationParameters parameters) {
 		super(Alesia.getInstance());
 		this.tableId = tableId;
 		this.simulationParameters = parameters;
@@ -523,14 +521,12 @@ public class Table extends Task<Void, Void> {
 	}
 
 	/**
-	 * increment the bb in tournament mode. this method Compute the AVG(tables) and
-	 * if every strategy has played (avg) more that 10 tables, the bb is incremented
-	 * 10% of the initial bb, 20% the second time and so on. the buyIn is also
-	 * incremented
+	 * increment the bb in tournament mode. this method Compute the AVG(tables) and if every strategy has played (avg)
+	 * more that 10 tables, the bb is incremented 10% of the initial bb, 20% the second time and so on. the buyIn is
+	 * also incremented
 	 * 
-	 * This method should be executed in taskGroup but i made here
-	 * to allow me to test interactive. also, unilateral increment don.t affect the
-	 * simulation (i think) eventualy all tables will be reach the same conclution
+	 * This method should be executed in taskGroup but i made here to allow me to test interactive. also, unilateral
+	 * increment don.t affect the simulation (i think) eventualy all tables will be reach the same conclution
 	 * 
 	 * 
 	 */
@@ -572,10 +568,8 @@ public class Table extends Task<Void, Void> {
 	}
 
 	/**
-	 * this method:
-	 * - reset the player values
-	 * - update the simulation result table
-	 * - update the strategies for the next round
+	 * this method: - reset the player values - update the simulation result table - update the strategies for the next
+	 * round
 	 */
 	private void resetAndUpdatePlayers() {
 		List<Map> activeList = null;
@@ -616,8 +610,8 @@ public class Table extends Task<Void, Void> {
 			} else {
 				// second level: if all strategies are present in the db file, shuffle a sublist
 				if (activeList == null) {
-					activeList = db.all("SELECT variables FROM simulation_results WHERE tableId = ? AND status = ?",
-							-1, SimulationResult.ACTIVE);
+					activeList = db.all("SELECT variables FROM simulation_results WHERE tableId = ? AND status = ?", -1,
+							SimulationResult.ACTIVE);
 					Collections.shuffle(activeList);
 				}
 				// if there no more active strategies, retire the player (happen at end of the
@@ -656,15 +650,13 @@ public class Table extends Task<Void, Void> {
 		if (!areAllPresent())
 			return;
 
-		Long actives = (Long) db.firstCell(
-				"SELECT COUNT(*) FROM simulation_results WHERE tableId = ? AND status = ?", -1,
-				SimulationResult.ACTIVE);
+		Long actives = (Long) db.firstCell("SELECT COUNT(*) FROM simulation_results WHERE tableId = ? AND status = ?",
+				-1, SimulationResult.ACTIVE);
 		activeStrategies = actives.intValue();
 	}
 
 	/**
-	 * reset the simulated tables. use this method to allow this table continua
-	 * after sumnarsatopm task
+	 * reset the simulated tables. use this method to allow this table continua after sumnarsatopm task
 	 */
 	public void resetTableCounter() {
 		this.tableCounter = 0;
@@ -892,8 +884,7 @@ public class Table extends Task<Void, Void> {
 	}
 
 	/**
-	 * return the current round expressed in cards numbers. 2 = preflop, 5 = Flop, 6
-	 * = Turn, 7 = River
+	 * return the current round expressed in cards numbers. 2 = preflop, 5 = Flop, 6 = Turn, 7 = River
 	 * 
 	 * @return # of dealt cards
 	 */
@@ -967,8 +958,7 @@ public class Table extends Task<Void, Void> {
 	 * Notifies clients that one or more players have been updated. <br />
 	 * <br />
 	 * 
-	 * A player's secret information is only sent its own client; other clients see
-	 * only a player's public information.
+	 * A player's secret information is only sent its own client; other clients see only a player's public information.
 	 * 
 	 * @param showdown Whether we are at the showdown phase.
 	 */
@@ -997,8 +987,8 @@ public class Table extends Task<Void, Void> {
 	}
 
 	/**
-	 * Return the log recorded for this hand. This log string contain newline
-	 * character, so can be read as standar multiline poker log
+	 * Return the log recorded for this hand. This log string contain newline character, so can be read as standar
+	 * multiline poker log
 	 * 
 	 * @return the log
 	 */
@@ -1115,6 +1105,10 @@ public class Table extends Task<Void, Void> {
 		dealerPosition = (dealerPosition + 1) % activePlayers.size();
 		dealer = activePlayers.get(dealerPosition);
 
+		// terry: mark the dealer for BettingSequence usage
+		activePlayers.forEach(p -> p.isDealer = false);
+		dealer.isDealer = true;
+
 		// Shuffle the deck.
 		deck.shuffle();
 
@@ -1147,9 +1141,8 @@ public class Table extends Task<Void, Void> {
 	}
 
 	/**
-	 * return shuffle list of integers based on range [0, 100] / {@link #GRAIN}
-	 * e.g: if GRAIN = 10 what i want is 10,20,...,90 because in simulation i want
-	 * to test the ranges [0,10], [11,20], ... [91,100]
+	 * return shuffle list of integers based on range [0, 100] / {@link #GRAIN} e.g: if GRAIN = 10 what i want is
+	 * 10,20,...,90 because in simulation i want to test the ranges [0,10], [11,20], ... [91,100]
 	 * 
 	 * @return the shuffle list
 	 */
@@ -1164,7 +1157,7 @@ public class Table extends Task<Void, Void> {
 	}
 
 	/**
-	 * return the next assignable value from {@link Table#getShuffleList()}
+	 * return the next assignable value from {@link PokerTable#getShuffleList()}
 	 * 
 	 * @return the new value
 	 */

@@ -105,7 +105,7 @@ public class ICRReader {
 					String cards = handCards + " " + boardCards;
 					String[] cards2 = cards.split(" ");
 					// at leas floop and the right # of players
-					if (player.playersLeft > Table.MAX_CAPACITY || StringUtils.isBlank(boardCards)) {
+					if (player.playersLeft > PokerTable.MAX_CAPACITY || StringUtils.isBlank(boardCards)) {
 						// don nothing the game will be not save it
 						continue;
 					}

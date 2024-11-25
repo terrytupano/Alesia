@@ -54,7 +54,7 @@ import hero.ozsoft.gui.*;
  */
 public class TableDialog extends InputBlocker implements Client {
 
-	private Table table;
+	private PokerTable table;
 
 	/** The players at the table. */
 	private final List<Player> players;
@@ -87,7 +87,7 @@ public class TableDialog extends InputBlocker implements Client {
 	/**
 	 * Constructor.
 	 */
-	public TableDialog(Table table) {
+	public TableDialog(PokerTable table) {
 		super(table, Task.BlockingScope.WINDOW, Alesia.getMainPanel());
 		TActionsFactory.insertActions(this);
 		this.busyPanel = new BusyPanel();
@@ -362,22 +362,22 @@ public class TableDialog extends InputBlocker implements Client {
 
 	@org.jdesktop.application.Action
 	public void pauseInteractiveSimulationOnHero() {
-		table.pause(Table.PAUSE_HERO);
+		table.pause(PokerTable.PAUSE_HERO);
 	}
 
 	@org.jdesktop.application.Action
 	public void pauseInteractiveSimulationOnPlayer() {
-		table.pause(Table.PAUSE_PLAYER);
+		table.pause(PokerTable.PAUSE_PLAYER);
 	}
 
 	@org.jdesktop.application.Action
 	public void pauseInteractiveSimulation() {
-		table.pause(Table.PAUSE_TASK);
+		table.pause(PokerTable.PAUSE_TASK);
 	}
 
 	@org.jdesktop.application.Action
 	public void resumeInteractiveSimulation() {
-		table.pause(Table.RESUME_ALL);
+		table.pause(PokerTable.RESUME_ALL);
 	}
 
 }

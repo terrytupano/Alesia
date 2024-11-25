@@ -47,7 +47,7 @@ public class SimulationParametersPanel extends TUIFormPanel implements ListSelec
 		addInputComponent(TUIUtils.getSwitch("isTournament", model.getBoolean("isTournament")));
 		addInputComponent(TUIUtils.getNumericTextField("handsToSimulate", model, columns), true, true);
 		addInputComponent(TUIUtils.getSpinner("numOfTasks", model, 1, TTaskManager.CORE_POOL_SIZE));
-		addInputComponent(TUIUtils.getSpinner("minPlayers", model, 2, Table.MAX_CAPACITY));
+		addInputComponent(TUIUtils.getSpinner("minPlayers", model, 2, PokerTable.MAX_CAPACITY));
 		addInputComponent(TUIUtils.getSpinner("grain", model, 5, 20, 5));
 
 		shuffleTextField = TUIUtils.getWebTextField("simulationVariable", model, columns);
@@ -206,7 +206,7 @@ public class SimulationParametersPanel extends TUIFormPanel implements ListSelec
 		int grain = simulationParameters.getInteger("grain");
 		for (String variable : variables) {
 			for (TrooperParameter trooperParameter : parameters) {
-				List<Integer> integers = Table.getShuffleList(grain); // allways shuffle !!
+				List<Integer> integers = PokerTable.getShuffleList(grain); // allways shuffle !!
 				trooperParameter.set(variable, integers.remove(0));
 				trooperParameter.save();
 			}
@@ -240,10 +240,10 @@ public class SimulationParametersPanel extends TUIFormPanel implements ListSelec
 			SimulationParameters simulationParameters = (SimulationParameters) getModel();
 
 			// in tournament, the # of strategies muss > # players
-			int stst = Table.getTotalStrategies(simulationParameters);
+			int stst = PokerTable.getTotalStrategies(simulationParameters);
 			boolean isTournament = simulationParameters.getBoolean("isTournament");
-			if (isTournament && stst < Table.MAX_CAPACITY) {
-				Alesia.showNotification("hero.msg07", stst, Table.MAX_CAPACITY);
+			if (isTournament && stst < PokerTable.MAX_CAPACITY) {
+				Alesia.showNotification("hero.msg07", stst, PokerTable.MAX_CAPACITY);
 				return null;
 			}
 
@@ -251,11 +251,11 @@ public class SimulationParametersPanel extends TUIFormPanel implements ListSelec
 			// & in tableDialog players place
 			LazyList<TrooperParameter> parameters = TrooperParameter.findAll().orderBy("chair");
 			TaskGroup taskGroup = new TaskGroup();
-			Table oneTable = null;
+			PokerTable oneTable = null;
 			int numOfTask = simulationParameters.getInteger("numOfTasks");
 
 			for (int i = 0; i < numOfTask; i++) {
-				Table table = new Table(i, simulationParameters);
+				PokerTable table = new PokerTable(i, simulationParameters);
 				for (TrooperParameter trooperParameter : parameters) {
 					if (trooperParameter.getBoolean("isActive")) {
 						String trooperName = trooperParameter.getString("trooper");

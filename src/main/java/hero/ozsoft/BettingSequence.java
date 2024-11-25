@@ -1,6 +1,8 @@
 package hero.ozsoft;
 
+import static tech.tablesaw.aggregate.AggregateFunctions.*;
 import java.util.*;
+import java.util.function.*;
 import java.util.stream.*;
 
 import org.apache.commons.math3.util.*;
@@ -8,11 +10,11 @@ import org.apache.commons.math3.util.*;
 import hero.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.actions.*;
+import tech.tablesaw.api.*;
 
 public class BettingSequence {
 
-    private static Map<Long, List<PlayerSummary>> bettingHistory = new TreeMap<>(Comparator.reverseOrder());
-
+    private static Table table = PlayerSummary.getTableTemplate();
     private Map<Integer, List<PlayerAction>> streets;
     private List<String> sequence = new ArrayList<>();
     private List<PlayerSummary> playerSumaries = new ArrayList<>();
@@ -65,8 +67,8 @@ public class BettingSequence {
     }
 
     public void addSummary(Player player) {
-        PlayerSummary summary = new PlayerSummary(player.getName(), street, player.getChair(), player.getCash(),
-                player.hasCards());
+        PlayerSummary summary = new PlayerSummary(player.getName(), handId, street, player.getChair(), player.getCash(),
+                player.hasCards(), player.isDealer);
         addSummary(summary);
     }
 
@@ -78,37 +80,7 @@ public class BettingSequence {
      */
     public void addSummary(PlayerSummary playerSummary) {
         this.playerSumaries.add(playerSummary);
-
-        // update the history of the current hand
-        List<PlayerSummary> list = bettingHistory.get(handId);
-        if (list == null) {
-            list = new ArrayList<>();
-            bettingHistory.put(handId, list);
-        }
-        list.add(playerSummary);
-    }
-
-    /**
-     * not completed method. delete
-     * @param bb
-     * @return
-     */
-    public double wasIRaised(double bb) {
-        // i raise is at least 3 bigblind
-        double bbb = bb * 3;
-
-        List<PlayerSummary> currentHand = bettingHistory.get(handId);
-        if (currentHand == null || currentHand.isEmpty())
-            return -1;
-
-        // select only active players & the current street
-        List<PlayerSummary> currentStreet = new ArrayList<>(currentHand);
-        currentStreet.removeIf(ps -> ps.isAlive && ps.street == street);
-
-        if (currentStreet.isEmpty())
-            return -1;
-
-        return 0;
+        PlayerSummary.addRow(table, playerSummary);
     }
 
     /**
@@ -116,81 +88,36 @@ public class BettingSequence {
      * returned {@link Pair} is the flop frequency and the second is the betting amount. both values are normalized.
      * meaning frequency=1 the villan saw all preflop
      * 
-     * 20241109: this methos was tested and dont work. using the chips to try to calculate the avg of betting yield a
-     * false result. in the chip information are included the winnins/loses of a particula player.
-     * 
-     * 
      * @param chair - the chair
      * @return the player type
      */
-    public Map<Integer, Pair<Double, Double>> getPlayersType(double buyIn, double bb) {
+    public Map<Integer, Pair<Integer, Double>> getPlayersType(double buyIn, double bb) {
         int window = 30;
-        int counter = 0;
-        Map<Integer, List<Double>> chipsByChair = new HashMap<>();
-        Map<Integer, Integer> preFlopByChair = new HashMap<>();
+        Map<Integer, Pair<Integer, Double>> pairs = new HashMap<>();
 
-        for (int i = 1; i <= Table.MAX_CAPACITY; i++) {
-            chipsByChair.put(i, new ArrayList<>());
-            preFlopByChair.put(i, 0);
-        }
+        for (int i = 1; i <= PokerTable.MAX_CAPACITY; i++) {
+            Table table2 = table.where(table.intColumn("chair").isEqualTo(i));
+            System.out.println(table2);
 
-        for (List<PlayerSummary> hand : bettingHistory.values()) {
-            if (counter > window)
-                break;
+            if (table2.rowCount() > window)
+                table2 = table2.inRange(window);
+            System.out.println(table2);
 
-            // for every chair, collect statistic
-            for (int i = 1; i <= Table.MAX_CAPACITY; i++) {
+            // ((DoubleColumn) table2.column("chips")).mult summarize("chips", min, max).apply();
+            // System.out.println(table2a);
 
-                // select only preflops & chair with index "i"
-                final int ch = i;
-                List<PlayerSummary> preflop = new ArrayList<>(hand);
-                preflop.removeIf(ps -> ps.chair != ch || ps.street != PokerSimulator.HOLE_CARDS_DEALT);
+            Table table3 = table2.summarize("chips", change).by("handId");
+            System.out.println(table3);
 
-                List<Double> chipByChair = chipsByChair.get(i);
-                for (PlayerSummary playerSummary : preflop) {
-                    chipByChair.add(playerSummary.chips);
-                }
-
-                // is there preflop info, count
-                if (chipByChair.size() > 0) {
-                    preFlopByChair.put(i, preFlopByChair.get(i) + 1);
-                }
-            }
-            counter++;
-        }
-
-        // foreach chipsByChair list, compute the diference to obtain the betting ammounts
-        for (List<Double> chipByChair : chipsByChair.values()) {
-
-            // only 1 element in this list meaning error o maybe check??
-            if (chipByChair.size() == 1) {
-                chipByChair.clear();
-                continue;
-            }
-
-            List<Double> doubles = new ArrayList<>(chipByChair);
-            chipByChair.clear();
-            for (int i = 0; i < doubles.size() - 1; i++) {
-                chipByChair.add(doubles.get(i) - doubles.get(i + 1));
-            }
-        }
-
-        // remove 0s. 0s mean chechs or multiple measurement with the same value
-        for (List<Double> chipByChair : chipsByChair.values()) {
-            chipByChair.removeIf(d -> d == 0);
-        }
-
-        // 20241109: this methos was tested and dont work. using the chips to try to calculate the avg of betting yield
-        // asfalse result. in the chip information are included the winnins/loses of a particula player.
-
-        // for each colected statistic, make a player characteritation
-        Map<Integer, Pair<Double, Double>> pairs = new HashMap<>();
-        for (int i = 1; i <= Table.MAX_CAPACITY; i++) {
-            OptionalDouble optionalDouble = chipsByChair.get(i).stream().mapToDouble(Double::doubleValue).average();
+            // LongColumn handIds = (LongColumn) table2.column("handId").unique();
+            // System.out.println(handIds.asList());
+            DoubleColumn changeChips = ((DoubleColumn) table3.column("Change [chips]"));
+            OptionalDouble optionalDouble = changeChips.asList().stream().mapToDouble(Double::doubleValue).average();
             if (optionalDouble.isPresent()) {
-                int flop = preFlopByChair.get(i);
+                DoublePredicate predicate = (d) -> d > 0;
+                int flops = changeChips.count(predicate);
                 double avg = optionalDouble.getAsDouble();
-                Pair<Double, Double> pair = new Pair<>((double) flop, avg);
+                Pair<Integer, Double> pair = new Pair<>(flops, avg);
                 pairs.put(i, pair);
             }
         }
@@ -250,20 +177,53 @@ public class BettingSequence {
      * 
      */
     public static class PlayerSummary {
+        public long handId;
         public long currentTimeMillis;
         public int street;
         public int chair;
         public String name;
         public double chips;
         public boolean isAlive;
+        public boolean isDealer;
 
-        public PlayerSummary(String name, int street, int position, double chips, boolean isAlive) {
-            this.chips = chips;
-            this.currentTimeMillis = System.currentTimeMillis();
+        public PlayerSummary(String name, long handId, int street, int chair, double chips, boolean isAlive,
+                boolean isDealer) {
             this.name = name;
-            this.chair = position;
+            this.handId = handId;
             this.street = street;
+            this.chair = chair;
+            this.chips = chips;
             this.isAlive = isAlive;
+            this.isDealer = isDealer;
+            this.currentTimeMillis = System.currentTimeMillis();
+        }
+
+        public static void addRow(Table table, PlayerSummary summary) {
+            Row row = table.appendRow();
+            row.setString("name", summary.name);
+            row.setLong("handId", summary.handId);
+            row.setInt("street", summary.street);
+            row.setInt("chair", summary.chair);
+            row.setDouble("chips", summary.chips);
+            row.setBoolean("isAlive", summary.isAlive);
+            row.setBoolean("isDealer", summary.isDealer);
+            row.setLong("currentTimeMillis", summary.currentTimeMillis);
+        }
+
+        public static Table getTableTemplate() {
+            StringColumn name = StringColumn.create("name");
+            LongColumn handId = LongColumn.create("handId");
+            IntColumn street = IntColumn.create("street");
+            IntColumn chair = IntColumn.create("chair");
+            DoubleColumn chips = DoubleColumn.create("chips");
+            BooleanColumn isAlive = BooleanColumn.create("isAlive");
+            BooleanColumn isDealer = BooleanColumn.create("isDealer");
+            LongColumn currentTimeMillis = LongColumn.create("currentTimeMillis");
+
+            Table table = Table.create("PlayerSumaries").addColumns(name, handId, street, chair, chips, isAlive,
+                    isDealer, currentTimeMillis);
+
+            return table;
         }
     }
 }

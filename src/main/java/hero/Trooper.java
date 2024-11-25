@@ -129,7 +129,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 	private TrooperParameter trooperParameter;
 	private int numOfvillains;
 	private GameRecorder gameRecorder;
-	private Table simulationTable;
+	private PokerTable simulationTable;
 	private long startDate;
 
 	public Trooper(TrooperParameter parameter) {
@@ -325,7 +325,7 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 		return action;
 	}
 
-	public Table getSimulationTable() {
+	public PokerTable getSimulationTable() {
 		return simulationTable;
 	}
 
@@ -415,10 +415,10 @@ public class Trooper extends Task<Void, Map<String, Object>> {
 
 	}
 
-	public void setSimulationTable(Table simulationTable) {
+	public void setSimulationTable(PokerTable simulationTable) {
 		this.simulationTable = simulationTable;
 		pokerSimulator.isLive = false;
-		this.numOfvillains = Table.MAX_CAPACITY - 1;
+		this.numOfvillains = PokerTable.MAX_CAPACITY - 1;
 		this.gameRecorder = new GameRecorder(this, numOfvillains);
 
 	}

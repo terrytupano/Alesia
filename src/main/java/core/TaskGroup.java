@@ -72,7 +72,7 @@ public class TaskGroup extends Task<Void, Void> implements PropertyChangeListene
 			if (partialResult >= active) {
 				processPartialResult();
 				partialResult = 0;
-				tasks.forEach(t -> ((Table) t).resetTableCounter());
+				tasks.forEach(t -> ((PokerTable) t).resetTableCounter());
 			}
 
 		}

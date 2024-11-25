@@ -25,7 +25,7 @@ public abstract class Bot implements Client {
 	protected int pot;
 	protected int buyIn;
 	protected UoAHand myHole, communityHand, hand;
-	protected Table table;
+	protected PokerTable table;
 	private int prevCash;
 
 	public TreeMap<String, Integer> simulationVariables;
@@ -152,7 +152,7 @@ public abstract class Bot implements Client {
 	 * @return the trooper
 	 */
 
-	public Trooper configureBot(Table table, TrooperParameter trooperParameter,
+	public Trooper configureBot(PokerTable table, TrooperParameter trooperParameter,
 			SimulationParameters simulationParameters) {
 		this.table = table;
 		this.trooper = new Trooper(trooperParameter);
