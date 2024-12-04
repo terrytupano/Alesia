@@ -47,17 +47,8 @@ public class TConsoleTextArea extends WebTextArea {
 
 	public void print(String key, Object value) {
 		String value2 = value.toString();
-//		if (value instanceof Boolean) {
-//			boolean boolVal = ((Boolean) value).booleanValue();
-//			value2 = !boolVal ? "<b>" + boolVal + "</b>" : ""+ boolVal;
-//		}
 		if (value instanceof Double)
 			value2 = TResources.fourDigitFormat.format((Double) value);
-
-//		if (value instanceof List<?>) {
-//			List<?> list = (List<?>) value;
-//			value2 = StringUtils.join(list, ", ");
-//		}
 
 		// remove headers
 		String key2 = key;

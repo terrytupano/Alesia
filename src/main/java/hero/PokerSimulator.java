@@ -15,6 +15,13 @@ import hero.ozsoft.*;
 
 public class PokerSimulator {
 
+	// standar prefloo range 42% until poket 22
+	// 42% is ultil 22 poket pair
+	// 45% is to make every step 5%
+	// 36% is to make every step 4%
+	// 25 is the max % for preflopCardsModel where all cards hat +EV
+	public static final int PREFLOP_RANGE = 45;
+	public static final int SIMULATION_PLAYERS = 6;
 	// same values as PokerProphesierAdapter + no_card_deal status
 	public static final int NO_CARDS_DEALT = 0;
 	public static final int HOLE_CARDS_DEALT = 2;
@@ -175,7 +182,7 @@ public class PokerSimulator {
 		// my hand evaluation
 		if (holeCards.size() > 0) {
 			result.put("rank", handRank);
-			result.put("name", UoAHandEvaluator.nameHand(allCards));
+			result.put("handName", UoAHandEvaluator.nameHand(allCards));
 			result.put("cardsDealed", holeCards + " " + communityCards);
 			// result.put("bestOf5Cards", evaluator.getBest5CardHand(allCards).toString().trim());
 		}
@@ -215,9 +222,10 @@ public class PokerSimulator {
 			result.put("isPoketPair", UoAHandEvaluator.isPoketPair(holeCards));
 			result.put("isOvercard", UoAHandEvaluator.isOvercard(holeCards, communityCards));
 			result.put("is2Overcards", UoAHandEvaluator.is2Overcards(holeCards, communityCards));
+			result.put("handType", UoAHandEvaluator.getType(allCards));
 
 			int inStraightDraw = UoAHandEvaluator.isInStraightDraw(holeCards, communityCards);
-			result.put("isInStraightDraw", inStraightDraw > 0);
+			result.put("isInStraightDraw", inStraightDraw);
 
 			int oeStraightDraw = UoAHandEvaluator.isOEStraightDraw(holeCards, communityCards);
 			result.put("isOEStraightDraw", oeStraightDraw);
@@ -333,8 +341,8 @@ public class PokerSimulator {
 		}
 
 		result.put("outs", outs);
-		result.put("outs2", outs * (2.13 / 100.0)); //Essential Poker Math p143
-		result.put("outs4", outs * (4.3 / 100.0)); //Essential Poker Math p143
+		result.put("outs2", outs * (2.13 / 100.0)); // Essential Poker Math p143
+		result.put("outs4", outs * (4.3 / 100.0)); // Essential Poker Math p143
 		result.put("outsExplanation", StringUtils.substringBeforeLast(outsExplanation, ", "));
 		return result;
 	}
@@ -458,6 +466,17 @@ public class PokerSimulator {
 	}
 
 	/**
+	 * Evaluation for simulation purposes
+	 * 
+	 * @param holeCards - the hole cards
+	 * @param communityCards - the comunity cards
+	 * @return the evaluation
+	 */
+	public static Map<String, Object> getEvaluation(UoAHand holeCards, UoAHand communityCards) {
+		return getEvaluation(holeCards, communityCards, SIMULATION_PLAYERS, PREFLOP_RANGE);
+	}
+
+	/**
 	 * return a {@link Map} object filled whit all values obtained from diverse evaluations algorithms.
 	 * 
 	 * @param holeCards      - Hole Cards
@@ -467,7 +486,7 @@ public class PokerSimulator {
 	 * 
 	 * @return properties
 	 */
-	public static Map<String, Object> getEvaluation(UoAHand holeCards, UoAHand communityCards, int totalPlayers,
+	private static Map<String, Object> getEvaluation(UoAHand holeCards, UoAHand communityCards, int totalPlayers,
 			int preflopRange) {
 		long t1 = System.currentTimeMillis();
 		Map<String, Object> result = getUoAEvaluation(holeCards, communityCards);
@@ -499,7 +518,8 @@ public class PokerSimulator {
 				}
 				result.put("rankBehindOuts", villansOuts);
 				result.put("rankBehindInRange", inside);
-				result.put("rankBehindTexture%", (double) villansOuts / rankBehind * 100d);
+				double texture = rankBehind == 0 ? 0 : (double) villansOuts / rankBehind * 100d;
+				result.put("rankBehindTexture%", texture);
 			}
 		}
 
@@ -649,7 +669,7 @@ public class PokerSimulator {
 		street = currentHand.size();
 
 		evaluation.clear();
-		evaluation.putAll(getEvaluation(holeCards, communityCards, activeVillans + 1, 42)); // 42% until poket 22
+		evaluation.putAll(getEvaluation(holeCards, communityCards, activeVillans + 1, PREFLOP_RANGE));
 
 		// Stack-to-Pot Ratios (SPRs)
 		// this value is only calculate on preflop and flop. ref: https://www.splitsuit.com/how-to-use-spr-poker-video
@@ -796,8 +816,11 @@ public class PokerSimulator {
 			availableActions.add(new TrooperAction(TrooperAction.RAISE, 3.5 * pot));
 			availableActions.add(new TrooperAction(TrooperAction.RAISE, 4 * pot));
 
-			// remove actions out of range
-			availableActions.removeIf(a -> a.amount >= chips || a.amount < call);
+			// remove actions out of range.
+			// in sumulation: if call = 0 (check) and raise != 0, i made the bet, the action is on me again and i habe
+			// the chance of check or reraise from the minimun ammount stored in raise variable, not less.
+			double lowB = call == 0 ? raise : call;
+			availableActions.removeIf(a -> a.amount >= chips || a.amount < lowB);
 		}
 
 		// compute reward:risk ratio

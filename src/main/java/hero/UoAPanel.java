@@ -81,7 +81,7 @@ public class UoAPanel extends TUIPanel {
 		UoAHand holeCards = new UoAHand();
 		UoAHand comunityCards = new UoAHand();
 		UoADeck deck = new UoADeck();
-		for (int i = 0; i < 100_000; i++) {
+		for (int i = 0; i < 10_000; i++) {
 			deck.reset();
 			deck.shuffle();
 			holeCards.makeEmpty();
@@ -91,13 +91,29 @@ public class UoAPanel extends TUIPanel {
 			comunityCards.addCard(deck.deal().getIndex());
 			comunityCards.addCard(deck.deal().getIndex());
 			comunityCards.addCard(deck.deal().getIndex());
-			Map<String, Object> evaluation = PokerSimulator.getOuts(holeCards, comunityCards);
-			int outs = (int) evaluation.get("outs");
-			statistics.addValue(outs);
-			frequency.addValue(outs);
-			if (outs > 20) {
-				System.out.println("Outs: " + outs + " cardsDealed " + holeCards +  " " + comunityCards + " "
-						+ evaluation.get("outsExplanation"));
+
+			// which snip will be executed
+			String snip = "rankBehindTexture%";
+
+			if ("rankBehindTexture%".equals(snip)) {
+				Map<String, Object> result = PokerSimulator.getEvaluation(holeCards, comunityCards);
+				double texture = (double) result.getOrDefault("rankBehindTexture%", 0d);
+				statistics.addValue(texture);
+				frequency.addValue(texture);
+				// console.print( holeCards + " " + comunityCards, texture);
+				System.out.println( holeCards + " " + comunityCards + "\t\t" +texture);
+			}
+
+			if ("outs".equals(snip)) {
+				// simple code to evaluate how many outs are out there
+				Map<String, Object> evaluation = PokerSimulator.getOuts(holeCards, comunityCards);
+				int outs = (int) evaluation.get("outs");
+				statistics.addValue(outs);
+				frequency.addValue(outs);
+				if (outs > 20) {
+					System.out.println("Outs: " + outs + " cardsDealed " + holeCards + " " + comunityCards + " "
+							+ evaluation.get("outsExplanation"));
+				}
 			}
 
 		}
@@ -109,6 +125,8 @@ public class UoAPanel extends TUIPanel {
 		map.put("min", statistics.getMin());
 		map.put("mean", statistics.getMean());
 		map.put("max", statistics.getMax());
+		map.put("frequency", frequency.getMode());
+
 		console.print(map);
 	}
 
@@ -168,7 +186,7 @@ public class UoAPanel extends TUIPanel {
 		console.append("Hole cards: " + holeCards + " Comunity cards: " + comunityCards + "\n");
 		int preflopRange = (Integer) rangeSpinner.getValue();
 
-		Map<String, Object> evaluation = PokerSimulator.getEvaluation(holeCards, comunityCards, 2, preflopRange);
+		Map<String, Object> evaluation = PokerSimulator.getEvaluation(holeCards, comunityCards);
 
 		// all elements instance of List are array of uoAHand. override this property
 		// and show only a sublist

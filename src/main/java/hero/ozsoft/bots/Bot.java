@@ -83,7 +83,7 @@ public abstract class Bot implements Client {
 		boolean allinBol = player.getCash() > 0;
 
 		// A bet is the initial amount and a raise is anything on top of this
-		pokerSimulator.sensorStatus.put("raise.call", callBol);
+		pokerSimulator.sensorStatus.put("call", callBol);
 		pokerSimulator.sensorStatus.put("raise.pot", potBol);
 		pokerSimulator.sensorStatus.put("raise.allin", allinBol);
 		pokerSimulator.sensorStatus.put("raise.slider", raiseBol);
@@ -100,7 +100,8 @@ public abstract class Bot implements Client {
 		pokerSimulator.potValue = pot;
 		pokerSimulator.heroChips = player.getCash();
 		pokerSimulator.raiseValue = raiseValue;
-		pokerSimulator.street = street;
+		// the street is computed in the simulation
+		// pokerSimulator.street = x;
 		// TODO: hasCard method don't say if the villain folded his cards
 		// -------------------------------------------------- !!!!!!!!!
 		int villans = (int) villains.stream().filter(p -> p.hasCards()).count();
@@ -211,14 +212,16 @@ public abstract class Bot implements Client {
 			myHole = new UoAHand();
 		}
 
-		// Claudia deals the Flop.
+		// Simone deals the Flop.
 		if (message.contains("Flop.") || message.contains("Turn.") || message.contains("River.")) {
-			street++;
+			street = PokerSimulator.FLOP_CARDS_DEALT;
+			street = message.contains("Turn.") ? PokerSimulator.TURN_CARD_DEALT : street;
+			street = message.contains("River.") ? PokerSimulator.RIVER_CARD_DEALT : street;
 		}
 
 		if (message.contains("Restartting the hole table.")) {
 			handsT = 0;
-			street = 0;
+			street = 0; // TODO: on 241203 was detected an error in street variable. please check 
 			prevCash = buyIn;
 		}
 
@@ -244,7 +247,7 @@ public abstract class Bot implements Client {
 	@Override
 	public void playerUpdated(Player player) {
 		// update myHole cards only once. thas allow correct traking of # of hands
-		// played by this trooper. a hand is whe the trooper has cards. whet the trooper
+		// played by this trooper. a hand is when the trooper has cards. when the trooper
 		// whit his card do, is here not important.
 		if (trooperName.equals(player.getName()) && player.getHand().size() == HOLE_CARDS && myHole.size() == 0) {
 			handsT++;

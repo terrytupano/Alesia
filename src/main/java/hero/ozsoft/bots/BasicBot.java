@@ -25,19 +25,6 @@ import hero.ozsoft.*;
 import hero.ozsoft.actions.*;
 
 /**
- * Auto mutable Alpha and Tau parameters bot.
- * 
- * Current implementation acts purely on the bot's hole cards, based on
- * <code>Tau</code> parameter of Original preflop Distribution. and
- * <code>alpha</code> mutable parameter selection. Only <b>hero</b> ist allow to
- * mutate every 100 hands. All other players will be randomly created with
- * random parameters.
- * 
- * <li>combined with a configurable level of tightness (when to play or fold a
- * hand ) and aggression (how much to bet or raise in case of good cards or when
- * bluffing). <br />
- * <br />
- * </ul>
  * 
  */
 public class BasicBot extends Bot {
@@ -71,12 +58,6 @@ public class BasicBot extends Bot {
 			action = pokerSimulator.ruleBook.getAction();
 			action2 = getPlayerAction(action, allowedActions);
 		}
-
-		// if (allowedActions.contains(PlayerAction.CHECK)) {
-		// return PlayerAction.CHECK;
-		// } else {
-		// return PlayerAction.CALL;
-		// }
 
 		return action2;
 	}

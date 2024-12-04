@@ -2,12 +2,15 @@ package hero;
 
 import java.util.*;
 
+import org.apache.commons.math3.util.*;
 import org.jeasy.rules.api.*;
 import org.jeasy.rules.core.*;
 
+import core.*;
 import datasource.*;
 import hero.UoAHandEval.*;
 import hero.ozsoft.*;
+import hero.ozsoft.BettingSequence.*;
 
 public class RuleBook {
 
@@ -93,12 +96,7 @@ public class RuleBook {
         double tablePosition = pokerSimulator.getTablePosition();
         double SPRs = getSPRs();
 
-        // 42% is ultil 22 poket pair
-        // 45% is to make every step 5%
-        // 36% is to make every step 4%
-        // 25 is the max % for preflopCardsModel where all cards hat +EV
-        // double upperB = 25d;
-        double rangeUpper = 45d;
+        double rangeUpper = PokerSimulator.PREFLOP_RANGE;
         double step = rangeUpper / PokerTable.MAX_CAPACITY;
         double preflopRange = step * tablePosition;
         int tau = (int) Math.round(preflopRange);
@@ -190,14 +188,42 @@ public class RuleBook {
         if (!(rank && pokerPair))
             return;
 
-        // 15-to-1 Rule.
+        // 15-to-1 Rule. Essential Poker Math p207
         double ess = pokerSimulator.bettingSequence.getEfectiveStackSize();
         if ((ess < pokerSimulator.bigBlind * 15))
             return;
 
-            pokerSimulator.bettingSequence.getPlayersType(pokerSimulator.buyIn, pokerSimulator.bigBlind);
+        Map<Integer, PlayerType> map = pokerSimulator.bettingSequence.getPlayersType(pokerSimulator.bigBlind);
+        for (Map.Entry<Integer, PlayerType> entry : map.entrySet()) {
+            TrooperParameter parameter = TrooperParameter.findFirst("chair = ?", entry.getKey());
+            System.out.println(parameter.getString("trooper") + " BigBlinds: "
+                    + TResources.twoDigitFormat.format(entry.getValue().bigBlinds) + " Flops: "
+                    + TResources.twoDigitFormat.format(entry.getValue().flops) + " " + entry.getValue().designation);
+        }
 
         putAlphaAction("setMining", availableActions);
+
+    }
+
+    private void evaluateBlindSteal() {
+        // only valid for BTN
+        if (pokerSimulator.getTablePosition() != PokerTable.MAX_CAPACITY - 1)
+            return;
+
+        boolean rank = pokerSimulator.holeCards.getCard(1).getRank() < 6;
+        boolean pokerPair = UoAHandEvaluator.isPoketPair(pokerSimulator.holeCards);
+        // this rulle apply to poket pair less that 66 (55-22) if not, return
+        if (!(rank && pokerPair))
+            return;
+
+        // 15-to-1 Rule. Essential Poker Math p207
+        double ess = pokerSimulator.bettingSequence.getEfectiveStackSize();
+        if ((ess < pokerSimulator.bigBlind * 15))
+            return;
+
+        // In general, you want to risk the least amount possible when stealing your opponents’ blinds.
+        double value = pokerSimulator.bigBlind * 2;
+        putAction("setMining", value, availableActions);
 
     }
 

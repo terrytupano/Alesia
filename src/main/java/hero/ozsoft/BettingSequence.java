@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
 
+import org.apache.commons.math3.stat.regression.*;
 import org.apache.commons.math3.util.*;
 
 import hero.*;
@@ -14,10 +15,15 @@ import tech.tablesaw.api.*;
 
 public class BettingSequence {
 
+    // constant to measurement of the player type flop max value.
+    public static final int FRAME_WINDOW = 30;
+    // the max average chips of a player type. empiricaly set to this value based on simulations
+    public static final int AVGBB_WINDOW = 20;
+
     private static Table table = PlayerSummary.getTableTemplate();
     private Map<Integer, List<PlayerAction>> streets;
-    private List<String> sequence = new ArrayList<>();
-    private List<PlayerSummary> playerSumaries = new ArrayList<>();
+    private List<String> sequence;
+    private List<PlayerSummary> playerSumaries;
 
     // street in simulation eviroment. in live environment, the information is readed form the bettingHistory
     private int street;
@@ -31,6 +37,8 @@ public class BettingSequence {
         this.street = PokerSimulator.NO_CARDS_DEALT;
         this.streets = new TreeMap<>();
         streets.put(street, new ArrayList<>());
+        this.sequence = new ArrayList<>();
+        this.playerSumaries = new ArrayList<>();
         this.handId = System.currentTimeMillis();
     }
 
@@ -48,14 +56,6 @@ public class BettingSequence {
         }
 
         addMessage(name + " - " + action2);
-
-        // remove summary for folded player
-        // error i cant alter the record process
-        // if (action instanceof FoldAction) {
-        // playerSumaries.removeIf(s -> s.name.equals(player.getName()));
-        // return;
-        // }
-
         addSummary(player);
     }
 
@@ -84,42 +84,53 @@ public class BettingSequence {
     }
 
     /**
-     * compute and return a characterization of the player sit on the char passed as argument. The first element of the
-     * returned {@link Pair} is the flop frequency and the second is the betting amount. both values are normalized.
-     * meaning frequency=1 the villan saw all preflop
-     * 
-     * @param chair - the chair
-     * @return the player type
+     * compute and return a characterization of the player sit on the char passed as argument. On the returned returned
+     * {@link Pair} :
+     * <p>
+     * The first element is the average chips on this period of time expresed in big blinds
+     * <p>
+     * the second is the flop frequency. how many flop the dude saw. the maximun is {@link #FRAME_WINDOW}
+     *
+     * @param bigBlind - the big blind
+     * @return the evaluations
      */
-    public Map<Integer, Pair<Integer, Double>> getPlayersType(double buyIn, double bb) {
-        int window = 30;
-        Map<Integer, Pair<Integer, Double>> pairs = new HashMap<>();
-
+    public Map<Integer, PlayerType> getPlayersType(double bigBlind) {
+        Map<Integer, PlayerType> pairs = new HashMap<>();
         for (int i = 1; i <= PokerTable.MAX_CAPACITY; i++) {
-            Table table2 = table.where(table.intColumn("chair").isEqualTo(i));
-            System.out.println(table2);
+            // select the current chair
+            Table table2 = table.where(table.intColumn("chair").isEqualTo(i)
+                    .and(table.intColumn("street").isEqualTo(PokerSimulator.FLOP_CARDS_DEALT))
+                    .and(table.booleanColumn("isAlive").isTrue()));
 
-            if (table2.rowCount() > window)
-                table2 = table2.inRange(window);
-            System.out.println(table2);
+            // remove 0 (is 0 and active allin??)
+            table2 = table2.where(table2.doubleColumn("chips").isGreaterThan(0));
 
-            // ((DoubleColumn) table2.column("chips")).mult summarize("chips", min, max).apply();
-            // System.out.println(table2a);
+            // select only the last window elements
+            if (table2.rowCount() > FRAME_WINDOW)
+                table2 = table2.inRange(-FRAME_WINDOW);
 
-            Table table3 = table2.summarize("chips", change).by("handId");
-            System.out.println(table3);
+            List<Double> doubles = table2.doubleColumn("chips").asList();
+            double max = doubles.stream().mapToDouble(Double::doubleValue).max().orElse(0d);
+            double min = doubles.stream().mapToDouble(Double::doubleValue).min().orElse(0d);
 
-            // LongColumn handIds = (LongColumn) table2.column("handId").unique();
-            // System.out.println(handIds.asList());
-            DoubleColumn changeChips = ((DoubleColumn) table3.column("Change [chips]"));
-            OptionalDouble optionalDouble = changeChips.asList().stream().mapToDouble(Double::doubleValue).average();
-            if (optionalDouble.isPresent()) {
-                DoublePredicate predicate = (d) -> d > 0;
-                int flops = changeChips.count(predicate);
-                double avg = optionalDouble.getAsDouble();
-                Pair<Integer, Double> pair = new Pair<>(flops, avg);
-                pairs.put(i, pair);
+            // positive or negative diference
+            SimpleRegression regression = new SimpleRegression();
+            for (int j = 0; j < doubles.size(); j++) {
+                regression.addData(j + 1, doubles.get(j));
             }
+            double slope = regression.getSlope();
+
+            double diff = max - min;
+            int flops = table2.rowCount();
+            double avgBigBlinds = 0;
+            // double flops2 = 0;
+            if (flops > 0) {
+                avgBigBlinds = diff / flops / bigBlind;
+                // avg = slope < 0 ? avg * -1.0 : avg;
+                // flops2 = flops / (double) FRAME_WINDOW;
+            }
+            PlayerType type = new PlayerType(avgBigBlinds, flops);
+            pairs.put(i, type);
         }
         return pairs;
     }
@@ -136,8 +147,12 @@ public class BettingSequence {
      */
     public double getEfectiveStackSize() {
         List<PlayerSummary> list = new ArrayList<>(playerSumaries);
-        // if a player hat chips=0, the player go allin. remove
-        list.removeIf(s -> s.chips == 0);
+        // only the current street. this avoid return previous recorded values of later positions when the invoquer fron
+        // this method is in early positions.
+        list.removeIf(s -> s.street != street);
+
+        // remove no active & when the player hat chips=0, the player go allin.
+        list.removeIf(s -> !s.isAlive || s.chips == 0);
 
         // due the instance of this betting sequence is a new instance for every hand, all the elements in the list
         // allways haven less chips every time. simple get the minimum
@@ -169,6 +184,40 @@ public class BettingSequence {
             for (PlayerAction action : street2.getValue()) {
                 System.out.println("  " + action);
             }
+        }
+    }
+
+    public static class PlayerType {
+        public final static String NO_INFO = "NO_INFO";
+        // prefers bet & raises to call, very aggresive, winning players
+        public final static String TAGs = "TAG";
+        // play too many nads. very agresive hight variance in win/loose
+        public final static String LAGs = "LAG";
+        // Call with goods hands. if raising, look out! not a winning conbination
+        public final static String ROCK = "ROCK";
+        // Clls with good hands, if raising, look out. generaly not a wining player
+        public final static String CALLING_STATIONS = "CALLING_STATIONS";
+
+        public double bigBlinds;
+        public double flops;
+        public String designation;
+
+        public PlayerType(double avgBigBlinds, double flops) {
+            this.bigBlinds = avgBigBlinds;
+            this.flops = flops;
+            designation = NO_INFO;
+            designation = avgBigBlinds > BettingSequence.AVGBB_WINDOW / 2d && flops < BettingSequence.FRAME_WINDOW / 2d
+                    ? TAGs
+                    : designation;
+            designation = avgBigBlinds > BettingSequence.AVGBB_WINDOW / 2d && flops > BettingSequence.FRAME_WINDOW / 2d
+                    ? LAGs
+                    : designation;
+            designation = avgBigBlinds < BettingSequence.AVGBB_WINDOW / 2d && flops > BettingSequence.FRAME_WINDOW / 2d
+                    ? CALLING_STATIONS
+                    : designation;
+            designation = avgBigBlinds < BettingSequence.AVGBB_WINDOW / 2d && flops < BettingSequence.FRAME_WINDOW / 2d
+                    ? CALLING_STATIONS
+                    : designation;
         }
     }
 
