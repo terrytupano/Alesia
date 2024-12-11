@@ -19,9 +19,8 @@ public class PokerSimulator {
 	// 42% is ultil 22 poket pair
 	// 45% is to make every step 5%
 	// 36% is to make every step 4%
-	// 25 is the max % for preflopCardsModel where all cards hat +EV
+	// 26 is the max % for preflopCardsModel where all cards hat 0 <= EV
 	public static final int PREFLOP_RANGE = 45;
-	public static final int SIMULATION_PLAYERS = 6;
 	// same values as PokerProphesierAdapter + no_card_deal status
 	public static final int NO_CARDS_DEALT = 0;
 	public static final int HOLE_CARDS_DEALT = 2;
@@ -219,24 +218,6 @@ public class PokerSimulator {
 			}
 			result.put("rankTotal", total);
 
-			result.put("isPoketPair", UoAHandEvaluator.isPoketPair(holeCards));
-			result.put("isOvercard", UoAHandEvaluator.isOvercard(holeCards, communityCards));
-			result.put("is2Overcards", UoAHandEvaluator.is2Overcards(holeCards, communityCards));
-			result.put("handType", UoAHandEvaluator.getType(allCards));
-
-			int inStraightDraw = UoAHandEvaluator.isInStraightDraw(holeCards, communityCards);
-			result.put("isInStraightDraw", inStraightDraw);
-
-			int oeStraightDraw = UoAHandEvaluator.isOEStraightDraw(holeCards, communityCards);
-			result.put("isOEStraightDraw", oeStraightDraw);
-
-			int flushDraw = UoAHandEvaluator.isFlushDraw(holeCards, communityCards);
-			result.put("isFlushDraw", flushDraw);
-
-			result.put("darknessHand", UoAHandEvaluator.getDarkness(holeCards, communityCards));
-			// for multiples draws, take the maximun fo them
-			result.put("darknessDraw", Collections.max(Arrays.asList(inStraightDraw, oeStraightDraw, flushDraw)));
-
 			double ahead = ((double) aheadList.size()) / ((double) total);
 			result.put("rankAhead", aheadList.size());
 			result.put("rankAhead%", ahead * 100d);
@@ -279,19 +260,23 @@ public class PokerSimulator {
 		// there is no more outs on the river
 		if (communityCards.size() == 3 || communityCards.size() == 4) {
 
+			result.put("isPoketPair", UoAHandEvaluator.isPoketPair(holeCards));
 			if (UoAHandEvaluator.isPoketPair(holeCards)
 					&& UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.PAIR) {
 				outs += 2;
 				outsExplanation += "Pocket pair to set, ";
 			}
 
-			if (UoAHandEvaluator.isOvercard(holeCards, communityCards)
-					&& UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.HIGH) {
+			boolean isOvercard = UoAHandEvaluator.isOvercard(holeCards, communityCards);
+			result.put("isOvercard", isOvercard);
+			if (isOvercard && UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.HIGH) {
 				outs += 3;
 				outsExplanation += "One overcard, ";
 			}
 
-			if (UoAHandEvaluator.isInStraightDraw(holeCards, communityCards) > 0) {
+			int inStraightDraw = UoAHandEvaluator.isInStraightDraw(holeCards, communityCards);
+			result.put("isInStraightDraw", inStraightDraw);
+			if (inStraightDraw > 0) {
 				outs += 4;
 				outsExplanation += "Inside straight draw, ";
 			}
@@ -314,8 +299,9 @@ public class PokerSimulator {
 			// outsExplanation += "No pair to pair, ";
 			// }
 
-			if (UoAHandEvaluator.is2Overcards(holeCards, communityCards)
-					&& UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.HIGH) {
+			boolean is2Overcards = UoAHandEvaluator.is2Overcards(holeCards, communityCards);
+			result.put("is2Overcards", is2Overcards);
+			if (is2Overcards && UoAHandEvaluator.getType(allCards) == UoAHandEvaluator.HIGH) {
 				outs += 6;
 				outsExplanation += "2 overcard to overpair, ";
 			}
@@ -326,18 +312,28 @@ public class PokerSimulator {
 				outsExplanation += "set to full house / four of a kind, ";
 			}
 
-			if (UoAHandEvaluator.isOEStraightDraw(holeCards, communityCards) > 0) {
+			int oeStraightDraw = UoAHandEvaluator.isOEStraightDraw(holeCards, communityCards);
+			result.put("isOEStraightDraw", oeStraightDraw);
+			if (oeStraightDraw > 0) {
 				outs += 8;
 				outsExplanation += "Open ended straight draw, ";
 			}
 
-			if (UoAHandEvaluator.isFlushDraw(holeCards, communityCards) > 0) {
+			int flushDraw = UoAHandEvaluator.isFlushDraw(holeCards, communityCards);
+			result.put("isFlushDraw", flushDraw);
+			if (flushDraw > 0) {
 				outs += 9;
 				outsExplanation += "Flush draw, ";
 			}
 			// inside straight draw and 2 overcards
 			// inside straight and flush draw
 			// open ended straight and flush draw
+
+			result.put("handType", UoAHandEvaluator.getType(allCards));
+			result.put("darknessHand", UoAHandEvaluator.getDarkness(holeCards, communityCards));
+			// for multiples draws, take the maximun fo them
+			result.put("darknessDraw", Collections.max(Arrays.asList(inStraightDraw, oeStraightDraw, flushDraw)));
+
 		}
 
 		result.put("outs", outs);
@@ -359,7 +355,7 @@ public class PokerSimulator {
 	public static Map<String, Object> getHandPotential(UoAHand holeCards, UoAHand communityCards, int totalPlayers) {
 		Map<String, Object> result = new TreeMap<>();
 
-		// terry: this method is util with comunity cards. TODO: check whit paper
+		// this method is valid only with comunity cards
 		if (communityCards.size() == 0) {
 			return result;
 		}
@@ -466,14 +462,14 @@ public class PokerSimulator {
 	}
 
 	/**
-	 * Evaluation for simulation purposes
+	 * Evaluation for simulation purposes. this method simulate 2 players
 	 * 
-	 * @param holeCards - the hole cards
+	 * @param holeCards      - the hole cards
 	 * @param communityCards - the comunity cards
 	 * @return the evaluation
 	 */
 	public static Map<String, Object> getEvaluation(UoAHand holeCards, UoAHand communityCards) {
-		return getEvaluation(holeCards, communityCards, SIMULATION_PLAYERS, PREFLOP_RANGE);
+		return getEvaluation(holeCards, communityCards, 2, PREFLOP_RANGE);
 	}
 
 	/**
@@ -481,7 +477,7 @@ public class PokerSimulator {
 	 * 
 	 * @param holeCards      - Hole Cards
 	 * @param communityCards - Community cards
-	 * @param totalPlayers   - number of players ONLY VILLANS
+	 * @param totalPlayers   - number of players HERO INCLUDED
 	 * @param preflopRange   - % to set on PreflopCardsModel
 	 * 
 	 * @return properties
@@ -492,34 +488,42 @@ public class PokerSimulator {
 		Map<String, Object> result = getUoAEvaluation(holeCards, communityCards);
 		result.putAll(getOuts(holeCards, communityCards));
 		result.putAll(getHandPotential(holeCards, communityCards, totalPlayers));
+
 		result.put("chenScore", PokerSimulator.getChenScore(holeCards));
 
 		/**
 		 * of the rankBehindList property, check how many of those hands are inside of the preflopRange, if one hand
-		 * pass the preflop distribution, count if the outs of the hand are better that mine
+		 * pass the preflop distribution, count the group (not the outs) zB. if is there a set draw, mark as 1
+		 * handTexture is simple the sum of the posibles outs 0= dry 1 wet 2=more wet 3=max wet
 		 */
 		if (communityCards.size() > 0) {
 			int inside = 0;
-			int villansOuts = 0;
 			if (preflopRange > 0) {
 				preflopCardsModel.setPercentage(preflopRange);
 				List<UoAHand> behindList = (List) result.get("rankBehindList");
-				int rankBehind = (Integer) result.get("rankBehind");
-				int myOuts = (Integer) result.get("outs");
+				int setDraws = 0;
+				int flushDraws = 0;
+				int inStraightDraws = 0;
+				int oeStraightDraws = 0;
 				for (UoAHand uoAHand : behindList) {
-					// pass the preflop? cout
+					// pass the preflop? count
 					if (preflopCardsModel.containsHand(uoAHand)) {
 						inside++;
-						// count the better outs
-						int outs = (Integer) getOuts(uoAHand, communityCards).getOrDefault("outs", 0);
-						villansOuts += outs > myOuts ? 1 : 0;
+						Map<String, Object> map = getOuts(uoAHand, communityCards);
+						// int outs = (int) map.get("outs");
+						boolean setDraw = (Integer) map.get("handType") == UoAHandEvaluator.TWOPAIR
+								&& !((Boolean) map.get("isPoketPair"))
+								|| ((Integer) map.get("handType") == UoAHandEvaluator.THREEKIND
+										&& !((Boolean) map.get("isPoketPair")));
+						setDraws = setDraw ? 1 : 0;
+						flushDraws = (Integer) map.get("isFlushDraw") > 0 ? 1 : 0;
+						inStraightDraws = (Integer) map.get("isInStraightDraw") > 0 ? 1 : 0;
+						oeStraightDraws = (Integer) map.get("isOEStraightDraw") > 0 ? 1 : 0;
 					}
-
 				}
-				result.put("rankBehindOuts", villansOuts);
-				result.put("rankBehindInRange", inside);
-				double texture = rankBehind == 0 ? 0 : (double) villansOuts / rankBehind * 100d;
-				result.put("rankBehindTexture%", texture);
+				int texture = setDraws + flushDraws + inStraightDraws + oeStraightDraws;
+				result.put("handTexture", texture);
+				result.put("handInside", inside);
 			}
 		}
 

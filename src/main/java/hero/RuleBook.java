@@ -25,6 +25,7 @@ public class RuleBook {
     private PreflopCardsModel preflopCardsModel;
     private PokerSimulator pokerSimulator;
     private double sprUpper = 15;
+    private Random random;
 
     public RuleBook(PokerSimulator simulator) {
         this.pokerSimulator = simulator;
@@ -33,7 +34,7 @@ public class RuleBook {
         this.facts = new Facts();
         this.rulesEngine = new DefaultRulesEngine();
         this.preflopCardsModel = new PreflopCardsModel();
-
+        this.random = new Random();
         /**
          * preflop
          */
@@ -77,6 +78,11 @@ public class RuleBook {
                 .description("A semi-bluff occurs when you bet with a drawing hand.").when(facts -> isPosFlop())
                 .then(facts -> evaluateSemiBluff()).build();
         rules.register(semiBluff);
+
+        Rule bluff = new RuleBuilder().name("Bluff")
+                .description("a bluff is a bet or raise made with a hand which is not thought to be the best hand.").when(facts -> isPosFlop())
+                .then(facts -> evaluateBluff()).build();
+        rules.register(bluff);
     }
 
     private double getSPRs() {
@@ -115,7 +121,7 @@ public class RuleBook {
             // high SPRs tight pasive call/check
             // see "preflop correction using SPR" tab in Some statistics.xlsx
             double value = callValue;
-            double r = Math.random();
+            double r = random.nextDouble();
             if (r < 1 - (SPRs / sprUpper))
                 value = raiseValue;
 
@@ -233,8 +239,19 @@ public class RuleBook {
      * better hand.
      */
     private void evaluateBluff() {
+        // Optimal Bluffing Frequency work only on the river
+        if (PokerSimulator.RIVER_CARD_DEALT != pokerSimulator.street)
+            return;
 
-        // compute a Polarized range based on the
+        // in this method, i will try only 1 pot size
+        // double obf = pokerSimulator.potValue /(2*pokerSimulator.potValue + 1);
+        double obf = 1 / 3d;
+        if (random.nextDouble() > obf)
+            return;
+
+        double value = pokerSimulator.potValue;
+        putAction("bluff", value, availableActions);
+
     }
 
     private void evaluateSemiBluff() {

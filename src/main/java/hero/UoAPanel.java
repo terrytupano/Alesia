@@ -81,7 +81,7 @@ public class UoAPanel extends TUIPanel {
 		UoAHand holeCards = new UoAHand();
 		UoAHand comunityCards = new UoAHand();
 		UoADeck deck = new UoADeck();
-		for (int i = 0; i < 10_000; i++) {
+		for (int i = 0; i < 1_000; i++) {
 			deck.reset();
 			deck.shuffle();
 			holeCards.makeEmpty();
@@ -93,14 +93,13 @@ public class UoAPanel extends TUIPanel {
 			comunityCards.addCard(deck.deal().getIndex());
 
 			// which snip will be executed
-			String snip = "rankBehindTexture%";
+			String snip = "handTexture";
 
-			if ("rankBehindTexture%".equals(snip)) {
+			if ("handTexture".equals(snip)) {
 				Map<String, Object> result = PokerSimulator.getEvaluation(holeCards, comunityCards);
-				double texture = (double) result.getOrDefault("rankBehindTexture%", 0d);
+				int texture = (int) result.get("handTexture");
 				statistics.addValue(texture);
 				frequency.addValue(texture);
-				// console.print( holeCards + " " + comunityCards, texture);
 				System.out.println( holeCards + " " + comunityCards + "\t\t" +texture);
 			}
 

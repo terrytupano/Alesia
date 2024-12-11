@@ -191,7 +191,7 @@ public class BettingSequence {
         public final static String NO_INFO = "NO_INFO";
         // prefers bet & raises to call, very aggresive, winning players
         public final static String TAGs = "TAG";
-        // play too many nads. very agresive hight variance in win/loose
+        // play too many hands. very agresive hight variance in win/loose
         public final static String LAGs = "LAG";
         // Call with goods hands. if raising, look out! not a winning conbination
         public final static String ROCK = "ROCK";
@@ -206,18 +206,12 @@ public class BettingSequence {
             this.bigBlinds = avgBigBlinds;
             this.flops = flops;
             designation = NO_INFO;
-            designation = avgBigBlinds > BettingSequence.AVGBB_WINDOW / 2d && flops < BettingSequence.FRAME_WINDOW / 2d
-                    ? TAGs
-                    : designation;
-            designation = avgBigBlinds > BettingSequence.AVGBB_WINDOW / 2d && flops > BettingSequence.FRAME_WINDOW / 2d
-                    ? LAGs
-                    : designation;
-            designation = avgBigBlinds < BettingSequence.AVGBB_WINDOW / 2d && flops > BettingSequence.FRAME_WINDOW / 2d
-                    ? CALLING_STATIONS
-                    : designation;
-            designation = avgBigBlinds < BettingSequence.AVGBB_WINDOW / 2d && flops < BettingSequence.FRAME_WINDOW / 2d
-                    ? CALLING_STATIONS
-                    : designation;
+            double yAxis = BettingSequence.AVGBB_WINDOW / 2d;
+            double xAxis = BettingSequence.FRAME_WINDOW / 2d;
+            designation = avgBigBlinds >= yAxis && flops < xAxis ? TAGs : designation;
+            designation = avgBigBlinds >= yAxis && flops >= xAxis ? LAGs : designation;
+            designation = avgBigBlinds < yAxis && flops >= xAxis ? CALLING_STATIONS : designation;
+            designation = avgBigBlinds < yAxis && flops < xAxis ? ROCK : designation;
         }
     }
 

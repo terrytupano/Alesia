@@ -206,10 +206,17 @@ public class UoAHandEvaluator {
 		return darkness;
 	}
 
-	private static boolean isOvercard(UoACard card, UoAHand communityCards) {
+	/**
+	 * return true if the hole card contain the card with the top range
+	 * 
+	 * @param holeCards      - the hole cards
+	 * @param communityCards - the comunity cards
+	 * @return is or not overcard
+	 */
+	private static boolean isOvercard(UoACard holeCards, UoAHand communityCards) {
 		boolean isOvercard = true;
 		for (int j = 1; j <= communityCards.size(); j++) {
-			isOvercard = card.getRank() <= communityCards.getCard(j).getRank() ? false : isOvercard;
+			isOvercard = holeCards.getRank() <= communityCards.getCard(j).getRank() ? false : isOvercard;
 		}
 		return isOvercard;
 	}
