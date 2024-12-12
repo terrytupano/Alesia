@@ -84,17 +84,27 @@ public class UoAHandEvaluator {
 	 */
 	public static int isFlushDraw(UoAHand holeCards, UoAHand communityCards) {
 		UoAHand hand = new UoAHand(holeCards + " " + communityCards);
+		long suitCount = countSuits(hand);
+		int dark = containSuit(holeCards.getCard(1), communityCards) ? 1 : 0;
+		dark += containSuit(holeCards.getCard(2), communityCards) ? 1 : 0;
+
+		return dark > 0 && suitCount == 4 ? dark : 0;
+	}
+
+	/**
+	 * return a int that represent the most suits found the the hand arguments. As Ad Ks Kh 7s will return 3
+	 * 
+	 * @param hand - the hand
+	 * @return - the count
+	 */
+	public static int countSuits(UoAHand hand) {
 		long suitCount = 0;
 		List<Integer> suits = Arrays.asList(UoACard.CLUBS, UoACard.DIAMONDS, UoACard.HEARTS, UoACard.SPADES);
 		for (Integer suit : suits) {
 			long count = hand.getCards().stream().filter(c -> c.getSuit() == suit).count();
 			suitCount = count > suitCount ? count : suitCount;
 		}
-
-		int dark = containSuit(holeCards.getCard(1), communityCards) ? 1 : 0;
-		dark += containSuit(holeCards.getCard(2), communityCards) ? 1 : 0;
-
-		return dark > 0 && suitCount == 4 ? dark : 0;
+		return (int) suitCount;
 	}
 
 	/**
@@ -120,6 +130,28 @@ public class UoAHandEvaluator {
 			}
 		}
 		return noDraw;
+	}
+
+	/**
+	 * similar to {@link #isInStraightDraw(UoAHand, UoAHand)} but for comunity cards only
+	 * 
+	 * @param communityCards - the cards
+	 * @return the boolean
+	 */
+	public static boolean isInStraightDraw(UoAHand communityCards) {
+		String gaps = getStraightDrawPatt(communityCards);
+		return (gaps.contains("21") || gaps.contains("11") || gaps.contains("12"));
+	}
+
+	/**
+	 * similar to {@link #isOEStraightDraw(UoAHand, UoAHand)} but for cumunity
+	 * 
+	 * @param communityCards - the cards
+	 * @return the boolean
+	 */
+	public static boolean isOEStraightDraw(UoAHand communityCards) {
+		String gaps = getStraightDrawPatt(communityCards);
+		return gaps.contains("111");
 	}
 
 	/**
@@ -222,20 +254,39 @@ public class UoAHandEvaluator {
 	}
 
 	/**
-	 * return a string that contain the gaps between the cards pasess as argument. e.g: "1211" mean that betwenn the 2d
-	 * and the 3d card is a 1 card gap
+	 * similar to {@link #getStraightDrawPatt(UoAHand)}
 	 * 
 	 * @param holeCards      - the hole cards
-	 * @param communityCards - the comunity card
-	 * @return the gaps
+	 * @param communityCards - the comunity cards
+	 * @return
 	 */
 	private static String getStraightDrawPatt(UoAHand holeCards, UoAHand communityCards) {
 		UoAHand hand = new UoAHand(holeCards + " " + communityCards);
+		return getStraightDrawPatt(hand);
+	}
+
+	/**
+	 * return a string that contain the gaps between the cards pasess as argument. e.g: "1211" mean that betwenn the 2d
+	 * and the 3d card is a 1 card gap
+	 * 
+	 * @param hand - the hand
+	 * @return the gaps
+	 */
+	private static String getStraightDrawPatt(UoAHand hand) {
 		List<Integer> ranks = hand.getCards().stream().map(c -> c.getRank()).collect(Collectors.toList());
+
+		// workaround : a hand like Td Tc 3d Ad 2c will wrong evaluated
+		if (ranks.contains(UoACard.ACE) && ranks.contains(UoACard.TWO) && ranks.contains(UoACard.THREE))
+			return "11";
+
 		Collections.sort(ranks);
 		String gaps = "";
 		for (int i = 0; i < ranks.size() - 1; i++) {
 			int gap = ranks.get(i + 1) - ranks.get(i);
+			// workaround : a hand like 8c Td Ac 2c Kc
+			if (gap == 11)
+				gap = 9;
+
 			// eg: JcJd TcQcKd return 1011 no inglude 0 value
 			if (gap > 0)
 				gaps += gap;

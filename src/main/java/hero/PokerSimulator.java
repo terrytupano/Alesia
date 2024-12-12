@@ -2,6 +2,7 @@ package hero;
 
 import java.text.*;
 import java.util.*;
+import java.util.stream.*;
 
 import org.apache.commons.lang3.*;
 import org.apache.commons.math3.stat.descriptive.*;
@@ -494,35 +495,17 @@ public class PokerSimulator {
 		/**
 		 * of the rankBehindList property, check how many of those hands are inside of the preflopRange, if one hand
 		 * pass the preflop distribution, count the group (not the outs) zB. if is there a set draw, mark as 1
-		 * handTexture is simple the sum of the posibles outs 0= dry 1 wet 2=more wet 3=max wet
+		 * handTexture is simple the sum of the posibles outs 0=dry 1=wet 2=more wet 3=max wet
 		 */
 		if (communityCards.size() > 0) {
 			int inside = 0;
 			if (preflopRange > 0) {
-				preflopCardsModel.setPercentage(preflopRange);
-				List<UoAHand> behindList = (List) result.get("rankBehindList");
-				int setDraws = 0;
-				int flushDraws = 0;
-				int inStraightDraws = 0;
-				int oeStraightDraws = 0;
-				for (UoAHand uoAHand : behindList) {
-					// pass the preflop? count
-					if (preflopCardsModel.containsHand(uoAHand)) {
-						inside++;
-						Map<String, Object> map = getOuts(uoAHand, communityCards);
-						// int outs = (int) map.get("outs");
-						boolean setDraw = (Integer) map.get("handType") == UoAHandEvaluator.TWOPAIR
-								&& !((Boolean) map.get("isPoketPair"))
-								|| ((Integer) map.get("handType") == UoAHandEvaluator.THREEKIND
-										&& !((Boolean) map.get("isPoketPair")));
-						setDraws = setDraw ? 1 : 0;
-						flushDraws = (Integer) map.get("isFlushDraw") > 0 ? 1 : 0;
-						inStraightDraws = (Integer) map.get("isInStraightDraw") > 0 ? 1 : 0;
-						oeStraightDraws = (Integer) map.get("isOEStraightDraw") > 0 ? 1 : 0;
-					}
-				}
-				int texture = setDraws + flushDraws + inStraightDraws + oeStraightDraws;
-				result.put("handTexture", texture);
+				int setDraw = UoAHandEvaluator.isPoketPair(communityCards) ? 3 : 0;
+				int inStraightDraw = UoAHandEvaluator.isInStraightDraw(communityCards) ? 4 : 0;
+				int oEStraightDraw = UoAHandEvaluator.isOEStraightDraw(communityCards) ? 8 : 0;
+				int flushDraw = UoAHandEvaluator.countSuits(communityCards) > 2 ? 9 : 0;
+
+				result.put("handTexture", setDraw + inStraightDraw + oEStraightDraw + flushDraw);
 				result.put("handInside", inside);
 			}
 		}

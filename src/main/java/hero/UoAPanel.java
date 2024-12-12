@@ -99,8 +99,9 @@ public class UoAPanel extends TUIPanel {
 				Map<String, Object> result = PokerSimulator.getEvaluation(holeCards, comunityCards);
 				int texture = (int) result.get("handTexture");
 				statistics.addValue(texture);
-				frequency.addValue(texture);
-				System.out.println( holeCards + " " + comunityCards + "\t\t" +texture);
+				if (texture > 0)
+					frequency.addValue(texture);
+				System.out.println(holeCards + " " + comunityCards + "\t\t" + texture);
 			}
 
 			if ("outs".equals(snip)) {
